@@ -27,7 +27,7 @@ ORCA_HASH = ["sheep-duck-llama-2-70b-v1.1", "sheep-duck-llama-2-13b"]
 orca_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### User:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'system' %}{{ '### System:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant:\\n' + message['content'] + '\\n\\n' }}{% endif %}{% if loop.last %}{{ '### Assistant:\\n' }}{% endif %}{% endfor %}"
 VICUNA = ["Wizard-Vicuna-13B-Uncensored-HF"]
 # jinja template for Vicuna 1.1 format:
-vicuna_1_1_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT: ' }}{% endif %}{% endfor %}"
+vicuna_1_1_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}"
 KOALA = ["koala-13B-HF"]
 # jinja template for Koala format:
 koala_template = "{{ 'BEGINNING OF CONVERSATION: ' }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + ' ' }}{% elif message['role'] == 'assistant' %}{{ 'GPT: ' + message['content'] + ' ' }}{% endif %}{% if loop.last %}{{ 'GPT:' }}{% endif %}{% endfor %}"
@@ -35,13 +35,15 @@ OASST = ["oasst-sft-4-pythia-12b-epoch-3.5"]
 # jinja template for OpenAssist format:
 oasst_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '<|prompter|>' + message['content'] + '<|endoftext|>' }}{% elif message['role'] == 'assistant' %}{{ '<|assistant|>' + message['content'] + '<|endoftext|>' }}{% endif %}{% if loop.last %}{{ '<|assistant|>' }}{% endif %}{% endfor %}"
 FALCON = ["falcon-7b-instruct", "falcon-40b-instruct"]
-# jinja template for (minimal) Falcon format:
-falcon_template = "{% for message in messages %}{{ message.content }}{{ eos_token }}{% endfor %}"
+# jinja template for assumed Falcon format:
+falcon_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}"
+# Falcon template based on https://huggingface.co/tiiuae/falcon-7b-instruct/discussions/1#64708b0a3df93fddece002a4
+
 # templates currently have 'generation prompt' hardcoded
 # doesn't matter for clembench, but once added, templates can be pushed to HF and this block can be reduced
 
 
-class HuggingfaceLocal2(backends.Backend):
+class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
         self.model_loaded = False
@@ -130,6 +132,7 @@ class HuggingfaceLocal2(backends.Backend):
 
         model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)
 
+        # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:
             response_text = model_output.replace(prompt_text, '').strip()
         else:
