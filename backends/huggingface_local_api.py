@@ -80,18 +80,8 @@ class HuggingfaceLocal2(backends.Backend):
             elif model_name in VICUNA:
                 self.tokenizer.chat_template = vicuna_1_1_template
 
-        # TODO: remove quantization from falcon
-        if model_name in FALCON:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                hf_model_str, device_map="auto", load_in_8bit=True, low_cpu_mem_usage=True, torch_dtype=torch.float16,
-                trust_remote_code=True, cache_dir=CACHE_DIR
-            )
-        elif model_name in OASST:
-            self.model = AutoModelForCausalLM.from_pretrained(
-                hf_model_str, device_map="auto", torch_dtype=torch.bfloat16, cache_dir=CACHE_DIR
-            )
-        else:
-            self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
+        # load all models using their default configuration:
+        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
@@ -108,6 +98,8 @@ class HuggingfaceLocal2(backends.Backend):
                     {"role": "user", "content": "Where was it played?"}
                 ]
         :param model: model name
+        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :param return_full_text: If True, whole input context is returned.
         :return: the continuation
         """
         assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
@@ -129,23 +121,19 @@ class HuggingfaceLocal2(backends.Backend):
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
 
-        model_output_ids = self.model.generate(prompt_tokens,
-                            temperature=self.temperature,
-                            max_new_tokens=max_new_tokens,
-                            return_full_text=return_full_text,
-                            do_sample=do_sample)
+        model_output_ids = self.model.generate(
+            prompt_tokens,
+            temperature=self.temperature,
+            max_new_tokens=max_new_tokens,
+            do_sample=do_sample
+        )
 
         model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)
 
-        # TODO: Check outputs to see if cleanup below is needed
-        # most of this should not be needed with return_full_text=False and skip_special_tokens=True
-        # response_text = generated_text.replace(prompt_text, '')\
-        response_text = model_output.replace(prompt_text, '')\
-            .replace('<pad>', '')\
-            .replace('<s>', '')\
-            .replace('</s>','')\
-            .replace('<|endoftext|>', '')\
-            .replace('<|assistant|>','').strip()
+        if not return_full_text:
+            response_text = model_output.replace(prompt_text, '').strip()
+        else:
+            response_text = model_output.strip()
 
         response = {'response': model_output}
         return prompt, response, response_text
