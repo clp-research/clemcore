@@ -1,6 +1,6 @@
 #!/bin/bash
 # Usage: ./pipeline_huggingfaces.sh
-# Preparation: ./setup.sh
+# Preparation: ./setup_hf.sh
 echo
 echo "==================================================="
 echo " PIPELINE: Starting $0"
@@ -10,10 +10,10 @@ echo
 cp key_default.json key.json
 # only self-play and single player for now
 models=(
-  "koala-13b"
-  "vicuna-13b"
-  "falcon-40b"
-  "oasst-12b"
+  "koala-13B-HF"
+  "Wizard-Vicuna-13B-Uncensored-HF"
+  "falcon-40b-instruct"
+  "oasst-sft-4-pythia-12b-epoch-3.5"
 )
 source venv_hf/bin/activate
 source prepare_path.sh
