@@ -7,7 +7,11 @@ echo " PIPELINE: Starting $0"
 echo "==================================================="
 echo
 # the key file has to exist
-cp key_default.json key.json
+if [ -e key.json ]
+then
+  echo "key.json found."
+else
+  echo "key.json not found! Please make sure that the file exists and contains your HuggingFace access token. This is required for gated models."
 # only self-play and single player for now
 models=(
   "koala-13B-HF"
