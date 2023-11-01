@@ -13,19 +13,34 @@ MODEL_FALCON_7B_INSTRUCT = "falcon-7b-instruct"
 MODEL_FALCON_40B_INSTRUCT = "falcon-40b-instruct"
 MODEL_OPEN_ASSISTANT_12B = "oasst-sft-4-pythia-12b-epoch-3.5"
 MODEL_KOALA_13B = "koala-13B-HF"
-MODEL_VICUNA_13B = "Wizard-Vicuna-13B-Uncensored-HF"
+MODEL_WIZARD_VICUNA_13B = "Wizard-Vicuna-13B-Uncensored-HF"
 MODEL_GOOGLE_FLAN_T5 = "flan-t5-xxl"
-SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B, MODEL_KOALA_13B, MODEL_VICUNA_13B]
+MODEL_WIZARDLM_70B_V1 = "WizardLM-70b-v1.0"
+MODEL_WIZARDLM_13B_V1_2 = "WizardLM-13b-v1.2"
+MODEL_LMSYS_VICUNA_7B = "Vicuna-7B"
+MODEL_LMSYS_VICUNA_13B = "Vicuna-13B"
+MODEL_LMSYS_VICUNA_33B = "Vicuna-33B"
+MODEL_GPT4ALL_13B_SNOOZY = "GPT4All-13B-Snoozy"
+MODEL_CODELLAMA_34B_I = "CodeLlama-34b-Instruct-hf"
+MODEL_ZEPHYR_7B_ALPHA = "zephyr-7b-alpha"
+MODEL_ZEPHYR_7B_BETA = "zephyr-7b-beta"
+SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
+                    MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B,
+                    MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2,
+                    MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY,
+                    MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA]
 
 NAME = "huggingface"
 
 # models that come with proper tokenizer chat template:
-PREMADE_CHAT_TEMPLATE = [MODEL_MISTRAL_7B_INSTRUCT_V0_1]
+PREMADE_CHAT_TEMPLATE = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA,
+                         MODEL_ZEPHYR_7B_BETA]
 # models to apply Orca-Hashes template to:
 ORCA_HASH = [MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B]
 # jinja template for Orca-Hashes format:
 orca_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### User:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'system' %}{{ '### System:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant:\\n' + message['content'] + '\\n\\n' }}{% endif %}{% if loop.last %}{{ '### Assistant:\\n' }}{% endif %}{% endfor %}"
-VICUNA = [MODEL_VICUNA_13B]
+VICUNA = [MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2, MODEL_LMSYS_VICUNA_13B,
+          MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY]
 # jinja template for Vicuna 1.1 format:
 vicuna_1_1_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}"
 KOALA = [MODEL_KOALA_13B]
@@ -53,18 +68,29 @@ class HuggingfaceLocal(backends.Backend):
 
         CACHE_DIR = 'huggingface_cache'
 
-        if model_name in ["Mistral-7B-Instruct-v0.1"]:  # mistralai models
+        if model_name in [MODEL_MISTRAL_7B_INSTRUCT_V0_1]:  # mistralai models
             hf_user_prefix = "mistralai/"
-        elif model_name in ["sheep-duck-llama-2-70b-v1.1", "sheep-duck-llama-2-13b"]:  # Riiid models
+        elif model_name in [MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
+                            MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B]:  # Riiid models
             hf_user_prefix = "Riiid/"
-        elif model_name in ["falcon-7b-instruct", "falcon-40b-instruct"]:  # tiiuae models
+        elif model_name in [MODEL_FALCON_7B_INSTRUCT, MODEL_FALCON_40B_INSTRUCT]:  # tiiuae models
             hf_user_prefix = "tiiuae/"
-        elif model_name in ["oasst-sft-4-pythia-12b-epoch-3.5"]:  # OpenAssistant models
+        elif model_name in [MODEL_OPEN_ASSISTANT_12B]:  # OpenAssistant models
             hf_user_prefix = "OpenAssistant/"
-        elif model_name in ["koala-13B-HF", "Wizard-Vicuna-13B-Uncensored-HF"]:  # TheBloke models
+        elif model_name in [MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B]:  # TheBloke models
             hf_user_prefix = "TheBloke/"
-        elif model_name in ["flan-t5-xxl"]:  # Google models
+        elif model_name in [MODEL_GOOGLE_FLAN_T5]:  # Google models
             hf_user_prefix = "google/"
+        elif model_name in [MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2]:  # WizardLM models
+            hf_user_prefix = "WizardLM/"
+        elif model_name in [MODEL_LMSYS_VICUNA_7B, MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B]:  # lmsys models
+            hf_user_prefix = "lmsys/"
+        elif model_name in [MODEL_GPT4ALL_13B_SNOOZY]:  # nomic-ai models
+            hf_user_prefix = "nomic-ai/"
+        elif model_name in [MODEL_CODELLAMA_34B_I]:  # codellama models
+            hf_user_prefix = "codellama/"
+        elif model_name in [MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA]:  # HuggingFaceH4 models
+            hf_user_prefix = "HuggingFaceH4/"
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
