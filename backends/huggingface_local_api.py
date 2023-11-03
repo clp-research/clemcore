@@ -102,8 +102,7 @@ class HuggingfaceLocal(backends.Backend):
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
-        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR,
-                                                       local_files_only=True)
+        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
             if model_name in ORCA_HASH:
@@ -118,8 +117,7 @@ class HuggingfaceLocal(backends.Backend):
                 self.tokenizer.chat_template = vicuna_1_1_template
 
         # load all models using their default configuration:
-        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR,
-                                                          local_files_only=True)
+        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
@@ -159,12 +157,19 @@ class HuggingfaceLocal(backends.Backend):
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
 
-        model_output_ids = self.model.generate(
-            prompt_tokens,
-            temperature=self.temperature,
-            max_new_tokens=max_new_tokens,
-            do_sample=do_sample
-        )
+        if do_sample:
+            model_output_ids = self.model.generate(
+                prompt_tokens,
+                temperature=self.temperature,
+                max_new_tokens=max_new_tokens,
+                do_sample=do_sample
+            )
+        else:
+            model_output_ids = self.model.generate(
+                prompt_tokens,
+                max_new_tokens=max_new_tokens,
+                do_sample=do_sample
+            )
 
         model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)[0]
 
