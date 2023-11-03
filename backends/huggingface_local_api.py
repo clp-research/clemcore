@@ -156,7 +156,7 @@ class HuggingfaceLocal(backends.Backend):
             do_sample=do_sample
         )
 
-        model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)
+        model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)[0]
 
         # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:
