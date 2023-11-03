@@ -102,7 +102,8 @@ class HuggingfaceLocal(backends.Backend):
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
-        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
+        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR,
+                                                       local_files_only=True)
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
             if model_name in ORCA_HASH:
@@ -117,7 +118,8 @@ class HuggingfaceLocal(backends.Backend):
                 self.tokenizer.chat_template = vicuna_1_1_template
 
         # load all models using their default configuration:
-        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
+        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR,
+                                                          local_files_only=True)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
