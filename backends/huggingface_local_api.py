@@ -3,6 +3,7 @@ from typing import List, Dict, Tuple, Any
 import torch
 import backends
 from transformers import AutoTokenizer, AutoModelForCausalLM
+import os
 
 logger = backends.get_logger(__name__)
 
@@ -66,7 +67,14 @@ class HuggingfaceLocal(backends.Backend):
     def load_model(self, model_name):
         logger.info(f'Start loading huggingface model: {model_name}')
 
-        CACHE_DIR = 'huggingface_cache'
+        # model cache handling
+        root_data_path = os.path.join(os.path.abspath(os.sep), "data")
+        # check if root/data exists:
+        if not os.path.isdir(root_data_path):
+            logger.info(f"{root_data_path} does not exist, creating directory.")
+            # create root/data:
+            os.mkdir(root_data_path)
+        CACHE_DIR = os.path.join(root_data_path, "huggingface_cache")
 
         if model_name in [MODEL_MISTRAL_7B_INSTRUCT_V0_1]:  # mistralai models
             hf_user_prefix = "mistralai/"
