@@ -3,29 +3,54 @@
 # Preparation: ./setup_hf.sh
 echo
 echo "==================================================="
-echo " PIPELINE: Starting $0"
+echo "PIPELINE: Starting"
 echo "==================================================="
 echo
-# the key file has to exist
-if [ -e key.json ]
-then
-  echo "key.json found."
-else
-  echo "key.json not found! Please make sure that the file exists and contains your HuggingFace access token. This is required for gated models."
-# only self-play and single player for now
-models=(
-  "koala-13B-HF"
-  "Wizard-Vicuna-13B-Uncensored-HF"
-  "falcon-40b-instruct"
-  "oasst-sft-4-pythia-12b-epoch-3.5"
+game_runs=(
+  # Single-player: privateshared
+  "privateshared koala-13B-HF"
+  "privateshared Wizard-Vicuna-13B-Uncensored-HF"
+  "privateshared falcon-40b-instruct"
+  "privateshared oasst-sft-4-pythia-12b-epoch-3.5"
+  # Single-player: wordle
+  "wordle koala-13B-HF"
+  "wordle Wizard-Vicuna-13B-Uncensored-HF"
+  "wordle falcon-40b-instruct"
+  "wordle oasst-sft-4-pythia-12b-epoch-3.5"
+  # Single-player: wordle_withclue
+  "wordle_withclue koala-13B-HF"
+  "wordle_withclue Wizard-Vicuna-13B-Uncensored-HF"
+  "wordle_withclue falcon-40b-instruct"
+  "wordle_withclue oasst-sft-4-pythia-12b-epoch-3.5"
+  # Multi-player taboo
+  "taboo koala-13B-HF--koala-13B-HF"
+  "taboo Wizard-Vicuna-13B-Uncensored-HF--Wizard-Vicuna-13B-Uncensored-HF"
+  "taboo falcon-40b-instruct--falcon-40b-instruct"
+  "taboo oasst-sft-4-pythia-12b-epoch-3.5--oasst-sft-4-pythia-12b-epoch-3.5"
+  # Multi-player referencegame
+  "referencegame koala-13B-HF--koala-13B-HF"
+  "referencegame Wizard-Vicuna-13B-Uncensored-HF--Wizard-Vicuna-13B-Uncensored-HF"
+  "referencegame falcon-40b-instruct--falcon-40b-instruct"
+  "referencegame oasst-sft-4-pythia-12b-epoch-3.5--oasst-sft-4-pythia-12b-epoch-3.5"
+  # Multi-player imagegame
+  "imagegame koala-13B-HF--koala-13B-HF"
+  "imagegame Wizard-Vicuna-13B-Uncensored-HF--Wizard-Vicuna-13B-Uncensored-HF"
+  "imagegame falcon-40b-instruct--falcon-40b-instruct"
+  "imagegame oasst-sft-4-pythia-12b-epoch-3.5--oasst-sft-4-pythia-12b-epoch-3.5"
+  # Multi-player wordle_withcritic
+  "wordle_withcritic koala-13B-HF--koala-13B-HF"
+  "wordle_withcritic Wizard-Vicuna-13B-Uncensored-HF--Wizard-Vicuna-13B-Uncensored-HF"
+  "wordle_withcritic falcon-40b-instruct--falcon-40b-instruct"
+  "wordle_withcritic oasst-sft-4-pythia-12b-epoch-3.5--oasst-sft-4-pythia-12b-epoch-3.5"
 )
-source venv_hf/bin/activate
-source prepare_path.sh
-# Run the benchmark (one model after the other; they consume limited GPU memory)
-# but play all games directly (since the loading into memory takes so much time)
-for model in "${models[@]}"; do
-  { time python3 scripts/cli.py -m "$model" -t 0.0 run all; } 2>&1 | tee runtime.all."$model".log
+total_runs=${#game_runs[@]}
+echo "Number of benchmark runs: $total_runs"
+current_runs=1
+for run_args in "${game_runs[@]}"; do
+  echo "Run $current_runs of $total_runs: $run_args"
+  bash -c "./run.sh ${run_args}"
+  ((current_runs++))
 done
-echo "========================================================================="
+echo "==================================================="
 echo "PIPELINE: Finished"
-echo "========================================================================="
+echo "==================================================="
