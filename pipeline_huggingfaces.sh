@@ -1,6 +1,10 @@
 #!/bin/bash
 # Usage: ./pipeline_huggingfaces.sh
 # Preparation: ./setup_hf.sh
+# activate HF venv:
+source venv_hf/bin/activate
+source prepare_path.sh
+# run pipeline:
 echo
 echo "==================================================="
 echo "PIPELINE: Starting"
