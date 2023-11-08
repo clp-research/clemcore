@@ -165,6 +165,9 @@ class HuggingfaceLocal(backends.Backend):
         if self.temperature > 0.0:
             do_sample = True
 
+        # test to check if temperature is properly set on this Backend object:
+        logger.info(f"Currently used temperature for this instance of HuggingfaceLocal: {self.temperature}")
+
         if do_sample:
             model_output_ids = self.model.generate(
                 prompt_tokens,
