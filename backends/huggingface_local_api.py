@@ -103,7 +103,8 @@ class HuggingfaceLocal(backends.Backend):
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
-        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
+        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR,
+                                                       verbose=False)
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
             if model_name in ORCA_HASH:
@@ -151,17 +152,12 @@ class HuggingfaceLocal(backends.Backend):
         if self.temperature > 0.0:
             do_sample = True
 
-        # stop excessive tokenizer warnings:
-        tokenizer_log_level_before = transformers.logging.get_verbosity()
-        transformers.logging.set_verbosity_error()
         # apply chat template & tokenize:
         prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
 
         prompt_text = self.tokenizer.apply_chat_template(messages, tokenize=False)
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
-        # return to prior verbosity:
-        transformers.logging.set_verbosity(tokenizer_log_level_before)
 
         if do_sample:
             model_output_ids = self.model.generate(
