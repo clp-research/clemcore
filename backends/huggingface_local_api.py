@@ -147,10 +147,11 @@ class HuggingfaceLocal(backends.Backend):
             self.load_model(model)
             logger.info(f"Finished loading huggingface model: {model}")
 
-        # greedy decoding:
-        do_sample: bool = False
-        if self.temperature > 0.0:
-            do_sample = True
+        # flatten consecutive user messages:
+        for msg_idx, message in enumerate(messages):
+            if msg_idx > 0 and message['role'] == "user" and messages[msg_idx - 1]['role'] == "user":
+                messages[msg_idx - 1]['content'] += f" {message['content']}"
+                del messages[msg_idx]
 
         # apply chat template & tokenize:
         prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
@@ -158,6 +159,11 @@ class HuggingfaceLocal(backends.Backend):
         prompt_text = self.tokenizer.apply_chat_template(messages, tokenize=False)
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
+
+        # greedy decoding:
+        do_sample: bool = False
+        if self.temperature > 0.0:
+            do_sample = True
 
         if do_sample:
             model_output_ids = self.model.generate(
