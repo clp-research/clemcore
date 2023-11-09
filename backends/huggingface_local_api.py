@@ -103,8 +103,8 @@ class HuggingfaceLocal(backends.Backend):
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
-        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR,
-                                                       verbose=False)
+        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+                                                       cache_dir=CACHE_DIR, verbose=False)
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
             if model_name in ORCA_HASH:
