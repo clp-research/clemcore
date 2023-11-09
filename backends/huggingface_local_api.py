@@ -146,6 +146,7 @@ class HuggingfaceLocal(backends.Backend):
         if not self.model_loaded:
             self.load_model(model)
             logger.info(f"Finished loading huggingface model: {model}")
+            logger.info(f"Model device map: {self.model.hf_device_map}")
 
         # flatten consecutive user messages:
         for msg_idx, message in enumerate(messages):
