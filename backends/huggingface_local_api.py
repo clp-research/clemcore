@@ -156,6 +156,7 @@ class HuggingfaceLocal(backends.Backend):
 
         # apply chat template & tokenize:
         prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
+        prompt_tokens = prompt_tokens.to(self.device)
 
         prompt_text = self.tokenizer.apply_chat_template(messages, tokenize=False)
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
