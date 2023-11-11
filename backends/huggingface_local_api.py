@@ -119,7 +119,8 @@ class HuggingfaceLocal(backends.Backend):
                 self.tokenizer.chat_template = vicuna_1_1_template
 
         # load all models using their default configuration:
-        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", cache_dir=CACHE_DIR)
+        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+                                                          cache_dir=CACHE_DIR)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
