@@ -14,6 +14,7 @@ from tqdm import tqdm
 import clemgame.metrics as clemmetrics
 
 EVAL_DIR = 'results_eval'
+RESULTS_DIR = './results'
 SEP = '---'
 FLOAT_FORMAT = "%.2f"
 
@@ -128,10 +129,10 @@ def load_json(path: str) -> dict:
     return data
 
 
-def load_scores(game_name: str = None) -> dict:
+def load_scores(game_name: str = None, path: str = RESULTS_DIR) -> dict:
     """Get all turn and episodes scores and return them in a dictionary."""
     # https://stackoverflow.com/a/18394205
-    score_files = list(Path("./results").rglob("*scores.json"))
+    score_files = list(Path(path).rglob("*scores.json"))
     print(f'Loading {len(score_files)} JSON files.')
     scores = {}
     for path in tqdm(score_files, desc="Loading scores"):
@@ -153,7 +154,7 @@ def load_scores(game_name: str = None) -> dict:
 def load_interactions(game_name: str = None) -> dict:
     """Get all interaction records and return them in a dictionary."""
     # https://stackoverflow.com/a/18394205
-    interaction_files = list(Path("./results").rglob("*interactions.json"))
+    interaction_files = list(Path(RESULTS_DIR).rglob("*interactions.json"))
     print(f'Loading {len(interaction_files)} JSON files.')
     interactions = {}
     for path in tqdm(interaction_files, desc="Loading interactions"):

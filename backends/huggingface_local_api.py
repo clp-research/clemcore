@@ -2,6 +2,7 @@
 from typing import List, Dict, Tuple, Any
 import torch
 import backends
+
 import transformers
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
@@ -32,11 +33,13 @@ SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA
                     MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY,
                     MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA]
 
+
 NAME = "huggingface"
 
 # models that come with proper tokenizer chat template:
 PREMADE_CHAT_TEMPLATE = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA,
                          MODEL_ZEPHYR_7B_BETA]
+
 # models to apply Orca-Hashes template to:
 ORCA_HASH = [MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B]
 # jinja template for Orca-Hashes format:
@@ -105,6 +108,7 @@ class HuggingfaceLocal(backends.Backend):
 
         self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                        cache_dir=CACHE_DIR, verbose=False)
+
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
             if model_name in ORCA_HASH:

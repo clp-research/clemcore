@@ -683,8 +683,10 @@ class GameBenchmark(GameResourceLocator):
                                  f"Will run with: {dialogue_partners}")
 
             if not dialogue_partners:
-                raise ValueError(f"{self.name}: Neither 'dialogue_partners' set in experiment instance "
-                                 "nor 'model_name' given as run arg")
+                message = (f"{self.name}: Neither 'dialogue_partners' set in experiment instance"
+                           f" nor 'model_name' given as run arg")
+                stdout_logger.error(message)
+                raise ValueError(message)
 
             for dialogue_pair in dialogue_partners:
                 if len(dialogue_pair) == 1 and self.is_single_player():
@@ -698,9 +700,11 @@ class GameBenchmark(GameResourceLocator):
                                                                           for model_name in dialogue_pair])
                     stdout_logger.info(f"With dialog partners: {dialogue_pair_desc}")
                 else:
-                    raise ValueError(f"Invalid model pairing {dialogue_pair} "
-                                     f"for a {'single' if self.is_single_player() else 'multi'}-player game."
-                                     f"For single-player expected only a single model, otherwise a pair.")
+                    message = (f"Invalid model pairing {dialogue_pair}"
+                               f" for a {'single' if self.is_single_player() else 'multi'}-player game."
+                               f" For single-player expected only a single model, otherwise a pair.")
+                    stdout_logger.error(message)
+                    raise ValueError(message)
                 episode_counter = 0
 
                 self.logger.info("Activity: %s Experiment: %s Partners: %s Episode: %d",

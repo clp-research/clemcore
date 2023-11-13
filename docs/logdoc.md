@@ -175,11 +175,15 @@ Games can have multiple turn-level scores and episode-level scores.
 
 Use ```log_turn_score``` to log a score name and its value for a given turn index
 and ```log_episode_score``` to log a score name and its value for the whole
-episode. Episode scores are usually a measure of game success.
+episode. Episode scores are usually measures of game success.
 
 The score results will be stored to ```scores.json``` which contains:
 - ```turn scores```: the turn-level scores for each game turn.
 - ```episode scores```: the episode-level scores for the episode.
+
+You can log as many scores as you wish. The minimal requirements is to log the episode-level scores defined in ```clemgame/metrics.py``` (see the paper's appendix for details).
+
+**Important**: if the game was aborted, all episode-level scores should be ```np.nan``` and turn-level scores can be logged up to the turn when the game was aborted. If the game was won or lost, all metrics should be a numerical value. This is specially revelant for the main score of each game, so that the evaluation script correctly distinguishes %played and computes the main score only for actually played games.  
 
 Here is an example of how the ```scores.json``` file of an episode will look like:
 

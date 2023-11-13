@@ -1,68 +1,300 @@
 # The Lightweight Dialogue Game framework
 
-## How to add and run your own game
-
-Games are interactions between two agents that are administrated by a game master.
-The game master handles all game logic and all messages are passed via the game master.
-The game master evaluates whether an agent has made a valid move, when the dialog ends, and what evaluation measures are logged.
-
-### The GameMaster
-
-The game master is implemented as a `GameMaster` class.
-The `GameMaster` does
-
-- access all relevant resources via `load_file()` or `load_json()`
-- `setup()` the concrete games instances
-- coordinate the `play()` of the game instances (up to multiple episodes)
-- record the game episodes (see ```logdoc.md``` for details)
-- call a `GameEvaluator` to `evaluate()` the game records XXX still-correct?
-
-The `GameMaster` must implement the following methods:
-
-1. `_on_setup(self, **kwargs)`: A method that instantiates a particular game episode that is described by the game instance (the `kwargs`)
-
-For example, the taboo game is set up as a game between two players, with a maximum number of turns and a list of target words and related words. The game state also includes whether a description was valid and a whether a guess was correct or not:
-  ```python
-    def _on_setup(self, **game_instance):
-        self.game_instance = game_instance
-
-        self.describer = WordDescriber(self.player_backends[0], self.max_turns)
-        self.guesser = WordGuesser(self.player_backends[1])
-
-        self.add_player(self.describer)
-        self.add_player(self.guesser)
-
-        self.target_word = game_instance["target_word"]
-        self.related_words = game_instance["related_word"]
-
-        self.invalid_response = False
-        self.target_in_description = False
-        self.guess_word = None
-
-  ```
-
-2. `_does_game_proceed(self)`: A method that returns `True` if the game should proceed at a particular game state or `False` if not.
-
-For example, the taboo game ends when one of the players gave an invalid response (e.g. a response that does not adhere to the expected format), when the describer used the target word in the description, when the guess was correct or when the maximum number of turns was reached:
-```python
-    def _does_game_proceed(self):
-        if self.invalid_response:
-            return False
-        if self.target_in_description:
-            return False  # stop game if clue is wrong (for now)
-        if self.guess_word == self.target_word:
-            return False
-        if self.current_turn >= self.max_turns:
-            return False
-        return True
+The benchmark is run for a particular game -- for example the taboo game -- using the follow command:  
 
 ```
+python3 scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run taboo
+```
 
-### The Player
+From the call we already see that taboo is a two-player game because we need to provide a descriptor for two models.
+These models are supposed to play certain roles in the game, here a clue giver and a guesser. 
+
+### GameBenchmark class
+
+When the command is executed then the `run` routine in `benchmark.py` 
+will determine the game code that needs to be invoked.
+For this the benchmark code loads all **subclasses** of type `GameBenchmark` and calls `setup()` 
+on them. The setup method already loads the game instances (`self.load_json("in/instances.json")`). 
+After this each game benchmark **subclass** is asked if it applies to the given game name, here `taboo`.  
+
+Therefore, such a **subclass** has to be provided with a specific game name 
+for each game to be run in the benchmark, for example for taboo:
+
+```
+class TabooGameBenchmark(GameBenchmark):
+
+    def __init__(self):
+        super().__init__(GAME_NAME)
+
+    def get_description(self):
+        return "Taboo game between two agents where one has to describe a word for the other to guess."
+
+    def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster:
+        return Taboo(experiment, player_backends)
+        
+    def is_single_player(self) -> bool:
+        return False
+```
+
+The respective subclass simply provides the `GAME_NAME=taboo` and the `GameBenchmark` super class is taking care of most
+of the necessary plumbing and executes the main logic for a benchmark run (calling the game master, loading files etc.).
+
+Aside: The return value of `get_description` is shown for the `python3 scripts/cli.py ls` command.
+
+Then the benchmark code checks if your game is single or multiplayer game (the default is multi-player), 
+so that the `-m gpt-3.5-turbo--gpt-3.5-turbo` option is properly handled. 
+Then the `run(dialog_pair,temperature)` method is called which is already implemented by `GameBenchmark`.
+This is when the `GameMaster` becomes relevant (which should be returned by your `create_game_master()` factory method).
+
+### GameMaster class
+
+Now for each experiment in the `instances.json` -- that has been loaded on_setup() -- the game benchmark code 
+applies the given dialog pair (or if not given tries to determine the dialogue pair from the instance information).
+
+Aside: There is also the option to provide multiple dialogue pairings in the experiments in `instances.json`. 
+Therefore, the code must check again, if these pairing align to the nature of the game (single or multiplayer).
+
+Each experiment represents a specific condition for the game, for example the assumed difficulty of the game instances
+and holds the actual game instances themselves. Then for each game instance a `GameMaster` is created 
+by using the `self.create_game_master()` method of the `GameBenchmark`. The `GameMaster` is in charge of actually 
+playing a single instance of the game. 
+For taboo this would be a target word to be guessed and the words that are not allowed to be said.
+The relevant code looks as follows:
+
+```
+try:
+   game_master = self.create_game_master(experiment_config, dialogue_pair)
+   game_master.setup(**game_instance)
+   game_master.play()
+   game_master.store_records(game_id, game_record_dir)
+except Exception:  # continue with other episodes if something goes wrong
+   self.logger.exception(f"{self.name}: Exception for episode {game_id} (but continue)")
+```
+
+We see that game master receives the game instance information on `setup()`. 
+Then coordinates the `play()` of the actual game. And finally calls `store_records` to stores 
+the interactions between the players and the game master during the turns in the `game_record_dir` 
+(this directory is prepared by the `GameBenchmark`).
+
+### Overview
+
+These are the important classes and methods to be implemented for your own game.
+
+A`MyGameBenchmark` that extends `GameBenchmark` and implements:
+- `def __init__(self)` with call to `super().__init__(GAME_NAME)`
+- `def get_description(self)` that returns a description
+- `def is_single_player(self) -> bool` that determines if one player is sufficient
+- `def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster` that returns `MyGameMaster` for my game
+
+A`MyGameMaster` that extends `GameMaster` and implements:
+- `def __init__(self, name: str, experiment: Dict, player_backends: List[str] = None):` that receives the experiment information and the players that play the game. These can be simply delegated to `super()`.
+- `def setup(self, **game_instance)` which sets the information you specify in `instances.json`
+- `def play(self)` that executes the game logic and performs the turns in the game
+- `def compute_scores(self, episode_interactions: Dict)` that is called later when the user executes the `python3 scripts/cli.py score taboo` command
+
+Note that the `store_records` method is already implemented by `GameRecorder` 
+and every `GameMaster` extends that class. This means that the method must not be implemented.
+
+### DialogueGameMaster
+
+Now we can see that `MyGameMaster` has all the freedom to implement `play()` which might be in some cases a nice thing.
+In other cases we already know that the gameplay will be executed in turns of for example two players.
+For these cases you can extend from `DialogueGameMaster` a more conrete subclass of `GameMaster`.
+
+The dialogue game master defines a play routine that is as follows:
+
+```python
+ def play(self) -> None:
+     self._on_before_game()
+     while self._does_game_proceed():
+         self.log_next_turn()  # not sure if we want to do this always here (or add to _on_before_turn)
+         self._on_before_turn(self.current_turn)
+         self.logger.info(f"{self.name}: %s turn: %d", self.name, self.current_turn)
+         for player in self.__player_sequence():
+             if not self._does_game_proceed():
+                 break  # potentially stop in between player turns
+             # GM -> Player
+             history = self.messages_by_names[player.descriptor]
+             assert history, f"messages history must not be empty for {player.descriptor}"
+
+             last_entry = history[-1]
+             assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
+                                                       "b.c. this would be the role of the current player"
+             message = last_entry["content"]
+
+             action = {'type': 'send message', 'content': message}
+             self.log_event(from_='GM', to=player.descriptor, action=action)
+
+             _prompt, _response, response_message = player(history, self.current_turn)
+
+             # Player -> GM
+             action = {'type': 'get message', 'content': response_message}
+             self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
+
+             # GM -> GM
+             self.__validate_parse_and_add_player_response(player, response_message)
+         self._on_after_turn(self.current_turn)
+         self.current_turn += 1
+     self._on_after_game()
+```
+
+Let's have a look on this routine. As long as the game proceeds (`_does_game_proceed()`):
+
+**GM -> Player.**
+At a player's turn, the player receives its view on the history of messages (`messages_by_names`) and the last
+messages is logged (`log_event`) as a `GM->Player` event in the interactions log. 
+Then player is asked to create a response based on the history and the current turn index.
+
+**Player -> GM.**
+The player response is received and logged as a `Player->GM` event in the interactions log.
+
+**GM -> GM.**
+The game master received the player response and validates its content. When the 
+validation is successful then the response is added to all player's history and 
+the next player's turn is performed with the same procedure.
+
+This shows that the logging is already done systematically when using the `DialogueGameMaster`.
+Still, there are several hooks for you to customize the gameplay:
+
+- `def _on_setup(self, **kwargs)` which must be implemented. Use `add_player()` here to add the players.
+- `def _does_game_proceed(self) -> bool` which must be implemented. Decides if the game can continue.
+- `def _validate_player_response(self, player: Player, utterance: str) -> bool` to decide if an utterance should be added. This is also the place to check for game end conditions. 
+- `def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]` to decide if a response utterance should be modified. If not simply return the utterance.
+        When a modified utterance and a true value is returned, then a 'parse' event is logged.
+- `def _after_add_player_response(self, player: Player, utterance: str)` to add the utterance to other player's history, if necessary.
+        To do this use the method `add_user_message(other_player,utterance)`.
+- the general game hooks `_on_before_game()` and `_on_before_game()`
+- the general turn hooks `_on_before_turn(turn_idx)` and `_on_after_turn(turn_idx)`
+
+Overall the game master acts here as a moderator between the players and the players actually never directly talk to each other.
+
+For the `taboo` game we use the setup hook to set instance specific values and
+to setup the `WordDescriber` and `WordGuesser` which are the `Player` for the game.
+The player could also be LLMs defined by the `player_backends` descriptor string.
+
+```python
+ def _on_setup(self, **game_instance):
+     logger.info("_on_setup")
+     self.game_instance = game_instance
+
+     self.describer = WordDescriber(self.player_backends[0], self.max_turns)
+     self.guesser = WordGuesser(self.player_backends[1])
+
+     self.add_player(self.describer)
+     self.add_player(self.guesser)
+```
+
+We use the general game hook to set the initial prompts for both players
+
+```python
+def _on_before_game(self):
+  self.add_user_message(self.describer, self.describer_initial_prompt)
+  self.add_user_message(self.guesser, self.guesser_initial_prompt)
+```
+
+Then we must decide if the guessing should continue like
+
+```python
+ def _does_game_proceed(self):
+     if self.invalid_response:
+         self.log_to_self("invalid format", "abort game")
+         return False
+     if self.clue_error is not None:
+         return False 
+     if self.current_turn >= self.max_turns:
+         self.log_to_self("max turns reached", str(self.max_turns))
+         return False
+     return True
+```
+
+And we have to check if the player response is actually in the valid format:
+
+```python
+def _validate_player_response(self, player, utterance: str) -> bool:
+  if player == self.guesser:
+      if not utterance.startswith("GUESS:"):
+          self.invalid_response = True
+          return False
+  if player == self.describer:
+      if not utterance.startswith("CLUE:"):
+          self.invalid_response = True
+          return False
+      errors = check_clue(utterance, self.target_word, self.related_words)
+      if errors:
+          error = errors[0]
+          self.clue_error = error
+          return False
+  self.log_to_self("valid format", "continue")
+  return True
+```
+
+We see that this is also the place to potentially detect violations of the game rules.
+Now we can also modify the message and for example log the responses without the prefixes.
+
+```python
+def _on_parse_response(self, player, utterance: str) -> Tuple[str, bool]:
+  if player == self.guesser:
+      utterance = utterance.replace("GUESS:", "")
+      self.guess_word = utterance.lower()
+      self.log_to_self("guess", self.guess_word)
+  if player == self.describer:
+      utterance = utterance.replace("CLUE:", "")
+      self.log_to_self("clue", utterance)
+  return utterance, False
+```
+
+The (possibly modified) response is then automatically added the player's history which is acting.
+Still, for two-player games we have to add the response to the history of the other player as well.
+
+```python
+def _after_add_player_response(self, player, utterance: str):
+    if player == self.describer:
+        utterance = f"CLUE: {utterance}."
+        self.add_user_message(self.guesser, utterance)
+    if player == self.guesser:
+        if self.guess_word != self.target_word:
+            utterance = f"GUESS: {self.guess_word}."
+            self.add_user_message(self.describer, utterance)
+```
+
+Finally, we need to use the general turn method to additionally log the initial prompt for the second player 
+and not only the most recent one (as automatically done by the `DialogueGameMaster`).
+
+```python
+def _on_before_turn(self, turn_idx: int):
+    if turn_idx == 0:
+        self.log_message_to(self.guesser, self.guesser_initial_prompt)
+```
+
+### GameResourceLocator class
+
+Note that the game masters are subclasses of the game resource locator.
+This class provides methods to access, load and store files from within the game directory.
+
+You should access resource only via the game resource locator! The locator knows how to refer to them.
+For example use: `gm.load_json("my_file")` which is located directly at your game directory `game/my_file.json`.
+You can access subdirectories by giving `gm.load_json("sub/my_file")` in `game/sub/my_file.json`.
+
+The expected game folder structure would be as follows:
+```
+games
+  ├──mygame
+  │     ├── in
+  │     │   └── instances.json
+  │     ├── resources
+  │     │   └── initial_prompt.template
+  │     ├── instancegenerator.py
+  │     └── master.py
+  ...
+```
+
+The resource locator tries to load files from the respective `mygame` directory in the games folder.
+
+### Player class
 
 A `Player` object receives `messages` and returns a textual response.
 A player generates this response either as a `_api_response()`
-(calling a deployed cLLM) or by implemented behavior in `_static_response()`.
+(calling a deployed cLLM) or by implemented behavior in `_custom_response()`.
 
 For example, the taboo game guesser agent can be implemented as a player that can be a cLLM with a static response that always guesses the word "pear":
 
@@ -74,12 +306,12 @@ class WordGuesser(Player):
    def __init__(self, model_name):
       super().__init__(model_name)
 
-   def _static_response(self, messages, turn_idx):
+   def _custom_response(self, messages, turn_idx):
       # mock response
       return f'Pear'
 ```
 
-### Generating game instances
+### GameInstanceGenerator class
 
 In order to let agents play a game, you need a description that instantiate single episodes.
 For example, in the taboo game, each episode is played with a specific target word that also comes with a list of other, related and forbidden words.
@@ -147,7 +379,7 @@ Add to the module a `master.py` that implements the `GameMaster`.
 ### Running experiments with your game
 
 ```
-python3 scripts/cli.py -m gpt-3.5-turbo [-e greet_en] hellogame
+python3 scripts/cli.py -m gpt-3.5-turbo [-e greet_en] run hellogame
 ```
 
 Note: With -e you can specify specific experiments to run.

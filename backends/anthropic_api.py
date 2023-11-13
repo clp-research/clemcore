@@ -2,12 +2,15 @@ from typing import List, Dict, Tuple, Any
 from retry import retry
 import anthropic
 import backends
+import json
 
 logger = backends.get_logger(__name__)
 
 MODEL_CLAUDE_13 = "claude-v1.3"
 MODEL_CLAUDE_13_100K = "claude-v1.3-100k"
-SUPPORTED_MODELS = [MODEL_CLAUDE_13, MODEL_CLAUDE_13_100K]
+MODEL_CLAUDE_INSTANT_12 = "claude-instant-1.2"
+MODEL_CLAUDE_2 = "claude-2"
+SUPPORTED_MODELS = [MODEL_CLAUDE_13, MODEL_CLAUDE_13_100K, MODEL_CLAUDE_INSTANT_12, MODEL_CLAUDE_2]
 
 NAME = "anthropic"
 
@@ -15,7 +18,7 @@ NAME = "anthropic"
 class Anthropic(backends.Backend):
     def __init__(self):
         creds = backends.load_credentials(NAME)
-        self.client = anthropic.Client(creds[NAME]["api_key"])
+        self.client = anthropic.Anthropic(api_key=creds[NAME]["api_key"])
         self.temperature: float = -1.
 
     @retry(tries=3, delay=0, logger=logger)
@@ -41,14 +44,16 @@ class Anthropic(backends.Backend):
 
         prompt += anthropic.AI_PROMPT
 
-        response = self.client.completion(
+        completion = self.client.completions.create(
             prompt=prompt,
             stop_sequences=[anthropic.HUMAN_PROMPT, '\n'],
             model=model,
             temperature=self.temperature,
             max_tokens_to_sample=100
         )
-        response_text = response['completion'].strip()
+
+        response_text = completion.completion.strip()
+        response = {'response': response_text}
         return prompt, response, response_text
 
     def supports(self, model_name: str):

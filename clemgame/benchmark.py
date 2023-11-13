@@ -12,7 +12,7 @@ stdout_logger = clemgame.get_logger("benchmark.run")
 
 def list_games():
     stdout_logger.info("Listing benchmark games:")
-    games_list = load_benchmarks(dialog_pair=None, do_setup=False)
+    games_list = load_benchmarks(do_setup=False)
     if not games_list:
         stdout_logger.info(" No games found. You can create a new game module in a sibling 'games' directory.")
     games_list = sorted(games_list, key=lambda gb: gb.name)

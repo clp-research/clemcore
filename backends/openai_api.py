@@ -7,10 +7,13 @@ import backends
 
 logger = backends.get_logger(__name__)
 
-MODEL_GPT_4 = "gpt-4"
-MODEL_GPT_35 = "gpt-3.5-turbo"
+MODEL_GPT_4_1106_PREVIEW = "gpt-4-1106-preview"
+MODEL_GPT_4_0613 = "gpt-4-0613"
+MODEL_GPT_4_0314 = "gpt-4-0314"
+MODEL_GPT_35_1106 = "gpt-3.5-turbo-1106"
+MODEL_GPT_35_0613 = "gpt-3.5-turbo-0613"
 MODEL_GPT_3 = "text-davinci-003"
-SUPPORTED_MODELS = [MODEL_GPT_4, MODEL_GPT_35, MODEL_GPT_3]
+SUPPORTED_MODELS = [MODEL_GPT_4_0314, MODEL_GPT_4_0613, MODEL_GPT_4_1106_PREVIEW, MODEL_GPT_35_1106, MODEL_GPT_35_0613, MODEL_GPT_3]
 
 NAME = "openai"
 
@@ -22,7 +25,7 @@ class OpenAI(backends.Backend):
         if "organisation" in creds[NAME]:
             openai.organization = creds[NAME]["organisation"]
         openai.api_key = creds[NAME]["api_key"]
-        self.chat_models: List = ["gpt-4", "gpt-3.5-turbo"]
+        self.chat_models: List = ["gpt-3.5-turbo-0613", "gpt-3.5-turbo-1106", "gpt-4-0314", "gpt-4-0613", "gpt-4-1106-preview"]
         self.temperature: float = -1.
 
     def list_models(self):
