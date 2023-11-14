@@ -163,7 +163,7 @@ class HuggingfaceLocal(backends.Backend):
         prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
         prompt_tokens = prompt_tokens.to(self.device)
 
-        prompt_text = self.tokenizer.apply_chat_template(messages, tokenize=False)
+        prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
 
@@ -189,7 +189,7 @@ class HuggingfaceLocal(backends.Backend):
                 do_sample=do_sample
             )
 
-        model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)[0]
+        model_output = self.tokenizer.batch_decode(model_output_ids)[0]
 
         # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:

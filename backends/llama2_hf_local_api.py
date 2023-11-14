@@ -100,7 +100,7 @@ class Llama2LocalHF(backends.Backend):
             prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
             prompt_tokens = prompt_tokens.to(self.device)
             # apply chat template for records:
-            prompt_text = self.tokenizer.apply_chat_template(messages, tokenize=False)
+            prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
             prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                       "temperature": self.temperature}
 
@@ -119,8 +119,7 @@ class Llama2LocalHF(backends.Backend):
                     max_new_tokens=max_new_tokens
                 )
 
-            model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True,
-                                                       clean_up_tokenization_spaces=False)[0]
+            model_output = self.tokenizer.batch_decode(model_output_ids)[0]
 
             response = {
                 "role": "assistant",
