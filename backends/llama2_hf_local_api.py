@@ -152,8 +152,7 @@ class Llama2LocalHF(backends.Backend):
                     max_new_tokens=max_new_tokens
                 )
 
-            model_output = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True,
-                                                       clean_up_tokenization_spaces=False)[0]
+            model_output = self.tokenizer.batch_decode(model_output_ids)[0]
 
             response_text = model_output.replace(prompt, '').strip()
 
