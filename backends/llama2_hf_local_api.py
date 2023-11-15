@@ -95,6 +95,9 @@ class Llama2LocalHF(backends.Backend):
                 if msg_idx > 0 and message['role'] == "user" and messages[msg_idx - 1]['role'] == "user":
                     messages[msg_idx - 1]['content'] += f" {message['content']}"
                     del messages[msg_idx]
+                elif msg_idx > 0 and message['role'] == "assistant" and messages[msg_idx - 1]['role'] == "assistant":
+                    messages[msg_idx - 1]['content'] += f" {message['content']}"
+                    del messages[msg_idx]
 
             # apply chat template & tokenize
             prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
