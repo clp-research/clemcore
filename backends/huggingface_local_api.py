@@ -197,10 +197,13 @@ class HuggingfaceLocal(backends.Backend):
         # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:
             response_text = model_output.replace(prompt_text, '').strip()
+            # remove llama2 EOS token at the end of output:
+            if response_text[-4:len(response_text)] == "</s>":
+                response_text = response_text[:-4]
         else:
             response_text = model_output.strip()
 
-        response = {'response': model_output}
+        response = {'response': response_text}
         return prompt, response, response_text
 
     def supports(self, model_name: str):
