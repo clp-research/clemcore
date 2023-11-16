@@ -6,6 +6,7 @@ import backends
 import transformers
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
+import copy
 
 logger = backends.get_logger(__name__)
 
@@ -153,17 +154,20 @@ class HuggingfaceLocal(backends.Backend):
             logger.info(f"Finished loading huggingface model: {model}")
             logger.info(f"Model device map: {self.model.hf_device_map}")
 
+        # deepcopy messages to prevent reference issues:
+        current_messages = copy.deepcopy(messages)
+
         # flatten consecutive user messages:
-        for msg_idx, message in enumerate(messages):
-            if msg_idx > 0 and message['role'] == "user" and messages[msg_idx - 1]['role'] == "user":
-                messages[msg_idx - 1]['content'] += f" {message['content']}"
-                del messages[msg_idx]
-            elif msg_idx > 0 and message['role'] == "assistant" and messages[msg_idx - 1]['role'] == "assistant":
-                messages[msg_idx - 1]['content'] += f" {message['content']}"
-                del messages[msg_idx]
+        for msg_idx, message in enumerate(current_messages):
+            if msg_idx > 0 and message['role'] == "user" and current_messages[msg_idx - 1]['role'] == "user":
+                current_messages[msg_idx - 1]['content'] += f" {message['content']}"
+                del current_messages[msg_idx]
+            elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1]['role'] == "assistant":
+                current_messages[msg_idx - 1]['content'] += f" {message['content']}"
+                del current_messages[msg_idx]
 
         # apply chat template & tokenize:
-        prompt_tokens = self.tokenizer.apply_chat_template(messages, return_tensors="pt")
+        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, return_tensors="pt")
         prompt_tokens = prompt_tokens.to(self.device)
 
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
