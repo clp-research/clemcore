@@ -37,20 +37,23 @@ class Cohere(backends.Backend):
 
         # all other messages except the last one. It is passed to the API with the variable message.
         for message in messages[:-1]:
-            m = {"user_name": "", "text": ""}
-            m["text"] = message["content"]
+
             if message['role'] == 'assistant':
-                m["user_name"] = "Chatbot"
+                m = {"user_name": "Chatbot", "text": ""}
+                m["text"] = message["content"]
+                chat_history.append(m)
             elif message['role'] == 'user':
-                m["user_name"] = "User"
-            chat_history.append(m)
+                m = {"user_name": "User", "text": ""}
+                m["text"] = message["content"]
+                chat_history.append(m)
 
         message = messages[-1]["content"]
 
         output = self.client.chat(
             message=message,
             model=model,
-            chat_history=chat_history
+            chat_history=chat_history,
+            temperature=self.temperature
         )
 
         response_text = output.text

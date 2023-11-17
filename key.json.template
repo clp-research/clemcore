@@ -11,5 +11,12 @@
   },
   "huggingface": {
     "api_key": ""
+  },
+  "cohere": {
+    "api_key": ""
+  },
+  "fastchat_openai": {
+    "api_key": "",
+    "fastchat_ip": ""
   }
 }
