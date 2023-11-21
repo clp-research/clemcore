@@ -200,3 +200,11 @@ Here is an example of how the ```scores.json``` file of an episode will look lik
     }
 }
 ```
+
+### IMPORTANT: Inspecting the game records
+
+During development, always check the generated ```interactions.json``` and ```requests.json``` to make sure that the API calls are passing the correct structure and that the records are being correctly saved.
+
+```interactions.json``` is built by the game master as a way to represent the actual interaction (with all its meta-events like parsing messages or checking game rules). This is used to create the transcripts, which are a user-friendly visualisation of the interaction. But remember that this does not reflect the actual API calls, this only reflects what the game master makes of the game!
+
+The actual prompts and responses from the model are saved into ```requests.json```, when an action is logged with its corresponding prompt and response object (see below how to do it). This file will reflect what was actually passed to and from the LLM. Remeber that LLMS do not keep a internal state, so every call to a model must contain its full dialogue history. Also remeber that when there are two LLMs playing at once, each will have its own dialogue history, which may be different! That's why, for debugging purposes, only looking at ```interactions.json``` is not enough, because it may not reflect exactly what the LLMs consumed and output.

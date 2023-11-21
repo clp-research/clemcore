@@ -53,8 +53,7 @@ class Anthropic(backends.Backend):
         )
 
         response_text = completion.completion.strip()
-        response = {'response': response_text}
-        return prompt, response, response_text
+        return prompt, json.loads(completion.json()), response_text
 
     def supports(self, model_name: str):
         return model_name in SUPPORTED_MODELS

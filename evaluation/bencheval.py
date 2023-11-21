@@ -76,6 +76,11 @@ def save_clem_table(df: pd.DataFrame, path: str) -> None:
     clemscore = clemscore.round(2).to_frame(name=('-', 'clemscore'))
     df_results = pd.concat([clemscore, df_full], axis=1)
 
+    # flatten header
+    df_results.index.name = None
+    df_results.columns = df_results.columns.to_flat_index() 
+    df_results.columns = [', '.join(x) for x in df_results.columns]
+
     # save table
     df_results.to_csv(Path(path) / f'{TABLE_NAME}.csv')
     df_results.to_html(Path(path) / f'{TABLE_NAME}.html')

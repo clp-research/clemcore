@@ -26,8 +26,15 @@ class FastChatOpenAI(backends.Backend):
 
     def __init__(self):
         creds = backends.load_credentials(NAME)
-        openai.api_base = creds[NAME]["fastchat_ip"]
+        #openai.api_base = creds[NAME]["fastchat_ip"]
         self.temperature: float = -1.
+
+    def set_fastchat_url(self):
+        self.orig_openai_api_base = openai.api_base
+        openai.api_based = self.creds[NAME]["fastchat_ip"]
+
+    def unset_fastchat_url(self):
+        openai.api_base = self.orig_openai_api_base
 
     def list_models(self):
         models = openai.Model.list()
