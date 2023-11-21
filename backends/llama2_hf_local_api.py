@@ -127,18 +127,16 @@ class Llama2LocalHF(backends.Backend):
                 )
 
             model_output = self.tokenizer.batch_decode(model_output_ids)[0]
+
+            response = {"response": model_output}
+
             # cull prompt from output:
-            model_output = model_output.replace(prompt_text, "").strip()
+            response_text = model_output.replace(prompt_text, "").strip()
             # remove EOS token at the end of output:
-            if model_output[-4:len(model_output)] == "</s>":
-                model_output = model_output[:-4]
+            if response_text[-4:len(response_text)] == "</s>":
+                response_text = response_text[:-4]
 
-            response = {
-                "role": "assistant",
-                "content": model_output,
-            }
 
-            response_text = model_output
 
         else:  # default (text completion)
             prompt = "\n".join([message["content"] for message in current_messages])
