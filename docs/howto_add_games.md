@@ -1,5 +1,14 @@
 # The Lightweight Dialogue Game framework
 
+### Preliminaries
+
+If you're completely new to this, it might make sense to look at two Jupyter notebooks that we provide here, which explain how to set up new games a bit more from scratch:
+
+- [How to Prototype Games](https://github.com/clp-research/clembench/blob/main/docs/howto_prototype_games.ipynb) explains how to use our backends to make first tests of prompts with a variety of LLMs easy to do, and then how to prototype your game loop.
+- [How to Add Games](https://github.com/clp-research/clembench/blob/main/docs/howto_add_games_example.ipynb) takes this further and shows how you get from the prototype to an implementation that can use all the clembench infrastructure for running the game repeatedly with different instances and models.
+
+### Introduction
+
 The benchmark is run for a particular game -- for example the taboo game -- using the follow command:  
 
 ```
