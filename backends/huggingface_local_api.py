@@ -236,6 +236,9 @@ class HuggingfaceLocal(backends.Backend):
             # remove llama2 EOS token at the end of output:
             if response_text[-4:len(response_text)] == "</s>":
                 response_text = response_text[:-4]
+            # remove openchat EOS token at the end of output:
+            if response_text[-15:len(response_text)] == "<|end_of_turn|>":
+                response_text = response_text[:-15]
         else:
             response_text = model_output.strip()
 
