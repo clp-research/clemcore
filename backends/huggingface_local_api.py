@@ -28,11 +28,15 @@ MODEL_GPT4ALL_13B_SNOOZY = "gpt4all-13b-snoozy"
 MODEL_CODELLAMA_34B_I = "CodeLlama-34b-Instruct-hf"
 MODEL_ZEPHYR_7B_ALPHA = "zephyr-7b-alpha"
 MODEL_ZEPHYR_7B_BETA = "zephyr-7b-beta"
+MODEL_OPENCHAT_3_5 = "openchat_3.5"
+MODEL_YI_34B_CHAT = "Yi-34B-Chat"
+MODEL_ORCA_2_13B = "Orca-2-13b"
 SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
                     MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B,
                     MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2,
                     MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY,
-                    MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA]
+                    MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA, MODEL_OPENCHAT_3_5,
+                    MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B]
 
 
 NAME = "huggingface"
@@ -59,9 +63,20 @@ FALCON = [MODEL_FALCON_7B_INSTRUCT, MODEL_FALCON_40B_INSTRUCT]
 # jinja template for assumed Falcon format:
 falcon_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}"
 # Falcon template based on https://huggingface.co/tiiuae/falcon-7b-instruct/discussions/1#64708b0a3df93fddece002a4
+OPENCHAT = [MODEL_OPENCHAT_3_5]
+# jinja template for openchat format:
+openchat_template = "{{ bos_token }}{% for message in messages %}{{ 'GPT4 Correct ' + message['role'].title() + ': ' + message['content'] + '<|end_of_turn|>'}}{% endfor %}GPT4 Correct Assistant:"
+CHATML = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B]
+# jinja template for chatml format:
+chatml_template = "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
 
 # templates currently have 'generation prompt' hardcoded
 # doesn't matter for clembench, but once added, templates can be pushed to HF and this block can be reduced
+# newer versions of transformers/tokenizers are supposed to properly handle the generation prompt argument
+# but transformers==4.34.0 does not support this feature (at least not reliably)
+
+# due to issues with differences between fast and slow HF tokenizer classes, some models require the 'slow' class/arg
+SLOW_TOKENIZER = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B]
 
 
 class HuggingfaceLocal(backends.Backend):
@@ -104,11 +119,22 @@ class HuggingfaceLocal(backends.Backend):
             hf_user_prefix = "codellama/"
         elif model_name in [MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA]:  # HuggingFaceH4 models
             hf_user_prefix = "HuggingFaceH4/"
+        elif model_name in [MODEL_OPENCHAT_3_5]:  # openchat models
+            hf_user_prefix = "openchat/"
+        elif model_name in [MODEL_YI_34B_CHAT]:  # 01-ai models
+            hf_user_prefix = "01-ai/"
+        elif model_name in [MODEL_ORCA_2_13B]:  # microsoft models
+            hf_user_prefix = "microsoft/"
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
-        self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                       cache_dir=CACHE_DIR, verbose=False)
+        # use 'slow' tokenizer for models that require it:
+        if model_name in SLOW_TOKENIZER:
+            self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+                                                           cache_dir=CACHE_DIR, verbose=False, use_fast=False)
+        else:
+            self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+                                                           cache_dir=CACHE_DIR, verbose=False)
 
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
@@ -122,6 +148,10 @@ class HuggingfaceLocal(backends.Backend):
                 self.tokenizer.chat_template = koala_template
             elif model_name in VICUNA:
                 self.tokenizer.chat_template = vicuna_1_1_template
+            elif model_name in OPENCHAT:
+                self.tokenizer.chat_template = openchat_template
+            elif model_name in CHATML:
+                self.tokenizer.chat_template = chatml_template
 
         # load all models using their default configuration:
         self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
@@ -180,7 +210,7 @@ class HuggingfaceLocal(backends.Backend):
             do_sample = True
 
         # test to check if temperature is properly set on this Backend object:
-        logger.info(f"Currently used temperature for this instance of HuggingfaceLocal: {self.temperature}")
+        # logger.info(f"Currently used temperature for this instance of HuggingfaceLocal: {self.temperature}")
 
         if do_sample:
             model_output_ids = self.model.generate(
