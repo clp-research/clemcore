@@ -35,7 +35,8 @@ SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA
                     MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B,
                     MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2,
                     MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY,
-                    MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA, MODEL_OPENCHAT_3_5]
+                    MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA, MODEL_OPENCHAT_3_5,
+                    MODEL_YI_34B_CHAT]
 
 
 NAME = "huggingface"
@@ -232,12 +233,21 @@ class HuggingfaceLocal(backends.Backend):
         # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:
             response_text = model_output.replace(prompt_text, '').strip()
+
+            # handle Yi decoded output mismatch:
+            if model == MODEL_YI_34B_CHAT:
+                response_text = model_output.rsplit("assistant\n", maxsplit=1)[1]
+
             # remove llama2 EOS token at the end of output:
             if response_text[-4:len(response_text)] == "</s>":
                 response_text = response_text[:-4]
             # remove openchat EOS token at the end of output:
             if response_text[-15:len(response_text)] == "<|end_of_turn|>":
                 response_text = response_text[:-15]
+            # remove ChatML EOS token at the end of output:
+            if response_text[-10:len(response_text)] == "<|im_end|>":
+                response_text = response_text[:-10]
+
         else:
             response_text = model_output.strip()
 
