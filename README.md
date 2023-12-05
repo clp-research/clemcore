@@ -25,6 +25,7 @@ We welcome you to contribute to or extend the benchmark with your own games and 
 Please simply open a pull request. You can find more information on how to use the benchmark in the links below.
 
 - [How to run the benchmark and evaluation locally](docs/howto_run_benchmark.md)
+- [How to run the benchmark, update leaderboard workflow](docs/howto_benchmark_workflow.md)
 - [How to add a new model as a backend](docs/howto_add_backend.md)
 - [How to add and run your own game](docs/howto_add_games.md)
 - [How to integrate with Slurk](docs/howto_slurk.md)

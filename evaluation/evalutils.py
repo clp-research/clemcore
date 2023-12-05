@@ -110,7 +110,9 @@ def savefig(name: str) -> None:
 
 def parse_directory_name(name: str) -> dict:
     """Extract information from the directory name structure."""
-    _, game, _, model, experiment, episode, _ = str(name).split('/')
+
+    splits = str(name).split('/')
+    game, _, model, experiment, episode, _ = splits[-6], splits[-5], splits[-4], splits[-3], splits[-2], splits[-1]
     return {'game': game,
             'model': model,
             'experiment': experiment,
