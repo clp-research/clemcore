@@ -268,6 +268,9 @@ class HuggingfaceLocal(backends.Backend):
             # remove ChatML EOS token at the end of output:
             if response_text[-10:len(response_text)] == "<|im_end|>":
                 response_text = response_text[:-10]
+            # remove DeepSeek EOS token at the end of output:
+            if response_text[-19:len(response_text)] == "<｜end▁of▁sentence｜>":
+                response_text = response_text[:-19]
 
         else:
             response_text = model_output.strip()
