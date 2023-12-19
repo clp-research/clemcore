@@ -342,7 +342,7 @@ class DialogueGameMaster(GameMaster):
         """
         Add a player to the game.
 
-        Note: The players will be called at the same order as added!
+        Note: The players will be called in the same order as added!
 
         :param player: to be added to the game
         """

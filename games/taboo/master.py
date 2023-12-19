@@ -75,12 +75,12 @@ def check_clue(utterance: str, target_word: str, related_words: List[str]) -> Li
         clue_lemma = EN_LEMMATIZER.lemmatize(clue_word)
         if clue_lemma == target_lemma:
             return [{
-                "message": f"Target word '{target_word}' is morphological similar to clue word '{clue_word}'",
+                "message": f"Target word '{target_word}' is morphologically similar to clue word '{clue_word}'",
                 "type": 0
             }]
         if clue_lemma in related_lemmas:
             return [{
-                "message": f"Related word is morphological similar to clue word '{clue_word}'",
+                "message": f"Related word is morphologically similar to clue word '{clue_word}'",
                 "type": 1
             }]
     return errors
