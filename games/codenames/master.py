@@ -10,10 +10,16 @@ logger = get_logger(__name__)
 GAME_NAME = "codenames"
 SEED = 418
 
+class ValidationError(Exception):
+    def __init__(self, message="Response does not follow the rules and is hence invalid."):
+        self.message = message
+        super().__init__(self.message)
+
 # TODO: all words on board in CAPS?
 # TODO: reprompting on failed response validation
 # TODO: scoring
 # TODO: self-logging of some actions for scoring later?
+# TODO: raise validation errors in players, so that gm can log error messages and react to them accordingly?
 # TODO: reuse players for other codename variants, e.g. Duet?
 # TODO: intermittent prompts e.g. "The next clue is:<CLUE>. The list of words now is: <List of words>"
 
@@ -32,26 +38,21 @@ class Guesser(Player):
         self.guesses = random.sample(board, number_of_allowed_guesses)
         return self.recover_utterance()
     
-    def validate_response(self, utterance: str, board: Set[str], number_of_allowed_guesses: int) -> bool:
+    def validate_response(self, utterance: str, board: Set[str], number_of_allowed_guesses: int):
         # all lines need to start with GUESS
         lines = utterance.split("\n")
         for line in lines:
             if not line.startswith(self.prefix):
-                print(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
-                return False
+                raise ValidationError(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
         guesses = [line[len(self.prefix):] for line in lines]
         # must contain one valid guess, but can only contain $number guesses max
         if not (0 < len(guesses) <= number_of_allowed_guesses):
-            print(f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}")
-            return False 
+            raise ValidationError(f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}")
         # guesses must be words on the board that are not uncovered yet
         for guess in guesses:
             if not guess in board:
-                print(f"Guessed word {guess} does not exist on board.")
-                return False
+                raise ValidationError(f"Guessed word {guess} does not exist on board.")
             
-        return True
-
     def parse_response(self, utterance: str) -> str:
         lines = utterance.split("\n")
         self.guesses = [line[len(self.prefix):] for line in lines]
@@ -71,8 +72,6 @@ class ClueGiver(Player):
         self.targets: List[str] = ['banana', 'apple']
 
     def _custom_response(self, history, turn) -> str:
-        #raise NotImplementedError("This should not be called, but the remote APIs.")
-        # TODO: random clue giving? how?
         prompt = history[-1]["content"]
         team_words = re.search(r"Your team words are: (.*)", prompt).group(1)
         team_words = team_words.split(', ')
@@ -81,47 +80,38 @@ class ClueGiver(Player):
         self.clue = "".join(random.sample(list(string.ascii_lowercase), 6))
         return self.recover_utterance()
     
-    def validate_response(self, utterance: str, board: Set[str]) -> bool:
+    def validate_response(self, utterance: str, board: Set[str]):
         # needs to start with correct prefix
         if not utterance.startswith(self.prefix):
-            print(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
-            return False
+            raise ValidationError(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
         utterance = utterance[len(self.prefix):]
         parts = utterance.split(', ')
         if len(parts) < 3:
-            print(f"Utterance did not contain enough parts {len(parts)} of required clue, number, and targets (at least three comma-separated)")
-            return False
+            raise ValidationError(f"Utterance did not contain enough parts {len(parts)} of required clue, number, and targets (at least three comma-separated)")
         clue = parts[0]
         number_of_targets = parts[1]
         targets = parts[2:]
         
         # Clue needs to be a single word
         if not clue.isalpha() or ' ' in clue:
-            print(f"Clue {clue} is not a single word.")
-            return False
+            raise ValidationError(f"Clue {clue} is not a single word.")
         # Clue needs to contain a word that is not morphologically similar to any word on the board
         # TODO: morphological relatedness!
         if clue in board:
-            print(f"Clue {clue} is one of the words on the board.")
-            return False
+            raise ValidationError(f"Clue {clue} is one of the words on the board.")
         
         # Number needs to be a valid number and in between a valid range of 1 and all words on the board (alternatively only team words?)
         if not number_of_targets.isdigit() or not (0 < int(number_of_targets) <= len(board)):
-            print(f"Number {number_of_targets} is not within range of 0 and {len(board)}")
-            return False
+            raise ValidationError(f"Number {number_of_targets} is not within range of 0 and {len(board)}")
         number_of_targets = int(number_of_targets)
         # needs to contain as many target words as the number given
         if len(targets) != number_of_targets:
-            print(f"Number {number_of_targets} does not match number of targets {targets}")
-            return False
+            raise ValidationError(f"Number {number_of_targets} does not match number of targets {targets}")
         # target words need to be words from the board
         for target in targets:
             if not target in board:
-                print(f"Targeted word {target} does not exist on board.")
-                return False
+                raise ValidationError(f"Targeted word {target} does not exist on board.")
             
-        return True
-
     def parse_response(self, utterance) -> str:
         utterance = utterance[len(self.prefix):]
         parts = utterance.split(', ')
@@ -224,12 +214,21 @@ class CodenamesGame(DialogueGameMaster):
             return guesses, True
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
+        self.invalid_response = False
         if player == self.cluegiver:
-            valid_response = player.validate_response(utterance, self.board - self.uncovered_words)
+            try:
+                player.validate_response(utterance, self.board - self.uncovered_words)
+            except ValidationError as error:
+                self.log_to_self("cluegiver validation error", error.message)
+                self.invalid_response = True
         else:
-            valid_response = player.validate_response(utterance, self.board - self.uncovered_words, self.cluegiver.number_of_targets)
-        self.invalid_response = not valid_response
-        return valid_response
+            try:
+                player.validate_response(utterance, self.board - self.uncovered_words, self.cluegiver.number_of_targets)
+            except ValidationError as error:
+                self.log_to_self("guesser validation error", error.message)
+                self.invalid_response = True
+        
+        return not self.invalid_response
     
     def _on_before_turn(self, current_turn):
         # add new cluegiver prompt
