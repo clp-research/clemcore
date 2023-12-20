@@ -9,6 +9,7 @@ logger = get_logger(__name__)
 
 GAME_NAME = "codenames"
 SEED = 418
+MAX_RETRIES = 2
 
 class ValidationError(Exception):
     def __init__(self, message="Response does not follow the rules and is hence invalid."):
@@ -16,18 +17,20 @@ class ValidationError(Exception):
         super().__init__(self.message)
 
 # TODO: all words on board in CAPS?
-# TODO: reprompting on failed response validation
 # TODO: scoring
 # TODO: self-logging of some actions for scoring later?
-# TODO: raise validation errors in players, so that gm can log error messages and react to them accordingly?
 # TODO: reuse players for other codename variants, e.g. Duet?
 # TODO: intermittent prompts e.g. "The next clue is:<CLUE>. The list of words now is: <List of words>"
+# TODO: only count first guess if it is wrong... no further guesses are counted
+# TODO: change prompts on reprompt, let them reflect the errors
+# TODO: ValidationError for "answer was too long, did not follow the specified format"
 
 class Guesser(Player):
     def __init__(self, model_name: str):
         super().__init__(model_name)
         self.guesses: List[str] = ['apple', 'banana']
         self.prefix: str = "GUESS: "
+        self.retries: int = 0
 
     def _custom_response(self, history, turn) -> str:
         # raise NotImplementedError("This should not be called, but the remote APIs.")
@@ -70,6 +73,7 @@ class ClueGiver(Player):
         self.clue: str = 'fruit'
         self.number_of_targets: int = 2
         self.targets: List[str] = ['banana', 'apple']
+        self.retries: int = 0
 
     def _custom_response(self, history, turn) -> str:
         prompt = history[-1]["content"]
@@ -120,8 +124,11 @@ class ClueGiver(Player):
         self.targets = parts[2:]
         return f"{self.clue}, {self.number_of_targets}"
 
-    def recover_utterance(self) -> str:
-        return f"{self.prefix}{self.clue}, {self.number_of_targets}, {', '.join(self.targets)}"
+    def recover_utterance(self, with_targets = False) -> str:
+        targets = ""
+        if with_targets:
+            targets = f", {', '.join(self.targets)}"
+        return f"{self.prefix}{self.clue}, {self.number_of_targets}{targets}"
 
 
 class CodenamesGame(DialogueGameMaster):
@@ -181,9 +188,11 @@ class CodenamesGame(DialogueGameMaster):
                                                                       clue=self.cluegiver.clue, 
                                                                       number=self.cluegiver.number_of_targets)
         return instance_prompt_guesser
-
-    def _on_before_game(self):
-        # Do something before the game start e.g. add the initial prompts to the message list for the players
+    
+    def _on_before_turn(self, current_turn):
+        # add new cluegiver prompt
+        self.cluegiver.retries = 0
+        self.guesser.retries = 0
         self.add_user_message(self.cluegiver, self._get_cluegiver_prompt())
 
     def _does_game_proceed(self) -> bool:
@@ -194,24 +203,19 @@ class CodenamesGame(DialogueGameMaster):
         # for the base version, a check is needed whether all team words from one team are revealed or the assassin is revealed
         if len(self.uncovered_words.intersection(self.team_words)) == len(self.team_words):
             # all team words have been revealed
+            self.log_to_self("game end", "Team won!")
             return False
         elif len(self.uncovered_words.intersection(self.opponent_words)) == len(self.opponent_words):
             # all opponents words have been revealed
+            self.log_to_self("game end", "Opponent won!")
             return False
         elif len(self.uncovered_words.intersection(self.assassin_words)) >= 1:
+            self.log_to_self("game end", "Assassin won!")
             return False
         #elif self.current_turn >= 9:
             # that would only be necessary be for Codenames Duet
         #    return False
         return True
-
-    def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
-        if player == self.cluegiver:
-            return player.parse_response(utterance), True
-        else:
-            guesses = player.parse_response(utterance)
-            self.uncovered_words.update(guesses)
-            return guesses, True
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         self.invalid_response = False
@@ -230,16 +234,30 @@ class CodenamesGame(DialogueGameMaster):
         
         return not self.invalid_response
     
-    def _on_before_turn(self, current_turn):
-        # add new cluegiver prompt
-        self.add_user_message(self.cluegiver, self._get_cluegiver_prompt())
-
-    def _on_after_turn(self, turn_idx: int):
-        pass
+    def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
+        if player == self.cluegiver:
+            self.log_to_self("clue", self.cluegiver.recover_utterance(with_targets = True) )
+            return player.parse_response(utterance), True
+        else:
+            self.log_to_self("guess", self.guesser.recover_utterance())
+            guesses = player.parse_response(utterance)
+            self.uncovered_words.update(guesses)
+            return guesses, True
+        
+    def _on_before_reprompt(self, player: Player):
+        logger.debug("Reprompting...")
+        player.retries += 1
+        self.add_user_message(player, "Your answer did not follow the requested format, please give a new answer that follows the format.")
+    
+    def _should_reprompt(self, player: Player):
+        if player.retries < MAX_RETRIES:
+            return self.invalid_response
+        return False
     
     def _after_add_player_response(self, player: Player, utterance: str):
         if player == self.cluegiver:
             # put clue and number of targets into prompt for guesser
+            # no intermittent turn for guesser needed, as it is short enough
             self.add_user_message(self.guesser, self._get_guesser_prompt())
         else:
             # TODO: use intermittent prompt, that also includes guess from guessing player and then prompts for new clue, with updated lists of board words

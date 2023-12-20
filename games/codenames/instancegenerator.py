@@ -21,6 +21,7 @@ SEED = 42
 
 # TODO: make number of words, number of team words and so on game or experiment parameters
 # TODO: sample from different prepared word lists (or with different similarity metrics) for different experiments
+# TODO: filter out clue words that are not single words (e.g. NEW YORK)
 
 class CodenamesInstanceGenerator(GameInstanceGenerator):
 
