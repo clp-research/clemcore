@@ -205,8 +205,16 @@ class HuggingfaceLocal(backends.Backend):
             logger.info(f"Finished loading huggingface model: {model}")
             logger.info(f"Model device map: {self.model.hf_device_map}")
 
+        # log current given messages list:
+        # logger.info(f"Raw messages passed: {messages}")
+
         # deepcopy messages to prevent reference issues:
         current_messages = copy.deepcopy(messages)
+
+        # cull empty system message:
+        if current_messages[0]['role'] == "system":
+            if not current_messages[0]['content']:
+                del current_messages[0]
 
         # flatten consecutive user messages:
         for msg_idx, message in enumerate(current_messages):
@@ -216,6 +224,9 @@ class HuggingfaceLocal(backends.Backend):
             elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1]['role'] == "assistant":
                 current_messages[msg_idx - 1]['content'] += f" {message['content']}"
                 del current_messages[msg_idx]
+
+        # log current flattened messages list:
+        # logger.info(f"Flattened messages: {current_messages}")
 
         # apply chat template & tokenize:
         prompt_tokens = self.tokenizer.apply_chat_template(current_messages, return_tensors="pt")
