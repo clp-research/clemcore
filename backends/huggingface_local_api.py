@@ -36,6 +36,7 @@ MODEL_DEEPSEEK_67B_CHAT = "deepseek-llm-67b-chat"
 MODEL_TULU_2_DPO_7B = "tulu-2-dpo-7b"
 MODEL_TULU_2_DPO_70B = "tulu-2-dpo-70b"
 MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1 = "Mixtral-8x7B-Instruct-v0.1"
+MODEL_SUS_CHAT_34B = "SUS-Chat-34B"
 
 SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
                     MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B,
@@ -43,7 +44,7 @@ SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA
                     MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY,
                     MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA, MODEL_OPENCHAT_3_5,
                     MODEL_YI_34B_CHAT, MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT, MODEL_TULU_2_DPO_7B,
-                    MODEL_TULU_2_DPO_70B, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1]
+                    MODEL_TULU_2_DPO_70B, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1, MODEL_SUS_CHAT_34B]
 
 
 NAME = "huggingface"
@@ -82,6 +83,8 @@ tulu_template = "{% for message in messages %}\n{% if message['role'] == 'user' 
 DEEPSEEK = [MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT]
 # jinja template for deepseek format:
 deepseek_template = "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}"
+SUSTECH = [MODEL_SUS_CHAT_34B]
+sus_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}"
 
 # templates currently have 'generation prompt' hardcoded
 # doesn't matter for clembench, but once added, templates can be pushed to HF and this block can be reduced
@@ -89,7 +92,7 @@ deepseek_template = "{% if not add_generation_prompt is defined %}{% set add_gen
 # but transformers==4.34.0 does not support this feature (at least not reliably)
 
 # due to issues with differences between fast and slow HF tokenizer classes, some models require the 'slow' class/arg
-SLOW_TOKENIZER = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B]
+SLOW_TOKENIZER = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B, MODEL_SUS_CHAT_34B]
 
 
 class HuggingfaceLocal(backends.Backend):
@@ -142,6 +145,8 @@ class HuggingfaceLocal(backends.Backend):
             hf_user_prefix = "deepseek-ai/"
         elif model_name in [MODEL_TULU_2_DPO_7B, MODEL_TULU_2_DPO_70B]:  # allenai models
             hf_user_prefix = "allenai/"
+        elif model_name in [MODEL_SUS_CHAT_34B]:  # SUSTech models
+            hf_user_prefix = "SUSTech/"
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
@@ -173,6 +178,8 @@ class HuggingfaceLocal(backends.Backend):
                 self.tokenizer.chat_template = tulu_template
             elif model_name in DEEPSEEK:
                 self.tokenizer.chat_template = deepseek_template
+            elif model_name in SUSTECH:
+                self.tokenizer.chat_template = sus_template
 
         # load all models using their default configuration:
         self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
