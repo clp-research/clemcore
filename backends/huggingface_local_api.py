@@ -289,6 +289,9 @@ class HuggingfaceLocal(backends.Backend):
             # remove DeepSeek EOS token at the end of output:
             if response_text[-19:len(response_text)] == "<｜end▁of▁sentence｜>":
                 response_text = response_text[:-19]
+            # remove SUS EOS token at the end of output:
+            if response_text[-13:len(response_text)] == "<|endoftext|>":
+                response_text = response_text[:-13]
 
         else:
             response_text = model_output.strip()
