@@ -1,0 +1,19 @@
+[
+  {
+    "model_name": "SUS-Chat-34B",
+    "huggingface_id": "SUSTech/SUS-Chat-34B",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}",
+    "slow_tokenizer": true,
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "Yi-34B-Chat",
+    "huggingface_id": "SUSTech/Yi-34B-Chat",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+    "slow_tokenizer": true,
+    "output_split_prefix": "assistant\n",
+    "eos_to_cull": "<|im_end|>"
+  }
+]
