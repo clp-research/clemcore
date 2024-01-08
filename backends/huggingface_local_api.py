@@ -38,6 +38,7 @@ MODEL_TULU_2_DPO_70B = "tulu-2-dpo-70b"
 MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1 = "Mixtral-8x7B-Instruct-v0.1"
 MODEL_SUS_CHAT_34B = "SUS-Chat-34B"
 
+
 SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
                     MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B,
                     MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2,
@@ -85,6 +86,7 @@ DEEPSEEK = [MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT]
 deepseek_template = "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}"
 SUSTECH = [MODEL_SUS_CHAT_34B]
 sus_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}"
+
 
 # templates currently have 'generation prompt' hardcoded
 # doesn't matter for clembench, but once added, templates can be pushed to HF and this block can be reduced
@@ -180,6 +182,7 @@ class HuggingfaceLocal(backends.Backend):
                 self.tokenizer.chat_template = deepseek_template
             elif model_name in SUSTECH:
                 self.tokenizer.chat_template = sus_template
+
 
         # load all models using their default configuration:
         self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
