@@ -15,5 +15,10 @@
     "slow_tokenizer": true,
     "output_split_prefix": "assistant\n",
     "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "Mistral-7B-Instruct-v0.1",
+    "huggingface_id": "mistralai/Mistral-7B-Instruct-v0.1",
+    "premade_chat_template": true
   }
 ]

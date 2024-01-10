@@ -7,6 +7,10 @@ import transformers
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import os
 import copy
+import json
+
+with open("hf_local_models.json") as model_registry_file:
+    MODEL_REGISTRY = json.load(model_registry_file)
 
 logger = backends.get_logger(__name__)
 
@@ -47,12 +51,16 @@ SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA
                     MODEL_YI_34B_CHAT, MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT, MODEL_TULU_2_DPO_7B,
                     MODEL_TULU_2_DPO_70B, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1, MODEL_SUS_CHAT_34B]
 
+_SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGISTRY]
+
 
 NAME = "huggingface"
 
 # models that come with proper tokenizer chat template:
 PREMADE_CHAT_TEMPLATE = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA,
                          MODEL_ZEPHYR_7B_BETA, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1]
+
+_PREMADE_CHAT_TEMPLATE = [model_setting['model_name'] for model_setting in MODEL_REGISTRY if model_setting['premade_chat_template']]
 
 # models to apply Orca-Hashes template to:
 ORCA_HASH = [MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B]
@@ -96,6 +104,13 @@ sus_template = "{% for message in messages %}{% if message['role'] == 'user' %}{
 # due to issues with differences between fast and slow HF tokenizer classes, some models require the 'slow' class/arg
 SLOW_TOKENIZER = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B, MODEL_SUS_CHAT_34B]
 
+# _SLOW_TOKENIZER = [model_setting['model_name'] for model_setting in MODEL_REGISTRY if model_setting['slow_tokenizer']]
+_SLOW_TOKENIZER = list()
+for model_setting in MODEL_REGISTRY:
+    if 'slow_tokenizer' in model_setting:
+        if model_setting['slow_tokenizer']:
+            _SLOW_TOKENIZER.append(model_setting['model_name'])
+
 
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
@@ -113,6 +128,11 @@ class HuggingfaceLocal(backends.Backend):
             # create root/data:
             os.mkdir(root_data_path)
         CACHE_DIR = os.path.join(root_data_path, "huggingface_cache")
+
+        for model_setting in MODEL_REGISTRY:
+            if model_setting['model_name'] == model_name:
+                self.model_settings = model_setting
+                break
 
         if model_name in [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1]:  # mistralai models
             hf_user_prefix = "mistralai/"
@@ -152,6 +172,8 @@ class HuggingfaceLocal(backends.Backend):
 
         hf_model_str = f"{hf_user_prefix}{model_name}"
 
+        _hf_model_str = self.model_settings['huggingface_id']
+
         # use 'slow' tokenizer for models that require it:
         if model_name in SLOW_TOKENIZER:
             self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
@@ -162,6 +184,10 @@ class HuggingfaceLocal(backends.Backend):
 
         # apply proper chat template:
         if model_name not in PREMADE_CHAT_TEMPLATE:
+
+            if 'custom_chat_template' in self.model_settings:
+                self.tokenizer.chat_template = self.model_settings['custom_chat_template']
+
             if model_name in ORCA_HASH:
                 self.tokenizer.chat_template = orca_template
             elif model_name in FALCON:
@@ -303,3 +329,11 @@ class HuggingfaceLocal(backends.Backend):
 
     def supports(self, model_name: str):
         return model_name in SUPPORTED_MODELS
+
+
+if __name__ == "__main__":
+    # print(MODEL_REGISTRY)
+    # print(_SUPPORTED_MODELS)
+    # print(_PREMADE_CHAT_TEMPLATE)
+    print(_SLOW_TOKENIZER)
+    # test_instance = HuggingfaceLocal()
