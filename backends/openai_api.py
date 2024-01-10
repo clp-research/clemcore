@@ -17,22 +17,30 @@ SUPPORTED_MODELS = [MODEL_GPT_4_0314, MODEL_GPT_4_0613, MODEL_GPT_4_1106_PREVIEW
 
 NAME = "openai"
 
+MAX_TOKENS = 100   # 2024-01-10, das: Should this be hardcoded???
 
 class OpenAI(backends.Backend):
 
     def __init__(self):
         creds = backends.load_credentials(NAME)
         if "organisation" in creds[NAME]:
-            openai.organization = creds[NAME]["organisation"]
-        openai.api_key = creds[NAME]["api_key"]
+            self.client = openai.OpenAI(
+                api_key=creds[NAME]["api_key"],
+                organization=creds[NAME]["organisation"]
+                )
+        else:
+            self.client = openai.OpenAI(
+                api_key=creds[NAME]["api_key"]
+                )
         self.chat_models: List = ["gpt-3.5-turbo-0613", "gpt-3.5-turbo-1106", "gpt-4-0314", "gpt-4-0613", "gpt-4-1106-preview"]
         self.temperature: float = -1.
 
     def list_models(self):
-        models = openai.Model.list()
-        names = [item["id"] for item in models["data"]]
+        models = self.client.models.list()
+        names = [item.id for item in models.data]
         names = sorted(names)
-        [print(n) for n in names]
+        return names
+        # [print(n) for n in names]   # 2024-01-10: what was this? a side effect-only method?
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict], model: str) -> Tuple[str, Any, str]:
@@ -51,20 +59,22 @@ class OpenAI(backends.Backend):
         if model in self.chat_models:
             # chat completion
             prompt = messages
-            api_response = openai.ChatCompletion.create(model=model, messages=prompt,
-                                                        temperature=self.temperature, max_tokens=100)
-            message = api_response["choices"][0]["message"]
-            if message["role"] != "assistant":  # safety check
-                raise AttributeError("Response message role is " + message["role"] + " but should be 'assistant'")
-            response_text = message["content"].strip()
-            response = json.loads(api_response.__str__())
+            api_response = self.client.chat.completions.create(model=model,
+                                                          messages=prompt,
+                                                          temperature=self.temperature,
+                                                          max_tokens=MAX_TOKENS)
+            message = api_response.choices[0].message
+            if message.role != "assistant":  # safety check
+                raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")
+            response_text = message.content.strip()
+            response = json.loads(api_response.json())
 
         else:  # default (text completion)
             prompt = "\n".join([message["content"] for message in messages])
-            api_response = openai.Completion.create(model=model, prompt=prompt,
-                                                    temperature=self.temperature, max_tokens=100)
-            response = json.loads(api_response.__str__())
-            response_text = api_response["choices"][0]["text"].strip()
+            api_response = self.client.completions.create(model=model, prompt=prompt,
+                                                     temperature=self.temperature, max_tokens=100)
+            response = json.loads(api_response.json())
+            response_text = api_response.choices[0].text.strip()
         return prompt, response, response_text
 
     def supports(self, model_name: str):
