@@ -80,6 +80,8 @@ class PrivateSharedGame:
     def initiate(self, initial_prompt: str) -> None:
         """Add initial prompt to the dialogue history."""
         self.messages.append({'role': 'user', 'content': initial_prompt})
+        # append a "fake" turn to avoid adjacent user turns
+        self.messages.append({'role': 'assistant', 'content': "Ok."})
 
     def questioner_turn(self, tag: str) -> str:
         """Append tagged next question to dialogue history and return it."""

@@ -112,7 +112,7 @@ def parse_directory_name(name: str) -> dict:
     """Extract information from the directory name structure."""
 
     splits = str(name).split('/')
-    game, _, model, experiment, episode, _ = splits[-6], splits[-5], splits[-4], splits[-3], splits[-2], splits[-1]
+    model, game, experiment, episode, _ = splits[-5:]
     return {'game': game,
             'model': model,
             'experiment': experiment,
