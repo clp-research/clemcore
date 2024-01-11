@@ -15,8 +15,8 @@
   "cohere": {
     "api_key": ""
   },
-  "fastchat_openai": {
+  "generic_openai_compatible": {
     "api_key": "",
-    "fastchat_ip": ""
+    "base_url": "http://127.0.0.1:8000/v1"
   }
 }

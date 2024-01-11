@@ -12,12 +12,16 @@ def game_dir(game_name: str) -> str:
     return os.path.join(project_root(), "games", game_name)
 
 
-def results_dir(game_name: str) -> str:
-    return os.path.join(project_root(), "results", game_name)
+def results_root() -> str:
+    return os.path.join(project_root(), "results")
 
 
-def load_json(file_name: str, game_name: str, is_results_file=False) -> Dict:
-    data = load_file(file_name, game_name, file_ending=".json", is_results_file=is_results_file)
+def game_results_dir_for(dialogue_pair: str, game_name: str) -> str:
+    return os.path.join(results_root(), dialogue_pair, game_name)
+
+
+def load_json(file_name: str, game_name: str) -> Dict:
+    data = load_file(file_name, game_name, file_ending=".json")
     data = json.loads(data)
     return data
 
@@ -38,26 +42,39 @@ def load_template(file_name: str, game_name: str) -> str:
     return load_file(file_name, game_name, file_ending=".template")
 
 
-def file_path(file_name: str, game_name: str = None, is_results_file=False) -> str:
-    if is_results_file:
-        return os.path.join(results_dir(game_name), file_name)
+def file_path(file_name: str, game_name: str = None) -> str:
     if game_name:
         return os.path.join(game_dir(game_name), file_name)
     return os.path.join(project_root(), file_name)
 
 
-def load_file(file_name: str, game_name: str = None, file_ending: str = None, is_results_file=False) -> str:
+def load_file(file_name: str, game_name: str = None, file_ending: str = None) -> str:
     if file_ending and not file_name.endswith(file_ending):
         file_name = file_name + file_ending
-    fp = file_path(file_name, game_name, is_results_file)
+    fp = file_path(file_name, game_name)
     with open(fp, encoding='utf8') as f:
         data = f.read()
     return data
 
 
-def store_game_results_file(data, file_name: str, game_name: str, sub_dir: str = None,
+def load_results_json(file_name: str, dialogue_pair: str, game_name: str) -> Dict:
+    data = load_results_file(file_name, dialogue_pair, game_name, file_ending=".json")
+    data = json.loads(data)
+    return data
+
+
+def load_results_file(file_name: str, dialogue_pair: str, game_name: str, file_ending: str = None) -> str:
+    if file_ending and not file_name.endswith(file_ending):
+        file_name = file_name + file_ending
+    fp = os.path.join(game_results_dir_for(dialogue_pair, game_name), file_name)
+    with open(fp, encoding='utf8') as f:
+        data = f.read()
+    return data
+
+
+def store_game_results_file(data, file_name: str, dialogue_pair: str, game_name: str, sub_dir: str = None,
                             do_overwrite: bool = True) -> str:
-    return store_file(data, file_name, results_dir(game_name), sub_dir, do_overwrite)
+    return store_file(data, file_name, game_results_dir_for(dialogue_pair, game_name), sub_dir, do_overwrite)
 
 
 def store_game_file(data, file_name: str, game_name: str, sub_dir: str = None, do_overwrite: bool = True) -> str:
