@@ -15,10 +15,10 @@ from clemgame import benchmark
     $> python3 scripts/cli.py [-m "mock"] run privateshared
     
     To score all games:
-    $> python3 scripts/cli.py [-m "mock"] score all
+    $> python3 scripts/cli.py score all
     
     To score a specific game:
-    $> python3 scripts/cli.py [-m "mock"] score privateshared
+    $> python3 scripts/cli.py score privateshared
     
     To score all games:
     $> python3 scripts/cli.py transcribe all
