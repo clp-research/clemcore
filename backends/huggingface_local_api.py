@@ -21,13 +21,6 @@ SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGIS
 NAME = "huggingface"
 
 
-SLOW_TOKENIZER = list()
-for model_setting in MODEL_REGISTRY:
-    if 'slow_tokenizer' in model_setting:
-        if model_setting['slow_tokenizer']:
-            SLOW_TOKENIZER.append(model_setting['model_name'])
-
-
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
@@ -58,8 +51,9 @@ class HuggingfaceLocal(backends.Backend):
         hf_model_str = self.model_settings['huggingface_id']
 
         # use 'slow' tokenizer for models that require it:
-        if model_name in SLOW_TOKENIZER:
-            self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+        if 'slow_tokenizer' in self.model_settings:
+            if self.model_settings['slow_tokenizer']:
+                self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                            cache_dir=CACHE_DIR, verbose=False, use_fast=False)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
