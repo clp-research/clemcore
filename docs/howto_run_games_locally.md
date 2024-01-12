@@ -22,7 +22,7 @@ Activate the environment
 source venv/bin/activate
 ```
 
-Install the required libraries
+Install the required libraries (note that ```openai``` needs to be updated to version ```1.7.0``` if you already installed the requirements before 2024-01-10)
 
 ```
 pip install -r requirements.txt
@@ -73,7 +73,7 @@ For example, you can use that script to get a more readable version of the game 
 python3 scripts/cli.py transcribe taboo
 ```
 
-After running this, the `results` directory will now hold html and LaTeX views of the transcripts.
+After running this, the `results` directory will now hold html and LaTeX views of the transcripts for each episode.
 
 Next run the following to generate scores:
 
