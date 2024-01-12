@@ -131,8 +131,9 @@ class HuggingfaceLocal(backends.Backend):
 
         for model_setting in MODEL_REGISTRY:
             if model_setting['model_name'] == model_name:
-                self.model_settings = model_setting
-                break
+                if model_setting['backend'] == "huggingface":
+                    self.model_settings = model_setting
+                    break
 
         if model_name in [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1]:  # mistralai models
             hf_user_prefix = "mistralai/"
