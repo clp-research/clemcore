@@ -4,7 +4,7 @@ import torch
 import backends
 
 import transformers
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import os
 import copy
 import json
@@ -24,11 +24,10 @@ FALLBACK_CONTEXT_SIZE = 256
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
+        self.config_and_tokenizer_loaded = False
         self.model_loaded = False
 
-    def load_model(self, model_name):
-        logger.info(f'Start loading huggingface model: {model_name}')
-
+    def load_config_and_tokenizer(self, model_name):
         # model cache handling
         root_data_path = os.path.join(os.path.abspath(os.sep), "data")
         # check if root/data exists:
@@ -36,7 +35,7 @@ class HuggingfaceLocal(backends.Backend):
             logger.info(f"{root_data_path} does not exist, creating directory.")
             # create root/data:
             os.mkdir(root_data_path)
-        CACHE_DIR = os.path.join(root_data_path, "huggingface_cache")
+        self.CACHE_DIR = os.path.join(root_data_path, "huggingface_cache")
 
         # get settings from model registry for the first name match that uses this backend:
         for model_setting in MODEL_REGISTRY:
@@ -54,10 +53,10 @@ class HuggingfaceLocal(backends.Backend):
         if 'slow_tokenizer' in self.model_settings:
             if self.model_settings['slow_tokenizer']:
                 self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                           cache_dir=CACHE_DIR, verbose=False, use_fast=False)
+                                                               cache_dir=self.CACHE_DIR, verbose=False, use_fast=False)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                           cache_dir=CACHE_DIR, verbose=False)
+                                                           cache_dir=self.CACHE_DIR, verbose=False)
 
         # apply proper chat template:
         if not self.model_settings['premade_chat_template']:
@@ -68,21 +67,33 @@ class HuggingfaceLocal(backends.Backend):
                             f"while model has no pre-made template! Generic template will be used, likely leading to "
                             f"bad results.")
 
+        model_config = AutoConfig.from_pretrained(hf_model_str)
+
+        # get context token limit for model:
+        if hasattr(model_config, 'max_position_embeddings'):  # this is the standard attribute used by most
+            self.context_size = model_config.max_position_embeddings
+        elif hasattr(model_config, 'n_positions'):  # some models may have their context size under this attribute
+            self.context_size = model_config.n_positions
+        else:  # few models, especially older ones, might not have their context size in the config
+            self.context_size = FALLBACK_CONTEXT_SIZE
+
+        self.config_and_tokenizer_loaded = True
+
+    def load_model(self, model_name):
+        logger.info(f'Start loading huggingface model: {model_name}')
+
+        if not self.config_and_tokenizer_loaded:
+            self.load_config_and_tokenizer(model_name)
+
+        hf_model_str = self.model_settings['huggingface_id']
+
         # load model using its default configuration:
         self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                          cache_dir=CACHE_DIR)
+                                                          cache_dir=self.CACHE_DIR)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
         self.model_loaded = True
-
-        # get context token limit for loaded model:
-        if hasattr(self.model.config, 'max_position_embeddings'):  # this is the standard attribute used by most
-            self.context_size = self.model.config.max_position_embeddings
-        elif hasattr(self.model.config, 'n_positions'):  # some models may have their context size under this attribute
-            self.context_size = self.model.config.n_positions
-        else:  # few models, especially older ones, might not have their context size in the config
-            self.context_size = FALLBACK_CONTEXT_SIZE
 
     def _check_messages(self, messages: List[Dict]):
         """
@@ -113,8 +124,11 @@ class HuggingfaceLocal(backends.Backend):
     def check_context_limit(self, messages: List[Dict], model: str, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
         """
         externally-callable context limit check
-        needs more refactoring to not require full model being loaded as for inference
         """
+
+        if not self.config_and_tokenizer_loaded:
+            self.load_config_and_tokenizer(model)
+
         prompt_tokens = self.tokenizer.apply_chat_template(messages)  # the actual tokens, including chat format
         prompt_size = len(prompt_tokens)
         tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
