@@ -18,6 +18,8 @@ NAME = "huggingface"
 
 SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGISTRY if model_setting['backend'] == NAME]
 
+FALLBACK_CONTEXT_SIZE = 256
+
 
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
@@ -74,6 +76,53 @@ class HuggingfaceLocal(backends.Backend):
         self.model_name = model_name
         self.model_loaded = True
 
+        # get context token limit for loaded model:
+        if hasattr(self.model.config, 'max_position_embeddings'):  # this is the standard attribute used by most
+            self.context_size = self.model.config.max_position_embeddings
+        elif hasattr(self.model.config, 'n_positions'):  # some models may have their context size under this attribute
+            self.context_size = self.model.config.n_positions
+        else:  # few models, especially older ones, might not have their context size in the config
+            self.context_size = FALLBACK_CONTEXT_SIZE
+
+    def _check_messages(self, messages: List[Dict]):
+        """
+        internal message checking
+        to be extended with model/template-specific checks and warnings
+        """
+        if messages[0]['role'] == "system":
+            if not messages[0]['content']:
+                print(f"Initial system message is empty!")
+
+    def _check_context_limit(self, prompt_tokens, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
+        """
+        internal context limit check to run in generate_response
+        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :return: Tuple with
+                Bool: True if context limit is not exceeded, False if too many tokens
+                Number of tokens for the given messages and maximum new tokens
+                Number of tokens of 'context space left'
+                Total context token limit
+        """
+        prompt_size = len(prompt_tokens)
+        tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
+        tokens_left = self.context_size - tokens_used
+        # print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
+        fits = tokens_used <= self.context_size
+        return fits, tokens_used, tokens_left, self.context_size
+
+    def check_context_limit(self, messages: List[Dict], model: str, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
+        """
+        externally-callable context limit check
+        needs more refactoring to not require full model being loaded as for inference
+        """
+        prompt_tokens = self.tokenizer.apply_chat_template(messages)  # the actual tokens, including chat format
+        prompt_size = len(prompt_tokens)
+        tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
+        tokens_left = self.context_size - tokens_used
+        print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
+        fits = tokens_used <= self.context_size
+        return fits, tokens_used, tokens_left, self.context_size
+
     def generate_response(self, messages: List[Dict], model: str,
                           max_new_tokens: int = 100, return_full_text: bool = False) -> Tuple[Any, Any, str]:
         """
@@ -128,6 +177,12 @@ class HuggingfaceLocal(backends.Backend):
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
+
+        # check context limit:
+        context_check = self._check_context_limit(prompt_tokens[0], max_new_tokens=max_new_tokens)
+        if not context_check[0]:  # if context is exceeded, context_check[0] is False
+            logger.info(f"Context token limit for {self.model_name} exceeded: {context_check[1]}/{context_check[3]}")
+            # fail gracefully here
 
         # greedy decoding:
         do_sample: bool = False
