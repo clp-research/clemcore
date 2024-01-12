@@ -9,16 +9,14 @@ import os
 import copy
 import json
 
-with open("hf_local_models.json") as model_registry_file:
+with open("hf_local_models.json", 'r', encoding="utf-8") as model_registry_file:
     MODEL_REGISTRY = json.load(model_registry_file)
 
 logger = backends.get_logger(__name__)
 
-
-SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGISTRY if model_setting['backend'] == "huggingface"]
-
-
 NAME = "huggingface"
+
+SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGISTRY if model_setting['backend'] == NAME]
 
 
 class HuggingfaceLocal(backends.Backend):
@@ -68,7 +66,7 @@ class HuggingfaceLocal(backends.Backend):
                             f"while model has no pre-made template! Generic template will be used, likely leading to "
                             f"bad results.")
 
-        # load all models using their default configuration:
+        # load model using its default configuration:
         self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                           cache_dir=CACHE_DIR)
 
@@ -180,7 +178,6 @@ class HuggingfaceLocal(backends.Backend):
 
 if __name__ == "__main__":
     # print(MODEL_REGISTRY)
-    # print(_SUPPORTED_MODELS)
-    # print(_PREMADE_CHAT_TEMPLATE)
-    print(SLOW_TOKENIZER)
+    # print(SUPPORTED_MODELS)
     # test_instance = HuggingfaceLocal()
+    pass
