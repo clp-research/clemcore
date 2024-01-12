@@ -218,5 +218,29 @@
     "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}",
     "slow_tokenizer": true,
     "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "llama-2-7b-hf",
+    "backend": "huggingface",
+    "requires_api_key": true,
+    "huggingface_id": "meta-llama/llama-2-7b-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "llama-2-13b-hf",
+    "backend": "huggingface",
+    "requires_api_key": true,
+    "huggingface_id": "meta-llama/llama-2-7b-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "llama-2-70b-hf",
+    "backend": "huggingface",
+    "requires_api_key": true,
+    "huggingface_id": "meta-llama/llama-2-7b-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
   }
 ]

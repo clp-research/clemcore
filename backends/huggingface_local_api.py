@@ -24,6 +24,7 @@ FALLBACK_CONTEXT_SIZE = 256
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
+        self.use_api_key: bool = False
         self.config_and_tokenizer_loaded = False
         self.model_loaded = False
 
@@ -47,6 +48,13 @@ class HuggingfaceLocal(backends.Backend):
         assert self.model_settings['model_name'] == model_name, (f"Model settings for {model_name} not properly loaded "
                                                                  f"from model registry!")
 
+        if 'requires_api_key' in self.model_settings:
+            if self.model_settings['requires_api_key']:
+                # load HF API key:
+                creds = backends.load_credentials("huggingface")
+                self.api_key = creds["huggingface"]["api_key"]
+                self.use_api_key = True
+
         hf_model_str = self.model_settings['huggingface_id']
 
         # use 'slow' tokenizer for models that require it:
@@ -54,6 +62,9 @@ class HuggingfaceLocal(backends.Backend):
             if self.model_settings['slow_tokenizer']:
                 self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                                cache_dir=self.CACHE_DIR, verbose=False, use_fast=False)
+        elif self.use_api_key:
+            self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, token=self.api_key, device_map="auto",
+                                                           torch_dtype="auto", cache_dir=self.CACHE_DIR, verbose=False)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                            cache_dir=self.CACHE_DIR, verbose=False)
@@ -88,8 +99,12 @@ class HuggingfaceLocal(backends.Backend):
         hf_model_str = self.model_settings['huggingface_id']
 
         # load model using its default configuration:
-        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                          cache_dir=self.CACHE_DIR)
+        if self.use_api_key:
+            self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, token=self.api_key, device_map="auto",
+                                                                torch_dtype="auto", cache_dir=self.CACHE_DIR)
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+                                                              cache_dir=self.CACHE_DIR)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_name = model_name
@@ -129,7 +144,7 @@ class HuggingfaceLocal(backends.Backend):
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
 
-        prompt_tokens = self.tokenizer.apply_chat_template(messages)  # the actual tokens, including chat format
+        prompt_tokens = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)  # the actual tokens, including chat format
         prompt_size = len(prompt_tokens)
         tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
         tokens_left = self.context_size - tokens_used
