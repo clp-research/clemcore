@@ -9,6 +9,8 @@ import os
 import copy
 import json
 
+from jinja2 import TemplateError
+
 with open("hf_local_models.json", 'r', encoding="utf-8") as model_registry_file:
     MODEL_REGISTRY = json.load(model_registry_file)
 
@@ -110,18 +112,91 @@ class HuggingfaceLocal(backends.Backend):
         self.model_name = model_name
         self.model_loaded = True
 
-    def _check_messages(self, messages: List[Dict]):
+    def check_messages(self, messages: List[Dict], model: str) -> bool:
         """
-        internal message checking
-        to be extended with model/template-specific checks and warnings
+        Message checking for clemgame development. This checks if the model's chat template accepts the given messages
+        as passed, before the standard flattening done for generation. This allows clemgame developers to construct
+        message lists that are sound as-is and are not affected by the indiscriminate processing of the generation
+        method. Deliberately verbose.
+        :param messages: for example
+                [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Who won the world series in 2020?"},
+                    {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                    {"role": "user", "content": "Where was it played?"}
+                ]
+        :param model: model name
+        :return: True if messages are sound as-is, False if messages are not compatible with the model's template.
         """
+
+        if not self.config_and_tokenizer_loaded:
+            self.load_config_and_tokenizer(model)
+
+        # bool for message acceptance:
+        messages_accepted: bool = True
+
+        # check for system message:
+        has_system_message: bool = False
         if messages[0]['role'] == "system":
+            print("System message detected.")
+            has_system_message = True
             if not messages[0]['content']:
-                print(f"Initial system message is empty!")
+                print(f"Initial system message is empty! It will be removed when generating responses.")
+            """
+            print("Checking model system message compatibility...")
+            # unfortunately the Mistral models, which do not accept system messages, do not raise a distinct exception for this...
+            try:
+                self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+            except TemplateError:
+                print("The model's chat template does not allow for system message!")
+                messages_accepted = False
+            """
+
+        # check for message order:
+        starts_with_assistant: bool = False
+        double_user: bool = False
+        double_assistant: bool = False
+        ends_with_assistant: bool = False
+
+        for msg_idx, message in enumerate(messages):
+            if not has_system_message and msg_idx == 0 and message['role'] == "assistant":
+                starts_with_assistant = True
+            if msg_idx > 0 and message['role'] == "user" and messages[msg_idx - 1]['role'] == "user":
+                double_user = True
+            elif msg_idx > 0 and message['role'] == "assistant" and messages[msg_idx - 1]['role'] == "assistant":
+                double_assistant = True
+        if messages[-1]['role'] == "assistant":
+            ends_with_assistant = True
+
+        if starts_with_assistant or double_user or double_assistant or ends_with_assistant:
+            print("Message order issue(s) found:")
+            if starts_with_assistant:
+                print("First message has role:'assistant'.")
+            if double_user:
+                print("Messages contain consecutive user messages.")
+            if double_assistant:
+                print("Messages contain consecutive assistant messages.")
+            if ends_with_assistant:
+                print("Last message has role:'assistant'.")
+
+        # proper check of chat template application:
+        try:
+            self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+        except TemplateError:
+            print("The model's chat template does not accept these messages! "
+                  "Flattening applied before generation might still allow these messages, but is indiscriminate and "
+                  "might lead to unintended generation inputs.")
+            messages_accepted = False
+        else:
+            print("The model's chat template accepts these messages. Flattening before generation is still applied to "
+                  "these messages, which is indiscriminate and might lead to unintended generation inputs.")
+
+        return messages_accepted
 
     def _check_context_limit(self, prompt_tokens, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
         """
-        internal context limit check to run in generate_response
+        Internal context limit check to run in generate_response.
+        :param prompt_tokens: List of prompt token IDs.
         :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
         :return: Tuple with
                 Bool: True if context limit is not exceeded, False if too many tokens
@@ -132,13 +207,27 @@ class HuggingfaceLocal(backends.Backend):
         prompt_size = len(prompt_tokens)
         tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
         tokens_left = self.context_size - tokens_used
-        # print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
         fits = tokens_used <= self.context_size
         return fits, tokens_used, tokens_left, self.context_size
 
-    def check_context_limit(self, messages: List[Dict], model: str, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
+    def check_context_limit(self, messages: List[Dict], model: str,
+                            max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
         """
-        externally-callable context limit check
+        Externally-callable context limit check for clemgame development.
+        :param messages: for example
+                [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Who won the world series in 2020?"},
+                    {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                    {"role": "user", "content": "Where was it played?"}
+                ]
+        :param model: model name
+        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :return: Tuple with
+                Bool: True if context limit is not exceeded, False if too many tokens
+                Number of tokens for the given messages and maximum new tokens
+                Number of tokens of 'context space left'
+                Total context token limit
         """
 
         if not self.config_and_tokenizer_loaded:
