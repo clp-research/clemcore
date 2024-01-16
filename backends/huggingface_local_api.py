@@ -31,6 +31,7 @@ class HuggingfaceLocal(backends.Backend):
         self.model_loaded = False
 
     def load_config_and_tokenizer(self, model_name):
+        logger.info(f'Start loading huggingface model config and tokenizer: {model_name}')
         # model cache handling
         root_data_path = os.path.join(os.path.abspath(os.sep), "data")
         # check if root/data exists:
@@ -80,7 +81,10 @@ class HuggingfaceLocal(backends.Backend):
                             f"while model has no pre-made template! Generic template will be used, likely leading to "
                             f"bad results.")
 
-        model_config = AutoConfig.from_pretrained(hf_model_str)
+        if self.use_api_key:
+            model_config = AutoConfig.from_pretrained(hf_model_str, token=self.api_key)
+        else:
+            model_config = AutoConfig.from_pretrained(hf_model_str)
 
         # get context token limit for model:
         if hasattr(model_config, 'max_position_embeddings'):  # this is the standard attribute used by most
@@ -93,17 +97,17 @@ class HuggingfaceLocal(backends.Backend):
         self.config_and_tokenizer_loaded = True
 
     def load_model(self, model_name):
-        logger.info(f'Start loading huggingface model: {model_name}')
-
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model_name)
+
+        logger.info(f'Start loading huggingface model weights: {model_name}')
 
         hf_model_str = self.model_settings['huggingface_id']
 
         # load model using its default configuration:
         if self.use_api_key:
             self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, token=self.api_key, device_map="auto",
-                                                                torch_dtype="auto", cache_dir=self.CACHE_DIR)
+                                                              torch_dtype="auto", cache_dir=self.CACHE_DIR)
         else:
             self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                               cache_dir=self.CACHE_DIR)
@@ -116,7 +120,7 @@ class HuggingfaceLocal(backends.Backend):
         """
         Message checking for clemgame development. This checks if the model's chat template accepts the given messages
         as passed, before the standard flattening done for generation. This allows clemgame developers to construct
-        message lists that are sound as-is and are not affected by the indiscriminate processing of the generation
+        message lists that are sound as-is and are not affected by the indiscriminate flattening of the generation
         method. Deliberately verbose.
         :param messages: for example
                 [
@@ -128,7 +132,6 @@ class HuggingfaceLocal(backends.Backend):
         :param model: model name
         :return: True if messages are sound as-is, False if messages are not compatible with the model's template.
         """
-
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
 
@@ -141,10 +144,14 @@ class HuggingfaceLocal(backends.Backend):
             print("System message detected.")
             has_system_message = True
             if not messages[0]['content']:
-                print(f"Initial system message is empty! It will be removed when generating responses.")
+                print(f"Initial system message is empty. It will be removed when generating responses.")
+            else:
+                print(f"Initial system message has content! It will not be removed when generating responses. This "
+                      f"will lead to issues with models that do not allow system messages.")
             """
             print("Checking model system message compatibility...")
-            # unfortunately the Mistral models, which do not accept system messages, do not raise a distinct exception for this...
+            # unfortunately Mistral models, which do not accept system message, currently do not raise a distinct 
+            # exception for this...
             try:
                 self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
             except TemplateError:
@@ -159,8 +166,12 @@ class HuggingfaceLocal(backends.Backend):
         ends_with_assistant: bool = False
 
         for msg_idx, message in enumerate(messages):
-            if not has_system_message and msg_idx == 0 and message['role'] == "assistant":
-                starts_with_assistant = True
+            if not has_system_message:
+                if msg_idx == 0 and message['role'] == "assistant":
+                    starts_with_assistant = True
+            else:
+                if msg_idx == 1 and message['role'] == "assistant":
+                    starts_with_assistant = True
             if msg_idx > 0 and message['role'] == "user" and messages[msg_idx - 1]['role'] == "user":
                 double_user = True
             elif msg_idx > 0 and message['role'] == "assistant" and messages[msg_idx - 1]['role'] == "assistant":
