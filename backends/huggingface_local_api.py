@@ -29,6 +29,7 @@ class HuggingfaceLocal(backends.Backend):
         self.use_api_key: bool = False
         self.config_and_tokenizer_loaded: bool = False
         self.model_loaded: bool = False
+        self.model_name: str = ""
 
     def load_config_and_tokenizer(self, model_name):
         logger.info(f'Loading huggingface model config and tokenizer: {model_name}')
@@ -94,9 +95,13 @@ class HuggingfaceLocal(backends.Backend):
         else:  # few models, especially older ones, might not have their context size in the config
             self.context_size = FALLBACK_CONTEXT_SIZE
 
+        self.model_name = model_name
         self.config_and_tokenizer_loaded = True
 
     def load_model(self, model_name):
+        if not model_name == self.model_name:
+            self.config_and_tokenizer_loaded = False
+
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model_name)
 
@@ -113,7 +118,6 @@ class HuggingfaceLocal(backends.Backend):
                                                               cache_dir=self.CACHE_DIR)
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model_name = model_name
         self.model_loaded = True
 
     def check_messages(self, messages: List[Dict], model: str) -> bool:
@@ -132,6 +136,9 @@ class HuggingfaceLocal(backends.Backend):
         :param model: model name
         :return: True if messages are sound as-is, False if messages are not compatible with the model's template.
         """
+        if not model == self.model_name:
+            self.config_and_tokenizer_loaded = False
+
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
 
@@ -241,6 +248,9 @@ class HuggingfaceLocal(backends.Backend):
                 Number of tokens of 'context space left'
                 Total context token limit
         """
+        if not model == self.model_name:
+            self.config_and_tokenizer_loaded = False
+
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
 
@@ -269,6 +279,9 @@ class HuggingfaceLocal(backends.Backend):
         :return: the continuation
         """
         assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
+
+        if not model == self.model_name:
+            self.model_loaded = False
 
         # load the model to the memory
         if not self.model_loaded:
