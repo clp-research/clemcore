@@ -14,6 +14,7 @@ This backend requires these **mandatory** key/values:
 `eos_to_cull`(string): This is the string representation of the model's EOS token. It needs to be removed by the backend to assure proper processing by clembench. Example: `<|im_end|>` (This is mandatory as there are models that do not define this in their tokenizer configuration.)  
 
 The following key/values are **optional**, but should be defined for models that require them for proper functioning:  
+`requires_api_key`(bool): If `true`, the backend will load a huggingface api access key/token from `key.json`, which is required to access 'gated' models like Meta's Llama2.  
 `custom_chat_template`(string): A jinja2 template string of the chat template to be applied for this model. This should be set if `premade_chat_template` is `false` for the model, as the generic fallback chat template that will be used if this is not defined is likely to lead to bad model performance.  
 `slow_tokenizer`(bool): If `true`, the backend will load the model's tokenizer with `use_fast=False`. Some models require the use of a 'slow' tokenizer class to assure proper tokenization.  
 `output_split_prefix`(string): The model's raw output will be rsplit using this string, and the remaining output following this string will be considered the model output. This is necessary for some models that decode tokens differently than they encode them, to assure that the prompt is properly removed from model responses. Example: `assistant\n`
