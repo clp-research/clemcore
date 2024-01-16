@@ -23,6 +23,20 @@ SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGIS
 FALLBACK_CONTEXT_SIZE = 256
 
 
+class ContextExceededError(Exception):
+    tokens_used: int = int()
+    tokens_left: int = int()
+    context_size: int = int()
+
+    def __init__(self, info_str: str = "Context limit exceeded", tokens_used: int = 0,
+                 tokens_left: int = 0, context_size: int = 0):
+        info = f"{info_str} {tokens_used}/{context_size}"
+        super().__init__(info)
+        self.tokens_used = tokens_used
+        self.tokens_left = tokens_left
+        self.context_size = context_size
+
+
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
@@ -325,7 +339,10 @@ class HuggingfaceLocal(backends.Backend):
         context_check = self._check_context_limit(prompt_tokens[0], max_new_tokens=max_new_tokens)
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_name} exceeded: {context_check[1]}/{context_check[3]}")
-            # fail gracefully here
+            # fail gracefully:
+            raise ContextExceededError(f"Context token limit for {self.model_name} exceeded",
+                                       tokens_used=context_check[1], tokens_left=context_check[2],
+                                       context_size=context_check[3])
 
         # greedy decoding:
         do_sample: bool = False
