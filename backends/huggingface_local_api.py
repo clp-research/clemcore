@@ -27,11 +27,11 @@ class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
         self.use_api_key: bool = False
-        self.config_and_tokenizer_loaded = False
-        self.model_loaded = False
+        self.config_and_tokenizer_loaded: bool = False
+        self.model_loaded: bool = False
 
     def load_config_and_tokenizer(self, model_name):
-        logger.info(f'Start loading huggingface model config and tokenizer: {model_name}')
+        logger.info(f'Loading huggingface model config and tokenizer: {model_name}')
         # model cache handling
         root_data_path = os.path.join(os.path.abspath(os.sep), "data")
         # check if root/data exists:
@@ -222,7 +222,7 @@ class HuggingfaceLocal(backends.Backend):
         return fits, tokens_used, tokens_left, self.context_size
 
     def check_context_limit(self, messages: List[Dict], model: str,
-                            max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
+                            max_new_tokens: int = 100, verbose: bool = True) -> Tuple[bool, int, int, int]:
         """
         Externally-callable context limit check for clemgame development.
         :param messages: for example
@@ -234,13 +234,13 @@ class HuggingfaceLocal(backends.Backend):
                 ]
         :param model: model name
         :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :param verbose: If True, prettyprint token counts.
         :return: Tuple with
                 Bool: True if context limit is not exceeded, False if too many tokens
                 Number of tokens for the given messages and maximum new tokens
                 Number of tokens of 'context space left'
                 Total context token limit
         """
-
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
 
@@ -248,7 +248,8 @@ class HuggingfaceLocal(backends.Backend):
         prompt_size = len(prompt_tokens)
         tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
         tokens_left = self.context_size - tokens_used
-        print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
+        if verbose:
+            print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
         fits = tokens_used <= self.context_size
         return fits, tokens_used, tokens_left, self.context_size
 
