@@ -245,12 +245,12 @@ class HuggingfaceLocal(backends.Backend):
             self.load_config_and_tokenizer(model)
 
         prompt_tokens = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)  # the actual tokens, including chat format
-        prompt_size = len(prompt_tokens)
-        tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
-        tokens_left = self.context_size - tokens_used
+        context_check_tuple = self._check_context_limit(prompt_tokens, max_new_tokens=max_new_tokens)
+        tokens_used = context_check_tuple[1]
+        tokens_left = context_check_tuple[2]
         if verbose:
             print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
-        fits = tokens_used <= self.context_size
+        fits = context_check_tuple[0]
         return fits, tokens_used, tokens_left, self.context_size
 
     def generate_response(self, messages: List[Dict], model: str,
