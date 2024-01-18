@@ -52,7 +52,7 @@ source prepare_path.sh
 Then run the cli script to run the `taboo` game on the `high_en` experiment using the pairs of `fsc-openchat-3.5-0106` models. You can replace the game and experiment names for your own use case.
 
 ```
-python3 scripts/cli.py -m fsc-openchat-3.5-0106--fsc-openchat-3.5-0106 -e high_en run taboo
+python3 scripts/cli.py run -g taboo -m fsc-openchat-3.5-0106 -e high_en
 ```
 
 (The `-m` option tells the script which model to use; since taboo is a two player game, we need both partners to be specified here.)
@@ -70,7 +70,7 @@ If that is the case, output (transcripts of the games played) will have been wri
 For example, you can use that script to get a more readable version of the game play jsons like so:
 
 ```
-python3 scripts/cli.py transcribe taboo
+python3 scripts/cli.py transcribe -g taboo
 ```
 
 After running this, the `results` directory will now hold html and LaTeX views of the transcripts for each episode.
@@ -78,7 +78,7 @@ After running this, the `results` directory will now hold html and LaTeX views o
 Next run the following to generate scores:
 
 ```
-python3 scripts/cli.py score taboo
+python3 scripts/cli.py score -g taboo
 ```
 
 # Evaluation

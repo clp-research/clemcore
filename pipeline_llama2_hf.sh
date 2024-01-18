@@ -26,13 +26,13 @@ game_runs=(
   # Single-player: wordle_withclue
   "wordle_withclue llama-2-13b-chat-hf"
   # Multi-player taboo
-  "taboo llama-2-13b-chat-hf--llama-2-13b-chat-hf"
+  "taboo llama-2-13b-chat-hf"
   # Multi-player referencegame
-  "referencegame llama-2-13b-chat-hf--llama-2-13b-chat-hf"
+  "referencegame llama-2-13b-chat-hf"
   # Multi-player imagegame
-  "imagegame llama-2-13b-chat-hf--llama-2-13b-chat-hf"
+  "imagegame llama-2-13b-chat-hf"
   # Multi-player wordle_withcritic
-  "wordle_withcritic llama-2-13b-chat-hf--llama-2-13b-chat-hf"
+  "wordle_withcritic llama-2-13b-chat-hf"
 )
 total_runs=${#game_runs[@]}
 echo "Number of benchmark runs: $total_runs"

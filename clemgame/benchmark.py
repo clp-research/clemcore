@@ -1,4 +1,6 @@
 """ Main entry point """
+from typing import List
+
 import clemgame
 
 from datetime import datetime
@@ -20,40 +22,22 @@ def list_games():
         stdout_logger.info(" Game: %s -> %s", game.name, game.get_description())
 
 
-def run(game_name: str, temperature: float, model_name: str = None, experiment_name: str = None):
-    logger.info("Running benchmark for: %s (model_name=%s)", game_name,
-                model_name if model_name is not None else "see experiment configs")
+def run(game_name: str, temperature: float, models: List[str] = None, experiment_name: str = None):
     assert 0.0 <= temperature <= 1.0, "Temperature must be in [0.,1.]"
     if experiment_name:
         logger.info("Only running experiment: %s", experiment_name)
-    if game_name == "all" and model_name is not None:
-        if string_utils.is_pair_descriptor(model_name):
-            raise ValueError("'all' argument only allows self-play (single model arguments)."
-                             " Please provide individual model names e.g. model-a which is"
-                             " then automatically expanded to a dialogue pair for multi-player.")
-        games_list = load_benchmarks()
-    else:
-        games_list = [load_benchmark(game_name)]
-    total_games = len(games_list)
-    for idx, benchmark in enumerate(games_list):
-        try:
-            if experiment_name:
-                benchmark.filter_experiment.append(experiment_name)
-            stdout_logger.info(f"Run game {idx + 1} of {total_games}: {benchmark.name}")
-            time_start = datetime.now()
-            # checking for None here is important b.c. then experiment conf is used
-            if game_name == "all" and model_name is not None:  # automatically handle self-play
-                if benchmark.is_single_player():
-                    dialog_pair = model_name
-                else:  # multi-player
-                    dialog_pair = string_utils.to_pair_descriptor([model_name, model_name])
-            else:  # for particular games calls take the given argument directly (the user should know)
-                dialog_pair = model_name
-            benchmark.run(dialog_pair=dialog_pair, temperature=temperature)
-            time_end = datetime.now()
-            logger.info(f"Run {benchmark.name} took {str(time_end - time_start)}")
-        except Exception as e:
-            logger.error(e, exc_info=True)
+    try:
+        benchmark = load_benchmark(game_name)
+        logger.info("Running benchmark for: %s (models=%s)", game_name,
+                    models if models is not None else "see experiment configs")
+        if experiment_name:
+            benchmark.filter_experiment.append(experiment_name)
+        time_start = datetime.now()
+        benchmark.run(player_backends=models, temperature=temperature)
+        time_end = datetime.now()
+        logger.info(f"Run {benchmark.name} took {str(time_end - time_start)}")
+    except Exception as e:
+        logger.error(e, exc_info=True)
 
 
 def score(game_name: str, experiment_name: str = None):

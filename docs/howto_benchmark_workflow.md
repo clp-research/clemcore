@@ -7,16 +7,10 @@ Detailed documentation about setting up the virtual environment, installing libr
 The benchmark is run for a particular game with a particular model -- for example, the taboo game on GPT-3.5-turbo -- using the following command:  
 
 ```
-python3 scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run taboo
+python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo
 ```
 
-Or run the following command to run all existing games on the chosen model (GPT-3.5-turbo):
-
-```
-python3 scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run all
-```
-
-Alternatively, the benchmark run can be scripted as follows to run multiple games and model combinations using the following bash script (here, only GPT-3.5-turbo and GPT-4 are chosen as references):
+Alternatively, the benchmark run can be scripted as follows to run multiple games various models (in self-play mode) using the following bash script (here, only GPT-3.5-turbo and GPT-4 are chosen as references):
 
 ```
 #!/bin/bash
@@ -30,24 +24,30 @@ game_runs=(
   # Single-player: privateshared
   "privateshared gpt-3.5-turbo"
   "privateshared gpt-4"
+  
   # Single-player: wordle
   "wordle gpt-3.5-turbo"
   "wordle gpt-4"
+  
   # Single-player: wordle_withclue
   "wordle_withclue gpt-3.5-turbo"
   "wordle_withclue gpt-4"
+  
   # Multi-player taboo
-  "taboo gpt-3.5-turbo--gpt-3.5-turbo"
-  "taboo gpt-4--gpt-4"
+  "taboo gpt-3.5-turbo"
+  "taboo gpt-4"
+  
   # Multi-player referencegame
-  "referencegame gpt-3.5-turbo--gpt-3.5-turbo"
-  "referencegame gpt-4--gpt-4"
+  "referencegame gpt-3.5-turbo"
+  "referencegame gpt-4"
+  
   # Multi-player imagegame
-  "imagegame gpt-3.5-turbo--gpt-3.5-turbo"
-  "imagegame gpt-4--gpt-4"
+  "imagegame gpt-3.5-turbo"
+  "imagegame gpt-4"
+  
   # Multi-player wordle_withcritic
-  "wordle_withcritic gpt-3.5-turbo--gpt-3.5-turbo"
-  "wordle_withcritic gpt-4--gpt-4"
+  "wordle_withcritic gpt-3.5-turbo"
+  "wordle_withcritic gpt-4"
 )
 total_runs=${#game_runs[@]}
 echo "Number of benchmark runs: $total_runs"
@@ -69,13 +69,25 @@ Once the benchmark runs are finished, the `results` folder will include all run 
 Run the following command to generate transcriptions of the dialogues. The script generates LaTeX and HTML files of the dialogues under each episode of a particular experiment.
 
 ```
-python3 scripts/cli.py transcribe all
+python3 scripts/cli.py transcribe
+```
+
+The default is for `all` games. But we could also do this just for a single game
+
+```
+python3 scripts/cli.py transcribe -g taboo
 ```
 
 Next, run the scoring command that calculates turn & episode-specific metrics defined for each game. This script generates `scores.json` file stored under the same folder as transcripts and other files under a specific episode. 
 
 ```
-python3 scripts/cli.py score all
+python3 scripts/cli.py score 
+```
+
+The default is for `all` games. But we could also do this just for a single game
+
+```
+python3 scripts/cli.py score -g taboo
 ```
 
 ### Evaluate the Benchmark Run & Update the Leaderboard
