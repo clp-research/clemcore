@@ -320,7 +320,8 @@ class HuggingfaceLocal(backends.Backend):
         return fits, tokens_used, tokens_left, self.context_size
 
     def generate_response(self, messages: List[Dict], model: str,
-                          max_new_tokens: int = 100, return_full_text: bool = False) -> Tuple[Any, Any, str]:
+                          max_new_tokens: int = 100, return_full_text: bool = False,
+                          log_messages: bool = False) -> Tuple[Any, Any, str]:
         """
         :param messages: for example
                 [
@@ -332,6 +333,7 @@ class HuggingfaceLocal(backends.Backend):
         :param model: model name
         :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
         :param return_full_text: If True, whole input context is returned.
+        :param log_messages: If True, raw and cleaned messages passed will be logged.
         :return: the continuation
         """
         assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
@@ -346,12 +348,14 @@ class HuggingfaceLocal(backends.Backend):
             logger.info(f"Model device map: {self.model.hf_device_map}")
 
         # log current given messages list:
-        # logger.info(f"Raw messages passed: {messages}")
+        if log_messages:
+            logger.info(f"Raw messages passed: {messages}")
 
         current_messages = self._clean_messages(messages)
 
         # log current flattened messages list:
-        # logger.info(f"Flattened messages: {current_messages}")
+        if log_messages:
+            logger.info(f"Flattened messages: {current_messages}")
 
         # apply chat template & tokenize:
         prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True,
@@ -375,9 +379,6 @@ class HuggingfaceLocal(backends.Backend):
         do_sample: bool = False
         if self.temperature > 0.0:
             do_sample = True
-
-        # test to check if temperature is properly set on this Backend object:
-        # logger.info(f"Currently used temperature for this instance of HuggingfaceLocal: {self.temperature}")
 
         if do_sample:
             model_output_ids = self.model.generate(
