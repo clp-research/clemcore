@@ -134,6 +134,40 @@ class HuggingfaceLocal(backends.Backend):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model_loaded = True
 
+    def _clean_messages(self, messages: List[Dict]) -> List[Dict]:
+        """
+        Remove message issues indiscriminately for compatibility with certain model's chat templates. Empty first system
+        message is removed (for Mistral models and others that do not use system messages). Messages are concatenated
+        to create consistent user-assistant pairs (for Llama-based chat formats).
+        :param messages: for example
+                [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Who won the world series in 2020?"},
+                    {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                    {"role": "user", "content": "Where was it played?"}
+                ]
+        :return: Cleaned and flattened messages list.
+        """
+        # deepcopy messages to prevent reference issues:
+        current_messages = copy.deepcopy(messages)
+
+        # cull empty system message:
+        if current_messages[0]['role'] == "system":
+            if not current_messages[0]['content']:
+                del current_messages[0]
+
+        # flatten consecutive user messages:
+        for msg_idx, message in enumerate(current_messages):
+            if msg_idx > 0 and message['role'] == "user" and current_messages[msg_idx - 1]['role'] == "user":
+                current_messages[msg_idx - 1]['content'] += f" {message['content']}"
+                del current_messages[msg_idx]
+            elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1][
+                'role'] == "assistant":
+                current_messages[msg_idx - 1]['content'] += f" {message['content']}"
+                del current_messages[msg_idx]
+
+        return current_messages
+
     def check_messages(self, messages: List[Dict], model: str) -> bool:
         """
         Message checking for clemgame development. This checks if the model's chat template accepts the given messages
@@ -243,7 +277,8 @@ class HuggingfaceLocal(backends.Backend):
         return fits, tokens_used, tokens_left, self.context_size
 
     def check_context_limit(self, messages: List[Dict], model: str,
-                            max_new_tokens: int = 100, verbose: bool = True) -> Tuple[bool, int, int, int]:
+                            max_new_tokens: int = 100, clean_messages: bool = False,
+                            verbose: bool = True) -> Tuple[bool, int, int, int]:
         """
         Externally-callable context limit check for clemgame development.
         :param messages: for example
@@ -255,6 +290,7 @@ class HuggingfaceLocal(backends.Backend):
                 ]
         :param model: model name
         :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :param clean_messages: If True, the standard cleaning method for message lists will be applied.
         :param verbose: If True, prettyprint token counts.
         :return: Tuple with
                 Bool: True if context limit is not exceeded, False if too many tokens
@@ -268,7 +304,13 @@ class HuggingfaceLocal(backends.Backend):
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
 
-        prompt_tokens = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)  # the actual tokens, including chat format
+        # optional messages processing:
+        if clean_messages:
+            current_messages = self._clean_messages(messages)
+        else:
+            current_messages = messages
+
+        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)  # the actual tokens, including chat format
         context_check_tuple = self._check_context_limit(prompt_tokens, max_new_tokens=max_new_tokens)
         tokens_used = context_check_tuple[1]
         tokens_left = context_check_tuple[2]
@@ -306,22 +348,7 @@ class HuggingfaceLocal(backends.Backend):
         # log current given messages list:
         # logger.info(f"Raw messages passed: {messages}")
 
-        # deepcopy messages to prevent reference issues:
-        current_messages = copy.deepcopy(messages)
-
-        # cull empty system message:
-        if current_messages[0]['role'] == "system":
-            if not current_messages[0]['content']:
-                del current_messages[0]
-
-        # flatten consecutive user messages:
-        for msg_idx, message in enumerate(current_messages):
-            if msg_idx > 0 and message['role'] == "user" and current_messages[msg_idx - 1]['role'] == "user":
-                current_messages[msg_idx - 1]['content'] += f" {message['content']}"
-                del current_messages[msg_idx]
-            elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1]['role'] == "assistant":
-                current_messages[msg_idx - 1]['content'] += f" {message['content']}"
-                del current_messages[msg_idx]
+        current_messages = self._clean_messages(messages)
 
         # log current flattened messages list:
         # logger.info(f"Flattened messages: {current_messages}")
@@ -392,7 +419,6 @@ class HuggingfaceLocal(backends.Backend):
 
 
 if __name__ == "__main__":
-    # print(MODEL_REGISTRY)
-    # print(SUPPORTED_MODELS)
-    # test_instance = HuggingfaceLocal()
-    pass
+    # initialize a backend instance:
+    test_backend = HuggingfaceLocal()
+    # TODO: add examples of message and context limit checking here
