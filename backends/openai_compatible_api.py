@@ -18,7 +18,7 @@ MAX_TOKENS = 100
 # serving at that moment.
 # But anyway, hopefull we'll soon have a different method for selecting backends. 2024-01-10
 SUPPORTED_MODELS = ["fsc-vicuna-13b-v1.5", "fsc-vicuna-33b-v1.3", "fsc-vicuna-7b-v1.5",
-                    "fsc-openchat-3.5-0106"]
+                    "fsc-openchat-3.5-0106", "fsc-codellama-34b-instruct"]
 
 NAME = "generic_openai_compatible"
 
