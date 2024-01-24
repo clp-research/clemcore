@@ -136,16 +136,14 @@
     "model_name": "openchat_3.5",
     "backend": "huggingface",
     "huggingface_id": "openchat/openchat_3.5",
-    "premade_chat_template": false,
-    "custom_chat_template": "{{ bos_token }}{% for message in messages %}{{ 'GPT4 Correct ' + message['role'].title() + ': ' + message['content'] + '<|end_of_turn|>'}}{% endfor %}GPT4 Correct Assistant:",
+    "premade_chat_template": true,
     "eos_to_cull": "<|end_of_turn|>"
   },
   {
     "model_name": "Yi-34B-Chat",
     "backend": "huggingface",
     "huggingface_id": "01-ai/Yi-34B-Chat",
-    "premade_chat_template": false,
-    "custom_chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
+    "premade_chat_template": true,
     "slow_tokenizer": true,
     "output_split_prefix": "assistant\n",
     "eos_to_cull": "<|im_end|>"
@@ -154,16 +152,14 @@
     "model_name": "deepseek-llm-7b-chat",
     "backend": "huggingface",
     "huggingface_id": "deepseek-ai/deepseek-llm-7b-chat",
-    "premade_chat_template": false,
-    "custom_chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "premade_chat_template": true,
     "eos_to_cull": "<｜end▁of▁sentence｜>"
   },
   {
     "model_name": "deepseek-llm-67b-chat",
     "backend": "huggingface",
     "huggingface_id": "deepseek-ai/deepseek-llm-67b-chat",
-    "premade_chat_template": false,
-    "custom_chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}",
+    "premade_chat_template": true,
     "eos_to_cull": "<｜end▁of▁sentence｜>"
   },
   {
