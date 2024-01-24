@@ -99,6 +99,7 @@ class HuggingfaceLocal(backends.Backend):
         self.config_and_tokenizer_loaded = True
 
     def load_model(self, model_name):
+        # different model name might be passed:
         if not model_name == self.model_name:
             self.config_and_tokenizer_loaded = False
 
@@ -240,8 +241,8 @@ class HuggingfaceLocal(backends.Backend):
                   f"might lead to unintended generation inputs.")
             messages_accepted = False
         else:
-            print(f"The {self.model_name} chat template accepts these messages. Cleaning before generation is still applied to "
-                  f"these messages, which is indiscriminate and might lead to unintended generation inputs.")
+            print(f"The {self.model_name} chat template accepts these messages. Cleaning before generation is still "
+                  f"applied to these messages, which is indiscriminate and might lead to unintended generation inputs.")
 
         return messages_accepted
 
@@ -284,19 +285,19 @@ class HuggingfaceLocal(backends.Backend):
                 Number of tokens of 'context space left'
                 Total context token limit
         """
+        # different model name might be passed:
         if not model == self.model_name:
             self.config_and_tokenizer_loaded = False
 
         if not self.config_and_tokenizer_loaded:
             self.load_config_and_tokenizer(model)
-
         # optional messages processing:
         if clean_messages:
             current_messages = self._clean_messages(messages)
         else:
             current_messages = messages
-
-        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)  # the actual tokens, including chat format
+        # the actual tokens, including chat format:
+        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)
         context_check_tuple = self._check_context_limit(prompt_tokens, max_new_tokens=max_new_tokens)
         tokens_used = context_check_tuple[1]
         tokens_left = context_check_tuple[2]
@@ -323,7 +324,7 @@ class HuggingfaceLocal(backends.Backend):
         :return: the continuation
         """
         assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
-
+        # different model name might be passed:
         if not model == self.model_name:
             self.model_loaded = False
 
@@ -358,8 +359,8 @@ class HuggingfaceLocal(backends.Backend):
             logger.info(f"Context token limit for {self.model_name} exceeded: {context_check[1]}/{context_check[3]}")
             # fail gracefully:
             raise backends.ContextExceededError(f"Context token limit for {self.model_name} exceeded",
-                                       tokens_used=context_check[1], tokens_left=context_check[2],
-                                       context_size=context_check[3])
+                                                tokens_used=context_check[1], tokens_left=context_check[2],
+                                                context_size=context_check[3])
 
         # greedy decoding:
         do_sample: bool = False
@@ -487,3 +488,8 @@ if __name__ == "__main__":
     print("Excessive messages context check with Mistral-7B-Instruct-v0.1:")
     excessive_context_check_tuple = test_backend.check_context_limit(excessive_messages, "Mistral-7B-Instruct-v0.1")
     print(f"Excessive messages context check output: {excessive_context_check_tuple}")
+    """Note: Mistral-7B-Instruct-v0.1 has an official context limit of 32768, and while the context limit checks might 
+    pass, using the full context of models with large limits like this is likely to use a great amount of memory (VRAM) 
+    which can lead to CUDA Out-Of-Memory errors that are not only hard to handle, but can also incapacitate shared 
+    hardware until it is manually reset. Please test for this while developing clemgames to prevent hardware outages 
+    when the full set of clemgames is run by others."""
