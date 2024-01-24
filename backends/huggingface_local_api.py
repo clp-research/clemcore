@@ -23,20 +23,6 @@ SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGIS
 FALLBACK_CONTEXT_SIZE = 256
 
 
-class ContextExceededError(Exception):
-    tokens_used: int = int()
-    tokens_left: int = int()
-    context_size: int = int()
-
-    def __init__(self, info_str: str = "Context limit exceeded", tokens_used: int = 0,
-                 tokens_left: int = 0, context_size: int = 0):
-        info = f"{info_str} {tokens_used}/{context_size}"
-        super().__init__(info)
-        self.tokens_used = tokens_used
-        self.tokens_left = tokens_left
-        self.context_size = context_size
-
-
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.

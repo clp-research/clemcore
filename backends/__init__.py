@@ -122,3 +122,20 @@ def configure(fn_apply: Callable[[Backend], None]):
     """
     for backend in _loaded_backends:
         fn_apply(backend)
+
+
+class ContextExceededError(Exception):
+    """
+    Exception to be raised when the messages passed to a backend instance exceed the context limit of the model.
+    """
+    tokens_used: int = int()
+    tokens_left: int = int()
+    context_size: int = int()
+
+    def __init__(self, info_str: str = "Context limit exceeded", tokens_used: int = 0,
+                 tokens_left: int = 0, context_size: int = 0):
+        info = f"{info_str} {tokens_used}/{context_size}"
+        super().__init__(info)
+        self.tokens_used = tokens_used
+        self.tokens_left = tokens_left
+        self.context_size = context_size
