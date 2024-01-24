@@ -249,13 +249,13 @@ class HuggingfaceLocal(backends.Backend):
         try:
             self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
         except TemplateError:
-            print("The model's chat template does not accept these messages! "
-                  "Flattening applied before generation might still allow these messages, but is indiscriminate and "
-                  "might lead to unintended generation inputs.")
+            print(f"The {self.model_name} chat template does not accept these messages! "
+                  f"Cleaning applied before generation might still allow these messages, but is indiscriminate and "
+                  f"might lead to unintended generation inputs.")
             messages_accepted = False
         else:
-            print("The model's chat template accepts these messages. Flattening before generation is still applied to "
-                  "these messages, which is indiscriminate and might lead to unintended generation inputs.")
+            print(f"The {self.model_name} chat template accepts these messages. Cleaning before generation is still applied to "
+                  f"these messages, which is indiscriminate and might lead to unintended generation inputs.")
 
         return messages_accepted
 
@@ -315,7 +315,7 @@ class HuggingfaceLocal(backends.Backend):
         tokens_used = context_check_tuple[1]
         tokens_left = context_check_tuple[2]
         if verbose:
-            print(f"{tokens_used} input tokens, {tokens_left}/{self.context_size} tokens left.")
+            print(f"{tokens_used} input tokens, {tokens_left} tokens of {self.context_size} left.")
         fits = context_check_tuple[0]
         return fits, tokens_used, tokens_left, self.context_size
 
@@ -422,4 +422,82 @@ class HuggingfaceLocal(backends.Backend):
 if __name__ == "__main__":
     # initialize a backend instance:
     test_backend = HuggingfaceLocal()
-    # TODO: add examples of message and context limit checking here
+
+    # MESSAGES CHECKING
+    print("--- Messages checking examples ---")
+    # proper minimal messages:
+    minimal_messages = [
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check proper minimal messages with Mistral-7B-Instruct-v0.1:
+    print("Minimal messages:")
+    test_backend.check_messages(minimal_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # improper double user messages:
+    double_user_messages = [
+        {"role": "user", "content": "Hello there!"},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check improper double user messages with Mistral-7B-Instruct-v0.1:
+    print("Double user messages:")
+    test_backend.check_messages(double_user_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # improper first assistant message:
+    first_assistant_messages = [
+        {"role": "assistant", "content": "Hello there!"},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check improper first assistant message with Mistral-7B-Instruct-v0.1:
+    print("First message role assistant:")
+    test_backend.check_messages(first_assistant_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # system message:
+    system_messages = [
+        {"role": "system", "content": "You love all kinds of fat."},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check system message with Mistral-7B-Instruct-v0.1:
+    print("System message:")
+    test_backend.check_messages(system_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # empty system message:
+    empty_system_messages = [
+        {"role": "system", "content": ""},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check empty system message with Mistral-7B-Instruct-v0.1:
+    print("Empty system message:")
+    test_backend.check_messages(empty_system_messages, "Mistral-7B-Instruct-v0.1")
+    print("-----")
+
+    # CONTEXT LIMIT CHECKING
+    print("--- Context limit checking ---")
+    # check minimal messages with Mistral-7B-Instruct-v0.1:
+    print("Minimal messages context check with Mistral-7B-Instruct-v0.1:")
+    minimal_context_check_tuple = test_backend.check_context_limit(minimal_messages, "Mistral-7B-Instruct-v0.1")
+    print(f"Minimal messages context check output: {minimal_context_check_tuple}")
+    print()
+    # excessive number of messages:
+    excessive_messages = list()
+    for _ in range(2000):
+        excessive_messages.append({"role": "user", "content": "What is your favourite condiment?"})
+        excessive_messages.append({"role": "assistant", "content": "Lard!"})
+    excessive_messages.append({"role": "user", "content": "Do you have mayonnaise recipes?"})
+    # check excessive messages with Mistral-7B-Instruct-v0.1:
+    print("Excessive messages context check with Mistral-7B-Instruct-v0.1:")
+    excessive_context_check_tuple = test_backend.check_context_limit(excessive_messages, "Mistral-7B-Instruct-v0.1")
+    print(f"Excessive messages context check output: {excessive_context_check_tuple}")
