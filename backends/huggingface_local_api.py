@@ -357,7 +357,7 @@ class HuggingfaceLocal(backends.Backend):
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_name} exceeded: {context_check[1]}/{context_check[3]}")
             # fail gracefully:
-            raise ContextExceededError(f"Context token limit for {self.model_name} exceeded",
+            raise backends.ContextExceededError(f"Context token limit for {self.model_name} exceeded",
                                        tokens_used=context_check[1], tokens_left=context_check[2],
                                        context_size=context_check[3])
 
