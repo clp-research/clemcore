@@ -22,6 +22,8 @@ SEED = 42
 # TODO: make number of words, number of team words and so on game or experiment parameters
 # TODO: sample from different prepared word lists (or with different similarity metrics) for different experiments
 # TODO: filter out clue words that are not single words (e.g. NEW YORK)
+# TODO: read from command line or make some experiment config files so that it is easy to implement new experiment instance generations
+# experiment: {assignments: {...}, wordlists: [...], generator: function() or string identifier}
 
 class CodenamesInstanceGenerator(GameInstanceGenerator):
 
@@ -60,6 +62,38 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
             # Add game parameters
             game_instance["board"] = board
             game_instance["assignments"] = {"team": team_words, "opponent": opponent_words, "innocent": innocent_words, "assassin": assassin_words}
+
+    def test_instance_format(board_instance, params):
+        # board_instance = {"board": [...],
+        # "assignments": {"team": [...], "opponent": [...], "innocent": [...], "assassin": [...]}}
+        
+        keys = ['total', 'team', 'opponent', 'innocent', 'assassin']
+        assert set(params.keys()) == set(keys), f"The params dictionary is missing a key, keys are {params.keys()}, but should be {keys}!"
+        
+        if not "board" in board_instance:
+            raise KeyError("The key 'board' was not found in the board instance.")
+        if not "assignments" in board_instance:
+            raise KeyError("The key 'assignments' was not found in the board instance.")
+        
+        if len(board_instance["board"]) != params["total"]:
+            raise ValueError(f"The total length of the board {len(board_instance['board'])} is unequal to the required board length {total}.")
+        for alignment in params.keys():
+            if alignment == 'total':
+                continue
+            if len(board_instance["assignments"][alignment]) != params[alignment]:
+                raise ValueError(f"The number of {alignment} on the board ({len(board_instance['assignments'][alignment])}) is unequal to the required number of {alignment} words ({params[alignment]})")
+        
+        if params['total'] != params['team'] + params['opponent'] + params['innocent'] + params['assassin']:
+            raise ValueError(f"The sum of all assignments does not match the total number of words!")
+            
+        assigned_words = [x for y in board_instance["assignments"] for x in board_instance['assignments'][y]]
+        print(assigned_words)
+        if set(board_instance["board"]) != set(assigned_words):
+            raise ValueError(f"The words on the board do not match all the assigned words.")
+
+    def test_all_instances(instances, params):
+        for instance in instances:
+            self.test_instance_format(instance, params)
 
 
 if __name__ == '__main__':
