@@ -4,6 +4,7 @@ from retry import retry
 import json
 import openai
 import backends
+import httpx
 
 logger = backends.get_logger(__name__)
 
@@ -17,7 +18,7 @@ MAX_TOKENS = 100
 # serving at that moment.
 # But anyway, hopefull we'll soon have a different method for selecting backends. 2024-01-10
 SUPPORTED_MODELS = ["fsc-vicuna-13b-v1.5", "fsc-vicuna-33b-v1.3", "fsc-vicuna-7b-v1.5",
-                    "lcp-openchat_openchat-3.5-1210"]
+                    "fsc-openchat-3.5-0106", "fsc-codellama-34b-instruct"]
 
 NAME = "generic_openai_compatible"
 
@@ -28,7 +29,11 @@ class GenericOpenAI(backends.Backend):
         creds = backends.load_credentials(NAME)
         self.client = openai.OpenAI(
             base_url=creds[NAME]["base_url"],
-            api_key = "sk-no-key-required"
+            api_key=creds[NAME]["api_key"],
+            ### TO BE REVISED!!! (Famous last words...)
+            ### The line below is needed because of
+            ### issues with the certificates on our GPU server.
+            http_client=httpx.Client(verify=False)
             )
         self.temperature: float = -1.
 
