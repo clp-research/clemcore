@@ -670,7 +670,7 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.error(
                         f"{self.name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def run(self, dialog_pair: str, temperature: float):
+    def run(self, player_backends: List[str], temperature: float):
         """
         Runs game-play on all game instances for a game.
         There must be an instances.json with the following structure:
@@ -713,11 +713,8 @@ class GameBenchmark(GameResourceLocator):
             # Determine dialogue partners: How often to run the experiment with different partners
             dialogue_partners: List[List[str]] = []
 
-            if dialog_pair:  # favor runtime argument over experiment config
-                if string_utils.is_pair_descriptor(dialog_pair):
-                    dialogue_partners = [string_utils.to_model_pair(dialog_pair)]
-                else:
-                    dialogue_partners = [[dialog_pair]]
+            if player_backends:  # favor runtime argument over experiment config
+                dialogue_partners = [player_backends]
             elif "dialogue_partners" in experiment:
                 dialogue_partners = experiment["dialogue_partners"]
                 self.logger.info(f"{self.name}: Detected 'dialogue_partners' in experiment config. "
@@ -725,27 +722,29 @@ class GameBenchmark(GameResourceLocator):
 
             if not dialogue_partners:
                 message = (f"{self.name}: Neither 'dialogue_partners' set in experiment instance"
-                           f" nor 'model_name' given as run arg")
+                           f" nor 'models' given as run arg")
                 stdout_logger.error(message)
                 raise ValueError(message)
 
             for dialogue_pair in dialogue_partners:
-                if len(dialogue_pair) == 1 and self.is_single_player():
-                    model_name = dialogue_pair[0]
-                    dialogue_pair_desc = f"{model_name}-t{temperature}"
-                    stdout_logger.info(f"With single player: {dialogue_pair_desc}")
+                if self.is_single_player():
+                    if len(dialogue_pair) > 1:
+                        message = f"Too many player for singe-player game '{self.name}': '{len(dialogue_partners)}'"
+                        stdout_logger.error(message)
+                        raise ValueError(message)
+                    model_desc_0 = f"{dialogue_pair[0]}-t{temperature}"
                     # still we store to model--model dir (virtual self-play)
-                    dialogue_pair_desc = f"{dialogue_pair_desc}--{dialogue_pair_desc}"
-                elif len(dialogue_pair) == 2 and not self.is_single_player():
-                    dialogue_pair_desc = string_utils.to_pair_descriptor([f"{model_name}-t{temperature}"
-                                                                          for model_name in dialogue_pair])
-                    stdout_logger.info(f"With dialog partners: {dialogue_pair_desc}")
-                else:
-                    message = (f"Invalid model pairing {dialogue_pair}"
-                               f" for a {'single' if self.is_single_player() else 'multi'}-player game."
-                               f" For single-player expected only a single model, otherwise a pair.")
-                    stdout_logger.error(message)
-                    raise ValueError(message)
+                    dialogue_pair_desc = f"{model_desc_0}--{model_desc_0}"
+                else:  # 2-players
+                    if len(dialogue_pair) > 2:
+                        message = f"Too many player for two-player game '{self.name}': '{len(dialogue_partners)}'"
+                        stdout_logger.error(message)
+                        raise ValueError(message)
+                    if len(dialogue_pair) == 1:
+                        dialogue_pair.append(dialogue_pair[0])  # model expansion
+                    model_desc_0 = f"{dialogue_pair[0]}-t{temperature}"
+                    model_desc_1 = f"{dialogue_pair[1]}-t{temperature}"
+                    dialogue_pair_desc = f"{model_desc_0}--{model_desc_1}"
                 episode_counter = 0
 
                 self.logger.info("Activity: %s Experiment: %s Partners: %s Episode: %d",

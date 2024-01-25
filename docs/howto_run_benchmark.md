@@ -62,10 +62,15 @@ source prepare_path.sh
 Then run the cli script
 
 ```
-python3 scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run taboo
+python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo
 ```
 
-(The `-m` option tells the script which model to use; since taboo is a two player game, we need both partners to be specified here.)
+The `-m` option tells the script which model to use. Since taboo is a two player game, we could theoretically also 
+let two different models play the game which would look like:
+
+```
+python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo-1106 gpt-4-0613
+```
 
 This should give you an output on the terminal that contains something like the following:
 
@@ -73,20 +78,21 @@ This should give you an output on the terminal that contains something like the 
 Playing games: 100%|██████████████████████████████████| 20/20 [00:48<00:00,  2.41s/it]
 ```
 
-If that is the case, output (transcripts of the games played) will have been written to `results/taboo` (in the main directory of the code).
+If that is the case, output (transcripts of the games played) will have been written to 
+`results/gpt-3.5-turbo-t0.0--gpt-3.5-turbo-t0.0/taboo` (in the main directory of the code).
 
 Unfortunately, at the moment the code often fails silently, for example if model names are wrong, so make sure that you see the confirmation that the game actually has been played. Have a look at the file `clembench.log` if you suspect that something might be wrong.
 
 You can get more information about what you can do with the `cli` script via:
 
 ```
-python3 scripts/cli.py --help
+python3 scripts/cli.py run --help
 ```
 
 For example, you can use that script to get a more readable version of the game play jsons like so:
 
 ```
-python3 scripts/cli.py transcribe taboo
+python3 scripts/cli.py transcribe -g taboo
 ```
 
 After running this, the `results` directory will now hold html and LaTeX views of the transcripts.
@@ -95,23 +101,23 @@ After running this, the `results` directory will now hold html and LaTeX views o
 To run other game masters individually use the following scripts. Note some games (privateshared) are single player and some games can be multiplayer (taboo, referencegame, imagegame, wordle)
 
 ```
-python scripts/cli.py -m gpt-3.5-turbo run privateshared
+python scripts/cli.py run -g privateshared -m gpt-3.5-turbo 
 ```
 
 ```
-python scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run taboo
+python scripts/cli.py run -g taboo -m gpt-3.5-turbo 
 ```
 
 ```
-python scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run imagegame
+python scripts/cli.py run -g imagegame -m gpt-3.5-turbo 
 ```
 
 ```
-python scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run referencegame
+python scripts/cli.py run -g referencegame -m gpt-3.5-turbo 
 ```
 
 ```
-python scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run wordle
+python scripts/cli.py run -g wordle -m gpt-3.5-turbo 
 ```
 
 
@@ -139,25 +145,25 @@ with the format described in ```logdoc.md```.
 In order to generate the transcriptions of the dialogues, please run this command:
 
 ```
-python3 scripts/cli.py transcribe all
+python3 scripts/cli.py transcribe
 ```
 
 Or put a single game name (taboo, referencegame, imagegame, wordle, privateshared)
 
 ```
-python3 scripts/cli.py transcribe taboo
+python3 scripts/cli.py transcribe -g taboo
 ```
 
 Next, run this command to generate the scores of the dialogues:
 
 ```
-python3 scripts/cli.py score all
+python3 scripts/cli.py score
 ```
 
 Or put a single game name (taboo, referencegame, imagegame, wordle, privateshared)
 
 ```
-python3 scripts/cli.py score taboo
+python3 scripts/cli.py score -g taboo
 ```
 
 We provide an evaluation script at `evaluation/papereval.py` that produces a number of tables and visualizations for all games in the ```results/``` directory, which was used for the paper. To use this script, new models (their name abbreviation), metrics (their range) and game/model (their order) must be added manually to the constants in ```evaluation/evalutils.py```. Run the following to replicate the results in the paper or if you have new results:

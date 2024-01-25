@@ -12,11 +12,17 @@ If you're completely new to this, it might make sense to look at two Jupyter not
 The benchmark is run for a particular game -- for example the taboo game -- using the follow command:  
 
 ```
-python3 scripts/cli.py -m gpt-3.5-turbo--gpt-3.5-turbo run taboo
+python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo-1106
 ```
 
-From the call we already see that taboo is a two-player game because we need to provide a descriptor for two models.
-These models are supposed to play certain roles in the game, here a clue giver and a guesser. 
+_Note: when only a single model for a 2-player game is given, then clem will use this model for both players!_ 
+
+As taboo is a game of two players (a clue giver and a guesser) we could theoretically also let two different
+models play the game which would look like:
+
+```
+python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo-1106 gpt-4-0613
+```
 
 ### GameBenchmark class
 
@@ -51,7 +57,7 @@ of the necessary plumbing and executes the main logic for a benchmark run (calli
 Aside: The return value of `get_description` is shown for the `python3 scripts/cli.py ls` command.
 
 Then the benchmark code checks if your game is single or multiplayer game (the default is multi-player), 
-so that the `-m gpt-3.5-turbo--gpt-3.5-turbo` option is properly handled. 
+so that the `-m gpt-3.5-turbo-1106` option is properly handled. 
 Then the `run(dialog_pair,temperature)` method is called which is already implemented by `GameBenchmark`.
 This is when the `GameMaster` becomes relevant (which should be returned by your `create_game_master()` factory method).
 
@@ -388,36 +394,37 @@ Add to the module a `master.py` that implements the `GameMaster`.
 ### Running experiments with your game
 
 ```
-python3 scripts/cli.py -m gpt-3.5-turbo [-e greet_en] run hellogame
+python3 scripts/cli.py run -g hellogame -m gpt-3.5-turbo-1106 [-e greet_en]
 ```
 
 Note: With -e you can specify specific experiments to run.
 
-This will create a records folder in your game directory as the following:
+This will create a results folder in the project root as follows:
 
 ```
-records
-└── gpt-3.5-turbo
-    └── greet_en
-        ├── episode_0
-        │ ├── instance_0.json
-        │ ├── interaction.json
-        │ └── transcript.html
-        ├── episode_1
-        │ ├── instance_1.json
-        │ ├── interaction.json
-        │ └── transcript.html
-        │ ...
-        └── experiment_greet_en.json
+results
+└── gpt-3.5-turbo-1106-t0.0--gpt-3.5-turbo-1106-t0.0
+    └── hellogame
+        └── 0_greet_en
+            ├── episode_0
+            │ ├── instance.json
+            │ ├── interaction.json
+            │ └── transcript.html
+            ├── episode_1
+            │ ├── instance.json
+            │ ├── interaction.json
+            │ └── transcript.html
+            │ ...
+            └── experiment_greet_en.json
 ```
 
-The top level is `records` followed by directories that mention the involved model (pairings).
+The top level is `results` followed by directories that mention the involved model (pairings).
 
 The model (pairing) sub-folders will contain a directory structure for each experiment
 and the experiments episodes (game plays).
 
 The episodes are defined by the game instances (from the `instances.json`) and
-contain the instance parameters `instance_n.json`, an `interaction.json` and a nice human-viewable `transcript.html`.
+contain the instance parameters `instance.json`, an `interaction.json` and a nice human-viewable `transcript.html`.
 
 The experiment folder also contains a `experiment_name.json` that contains the run parameters.
 
