@@ -1,6 +1,5 @@
 # How to add a model to the HuggingFace backend
-This HowTo explains how to add a LLM hosted on the HuggingFace (HF) model repository to the local HuggingFace 
-backend of clembench.
+This HowTo explains how to add a LLM hosted on the HuggingFace (HF) model repository to the local HuggingFace backend of clembench.
 ## HuggingFace models
 Each model hosted on [HuggingFace](http://huggingface.co) is identified by its **model ID**, which is the combination of
 the **model uploader's username** and the individual **model name**.  
