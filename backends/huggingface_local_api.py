@@ -11,7 +11,14 @@ import json
 
 from jinja2 import TemplateError
 
-with open("backends/hf_local_models.json", 'r', encoding="utf-8") as model_registry_file:
+# model registry accessibility:
+current_wd = os.getcwd()
+if not current_wd[-8:] == "backends":
+    model_registry_path = os.path.join("backends", "hf_local_models.json")
+else:
+    model_registry_path = os.path.join("hf_local_models.json")
+# load model registry:
+with open(model_registry_path, 'r', encoding="utf-8") as model_registry_file:
     MODEL_REGISTRY = json.load(model_registry_file)
 
 logger = backends.get_logger(__name__)

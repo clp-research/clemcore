@@ -195,26 +195,26 @@
     "eos_to_cull": "<|endoftext|>"
   },
   {
-    "model_name": "llama-2-7b-hf",
+    "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface",
     "requires_api_key": true,
-    "huggingface_id": "meta-llama/llama-2-7b-hf",
+    "huggingface_id": "meta-llama/llama-2-7b-chat-hf",
     "premade_chat_template": true,
     "eos_to_cull": "</s>"
   },
   {
-    "model_name": "llama-2-13b-hf",
+    "model_name": "llama-2-13b-chat-hf",
     "backend": "huggingface",
     "requires_api_key": true,
-    "huggingface_id": "meta-llama/llama-2-7b-hf",
+    "huggingface_id": "meta-llama/llama-2-13b-chat-hf",
     "premade_chat_template": true,
     "eos_to_cull": "</s>"
   },
   {
-    "model_name": "llama-2-70b-hf",
+    "model_name": "llama-2-70b-chat-hf",
     "backend": "huggingface",
     "requires_api_key": true,
-    "huggingface_id": "meta-llama/llama-2-7b-hf",
+    "huggingface_id": "meta-llama/llama-2-70b-chat-hf",
     "premade_chat_template": true,
     "eos_to_cull": "</s>"
   }
