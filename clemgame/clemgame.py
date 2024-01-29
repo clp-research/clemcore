@@ -838,12 +838,12 @@ class GameInstanceGenerator(GameResourceLocator):
     def on_generate(self):
         raise NotImplementedError()
 
-    def generate(self):
+    def generate(self, filename="instances.json"):
         self.on_generate()
-        self.store()
+        self.store(filename)
 
-    def store(self):
-        self.store_file(self.instances, "instances.json", sub_dir="in")
+    def store(self, filename):
+        self.store_file(self.instances, filename, sub_dir="in")
 
 
 def load_benchmarks(do_setup: bool = True) -> List[GameBenchmark]:
