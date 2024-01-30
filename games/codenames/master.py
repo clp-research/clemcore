@@ -2,8 +2,10 @@ from typing import Dict, List, Tuple, Set
 from string import Template
 import random, string, re, math
 
-from clemgame.clemgame import GameMaster, GameBenchmark, Player, DialogueGameMaster
+from clemgame.clemgame import GameMaster, GameScorer, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
+from clemgame.metrics import METRIC_ABORTED, METRIC_SUCCESS, METRIC_LOSE, METRIC_REQUEST_COUNT, \
+    METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_SUCCESS, BENCH_SCORE
 
 logger = get_logger(__name__)
 
@@ -22,6 +24,8 @@ class ValidationError(Exception):
 # TODO: change prompts on reprompt, let them reflect the errors
 # TODO: ValidationError for "answer was too long, did not follow the specified format"
 # TODO: implement mock opponent player
+# TODO: change main score calculation, revealing assassin on first turn is scored too high
+# TODO: USE STRING CONSTANTS!!!
 
 class Guesser(Player):
     def __init__(self, model_name: str):
@@ -35,6 +39,7 @@ class Guesser(Player):
         board = prompt.split('\n\n')[1].split(', ')
         number_of_allowed_guesses = int(re.search(r"Please select up to ([0-9]+) words", prompt).group(1))
         self.guesses = random.sample(board, number_of_allowed_guesses)
+        self.guesses = [word.strip('.') for word in self.guesses]       # was not an issue but also does not hurt
         return self.recover_utterance()
     
     def validate_response(self, utterance: str, board: List[str], number_of_allowed_guesses: int):
@@ -43,7 +48,7 @@ class Guesser(Player):
         for line in lines:
             if not line.startswith(self.prefix):
                 raise ValidationError(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
-        guesses = [line[len(self.prefix):] for line in lines]
+        guesses = [line.removeprefix(self.prefix) for line in lines]
         # must contain one valid guess, but can only contain $number guesses max
         if not (0 < len(guesses) <= number_of_allowed_guesses):
             raise ValidationError(f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}")
@@ -54,13 +59,12 @@ class Guesser(Player):
             
     def parse_response(self, utterance: str) -> str:
         lines = utterance.split("\n")
-        self.guesses = [line[len(self.prefix):] for line in lines]
-        return self.guesses
+        self.guesses = [line.removeprefix(self.prefix) for line in lines]
+        return f"{', '.join(self.guesses)}"
             
     def recover_utterance(self) -> str:
         with_prefix = [self.prefix + guess for guess in self.guesses]
         return "\n".join(with_prefix)
-
 
 class ClueGiver(Player):
     def __init__(self, model_name: str):
@@ -73,7 +77,7 @@ class ClueGiver(Player):
 
     def _custom_response(self, history, turn) -> str:
         prompt = history[-1]["content"]
-        match = re.search(r"Your team words are: (.*)", prompt)
+        match = re.search(r"Your team words are: (.*)\.", prompt)
         if match != None:
             # Player was actually prompted (otherwise it was reprompted and the team_words stay the same)
             team_words = match.group(1)
@@ -87,7 +91,7 @@ class ClueGiver(Player):
         # needs to start with correct prefix
         if not utterance.startswith(self.prefix):
             raise ValidationError(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
-        utterance = utterance[len(self.prefix):]
+        utterance = utterance.removeprefix(self.prefix)
         parts = utterance.split(', ')
         if len(parts) < 3:
             raise ValidationError(f"Utterance {utterance} did not contain enough parts (only {len(parts)}) of required clue, number, and targets (at least three comma-separated)")
@@ -116,7 +120,7 @@ class ClueGiver(Player):
                 raise ValidationError(f"Targeted word {target} does not exist on board.")
             
     def parse_response(self, utterance: str) -> str:
-        utterance = utterance[len(self.prefix):]
+        utterance = utterance.removeprefix(self.prefix)
         parts = utterance.split(', ')
         self.clue = parts[0]
         self.number_of_targets = int(parts[1])
@@ -162,14 +166,16 @@ class CodenamesBoard:
     
     def has_team_won(self) -> bool:
         return len(self.hidden["team"]) == 0
+    
+    def has_team_won_through_assassin(self) -> bool:
+        return len(self.revealed["opponent"]["assassin"]) >= 1
 
     def has_opponent_won(self) -> bool:
         return len(self.hidden["opponent"]) == 0
 
-    def has_assassin_won(self) -> bool:
-        return len(self.revealed["team"]["assassin"]) >= 1 or len(self.revealed["opponent"]["assassin"]) >= 1
-
-
+    def has_opponent_won_through_assassin(self) -> bool:
+        return len(self.revealed["team"]["assassin"]) >= 1
+    
 class CodenamesGame(DialogueGameMaster):
     """This class implements a codenames game in which player A
     is giving a clue for a set of target words on a board, 
@@ -181,10 +187,6 @@ class CodenamesGame(DialogueGameMaster):
         # fetch experiment parameters
         self.experiment: str = experiment["name"]
         self.experiment_type: str = experiment["type"]
-        
-        #self.aborted: bool = False
-        #self.lose: bool = False
-        self.invalid_response: bool = False
 
         # save player interfaces
         self.model_a: str = player_backends[0]
@@ -196,6 +198,14 @@ class CodenamesGame(DialogueGameMaster):
                                                     game_instance["assignments"]["opponent"], 
                                                     game_instance["assignments"]["innocent"],
                                                     game_instance["assignments"]["assassin"])
+        
+        self.aborted: bool = False
+        self.lost: bool = False
+        self.invalid_response: bool = False
+        self.number_of_turns = 0
+        self.request_count = 0
+        self.parsed_request_count = 0
+        self.violated_request_count = 0
 
         # Create the players
         self.cluegiver: Player = ClueGiver(self.player_backends[0])
@@ -229,37 +239,49 @@ class CodenamesGame(DialogueGameMaster):
                                                                       number=self.cluegiver.number_of_targets)
         return instance_prompt_guesser
     
+    def _on_before_game(self):
+        self.add_user_message(self.cluegiver, self._get_cluegiver_prompt())
+
     def _on_before_turn(self, current_turn):
         # add new cluegiver prompt
         self.cluegiver.retries = 0
         self.guesser.retries = 0
+        self.number_of_turns += 1
         self.add_user_message(self.cluegiver, self._get_cluegiver_prompt())
 
     def _does_game_proceed(self) -> bool:
         # Determine if the game should proceed. This is also called once initially.
+        continue_game = True
         if self.invalid_response:
-            return False
+            self.log_key("game end", "aborted")
+            self.aborted = True
+            continue_game = False
         
         # for the base version, a check is needed whether all team words from one team are revealed or the assassin is revealed
-        continue_game = True
         if self.board.has_team_won():
-            self.log_to_self("game end", "Team won!")
+            self.log_key("game end", "team won")
+            self.lost = False
             continue_game = False
         elif self.board.has_opponent_won():
-            self.log_to_self("game end", "Opponent won!")
+            self.log_key("game end", "opponent won")
+            self.lost = True
             continue_game = False
-        elif self.board.has_assassin_won():
-            self.log_to_self("game end", "Assassin won!")
+        elif self.board.has_team_won_through_assassin():
+            self.log_key("game end", "team won through assassin")
+            self.lost = False
             continue_game = False
-        #elif self.current_turn >= 9:
-            # that would only be necessary be for Codenames Duet
-        #    return False
+        elif self.board.has_opponent_won_through_assassin():
+            self.log_key("game end", "opponent won through assassin")
+            self.lost = True
+            continue_game = False
+
         if not continue_game:
-            self.log_to_self("board status", self.board.get_current_board())
+            self._log_game_end()
             return False
         return True
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
+        self.request_count += 1
         self.invalid_response = False
         if player == self.cluegiver:
             try:
@@ -268,25 +290,29 @@ class CodenamesGame(DialogueGameMaster):
                 print(error.message)
                 self.log_to_self("cluegiver validation error", error.message)
                 self.invalid_response = True
+                self.violated_request_count += 1
         else:
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words(), self.cluegiver.number_of_targets)
             except ValidationError as error:
                 self.log_to_self("guesser validation error", error.message)
                 self.invalid_response = True
+                self.violated_request_count += 1
         
         return not self.invalid_response
     
     def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
+        self.parsed_request_count += 1
         if player == self.cluegiver:
             self.log_to_self("clue", self.cluegiver.recover_utterance() ) # already logged by logging player message but needed for score
             self.log_to_self("targets", self.cluegiver.targets)
-            return player.parse_response(utterance), True
+            # TODO: first parse_response, then log other things. These only get populated once the parsing is done....
+            return player.parse_response(utterance), False
         else:
             # TODO: check this, does not seem to work
             self.log_to_self("guess", self.guesser.recover_utterance()) # already logged by logging player message but needed for score
-            guesses = player.parse_response(utterance)
-            for guess in guesses:
+            parsed_utterance = player.parse_response(utterance)
+            for guess in player.guesses:
                 assignment = self.board.reveal_word(guess)
                 self.log_to_self("word revealed", assignment)
                 if self._was_target(guess):
@@ -295,14 +321,16 @@ class CodenamesGame(DialogueGameMaster):
                     self.log_to_self("turn end after", guess)
                     break
                 
-            return guesses, True
+            return parsed_utterance, False
         
     def _on_before_reprompt(self, player: Player):
         logger.debug("Reprompting...")
         player.retries += 1
+        self.request_count += 1
         self.add_user_message(player, "Your answer did not follow the requested format, please give a new answer that follows the format.")
     
     def _should_reprompt(self, player: Player):
+        return False
         if player.retries < MAX_RETRIES:
             return self.invalid_response
         return False
@@ -311,15 +339,31 @@ class CodenamesGame(DialogueGameMaster):
         if player == self.cluegiver:
             # put clue and number of targets into prompt for guesser
             # no intermittent turn for guesser needed, as it is short enough
+            # pass
             self.add_user_message(self.guesser, self._get_guesser_prompt())
+
         else:
             # TODO: use intermittent prompt, that also includes guess from guessing player and then prompts for new clue, with updated lists of board words
             self.add_user_message(self.cluegiver, utterance)
 
-    def compute_scores(self, episode_interactions: Dict) -> None:
-        board_at_end = {}
-        invalid_format_total = {"cluegiver": 0, "guesser": 0}
-        for turn_idx, turn in enumerate(episode_interactions["turns"]):
+    def _log_game_end(self):
+        # log everything that is needed for score calculation and game evaluation
+        self.log_key("board status", self.board.get_current_board())
+        self.log_key("number of turns", self.number_of_turns)
+        self.log_key(METRIC_ABORTED, self.aborted)
+        self.log_key(METRIC_LOSE, self.lost)
+        # METRIC_SUCCESS does not need to be logged as it is inferred from ABORTED and LOSE
+        self.log_key(METRIC_REQUEST_COUNT, self.request_count)
+        self.log_key(METRIC_REQUEST_COUNT_PARSED, self.parsed_request_count)
+        self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_request_count)            
+
+
+class CodenamesScorer(GameScorer):
+    def __init__(self):
+        super().__init__(GAME_NAME)
+
+    def score_turns(self):
+        for turn_idx, turn in enumerate(self.episode_interactions["turns"]):
             # Metrics per turn:
             # target-precision, target-recall, target-f1
             # team-precision
@@ -339,8 +383,6 @@ class CodenamesGame(DialogueGameMaster):
                     case "word revealed":
                         turn_score["words revealed"][action["content"]] += 1
                         turn_score["words revealed"]["total"] += 1
-                    case "board status":
-                        board_at_end = action["content"]
 
             sum_revealed_words = turn_score["words revealed"]["team"] + turn_score["words revealed"]["opponent"] + turn_score["words revealed"]["innocent"] + turn_score["words revealed"]["assassin"]
             target_precision = 0
@@ -364,32 +406,47 @@ class CodenamesGame(DialogueGameMaster):
             self.log_turn_score(turn_idx, "target f1", target_f1)
             self.log_turn_score(turn_idx, "team precision", team_precision)
 
-            invalid_format_total["cluegiver"] += turn_score["cluegiver invalid format"]
-            invalid_format_total["guesser"] += turn_score["guesser invalid format"]
-
-        # Metrics per game:
-        # win/lose
-        # if lose, lost through assassin or lost through other team being faster
-        # number of team words revealed vs. all words revealed by agent
-        # how many turns needed
-        # TODO: remove magic numbers 9 and 8, should come from word assignments somewhere
-        number_of_turns = len(episode_interactions["turns"])
-        self.log_episode_score("board status", board_at_end)
-        self.log_episode_score("won", len(board_at_end["hidden"]["team"]) == 0)
-        self.log_episode_score("lost through opponent", len(board_at_end["hidden"]["opponent"]) == 0)
-        self.log_episode_score("lost through assassin", len(board_at_end["revealed"]["team"]["assassin"]) >= 1)
-        self.log_episode_score("won through assassin (opponent revealed)", len(board_at_end["revealed"]["opponent"]["assassin"]) >= 1)
+    def score_game(self):
+        # game-specific scores
+        number_of_turns = self.episode_interactions["number of turns"]
         self.log_episode_score("number of turns", number_of_turns)
-        self.log_episode_score("team words revealed", len(board_at_end["revealed"]["team"]["team"]) / 9)
-        self.log_episode_score("other words revealed", 1 - (len(board_at_end["revealed"]["team"]["assassin"]) + len(board_at_end["revealed"]["team"]["opponent"]) + len(board_at_end["revealed"]["team"]["innocent"])) / 16)
-        self.log_episode_score("total invalid format", invalid_format_total)
+
+        # plus all required game scores
+        super().score_game()
+    
+    def score_game_end(self):
+        super().score_game_end()
+        # plus game specific things
+        # won or lost through assassin or through revealing all words of one team
+
+        game_end = self.episode_interactions["game end"]
+        match game_end:
+            case "team won":
+                end_score = 1
+            case "team won through assassin":
+                end_score = 2
+            case "opponent won":
+                end_score = 3
+            case "opponent won through assassin":
+                end_score = 4
+        self.log_episode_score("game end", end_score)
+
+        self.board_at_end = self.episode_interactions["board status"]
+        # self.log_episode_score("board status", board_at_end)
+
+        self.log_episode_score("team words revealed/all team words", len(self.board_at_end["revealed"]["team"]["team"]) / 9)
+        self.log_episode_score("other words revealed/all words revealed", 1 - (len(self.board_at_end["revealed"]["team"]["assassin"]) + len(self.board_at_end["revealed"]["team"]["opponent"]) + len(self.board_at_end["revealed"]["team"]["innocent"])) / 16)
+       
+    def log_main_score(self):
+        # all logged scores are available via self.scores["episode scores"][score_name]
+        # or self.scores["turn scores"][turn_idx][score_name]
 
         # Main Score: log19(1 + (#team - #opponent - assassin_true*#hidden_opponent + 9 offset) / #turns) * 100
-        main_score = len(board_at_end["revealed"]["team"]["team"]) - len(board_at_end["revealed"]["team"]["opponent"]) - len(board_at_end["revealed"]["team"]["assassin"]) * len(board_at_end["hidden"]["opponent"]) + 9 # offset
-        main_score = (main_score / number_of_turns) + 1
+        main_score = len(self.board_at_end["revealed"]["team"]["team"]) - len(self.board_at_end["revealed"]["team"]["opponent"]) - len(self.board_at_end["revealed"]["team"]["assassin"]) * len(self.board_at_end["hidden"]["opponent"]) + 9 # offset
+        main_score = (main_score / self.scores["episode scores"]["number of turns"]) + 1
         main_score = math.log(main_score, 19) * 100
         assert 0 <= main_score <= 100, f"Main Score of {main_score} is not between 0 and 100"
-        self.log_episode_score("Main Score", main_score)
+        self.log_episode_score(BENCH_SCORE, main_score)
 
 
 class CodenamesGameBenchmark(GameBenchmark):
@@ -403,3 +460,6 @@ class CodenamesGameBenchmark(GameBenchmark):
 
     def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster:
         return CodenamesGame(experiment, player_backends)
+
+    def create_game_scorer(self) -> GameScorer:
+        return CodenamesScorer()
