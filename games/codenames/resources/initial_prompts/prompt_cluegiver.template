@@ -7,7 +7,7 @@ Please give your clue in the following format (and do not include any other text
 CLUE: <WORD>, <NUMBER>, <TARGET WORDS>
 where WORD is your clue word, NUMBER is the number of words your clue is targeting, and TARGET_WORDS are the targeted words that your teammate should guess from your clue.
 
-Your team words are: $team_words
-Your opponent's team words are: $opponent_words
-Distractor words are: $innocent_words
-The kill words are: $assassin_words
+Your team words are: $team_words.
+Your opponent's team words are: $opponent_words.
+Distractor words are: $innocent_words.
+The kill words are: $assassin_words. 
