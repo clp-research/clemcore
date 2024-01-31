@@ -4,8 +4,8 @@ import random, string, re, math
 
 from clemgame.clemgame import GameMaster, GameScorer, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
-from clemgame.metrics import METRIC_ABORTED, METRIC_SUCCESS, METRIC_LOSE, METRIC_REQUEST_COUNT, \
-    METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_SUCCESS, BENCH_SCORE
+from clemgame.metrics import METRIC_ABORTED, METRIC_LOSE, METRIC_REQUEST_COUNT, \
+    METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED, BENCH_SCORE
 
 logger = get_logger(__name__)
 
@@ -368,8 +368,7 @@ class CodenamesScorer(GameScorer):
             # target-precision, target-recall, target-f1
             # team-precision
             # invalid formats per player
-            turn_score = {"clue": None, "targets": [], "cluegiver invalid format": 0, 
-                          "guess": None, "guesser invalid format": 0, 
+            turn_score = {"targets": [], "cluegiver invalid format": 0, "guesser invalid format": 0, 
                           "words revealed": {"target": 0, "team": 0, "opponent": 0, "innocent": 0, "assassin": 0, "total": 0}}
             for event in turn:
                 action = event['action']
@@ -378,8 +377,8 @@ class CodenamesScorer(GameScorer):
                         turn_score["cluegiver invalid format"] += 1
                     case "guesser validation error":
                         turn_score["guesser invalid format"] += 1
-                    case "clue" | "targets" | "guess ":
-                        turn_score[action["type"]] = action["content"]
+                    case "targets":
+                        turn_score["targets"] = action["content"]
                     case "word revealed":
                         turn_score["words revealed"][action["content"]] += 1
                         turn_score["words revealed"]["total"] += 1
@@ -420,6 +419,7 @@ class CodenamesScorer(GameScorer):
         # won or lost through assassin or through revealing all words of one team
 
         game_end = self.episode_interactions["game end"]
+        end_score = 5       # assume that game was aborted
         match game_end:
             case "team won":
                 end_score = 1
