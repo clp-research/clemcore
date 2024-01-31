@@ -11,14 +11,8 @@ import json
 
 from jinja2 import TemplateError
 
-
-# model registry accessibility:
-current_wd = os.getcwd()
-if not current_wd[-8:] == "backends":
-    model_registry_path = os.path.join("backends", "hf_local_models.json")
-else:
-    model_registry_path = os.path.join("hf_local_models.json")
 # load model registry:
+model_registry_path = os.path.join(backends.project_root, "backends", "hf_local_models.json")
 with open(model_registry_path, 'r', encoding="utf-8") as model_registry_file:
     MODEL_REGISTRY = json.load(model_registry_file)
 
@@ -48,7 +42,6 @@ class HuggingfaceLocal(backends.Backend):
             logger.info(f"{root_data_path} does not exist, creating directory.")
             # create root/data:
             os.mkdir(root_data_path)
-
         self.CACHE_DIR = os.path.join(root_data_path, "huggingface_cache")
 
         # get settings from model registry for the first name match that uses this backend:
@@ -405,6 +398,7 @@ class HuggingfaceLocal(backends.Backend):
 
             if response_text[-eos_len:len(response_text)] == self.model_settings['eos_to_cull']:
                 response_text = response_text[:-eos_len]
+
         else:
             response_text = model_output.strip()
 
