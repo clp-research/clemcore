@@ -60,6 +60,11 @@ class HuggingfaceLocal(backends.Backend):
                 creds = backends.load_credentials("huggingface")
                 self.api_key = creds["huggingface"]["api_key"]
                 self.use_api_key = True
+            else:
+                requires_api_key_info = (f"{self.model_settings['model_name']} registry setting has requires_api_key, "
+                                         f"but it is not 'true'. Please check the model entry.")
+                print(requires_api_key_info)
+                logger.info(requires_api_key_info)
 
         hf_model_str = self.model_settings['huggingface_id']
 
@@ -68,6 +73,11 @@ class HuggingfaceLocal(backends.Backend):
             if self.model_settings['slow_tokenizer']:
                 self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                                cache_dir=self.CACHE_DIR, verbose=False, use_fast=False)
+            else:
+                slow_tokenizer_info = (f"{self.model_settings['model_name']} registry setting has slow_tokenizer, "
+                                       f"but it is not 'true'. Please check the model entry.")
+                print(slow_tokenizer_info)
+                logger.info(slow_tokenizer_info)
         elif self.use_api_key:
             self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, token=self.api_key, device_map="auto",
                                                            torch_dtype="auto", cache_dir=self.CACHE_DIR, verbose=False)
