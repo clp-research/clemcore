@@ -10,6 +10,7 @@ from tqdm import tqdm
 import backends
 import clemgame
 from clemgame import file_utils, string_utils, transcript_utils
+import clemgame.metrics as ms
 
 logger = clemgame.get_logger(__name__)
 stdout_logger = clemgame.get_logger("benchmark.run")
@@ -196,14 +197,6 @@ class GameRecorder(GameResourceLocator):
         }
         """ Stores calls to the API """
         self.requests = []
-        """ Stores values of score computation """
-        self.scores = {
-            "turn scores": {},
-            "episode scores": {},
-        }
-
-    def store_scores(self, dialogue_pair, game_record_dir):
-        self.store_results_file(self.scores, "scores.json", dialogue_pair, sub_dir=game_record_dir)
 
     def log_next_turn(self):
         """ Call this method to group interactions per turn """
@@ -256,22 +249,6 @@ class GameRecorder(GameResourceLocator):
         elif isinstance(call_obj, str):
             return call_obj[:]
         return call_obj
-
-    def log_turn_score(self, turn_idx, score_name, score_value):
-        if isinstance(score_value, bool):
-            self.logger.warning(f"{self.name}: Score {score_name} value is boolean, this can break the eval!")
-        if turn_idx not in self.scores["turn scores"]:
-            self.scores["turn scores"][turn_idx] = {}
-        if score_name in self.scores["turn scores"][turn_idx]:
-            self.logger.warning(f"{self.name}: Score {score_name} overwritten at turn {turn_idx}!")
-        self.scores["turn scores"][turn_idx][score_name] = score_value
-        self.logger.info(f"{self.name}: Logged turn {turn_idx} score {score_name}={score_value}.")
-
-    def log_episode_score(self, score_name, score_value):
-        if score_name in self.scores["episode scores"]:
-            self.logger.warning(f"{self.name}: Episode score {score_name} overwritten!")
-        self.scores["episode scores"][score_name] = score_value
-        self.logger.info(f"{self.name}: Logged episode score {score_name}={score_value}.")
 
     def store_records(self, dialogue_pair_desc: str, game_id: int, game_record_dir: str):
         """Raise warnings if a mandatory element is empty or format is wrong."""
@@ -330,10 +307,77 @@ class GameMaster(GameRecorder):
         """
         raise NotImplementedError()
 
+
+class GameScorer(GameRecorder):
+    def __init__(self, name: str):
+        super().__init__(name)
+        """ Stores values of score computation """
+        self.scores = {
+            "turn scores": {},
+            "episode scores": {},
+        }
+
+    def store_scores(self, dialogue_pair, game_record_dir):
+        self.store_results_file(self.scores, "scores.json", dialogue_pair, sub_dir=game_record_dir)
+
+    def log_turn_score(self, turn_idx, score_name, score_value):
+        if isinstance(score_value, bool):
+            self.logger.warning(f"{self.name}: Score {score_name} value is boolean, this can break the eval!")
+        if turn_idx not in self.scores["turn scores"]:
+            self.scores["turn scores"][turn_idx] = {}
+        if score_name in self.scores["turn scores"][turn_idx]:
+            self.logger.warning(f"{self.name}: Score {score_name} overwritten at turn {turn_idx}!")
+        self.scores["turn scores"][turn_idx][score_name] = score_value
+        self.logger.info(f"{self.name}: Logged turn {turn_idx} score {score_name}={score_value}.")
+
+    def log_episode_score(self, score_name, score_value):
+        if score_name in self.scores["episode scores"]:
+            self.logger.warning(f"{self.name}: Episode score {score_name} overwritten!")
+        self.scores["episode scores"][score_name] = score_value
+        self.logger.info(f"{self.name}: Logged episode score {score_name}={score_value}.")
+
+    #def log_experiment(self, **kwargs):
+    #    """
+    #    Log all experiment-specific data here, as you would set it up in the gamemaster.setup() function.
+    #    """
+    #    raise NotImplementedError()
+                        
     def compute_scores(self, episode_interactions: Dict) -> None:
-        """
-        Loop over the game records to compute and log all turn and episode scores.
-        """
+        self.episode_interactions = episode_interactions
+        self.score_turns()
+        self.score_game()
+
+    def score_turns(self) -> None:
+        "Loop over turns, calculate and log turn-specific scores"
+        raise NotImplementedError()
+    
+    def score_game(self) -> None:
+        self.score_game_end()
+        self.score_requests()
+        self.log_main_score()
+
+    def score_game_end(self) -> None:
+        aborted = int(self.episode_interactions[ms.METRIC_ABORTED])
+        lose = int(self.episode_interactions[ms.METRIC_LOSE]) if not aborted else 0
+        success =  1 - lose if not aborted else 0
+
+        self.log_episode_score(ms.METRIC_ABORTED, aborted)
+        self.log_episode_score(ms.METRIC_LOSE, lose)
+        self.log_episode_score(ms.METRIC_SUCCESS, success)
+
+    def score_requests(self):
+        # logging total request count, parsed, violated, and success ratio of parsed requests over all requests
+        request_count = self.episode_interactions[ms.METRIC_REQUEST_COUNT] # could also be calculated by adding parsed and violated requests
+        parsed_requests = self.episode_interactions[ms.METRIC_REQUEST_COUNT_PARSED]
+        violated_requests = self.episode_interactions[ms.METRIC_REQUEST_COUNT_VIOLATED]
+
+        self.log_episode_score(ms.METRIC_REQUEST_COUNT, request_count)
+        self.log_episode_score(ms.METRIC_REQUEST_COUNT_PARSED, parsed_requests)
+        self.log_episode_score(ms.METRIC_REQUEST_COUNT_VIOLATED, violated_requests)
+        self.log_episode_score(ms.METRIC_REQUEST_SUCCESS, parsed_requests / request_count)
+
+    def log_main_score(self):
+        "Replace this function call with a function that logs your main score aka BENCH_SCORE"
         raise NotImplementedError()
 
 
@@ -353,7 +397,7 @@ class DialogueGameMaster(GameMaster):
         """
         Add a player to the game.
 
-        Note: The players will be called at the same order as added!
+        Note: The players will be called in the same order as added!
 
         :param player: to be added to the game
         """
@@ -389,29 +433,49 @@ class DialogueGameMaster(GameMaster):
             for player in self.__player_sequence():
                 if not self._does_game_proceed():
                     break  # potentially stop in between player turns
-                # GM -> Player
-                history = self.messages_by_names[player.descriptor]
-                assert history, f"messages history must not be empty for {player.descriptor}"
-
-                last_entry = history[-1]
-                assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
-                                                          "b.c. this would be the role of the current player"
-                message = last_entry["content"]
-
-                action = {'type': 'send message', 'content': message}
-                self.log_event(from_='GM', to=player.descriptor, action=action)
-
-                _prompt, _response, response_message = player(history, self.current_turn)
-
-                # Player -> GM
-                action = {'type': 'get message', 'content': response_message}
-                self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
-
-                # GM -> GM
-                self.__validate_parse_and_add_player_response(player, response_message)
+                self.prompt(player)
+                while self._should_reprompt(player):
+                    self._on_before_reprompt(player)
+                    self.prompt(player)
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
         self._on_after_game()
+
+    def prompt(self, player: Player):
+        # GM -> Player
+        history = self.messages_by_names[player.descriptor]
+        assert history, f"messages history must not be empty for {player.descriptor}"
+
+        last_entry = history[-1]
+        assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
+                                                    "b.c. this would be the role of the current player"
+        message = last_entry["content"]
+
+        action = {'type': 'send message', 'content': message}
+        self.log_event(from_='GM', to=player.descriptor, action=action)
+
+        _prompt, _response, response_message = player(history, self.current_turn)
+
+        # Player -> GM
+        action = {'type': 'get message', 'content': response_message}
+        self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
+
+        # GM -> GM
+        self.__validate_parse_and_add_player_response(player, response_message)
+
+    def _should_reprompt(self, player: Player):
+        return False
+
+    def _on_before_reprompt(self, player: Player):
+        """
+        Hook
+
+        Change the prompt to reprompt the player on e.g. an invalid response.
+        Add the new prompt to the players message via self.add_user_message(player, new_prompt)
+
+        :param player: that produced the invalid response
+        """
+        pass
 
     def log_message_to(self, player: Player, message: str):
         """            GM -> Player        """
@@ -626,23 +690,21 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.info(f"Skip experiment {experiment_name}")
                     continue
                 stdout_logger.info(f"Scoring: {experiment_name}")
-                experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}",
-                                                           dialogue_pair)
+                # experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}", dialogue_pair)
                 episode_dirs = [file for file in os.listdir(experiment_path)
                                 if os.path.isdir(os.path.join(experiment_path, file))]
                 error_count = 0
                 for episode_dir in tqdm(episode_dirs, desc="Scoring episodes"):
                     try:
                         rel_episode_path = f"{experiment_dir}/{episode_dir}"
-                        game_instance = self.load_results_json(f"{rel_episode_path}/instance",
-                                                               dialogue_pair)
+                        # game_instance = self.load_results_json(f"{rel_episode_path}/instance", dialogue_pair)
                         game_interactions = self.load_results_json(f"{rel_episode_path}/interactions",
                                                                    dialogue_pair)
 
-                        game_master = self.create_game_master(experiment_config, model_pair)
-                        game_master.setup(**game_instance)
-                        game_master.compute_scores(game_interactions)
-                        game_master.store_scores(dialogue_pair, rel_episode_path)
+                        game_scorer = self.create_game_scorer() # (experiment_config, model_pair)
+                        # game_scorer.log_experiment(**game_instance) # was originally game_master.setup() but I don't see why it would be needed to compute scores
+                        game_scorer.compute_scores(game_interactions)
+                        game_scorer.store_scores(dialogue_pair, rel_episode_path)
                     except Exception:  # continue with other episodes if something goes wrong
                         self.logger.exception(f"{self.name}: Cannot score {episode_dir} (but continue)")
                         error_count += 1

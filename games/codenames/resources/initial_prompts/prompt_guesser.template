@@ -1,0 +1,7 @@
+Please select up to $number words from the following list that best relate or are most closely associated with the word '$clue':
+
+$board
+
+Please give your guess(es) as a comma-separated list in the format below (and do not include any other text in your answer):
+GUESS: <LIST OF WORDS>
+You can add as many words as you want and can guess, with a minimum of 1 and a maximum of $number.
