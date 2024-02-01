@@ -406,7 +406,7 @@ class HuggingfaceLocal(backends.Backend):
 
             eos_len = len(self.model_settings['eos_to_cull'])
 
-            if response_text[-eos_len:len(response_text)] == self.model_settings['eos_to_cull']:
+            if response_text.endswith(self.model_settings['eos_to_cull']):
                 response_text = response_text[:-eos_len]
 
         else:
