@@ -19,7 +19,6 @@ class ValidationError(Exception):
 # TODO: reuse players for other codename variants, e.g. Duet?
 # TODO: change prompts on reprompt, let them reflect the errors
 # TODO: ValidationError for "answer was too long, did not follow the specified format"
-# TODO: implement mock opponent player
 # TODO: change main score calculation, revealing assassin on first turn is scored too high
         # also when game is aborted in the beginning, the low number of turns gives too high overall scores
 
@@ -245,11 +244,22 @@ class CodenamesGame(DialogueGameMaster):
                                                                       number=self.cluegiver.number_of_targets)
         return instance_prompt_guesser
     
+    def _opponent_turn(self):
+        # reveal as many opponent cards as the opponent difficulty
+        opponent_words = random.sample(self.board.get_hidden_words(OPPONENT), self.opponent_difficulty)
+        for word in opponent_words:
+            assignment = self.board.reveal_word(word, OPPONENT)
+            self.log_to_self(Turn_logs.OPPONENT_REVEALED, assignment)            
+    
     def _on_before_game(self):
         pass
         # self.add_user_message(self.cluegiver, self._get_cluegiver_prompt(initial=True))
 
     def _on_before_turn(self, current_turn):
+        # let mock opponent reveal their cards
+        if self.number_of_turns > 0:
+            self._opponent_turn()
+
         # add new cluegiver prompt
         self.cluegiver.retries = 0
         self.guesser.retries = 0
