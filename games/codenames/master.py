@@ -331,7 +331,7 @@ class CodenamesGame(DialogueGameMaster):
                 assignment = self.board.reveal_word(guess)
                 self.log_to_self(Turn_logs.TEAM_REVEALED, assignment)
                 if self._was_target(guess):
-                    self.log_to_self("target revealed", guess)
+                    self.log_to_self(Turn_logs.TARGET_REVEALED, guess)
                 if not self.board.should_continue_after_revealing(guess):
                     self.log_to_self("turn end after", guess)
                     break
@@ -394,6 +394,8 @@ class CodenamesScorer(GameScorer):
                     case Turn_logs.TEAM_REVEALED:
                         turn_score[REVEALED][action["content"]] += 1
                         turn_score[REVEALED]["total"] += 1
+                    case Turn_logs.TARGET_REVEALED:
+                        turn_score[REVEALED][TARGET] += 1
 
             sum_revealed_words = turn_score[REVEALED][TEAM] + turn_score[REVEALED][OPPONENT] + turn_score[REVEALED][INNOCENT] + turn_score[REVEALED][ASSASSIN]
             target_precision = 0
