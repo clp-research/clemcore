@@ -432,6 +432,8 @@ class CodenamesScorer(GameScorer):
         # plus game specific things
         # won or lost through assassin or through revealing all words of one team
 
+        # TODO: should ratios also be 0 or NaN when the game was aborted?
+
         game_end = self.episode_interactions[GAME_END]
         end_score = 5       # assume that game was aborted
         match game_end:
@@ -454,6 +456,10 @@ class CodenamesScorer(GameScorer):
     def log_main_score(self):
         # all logged scores are available via self.scores["episode scores"][score_name]
         # or self.scores["turn scores"][turn_idx][score_name]
+
+        if self.scores["episode scores"][METRIC_ABORTED]:
+            self.log_episode_score(BENCH_SCORE, math.nan)
+            return
 
         # Main Score: log19(1 + (#team - #opponent - assassin_true*#hidden_opponent + 9 offset) / #turns) * 100
         #main_score = len(self.board_at_end[REVEALED][TEAM][TEAM]) - len(self.board_at_end[REVEALED][TEAM][OPPONENT]) - len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) * len(self.board_at_end[HIDDEN][OPPONENT]) + 9 # offset
