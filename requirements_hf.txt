@@ -1,8 +1,8 @@
 # Local Backends
 torch==2.0.1 # fix pytorch version
-transformers==4.34.0 # Huggingfaces
+transformers==4.36.0 # Huggingfaces
 sentencepiece==0.1.99 # FLAN model
-accelerate==0.20.3 # FLAN model
+accelerate==0.25.0 # FLAN model
 einops==0.6.1 # FALCON model
 protobuf==3.20.0
 bitsandbytes==0.39.0
