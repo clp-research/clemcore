@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple, Set
 from string import Template
-import random, string, re, math
+import random, string, re, statistics
 
 from clemgame.clemgame import GameMaster, GameScorer, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
@@ -331,7 +331,7 @@ class CodenamesGame(DialogueGameMaster):
                 assignment = self.board.reveal_word(guess)
                 self.log_to_self(Turn_logs.TEAM_REVEALED, assignment)
                 if self._was_target(guess):
-                    self.log_to_self("target revealed", guess)
+                    self.log_to_self(Turn_logs.TARGET_REVEALED, guess)
                 if not self.board.should_continue_after_revealing(guess):
                     self.log_to_self("turn end after", guess)
                     break
@@ -345,7 +345,7 @@ class CodenamesGame(DialogueGameMaster):
         self.add_user_message(player, "Your answer did not follow the requested format, please give a new answer that follows the format.")
     
     def _should_reprompt(self, player: Player):
-        return False
+        # return False
         if player.retries < MAX_RETRIES:
             return self.invalid_response
         return False
@@ -394,6 +394,8 @@ class CodenamesScorer(GameScorer):
                     case Turn_logs.TEAM_REVEALED:
                         turn_score[REVEALED][action["content"]] += 1
                         turn_score[REVEALED]["total"] += 1
+                    case Turn_logs.TARGET_REVEALED:
+                        turn_score[REVEALED][TARGET] += 1
 
             sum_revealed_words = turn_score[REVEALED][TEAM] + turn_score[REVEALED][OPPONENT] + turn_score[REVEALED][INNOCENT] + turn_score[REVEALED][ASSASSIN]
             target_precision = 0
@@ -430,6 +432,8 @@ class CodenamesScorer(GameScorer):
         # plus game specific things
         # won or lost through assassin or through revealing all words of one team
 
+        # TODO: should ratios also be 0 or NaN when the game was aborted?
+
         game_end = self.episode_interactions[GAME_END]
         end_score = 5       # assume that game was aborted
         match game_end:
@@ -453,11 +457,20 @@ class CodenamesScorer(GameScorer):
         # all logged scores are available via self.scores["episode scores"][score_name]
         # or self.scores["turn scores"][turn_idx][score_name]
 
+        if self.scores["episode scores"][METRIC_ABORTED]:
+            self.log_episode_score(BENCH_SCORE, math.nan)
+            return
+
         # Main Score: log19(1 + (#team - #opponent - assassin_true*#hidden_opponent + 9 offset) / #turns) * 100
-        main_score = len(self.board_at_end[REVEALED][TEAM][TEAM]) - len(self.board_at_end[REVEALED][TEAM][OPPONENT]) - len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) * len(self.board_at_end[HIDDEN][OPPONENT]) + 9 # offset
-        main_score = (main_score / self.scores["episode scores"][NUMBER_OF_TURNS]) + 1
-        main_score = math.log(main_score, 19) * 100
-        assert 0 <= main_score <= 100, f"Main Score of {main_score} is not between 0 and 100"
+        #main_score = len(self.board_at_end[REVEALED][TEAM][TEAM]) - len(self.board_at_end[REVEALED][TEAM][OPPONENT]) - len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) * len(self.board_at_end[HIDDEN][OPPONENT]) + 9 # offset
+        #main_score = (main_score / self.scores["episode scores"][NUMBER_OF_TURNS]) + 1
+        #main_score = math.log(main_score, 19) * 100
+        #assert 0 <= main_score <= 100, f"Main Score of {main_score} is not between 0 and 100"
+        #self.log_episode_score(BENCH_SCORE, main_score)
+
+        # Main Score: average of target-f1s
+        target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
+        main_score = statistics.mean(target_f1s)
         self.log_episode_score(BENCH_SCORE, main_score)
 
 
