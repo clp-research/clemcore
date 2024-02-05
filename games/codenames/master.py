@@ -345,7 +345,7 @@ class CodenamesGame(DialogueGameMaster):
         self.add_user_message(player, "Your answer did not follow the requested format, please give a new answer that follows the format.")
     
     def _should_reprompt(self, player: Player):
-        return False
+        # return False
         if player.retries < MAX_RETRIES:
             return self.invalid_response
         return False
