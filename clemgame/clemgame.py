@@ -381,12 +381,12 @@ class DialogueGameMaster(GameMaster):
                 self.prompt(player)
                 while self._should_reprompt(player):
                     self._on_before_reprompt(player)
-                    self.prompt(player)
+                    self.prompt(player, is_reprompt = True)
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
         self._on_after_game()
 
-    def prompt(self, player: Player):
+    def prompt(self, player: Player, is_reprompt=False):
         # GM -> Player
         history = self.messages_by_names[player.descriptor]
         assert history, f"messages history must not be empty for {player.descriptor}"
@@ -396,7 +396,8 @@ class DialogueGameMaster(GameMaster):
                                                     "b.c. this would be the role of the current player"
         message = last_entry["content"]
 
-        action = {'type': 'send message', 'content': message}
+        action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
+        action = {'type': action_type, 'content': message}
         self.log_event(from_='GM', to=player.descriptor, action=action)
 
         _prompt, _response, response_message = player(history, self.current_turn)
