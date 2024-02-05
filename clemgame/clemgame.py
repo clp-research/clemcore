@@ -457,8 +457,6 @@ class DialogueGameMaster(GameMaster):
             self.current_turn += 1
         self._on_after_game()
 
-        
-
     def log_message_to(self, player: Player, message: str):
         """            GM -> Player        """
         action = {'type': 'send message', 'content': message}
