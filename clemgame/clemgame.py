@@ -840,9 +840,6 @@ class GameInstanceGenerator(GameResourceLocator):
 
     def generate(self, filename="instances.json"):
         self.on_generate()
-        self.store(filename)
-
-    def store(self, filename):
         self.store_file(self.instances, filename, sub_dir="in")
 
 
