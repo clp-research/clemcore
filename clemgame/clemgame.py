@@ -435,8 +435,8 @@ class DialogueGameMaster(GameMaster):
                     break  # potentially stop in between player turns
                 self.prompt(player)
                 while self._should_reprompt(player):
-                    self._on_before_reprompt(player, is_reprompt=True)
-                    self.prompt(player)
+                    self._on_before_reprompt(player)
+                    self.prompt(player, is_reprompt = True)
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
         self._on_after_game()

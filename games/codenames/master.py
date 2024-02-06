@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple, Set
 from string import Template
-import random, string, re, statistics
+import random, string, re, statistics, math
 
 from clemgame.clemgame import GameMaster, GameScorer, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
@@ -18,9 +18,6 @@ class ValidationError(Exception):
 
 # TODO: reuse players for other codename variants, e.g. Duet?
 # TODO: change prompts on reprompt, let them reflect the errors
-# TODO: ValidationError for "answer was too long, did not follow the specified format"
-# TODO: change main score calculation, revealing assassin on first turn is scored too high
-        # also when game is aborted in the beginning, the low number of turns gives too high overall scores
 
 class Guesser(Player):
     def __init__(self, model_name: str):
@@ -40,17 +37,19 @@ class Guesser(Player):
     def validate_response(self, utterance: str, board: List[str], number_of_allowed_guesses: int):
         # utterance needs to start with GUESS
         if not utterance.startswith(self.prefix):
-            raise ValidationError(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
+            raise ValidationError(f"Your answer '{utterance}' did not start with the correct prefix ({self.prefix}).")
         utterance = utterance.removeprefix(self.prefix)
+        if '\n' in utterance:
+            raise ValidationError(f"Your answer contained more than one line, please only give one round of guesses on one line.")
         guesses = utterance.split(', ')
         guesses = [word.strip('. ').lower() for word in guesses]
         # must contain one valid guess, but can only contain $number guesses max
         if not (0 < len(guesses) <= number_of_allowed_guesses):
-            raise ValidationError(f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}")
+            raise ValidationError(f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}.")
         # guesses must be words on the board that are not revealed yet
         for guess in guesses:
             if not guess in board:
-                raise ValidationError(f"Guessed word {guess} does not exist on board.")
+                raise ValidationError(f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists.")
             
     def parse_response(self, utterance: str) -> str:
         utterance = utterance.removeprefix(self.prefix)
@@ -85,42 +84,40 @@ class ClueGiver(Player):
     def validate_response(self, utterance: str, board: List[str]):
         # needs to start with correct prefix
         if not utterance.startswith(self.prefix):
-            raise ValidationError(f"Utterance {utterance} did not start with the correct prefix. ({self.prefix})")
+            raise ValidationError(f"Your answer {utterance} did not start with the correct prefix ({self.prefix}).")
         utterance = utterance.removeprefix(self.prefix)
-        parts = utterance.split(', ')
-        if len(parts) < 3:
-            raise ValidationError(f"Utterance {utterance} did not contain enough parts (only {len(parts)}) of required clue, number, and targets (at least three comma-separated)")
+        if '\n' in utterance:
+            raise ValidationError(f"Your answer contained more than one line, please only give one clue and your targets on one line.")
+        parts = utterance.split(' | ')
+        if len(parts) != 2:
+            raise ValidationError(f"Your answer {utterance} did not contain enough or too many parts ({len(parts)}) of the required format (CLUE: <clue> | <targets>).")
         clue = parts[0].lower()
-        number_of_targets = parts[1]
-        targets = parts[2:]
+        
+        targets = parts[1].split(', ')
         targets = [target.strip(' .').lower() for target in targets]
         
         # Clue needs to be a single word
         if not clue.isalpha() or ' ' in clue:
-            raise ValidationError(f"Clue {clue} is not a single word.")
+            raise ValidationError(f"Clue '{clue}' is not a word.")
+        if ' ' in clue:
+            raise ValidationError(f"Clue '{clue}' is not a single word.")
         # Clue needs to contain a word that is not morphologically similar to any word on the board
         # TODO: morphological relatedness!
         if clue in board:
-            raise ValidationError(f"Clue {clue} is one of the words on the board.")
+            raise ValidationError(f"Clue '{clue}' is one of the words on the board, please come up with a new word.")
         
-        # Number needs to be a valid number and in between a valid range of 1 and all words on the board (alternatively only team words?)
-        if not number_of_targets.isdigit() or not (0 < int(number_of_targets) <= len(board)):
-            raise ValidationError(f"Number {number_of_targets} is not within range of 0 and {len(board)}")
-        number_of_targets = int(number_of_targets)
-        # needs to contain as many target words as the number given
-        if len(targets) != number_of_targets:
-            raise ValidationError(f"Number {number_of_targets} does not match number of targets {targets}")
-        # target words need to be words from the board
         for target in targets:
             if not target in board:
-                raise ValidationError(f"Targeted word {target} does not exist on board.")
+                raise ValidationError(f"Targeted word '{target}' was not listed, you can only target words provided in the lists.")
             
     def parse_response(self, utterance: str) -> str:
         utterance = utterance.removeprefix(self.prefix)
-        parts = utterance.split(', ')
-        self.clue = parts[0].lower()
-        self.number_of_targets = int(parts[1])
-        self.targets = parts[2:]
+        self.clue, self.targets = utterance.split(' | ')
+        self.targets = self.targets.split(', ')
+        #parts = utterance.split(', ')
+        self.clue = self.clue.lower()
+        self.number_of_targets = len(self.targets)
+        # self.targets = parts[2:]
         self.targets = [target.strip(' .').lower() for target in self.targets]
         return f"{self.clue}, {self.number_of_targets}"
 
@@ -128,7 +125,7 @@ class ClueGiver(Player):
         targets = ""
         if with_targets:
             targets = f", {', '.join(self.targets)}"
-        return f"{self.prefix}{self.clue}, {self.number_of_targets}{targets}"
+        return f"{self.prefix}{self.clue} | {targets}"
 
 class CodenamesBoard:
     def __init__(self, team_words, opponent_words, innocent_words, assassin_words):
@@ -156,7 +153,7 @@ class CodenamesBoard:
                 self.hidden[assignment].remove(word)
                 return assignment
 
-        raise ValueError(f"Word {word} was not found amongst the hidden words on the board.")
+        raise ValueError(f"Word '{word}' was not found amongst the hidden words on the board, cannot be revealed.")
     
     def should_continue_after_revealing(self, word: str, by: str = TEAM):
         return word in self.revealed[by][by]
@@ -305,10 +302,10 @@ class CodenamesGame(DialogueGameMaster):
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words())
             except ValidationError as error:
-                print(error.message)
                 self.log_to_self(Turn_logs.CLUEGIVER_INVALID_FORMAT, error.message)
                 self.invalid_response = True
                 self.violated_request_count += 1
+                self.last_error_message = error.message
         else:
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words(), self.cluegiver.number_of_targets)
@@ -316,6 +313,7 @@ class CodenamesGame(DialogueGameMaster):
                 self.log_to_self(Turn_logs.GUESSER_INVALID_FORMAT, error.message)
                 self.invalid_response = True
                 self.violated_request_count += 1
+                self.last_error_message = error.message
         
         return not self.invalid_response
     
@@ -342,7 +340,7 @@ class CodenamesGame(DialogueGameMaster):
         logger.debug("Reprompting...")
         player.retries += 1
         self.request_count += 1
-        self.add_user_message(player, "Your answer did not follow the requested format, please give a new answer that follows the format.")
+        self.add_user_message(player, f"Your answer did not follow the requested format: {self.last_error_message}")
     
     def _should_reprompt(self, player: Player):
         # return False
