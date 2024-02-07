@@ -4,197 +4,132 @@ import torch
 import backends
 
 import transformers
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
 import os
 import copy
+import json
+
+from jinja2 import TemplateError
+
+# load model registry:
+model_registry_path = os.path.join(backends.project_root, "backends", "hf_local_models.json")
+with open(model_registry_path, 'r', encoding="utf-8") as model_registry_file:
+    MODEL_REGISTRY = json.load(model_registry_file)
 
 logger = backends.get_logger(__name__)
 
-MODEL_MISTRAL_7B_INSTRUCT_V0_1 = "Mistral-7B-Instruct-v0.1"
-MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1 = "sheep-duck-llama-2-70b-v1.1"
-MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B = "sheep-duck-llama-2-13b"
-MODEL_FALCON_7B_INSTRUCT = "falcon-7b-instruct"
-MODEL_FALCON_40B_INSTRUCT = "falcon-40b-instruct"
-MODEL_OPEN_ASSISTANT_12B = "oasst-sft-4-pythia-12b-epoch-3.5"
-MODEL_KOALA_13B = "koala-13B-HF"
-MODEL_WIZARD_VICUNA_13B = "Wizard-Vicuna-13B-Uncensored-HF"
-MODEL_GOOGLE_FLAN_T5 = "flan-t5-xxl"
-MODEL_WIZARDLM_70B_V1 = "WizardLM-70b-v1.0"
-MODEL_WIZARDLM_13B_V1_2 = "WizardLM-13b-v1.2"
-MODEL_LMSYS_VICUNA_7B = "vicuna-7b-v1.5"
-MODEL_LMSYS_VICUNA_13B = "vicuna-13b-v1.5"
-MODEL_LMSYS_VICUNA_33B = "vicuna-33b-v1.3"
-MODEL_GPT4ALL_13B_SNOOZY = "gpt4all-13b-snoozy"
-MODEL_CODELLAMA_34B_I = "CodeLlama-34b-Instruct-hf"
-MODEL_ZEPHYR_7B_ALPHA = "zephyr-7b-alpha"
-MODEL_ZEPHYR_7B_BETA = "zephyr-7b-beta"
-MODEL_OPENCHAT_3_5 = "openchat_3.5"
-MODEL_YI_34B_CHAT = "Yi-34B-Chat"
-MODEL_ORCA_2_13B = "Orca-2-13b"
-MODEL_DEEPSEEK_7B_CHAT = "deepseek-llm-7b-chat"
-MODEL_DEEPSEEK_67B_CHAT = "deepseek-llm-67b-chat"
-MODEL_TULU_2_DPO_7B = "tulu-2-dpo-7b"
-MODEL_TULU_2_DPO_70B = "tulu-2-dpo-70b"
-MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1 = "Mixtral-8x7B-Instruct-v0.1"
-MODEL_SUS_CHAT_34B = "SUS-Chat-34B"
-
-
-SUPPORTED_MODELS = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
-                    MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B, MODEL_FALCON_7B_INSTRUCT, MODEL_OPEN_ASSISTANT_12B,
-                    MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2,
-                    MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY,
-                    MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA, MODEL_OPENCHAT_3_5,
-                    MODEL_YI_34B_CHAT, MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT, MODEL_TULU_2_DPO_7B,
-                    MODEL_TULU_2_DPO_70B, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1, MODEL_SUS_CHAT_34B]
-
-
 NAME = "huggingface"
 
-# models that come with proper tokenizer chat template:
-PREMADE_CHAT_TEMPLATE = [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_CODELLAMA_34B_I, MODEL_ZEPHYR_7B_ALPHA,
-                         MODEL_ZEPHYR_7B_BETA, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1]
+SUPPORTED_MODELS = [model_setting['model_name'] for model_setting in MODEL_REGISTRY if model_setting['backend'] == NAME]
 
-# models to apply Orca-Hashes template to:
-ORCA_HASH = [MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1, MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B]
-# jinja template for Orca-Hashes format:
-orca_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### User:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'system' %}{{ '### System:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant:\\n' + message['content'] + '\\n\\n' }}{% endif %}{% if loop.last %}{{ '### Assistant:\\n' }}{% endif %}{% endfor %}"
-VICUNA = [MODEL_WIZARD_VICUNA_13B, MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2, MODEL_LMSYS_VICUNA_13B,
-          MODEL_LMSYS_VICUNA_33B, MODEL_LMSYS_VICUNA_7B, MODEL_GPT4ALL_13B_SNOOZY]
-# jinja template for Vicuna 1.1 format:
-vicuna_1_1_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}"
-KOALA = [MODEL_KOALA_13B]
-# jinja template for Koala format:
-koala_template = "{{ 'BEGINNING OF CONVERSATION: ' }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + ' ' }}{% elif message['role'] == 'assistant' %}{{ 'GPT: ' + message['content'] + ' ' }}{% endif %}{% if loop.last %}{{ 'GPT:' }}{% endif %}{% endfor %}"
-OASST = [MODEL_OPEN_ASSISTANT_12B]
-# jinja template for OpenAssist format:
-oasst_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '<|prompter|>' + message['content'] + '<|endoftext|>' }}{% elif message['role'] == 'assistant' %}{{ '<|assistant|>' + message['content'] + '<|endoftext|>' }}{% endif %}{% if loop.last %}{{ '<|assistant|>' }}{% endif %}{% endfor %}"
-FALCON = [MODEL_FALCON_7B_INSTRUCT, MODEL_FALCON_40B_INSTRUCT]
-# jinja template for assumed Falcon format:
-falcon_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}"
-# Falcon template based on https://huggingface.co/tiiuae/falcon-7b-instruct/discussions/1#64708b0a3df93fddece002a4
-OPENCHAT = [MODEL_OPENCHAT_3_5]
-# jinja template for openchat format:
-openchat_template = "{{ bos_token }}{% for message in messages %}{{ 'GPT4 Correct ' + message['role'].title() + ': ' + message['content'] + '<|end_of_turn|>'}}{% endfor %}GPT4 Correct Assistant:"
-CHATML = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B]
-# jinja template for chatml format:
-chatml_template = "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}"
-TULU = [MODEL_TULU_2_DPO_7B, MODEL_TULU_2_DPO_70B]
-# jinja template for tulu format:
-tulu_template = "{% for message in messages %}\n{% if message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}"
-DEEPSEEK = [MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT]
-# jinja template for deepseek format:
-deepseek_template = "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'User: ' + message['content'] + '\n\n' }}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}"
-SUSTECH = [MODEL_SUS_CHAT_34B]
-sus_template = "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}"
-
-
-# templates currently have 'generation prompt' hardcoded
-# doesn't matter for clembench, but once added, templates can be pushed to HF and this block can be reduced
-# newer versions of transformers/tokenizers are supposed to properly handle the generation prompt argument
-# but transformers==4.34.0 does not support this feature (at least not reliably)
-
-# due to issues with differences between fast and slow HF tokenizer classes, some models require the 'slow' class/arg
-SLOW_TOKENIZER = [MODEL_YI_34B_CHAT, MODEL_ORCA_2_13B, MODEL_SUS_CHAT_34B]
+FALLBACK_CONTEXT_SIZE = 256
 
 
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
-        self.model_loaded = False
+        self.use_api_key: bool = False
+        self.config_and_tokenizer_loaded: bool = False
+        self.model_loaded: bool = False
+        self.model_name: str = ""
 
-    def load_model(self, model_name):
-        logger.info(f'Start loading huggingface model: {model_name}')
+    def load_config_and_tokenizer(self, model_name):
+        logger.info(f'Loading huggingface model config and tokenizer: {model_name}')
 
-        # model cache handling
-        root_data_path = os.path.join(os.path.abspath(os.sep), "data")
-        # check if root/data exists:
-        if not os.path.isdir(root_data_path):
-            logger.info(f"{root_data_path} does not exist, creating directory.")
-            # create root/data:
-            os.mkdir(root_data_path)
-        CACHE_DIR = os.path.join(root_data_path, "huggingface_cache")
+        # get settings from model registry for the first name match that uses this backend:
+        for model_setting in MODEL_REGISTRY:
+            if model_setting['model_name'] == model_name:
+                if model_setting['backend'] == "huggingface":
+                    self.model_settings = model_setting
+                    break
 
-        if model_name in [MODEL_MISTRAL_7B_INSTRUCT_V0_1, MODEL_MIXTRAL_8X7B_INSTRUCT_V0_1]:  # mistralai models
-            hf_user_prefix = "mistralai/"
-        elif model_name in [MODEL_RIIID_SHEEP_DUCK_LLAMA_2_70B_V1_1,
-                            MODEL_RIIID_SHEEP_DUCK_LLAMA_2_13B]:  # Riiid models
-            hf_user_prefix = "Riiid/"
-        elif model_name in [MODEL_FALCON_7B_INSTRUCT, MODEL_FALCON_40B_INSTRUCT]:  # tiiuae models
-            hf_user_prefix = "tiiuae/"
-        elif model_name in [MODEL_OPEN_ASSISTANT_12B]:  # OpenAssistant models
-            hf_user_prefix = "OpenAssistant/"
-        elif model_name in [MODEL_KOALA_13B, MODEL_WIZARD_VICUNA_13B]:  # TheBloke models
-            hf_user_prefix = "TheBloke/"
-        elif model_name in [MODEL_GOOGLE_FLAN_T5]:  # Google models
-            hf_user_prefix = "google/"
-        elif model_name in [MODEL_WIZARDLM_70B_V1, MODEL_WIZARDLM_13B_V1_2]:  # WizardLM models
-            hf_user_prefix = "WizardLM/"
-        elif model_name in [MODEL_LMSYS_VICUNA_7B, MODEL_LMSYS_VICUNA_13B, MODEL_LMSYS_VICUNA_33B]:  # lmsys models
-            hf_user_prefix = "lmsys/"
-        elif model_name in [MODEL_GPT4ALL_13B_SNOOZY]:  # nomic-ai models
-            hf_user_prefix = "nomic-ai/"
-        elif model_name in [MODEL_CODELLAMA_34B_I]:  # codellama models
-            hf_user_prefix = "codellama/"
-        elif model_name in [MODEL_ZEPHYR_7B_ALPHA, MODEL_ZEPHYR_7B_BETA]:  # HuggingFaceH4 models
-            hf_user_prefix = "HuggingFaceH4/"
-        elif model_name in [MODEL_OPENCHAT_3_5]:  # openchat models
-            hf_user_prefix = "openchat/"
-        elif model_name in [MODEL_YI_34B_CHAT]:  # 01-ai models
-            hf_user_prefix = "01-ai/"
-        elif model_name in [MODEL_ORCA_2_13B]:  # microsoft models
-            hf_user_prefix = "microsoft/"
-        elif model_name in [MODEL_DEEPSEEK_7B_CHAT, MODEL_DEEPSEEK_67B_CHAT]:  # deepseek-ai models
-            hf_user_prefix = "deepseek-ai/"
-        elif model_name in [MODEL_TULU_2_DPO_7B, MODEL_TULU_2_DPO_70B]:  # allenai models
-            hf_user_prefix = "allenai/"
-        elif model_name in [MODEL_SUS_CHAT_34B]:  # SUSTech models
-            hf_user_prefix = "SUSTech/"
+        assert self.model_settings['model_name'] == model_name, (f"Model settings for {model_name} not properly loaded "
+                                                                 f"from model registry!")
 
-        hf_model_str = f"{hf_user_prefix}{model_name}"
+        if 'requires_api_key' in self.model_settings:
+            if self.model_settings['requires_api_key']:
+                # load HF API key:
+                creds = backends.load_credentials("huggingface")
+                self.api_key = creds["huggingface"]["api_key"]
+                self.use_api_key = True
+            else:
+                requires_api_key_info = (f"{self.model_settings['model_name']} registry setting has requires_api_key, "
+                                         f"but it is not 'true'. Please check the model entry.")
+                print(requires_api_key_info)
+                logger.info(requires_api_key_info)
+
+        hf_model_str = self.model_settings['huggingface_id']
 
         # use 'slow' tokenizer for models that require it:
-        if model_name in SLOW_TOKENIZER:
-            self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                           cache_dir=CACHE_DIR, verbose=False, use_fast=False)
+        if 'slow_tokenizer' in self.model_settings:
+            if self.model_settings['slow_tokenizer']:
+                self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
+                                                               verbose=False, use_fast=False)
+            else:
+                slow_tokenizer_info = (f"{self.model_settings['model_name']} registry setting has slow_tokenizer, "
+                                       f"but it is not 'true'. Please check the model entry.")
+                print(slow_tokenizer_info)
+                logger.info(slow_tokenizer_info)
+        elif self.use_api_key:
+            self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, token=self.api_key, device_map="auto",
+                                                           torch_dtype="auto", verbose=False)
         else:
             self.tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                           cache_dir=CACHE_DIR, verbose=False)
+                                                           verbose=False)
 
         # apply proper chat template:
-        if model_name not in PREMADE_CHAT_TEMPLATE:
-            if model_name in ORCA_HASH:
-                self.tokenizer.chat_template = orca_template
-            elif model_name in FALCON:
-                self.tokenizer.chat_template = falcon_template
-            elif model_name in OASST:
-                self.tokenizer.chat_template = oasst_template
-            elif model_name in KOALA:
-                self.tokenizer.chat_template = koala_template
-            elif model_name in VICUNA:
-                self.tokenizer.chat_template = vicuna_1_1_template
-            elif model_name in OPENCHAT:
-                self.tokenizer.chat_template = openchat_template
-            elif model_name in CHATML:
-                self.tokenizer.chat_template = chatml_template
-            elif model_name in TULU:
-                self.tokenizer.chat_template = tulu_template
-            elif model_name in DEEPSEEK:
-                self.tokenizer.chat_template = deepseek_template
-            elif model_name in SUSTECH:
-                self.tokenizer.chat_template = sus_template
+        if not self.model_settings['premade_chat_template']:
+            if 'custom_chat_template' in self.model_settings:
+                self.tokenizer.chat_template = self.model_settings['custom_chat_template']
+            else:
+                logger.info(f"No custom chat template for {model_name} found in model settings from model registry "
+                            f"while model has no pre-made template! Generic template will be used, likely leading to "
+                            f"bad results.")
 
+        if self.use_api_key:
+            model_config = AutoConfig.from_pretrained(hf_model_str, token=self.api_key)
+        else:
+            model_config = AutoConfig.from_pretrained(hf_model_str)
 
-        # load all models using their default configuration:
-        self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
-                                                          cache_dir=CACHE_DIR)
+        # get context token limit for model:
+        if hasattr(model_config, 'max_position_embeddings'):  # this is the standard attribute used by most
+            self.context_size = model_config.max_position_embeddings
+        elif hasattr(model_config, 'n_positions'):  # some models may have their context size under this attribute
+            self.context_size = model_config.n_positions
+        else:  # few models, especially older ones, might not have their context size in the config
+            self.context_size = FALLBACK_CONTEXT_SIZE
+
+        self.model_name = model_name
+        self.config_and_tokenizer_loaded = True
+
+    def load_model(self, model_name):
+        # different model name might be passed:
+        if not model_name == self.model_name:
+            self.config_and_tokenizer_loaded = False
+
+        if not self.config_and_tokenizer_loaded:
+            self.load_config_and_tokenizer(model_name)
+
+        logger.info(f'Start loading huggingface model weights: {model_name}')
+
+        hf_model_str = self.model_settings['huggingface_id']
+
+        # load model using its default configuration:
+        if self.use_api_key:
+            self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, token=self.api_key, device_map="auto",
+                                                              torch_dtype="auto")
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto"
+                                                              )
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model_name = model_name
         self.model_loaded = True
 
-    def generate_response(self, messages: List[Dict], model: str,
-                          max_new_tokens: int = 100, return_full_text: bool = False) -> Tuple[Any, Any, str]:
+    def _clean_messages(self, messages: List[Dict]) -> List[Dict]:
         """
+        Remove message issues indiscriminately for compatibility with certain model's chat templates. Empty first system
+        message is removed (for Mistral models and others that do not use system messages). Messages are concatenated
+        to create consistent user-assistant pairs (for Llama-based chat formats).
         :param messages: for example
                 [
                     {"role": "system", "content": "You are a helpful assistant."},
@@ -202,22 +137,8 @@ class HuggingfaceLocal(backends.Backend):
                     {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                     {"role": "user", "content": "Where was it played?"}
                 ]
-        :param model: model name
-        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
-        :param return_full_text: If True, whole input context is returned.
-        :return: the continuation
+        :return: Cleaned and flattened messages list.
         """
-        assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
-
-        # load the model to the memory
-        if not self.model_loaded:
-            self.load_model(model)
-            logger.info(f"Finished loading huggingface model: {model}")
-            logger.info(f"Model device map: {self.model.hf_device_map}")
-
-        # log current given messages list:
-        # logger.info(f"Raw messages passed: {messages}")
-
         # deepcopy messages to prevent reference issues:
         current_messages = copy.deepcopy(messages)
 
@@ -231,28 +152,224 @@ class HuggingfaceLocal(backends.Backend):
             if msg_idx > 0 and message['role'] == "user" and current_messages[msg_idx - 1]['role'] == "user":
                 current_messages[msg_idx - 1]['content'] += f" {message['content']}"
                 del current_messages[msg_idx]
-            elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1]['role'] == "assistant":
+            elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1][
+                'role'] == "assistant":
                 current_messages[msg_idx - 1]['content'] += f" {message['content']}"
                 del current_messages[msg_idx]
 
+        return current_messages
+
+    def check_messages(self, messages: List[Dict], model: str) -> bool:
+        """
+        Message checking for clemgame development. This checks if the model's chat template accepts the given messages
+        as passed, before the standard flattening done for generation. This allows clemgame developers to construct
+        message lists that are sound as-is and are not affected by the indiscriminate flattening of the generation
+        method. Deliberately verbose.
+        :param messages: for example
+                [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Who won the world series in 2020?"},
+                    {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                    {"role": "user", "content": "Where was it played?"}
+                ]
+        :param model: model name
+        :return: True if messages are sound as-is, False if messages are not compatible with the model's template.
+        """
+        if not model == self.model_name:
+            self.config_and_tokenizer_loaded = False
+
+        if not self.config_and_tokenizer_loaded:
+            self.load_config_and_tokenizer(model)
+
+        # bool for message acceptance:
+        messages_accepted: bool = True
+
+        # check for system message:
+        has_system_message: bool = False
+        if messages[0]['role'] == "system":
+            print("System message detected.")
+            has_system_message = True
+            if not messages[0]['content']:
+                print(f"Initial system message is empty. It will be removed when generating responses.")
+            else:
+                print(f"Initial system message has content! It will not be removed when generating responses. This "
+                      f"will lead to issues with models that do not allow system messages.")
+            """
+            print("Checking model system message compatibility...")
+            # unfortunately Mistral models, which do not accept system message, currently do not raise a distinct 
+            # exception for this...
+            try:
+                self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+            except TemplateError:
+                print("The model's chat template does not allow for system message!")
+                messages_accepted = False
+            """
+
+        # check for message order:
+        starts_with_assistant: bool = False
+        double_user: bool = False
+        double_assistant: bool = False
+        ends_with_assistant: bool = False
+
+        for msg_idx, message in enumerate(messages):
+            if not has_system_message:
+                if msg_idx == 0 and message['role'] == "assistant":
+                    starts_with_assistant = True
+            else:
+                if msg_idx == 1 and message['role'] == "assistant":
+                    starts_with_assistant = True
+            if msg_idx > 0 and message['role'] == "user" and messages[msg_idx - 1]['role'] == "user":
+                double_user = True
+            elif msg_idx > 0 and message['role'] == "assistant" and messages[msg_idx - 1]['role'] == "assistant":
+                double_assistant = True
+        if messages[-1]['role'] == "assistant":
+            ends_with_assistant = True
+
+        if starts_with_assistant or double_user or double_assistant or ends_with_assistant:
+            print("Message order issue(s) found:")
+            if starts_with_assistant:
+                print("First message has role:'assistant'.")
+            if double_user:
+                print("Messages contain consecutive user messages.")
+            if double_assistant:
+                print("Messages contain consecutive assistant messages.")
+            if ends_with_assistant:
+                print("Last message has role:'assistant'.")
+
+        # proper check of chat template application:
+        try:
+            self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+        except TemplateError:
+            print(f"The {self.model_name} chat template does not accept these messages! "
+                  f"Cleaning applied before generation might still allow these messages, but is indiscriminate and "
+                  f"might lead to unintended generation inputs.")
+            messages_accepted = False
+        else:
+            print(f"The {self.model_name} chat template accepts these messages. Cleaning before generation is still "
+                  f"applied to these messages, which is indiscriminate and might lead to unintended generation inputs.")
+
+        return messages_accepted
+
+    def _check_context_limit(self, prompt_tokens, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
+        """
+        Internal context limit check to run in generate_response.
+        :param prompt_tokens: List of prompt token IDs.
+        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :return: Tuple with
+                Bool: True if context limit is not exceeded, False if too many tokens
+                Number of tokens for the given messages and maximum new tokens
+                Number of tokens of 'context space left'
+                Total context token limit
+        """
+        prompt_size = len(prompt_tokens)
+        tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
+        tokens_left = self.context_size - tokens_used
+        fits = tokens_used <= self.context_size
+        return fits, tokens_used, tokens_left, self.context_size
+
+    def check_context_limit(self, messages: List[Dict], model: str,
+                            max_new_tokens: int = 100, clean_messages: bool = False,
+                            verbose: bool = True) -> Tuple[bool, int, int, int]:
+        """
+        Externally-callable context limit check for clemgame development.
+        :param messages: for example
+                [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Who won the world series in 2020?"},
+                    {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                    {"role": "user", "content": "Where was it played?"}
+                ]
+        :param model: model name
+        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :param clean_messages: If True, the standard cleaning method for message lists will be applied.
+        :param verbose: If True, prettyprint token counts.
+        :return: Tuple with
+                Bool: True if context limit is not exceeded, False if too many tokens
+                Number of tokens for the given messages and maximum new tokens
+                Number of tokens of 'context space left'
+                Total context token limit
+        """
+        # different model name might be passed:
+        if not model == self.model_name:
+            self.config_and_tokenizer_loaded = False
+
+        if not self.config_and_tokenizer_loaded:
+            self.load_config_and_tokenizer(model)
+        # optional messages processing:
+        if clean_messages:
+            current_messages = self._clean_messages(messages)
+        else:
+            current_messages = messages
+        # the actual tokens, including chat format:
+        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)
+        context_check_tuple = self._check_context_limit(prompt_tokens, max_new_tokens=max_new_tokens)
+        tokens_used = context_check_tuple[1]
+        tokens_left = context_check_tuple[2]
+        if verbose:
+            print(f"{tokens_used} input tokens, {tokens_left} tokens of {self.context_size} left.")
+        fits = context_check_tuple[0]
+        return fits, tokens_used, tokens_left, self.context_size
+
+    def generate_response(self, messages: List[Dict], model: str,
+                          max_new_tokens: int = 100, return_full_text: bool = False,
+                          log_messages: bool = False) -> Tuple[Any, Any, str]:
+        """
+        :param messages: for example
+                [
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": "Who won the world series in 2020?"},
+                    {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
+                    {"role": "user", "content": "Where was it played?"}
+                ]
+        :param model: model name
+        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
+        :param return_full_text: If True, whole input context is returned.
+        :param log_messages: If True, raw and cleaned messages passed will be logged.
+        :return: the continuation
+        """
+        assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
+        # different model name might be passed:
+        if not model == self.model_name:
+            self.model_loaded = False
+
+        # load the model to the memory
+        if not self.model_loaded:
+            self.load_model(model)
+            logger.info(f"Finished loading huggingface model: {model}")
+            logger.info(f"Model device map: {self.model.hf_device_map}")
+
+        # log current given messages list:
+        if log_messages:
+            logger.info(f"Raw messages passed: {messages}")
+
+        current_messages = self._clean_messages(messages)
+
         # log current flattened messages list:
-        # logger.info(f"Flattened messages: {current_messages}")
+        if log_messages:
+            logger.info(f"Flattened messages: {current_messages}")
 
         # apply chat template & tokenize:
-        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, return_tensors="pt")
+        prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True,
+                                                           return_tensors="pt")
         prompt_tokens = prompt_tokens.to(self.device)
 
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
         prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
 
+        # check context limit:
+        context_check = self._check_context_limit(prompt_tokens[0], max_new_tokens=max_new_tokens)
+        if not context_check[0]:  # if context is exceeded, context_check[0] is False
+            logger.info(f"Context token limit for {self.model_name} exceeded: {context_check[1]}/{context_check[3]}")
+            # fail gracefully:
+            raise backends.ContextExceededError(f"Context token limit for {self.model_name} exceeded",
+                                                tokens_used=context_check[1], tokens_left=context_check[2],
+                                                context_size=context_check[3])
+
         # greedy decoding:
         do_sample: bool = False
         if self.temperature > 0.0:
             do_sample = True
-
-        # test to check if temperature is properly set on this Backend object:
-        # logger.info(f"Currently used temperature for this instance of HuggingfaceLocal: {self.temperature}")
 
         if do_sample:
             model_output_ids = self.model.generate(
@@ -276,25 +393,13 @@ class HuggingfaceLocal(backends.Backend):
         if not return_full_text:
             response_text = model_output.replace(prompt_text, '').strip()
 
-            # handle Yi decoded output mismatch:
-            if model == MODEL_YI_34B_CHAT:
-                response_text = model_output.rsplit("assistant\n", maxsplit=1)[1]
+            if 'output_split_prefix' in self.model_settings:
+                response_text = model_output.rsplit(self.model_settings['output_split_prefix'], maxsplit=1)[1]
 
-            # remove llama2 EOS token at the end of output:
-            if response_text[-4:len(response_text)] == "</s>":
-                response_text = response_text[:-4]
-            # remove openchat EOS token at the end of output:
-            if response_text[-15:len(response_text)] == "<|end_of_turn|>":
-                response_text = response_text[:-15]
-            # remove ChatML EOS token at the end of output:
-            if response_text[-10:len(response_text)] == "<|im_end|>":
-                response_text = response_text[:-10]
-            # remove DeepSeek EOS token at the end of output:
-            if response_text[-19:len(response_text)] == "<｜end▁of▁sentence｜>":
-                response_text = response_text[:-19]
-            # remove SUS EOS token at the end of output:
-            if response_text[-13:len(response_text)] == "<|endoftext|>":
-                response_text = response_text[:-13]
+            eos_len = len(self.model_settings['eos_to_cull'])
+
+            if response_text.endswith(self.model_settings['eos_to_cull']):
+                response_text = response_text[:-eos_len]
 
         else:
             response_text = model_output.strip()
@@ -303,3 +408,92 @@ class HuggingfaceLocal(backends.Backend):
 
     def supports(self, model_name: str):
         return model_name in SUPPORTED_MODELS
+
+
+if __name__ == "__main__":
+    # initialize a backend instance:
+    test_backend = HuggingfaceLocal()
+
+    # MESSAGES CHECKING
+    print("--- Messages checking examples ---")
+    # proper minimal messages:
+    minimal_messages = [
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check proper minimal messages with Mistral-7B-Instruct-v0.1:
+    print("Minimal messages:")
+    test_backend.check_messages(minimal_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # improper double user messages:
+    double_user_messages = [
+        {"role": "user", "content": "Hello there!"},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check improper double user messages with Mistral-7B-Instruct-v0.1:
+    print("Double user messages:")
+    test_backend.check_messages(double_user_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # improper first assistant message:
+    first_assistant_messages = [
+        {"role": "assistant", "content": "Hello there!"},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check improper first assistant message with Mistral-7B-Instruct-v0.1:
+    print("First message role assistant:")
+    test_backend.check_messages(first_assistant_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # system message:
+    system_messages = [
+        {"role": "system", "content": "You love all kinds of fat."},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check system message with Mistral-7B-Instruct-v0.1:
+    print("System message:")
+    test_backend.check_messages(system_messages, "Mistral-7B-Instruct-v0.1")
+    print()
+
+    # empty system message:
+    empty_system_messages = [
+        {"role": "system", "content": ""},
+        {"role": "user", "content": "What is your favourite condiment?"},
+        {"role": "assistant", "content": "Lard!"},
+        {"role": "user", "content": "Do you have mayonnaise recipes?"}
+    ]
+    # check empty system message with Mistral-7B-Instruct-v0.1:
+    print("Empty system message:")
+    test_backend.check_messages(empty_system_messages, "Mistral-7B-Instruct-v0.1")
+    print("-----")
+
+    # CONTEXT LIMIT CHECKING
+    print("--- Context limit checking ---")
+    # check minimal messages with Mistral-7B-Instruct-v0.1:
+    print("Minimal messages context check with Mistral-7B-Instruct-v0.1:")
+    minimal_context_check_tuple = test_backend.check_context_limit(minimal_messages, "Mistral-7B-Instruct-v0.1")
+    print(f"Minimal messages context check output: {minimal_context_check_tuple}")
+    print()
+    # excessive number of messages:
+    excessive_messages = list()
+    for _ in range(2000):
+        excessive_messages.append({"role": "user", "content": "What is your favourite condiment?"})
+        excessive_messages.append({"role": "assistant", "content": "Lard!"})
+    excessive_messages.append({"role": "user", "content": "Do you have mayonnaise recipes?"})
+    # check excessive messages with Mistral-7B-Instruct-v0.1:
+    print("Excessive messages context check with Mistral-7B-Instruct-v0.1:")
+    excessive_context_check_tuple = test_backend.check_context_limit(excessive_messages, "Mistral-7B-Instruct-v0.1")
+    print(f"Excessive messages context check output: {excessive_context_check_tuple}")
+    """Note: Mistral-7B-Instruct-v0.1 has an official context limit of 32768, and while the context limit checks might 
+    pass, using the full context of models with large limits like this is likely to use a great amount of memory (VRAM) 
+    which can lead to CUDA Out-Of-Memory errors that are not only hard to handle, but can also incapacitate shared 
+    hardware until it is manually reset. Please test for this while developing clemgames to prevent hardware outages 
+    when the full set of clemgames is run by others."""
