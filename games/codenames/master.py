@@ -17,7 +17,6 @@ class ValidationError(Exception):
         super().__init__(self.message)
 
 # TODO: reuse players for other codename variants, e.g. Duet?
-# TODO: change prompts on reprompt, let them reflect the errors
 
 class Guesser(Player):
     def __init__(self, model_name: str):
@@ -394,6 +393,12 @@ class CodenamesScorer(GameScorer):
                         turn_score[REVEALED]["total"] += 1
                     case Turn_logs.TARGET_REVEALED:
                         turn_score[REVEALED][TARGET] += 1
+            
+            # to calculate cluegiver target precision, I would need the board assignments that I do not have
+            #cluegiver_target_precision = 0
+            #for target in turn_score[Turn_logs.TARGETS]:
+            #    if target in 
+            #turn_score[]
 
             sum_revealed_words = turn_score[REVEALED][TEAM] + turn_score[REVEALED][OPPONENT] + turn_score[REVEALED][INNOCENT] + turn_score[REVEALED][ASSASSIN]
             target_precision = 0
@@ -459,16 +464,11 @@ class CodenamesScorer(GameScorer):
             self.log_episode_score(BENCH_SCORE, math.nan)
             return
 
-        # Main Score: log19(1 + (#team - #opponent - assassin_true*#hidden_opponent + 9 offset) / #turns) * 100
-        #main_score = len(self.board_at_end[REVEALED][TEAM][TEAM]) - len(self.board_at_end[REVEALED][TEAM][OPPONENT]) - len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) * len(self.board_at_end[HIDDEN][OPPONENT]) + 9 # offset
-        #main_score = (main_score / self.scores["episode scores"][NUMBER_OF_TURNS]) + 1
-        #main_score = math.log(main_score, 19) * 100
-        #assert 0 <= main_score <= 100, f"Main Score of {main_score} is not between 0 and 100"
-        #self.log_episode_score(BENCH_SCORE, main_score)
-
-        # Main Score: average of target-f1s
+        # Main Score: harmonic mean of success (average of target-f1s) and efficiency (1/number of turns)
         target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
-        main_score = statistics.mean(target_f1s)
+        efficiency = 1/self.scores["episode scores"][NUMBER_OF_TURNS]
+        avg_target_f1s = statistics.mean(target_f1s)
+        main_score = statistics.harmonic_mean([avg_target_f1s, efficiency]) * 100
         self.log_episode_score(BENCH_SCORE, main_score)
 
 
