@@ -4,8 +4,8 @@ The more words your clue relates to, the quicker you can win the game, but the h
 
 Please give your clue in the following format and make your answer as short as possible:
 
-CLUE: <WORD> | <TARGET WORDS>
-where WORD is your clue word and TARGET_WORDS are the targeted words that your teammate should guess from your clue.
+CLUE: <WORD>
+TARGETS: <TARGETS>
 
 Your team words are: $team_words.
 Your opponent's team words are: $opponent_words.

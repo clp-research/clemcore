@@ -65,6 +65,8 @@ class Guesser(Player):
                     raise ValidationError(f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists.")
             
     def parse_response(self, utterance: str) -> str:
+        if IGNORE_RAMBLING:
+            utterance = utterance.split('\n')[0]
         utterance = utterance.removeprefix(self.prefix)
         self.guesses = utterance.split(', ')
         self.guesses = [word.strip('. ').lower() for word in self.guesses]
@@ -76,7 +78,8 @@ class Guesser(Player):
 class ClueGiver(Player):
     def __init__(self, model_name: str):
         super().__init__(model_name)
-        self.prefix: str = "CLUE: "
+        self.clue_prefix: str = "CLUE: "
+        self.target_prefix: str = "TARGETS: "
         self.clue: str = 'clue'
         self.number_of_targets: int = 2
         self.targets: List[str] = ['target', 'word']
@@ -95,25 +98,30 @@ class ClueGiver(Player):
         return self.recover_utterance(with_targets=True)
     
     def validate_response(self, utterance: str, board: List[str]):
-        # utterance should only contain one line
-        if '\n' in utterance:
-            if IGNORE_RAMBLING:
-                utterance = utterance.split('\n')[0]
-                # self.log_to_self("IGNORE RAMBLING")
-                print('IGNORE RAMBLING')
-            else:
-                raise ValidationError(f"Your answer contained more than one line, please only give one clue and your targets on one line.")
-        # needs to start with correct prefix
-        if not utterance.startswith(self.prefix):
-            raise ValidationError(f"Your answer {utterance} did not start with the correct prefix ({self.prefix}).")
-        utterance = utterance.removeprefix(self.prefix)
-        parts = utterance.split(' | ')
-        if len(parts) != 2:
-            raise ValidationError(f"Your answer {utterance} did not contain enough or too many parts ({len(parts)}) of the required format (CLUE: <clue> | <targets>).")
-        clue = parts[0].lower()
+        # utterance should contain two lines, one with the clue, one with the targets
+        parts = utterance.split('\n')
+        if len(parts) < 1:
+            raise ValidationError("Your answer did not contain clue and targets on two separate lines.")
+        elif len(parts) > 2:
+            if not IGNORE_RAMBLING:
+                raise ValidationError(f"Your answer contained more than two lines, please only give one clue and your targets on two separate lines.")
+
+        clue = None
+        targets = None
+        for part in parts:
+            if part.startswith(self.clue_prefix):
+                clue = part.removeprefix(self.clue_prefix)
+            elif part.startswith(self.target_prefix):
+                targets = part.removeprefix(self.target_prefix)
+
+        if not clue:
+            raise ValidationError(f"Your clue did not start with the correct prefix ({self.clue_prefix}).")
+        if not targets:
+            raise ValidationError(f"Your targets did not start with the correct prefix ({self.target_prefix}).")
         
-        targets = parts[1].split(', ')
-        targets = [target.strip(' .').lower() for target in targets]
+        clue = clue.lower()
+        targets = targets.split(', ')
+        targets = [target.strip(" .!'").lower() for target in targets]
         
         # Clue needs to be a single word
         if not clue.isalpha() or ' ' in clue:
@@ -135,19 +143,24 @@ class ClueGiver(Player):
                     raise ValidationError(f"Targeted word '{target}' was not listed, you can only target words provided in the lists.")
             
     def parse_response(self, utterance: str) -> str:
-        utterance = utterance.removeprefix(self.prefix)
-        self.clue, self.targets = utterance.split(' | ')
-        self.targets = self.targets.split(', ')
-        self.clue = self.clue.lower()
-        self.number_of_targets = len(self.targets)
+        parts = utterance.split('\n')
+        for part in parts:
+            if part.startswith(self.clue_prefix):
+                clue = part.removeprefix(self.clue_prefix)
+            elif part.startswith(self.target_prefix):
+                targets = part.removeprefix(self.target_prefix)
+        
+        self.clue = clue.lower()
+        self.targets = targets.split(', ')
         self.targets = [target.strip(' .').lower() for target in self.targets]
+        self.number_of_targets = len(self.targets)
         return f"{self.clue}, {self.number_of_targets}"
 
     def recover_utterance(self, with_targets = False) -> str:
-        targets = ""
         if with_targets:
             targets = ', '.join(self.targets)
-        return f"{self.prefix}{self.clue} | {targets}"
+            return f"{self.clue_prefix}{self.clue}\n{self.target_prefix}{targets}"
+        return f"{self.clue_prefix}{self.clue}, {len(self.targets)}"
 
 class CodenamesBoard:
     def __init__(self, team_words, opponent_words, innocent_words, assassin_words):

@@ -4,4 +4,5 @@ $board
 
 Please give your guess(es) as a comma-separated list in the format below:
 GUESS: <LIST OF WORDS>
+
 You can add as many words as you want and can guess, with a minimum of 1 and a maximum of $number. Make your answer as short as possible.
