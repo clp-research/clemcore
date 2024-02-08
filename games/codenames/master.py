@@ -10,6 +10,9 @@ from games.codenames.constants import *
 
 logger = get_logger(__name__)
 
+IGNORE_RAMBLING = True
+IGNORE_FALSE_TARGETS_OR_GUESSES = True
+REPROMPT_ON_ERROR = True
 
 class ValidationError(Exception):
     def __init__(self, message="Response does not follow the rules and is hence invalid."):
@@ -123,7 +126,7 @@ class ClueGiver(Player):
     def recover_utterance(self, with_targets = False) -> str:
         targets = ""
         if with_targets:
-            targets = f", {', '.join(self.targets)}"
+            targets = ', '.join(self.targets)
         return f"{self.prefix}{self.clue} | {targets}"
 
 class CodenamesBoard:
@@ -338,13 +341,13 @@ class CodenamesGame(DialogueGameMaster):
     def _on_before_reprompt(self, player: Player):
         logger.debug("Reprompting...")
         player.retries += 1
-        self.request_count += 1
         self.add_user_message(player, f"Your answer did not follow the requested format: {self.last_error_message}")
     
     def _should_reprompt(self, player: Player):
         # return False
-        if player.retries < MAX_RETRIES:
-            return self.invalid_response
+        if REPROMPT_ON_ERROR:
+            if player.retries < MAX_RETRIES:
+                return self.invalid_response
         return False
     
     def _after_add_player_response(self, player: Player, utterance: str):
@@ -370,6 +373,17 @@ class CodenamesGame(DialogueGameMaster):
 class CodenamesScorer(GameScorer):
     def __init__(self):
         super().__init__(GAME_NAME)
+
+    def log_turn_score(self, turn_idx, name, value, scale=False):
+        if type(value) == int or type(value) == float:
+            value = round(value, 3)
+            value = value * 100 if scale else value
+        super().log_turn_score(turn_idx, name, value)
+
+    def log_episode_score(self, name, value, scale=False):
+        value = round(value, 3)
+        value = value * 100 if scale else value
+        super().log_episode_score(name, value)
 
     def score_turns(self):
         for turn_idx, turn in enumerate(self.episode_interactions["turns"]):
@@ -426,6 +440,11 @@ class CodenamesScorer(GameScorer):
         # game-specific scores
         number_of_turns = self.episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
+        efficiency = 1 / number_of_turns
+        self.log_episode_score("efficiency", efficiency)
+        target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
+        avg_target_f1s = statistics.mean(target_f1s)
+        self.log_episode_score("avg target f1", avg_target_f1s)
 
         # plus all required game scores
         super().score_game()
@@ -446,7 +465,7 @@ class CodenamesScorer(GameScorer):
                 end_score = 2
             case Game_ends.OPPONENT_WON:
                 end_score = 3
-            case Game_ends.TEAM_WON_THROUGH_ASSASSIN:
+            case Game_ends.OPPONENT_WON_THROUGH_ASSASSIN:
                 end_score = 4
         self.log_episode_score(GAME_END, end_score)
 
@@ -454,7 +473,7 @@ class CodenamesScorer(GameScorer):
         # self.log_episode_score(BOARD_STATUS, board_at_end)
 
         self.log_episode_score("team words revealed/all team words", len(self.board_at_end[REVEALED][TEAM][TEAM]) / 9)
-        self.log_episode_score("other words revealed/all words revealed", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / 16)
+        self.log_episode_score("other words not revealed/all other words", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / 16)
        
     def log_main_score(self):
         # all logged scores are available via self.scores["episode scores"][score_name]
@@ -464,13 +483,11 @@ class CodenamesScorer(GameScorer):
             self.log_episode_score(BENCH_SCORE, math.nan)
             return
 
-        # Main Score: harmonic mean of success (average of target-f1s) and efficiency (1/number of turns)
-        target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
-        efficiency = 1/self.scores["episode scores"][NUMBER_OF_TURNS]
-        avg_target_f1s = statistics.mean(target_f1s)
-        main_score = statistics.harmonic_mean([avg_target_f1s, efficiency]) * 100
-        self.log_episode_score(BENCH_SCORE, main_score)
-
+        # Main Score: harmonic mean of success (revealed team words / all team words (recall)) and efficiency (1/number of turns)
+        success = self.scores["episode scores"]["team words revealed/all team words"]
+        efficiency = self.scores["episode scores"]["efficiency"]
+        main_score = statistics.harmonic_mean([success, efficiency])
+        self.log_episode_score(BENCH_SCORE, main_score, scale=True)
 
 class CodenamesGameBenchmark(GameBenchmark):
 
