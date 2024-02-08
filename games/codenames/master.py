@@ -27,6 +27,8 @@ class Guesser(Player):
         self.guesses: List[str] = ['guess', 'word']
         self.prefix: str = "GUESS: "
         self.retries: int = 0
+        self.ignored_guesses = 0
+        self.ignored_rambles = 0
 
     def _custom_response(self, history, turn) -> str:
         prompt = history[-1]["content"]
@@ -41,8 +43,7 @@ class Guesser(Player):
         if '\n' in utterance:
             if IGNORE_RAMBLING:
                 utterance = utterance.split('\n')[0]
-                print('IGNORE RAMBLING')
-                # self.log_to_self("IGNORE RAMBLING")
+                self.ignored_rambles += 1
             else:
                 raise ValidationError(f"Your answer contained more than one line, please only give one round of guesses on one line.")
         # utterance needs to start with GUESS
@@ -59,8 +60,7 @@ class Guesser(Player):
         for guess in guesses:
             if not guess in board:
                 if IGNORE_FALSE_TARGETS_OR_GUESSES:
-                    # self.log_to_self("IGNORE FALSE GUESS")
-                    print('IGNORE FALSE GUESS')
+                    self.ignored_guesses += 1
                 else:
                     raise ValidationError(f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists.")
             
@@ -84,6 +84,8 @@ class ClueGiver(Player):
         self.number_of_targets: int = 2
         self.targets: List[str] = ['target', 'word']
         self.retries: int = 0
+        self.ignored_targets = 0
+        self.ignored_rambles = 0
 
     def _custom_response(self, history, turn) -> str:
         prompt = history[-1]["content"]
@@ -105,6 +107,8 @@ class ClueGiver(Player):
         elif len(parts) > 2:
             if not IGNORE_RAMBLING:
                 raise ValidationError(f"Your answer contained more than two lines, please only give one clue and your targets on two separate lines.")
+            else:
+                self.ignored_rambles += 1
 
         clue = None
         targets = None
@@ -138,6 +142,7 @@ class ClueGiver(Player):
                 if IGNORE_FALSE_TARGETS_OR_GUESSES:
                     # self.log_to_self("IGNORE FALSE TARGET")
                     print('IGNORE FALSE TARGET')
+                    self.ignored_targets += 1
                     # TODO: remove target from targets?
                 else:
                     raise ValidationError(f"Targeted word '{target}' was not listed, you can only target words provided in the lists.")
@@ -401,8 +406,11 @@ class CodenamesGame(DialogueGameMaster):
         # METRIC_SUCCESS does not need to be logged as it is inferred from ABORTED and LOSE
         self.log_key(METRIC_REQUEST_COUNT, self.request_count)
         self.log_key(METRIC_REQUEST_COUNT_PARSED, self.parsed_request_count)
-        self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_request_count)            
-
+        self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_request_count)
+        self.log_key("Cluegiver ignored rambling", self.cluegiver.ignored_rambles)
+        self.log_key("Guesser ignored rambling", self.guesser.ignored_rambles)
+        self.log_key("Cluegiver ignored false targets", self.cluegiver.ignored_targets)
+        self.log_key("Guesser ignored false guesses", self.guesser.ignored_guesses) 
 
 class CodenamesScorer(GameScorer):
     def __init__(self):
@@ -472,6 +480,9 @@ class CodenamesScorer(GameScorer):
 
     def score_game(self):
         # game-specific scores
+        self.log_episode_score("ignore rambling", IGNORE_RAMBLING)
+        self.log_episode_score("ignore false targets or guesses", IGNORE_FALSE_TARGETS_OR_GUESSES)
+
         number_of_turns = self.episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
         efficiency = 1 / number_of_turns
