@@ -1,0 +1,221 @@
+[
+  {
+    "model_name": "Mistral-7B-Instruct-v0.1",
+    "backend": "huggingface",
+    "huggingface_id": "mistralai/Mistral-7B-Instruct-v0.1",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "sheep-duck-llama-2-70b-v1.1",
+    "backend": "huggingface",
+    "huggingface_id": "Riiid/sheep-duck-llama-2-70b-v1.1",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### User:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'system' %}{{ '### System:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant:\\n' + message['content'] + '\\n\\n' }}{% endif %}{% if loop.last %}{{ '### Assistant:\\n' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "sheep-duck-llama-2-13b",
+    "backend": "huggingface",
+    "huggingface_id": "Riiid/sheep-duck-llama-2-13b",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### User:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'system' %}{{ '### System:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant:\\n' + message['content'] + '\\n\\n' }}{% endif %}{% if loop.last %}{{ '### Assistant:\\n' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "falcon-7b-instruct",
+    "backend": "huggingface",
+    "huggingface_id": "tiiuae/falcon-7b-instruct",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "falcon-40b-instruct",
+    "backend": "huggingface",
+    "huggingface_id": "tiiuae/falcon-40b-instruct",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "oasst-sft-4-pythia-12b-epoch-3.5",
+    "backend": "huggingface",
+    "huggingface_id": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '<|prompter|>' + message['content'] + '<|endoftext|>' }}{% elif message['role'] == 'assistant' %}{{ '<|assistant|>' + message['content'] + '<|endoftext|>' }}{% endif %}{% if loop.last %}{{ '<|assistant|>' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "koala-13B-HF",
+    "backend": "huggingface",
+    "huggingface_id": "TheBloke/koala-13B-HF",
+    "premade_chat_template": false,
+    "custom_chat_template": "{{ 'BEGINNING OF CONVERSATION: ' }}{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + ' ' }}{% elif message['role'] == 'assistant' %}{{ 'GPT: ' + message['content'] + ' ' }}{% endif %}{% if loop.last %}{{ 'GPT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "Wizard-Vicuna-13B-Uncensored-HF",
+    "backend": "huggingface",
+    "huggingface_id": "TheBloke/Wizard-Vicuna-13B-Uncensored-HF",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "WizardLM-70b-v1.0",
+    "backend": "huggingface",
+    "huggingface_id": "WizardLM/WizardLM-70b-v1.0",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+
+  },
+  {
+    "model_name": "WizardLM-13b-v1.2",
+    "backend": "huggingface",
+    "huggingface_id": "WizardLM/WizardLM-13b-v1.2",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "vicuna-7b-v1.5",
+    "backend": "huggingface",
+    "huggingface_id": "lmsys/vicuna-7b-v1.5",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "vicuna-13b-v1.5",
+    "backend": "huggingface",
+    "huggingface_id": "lmsys/vicuna-13b-v1.5",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "vicuna-33b-v1.3",
+    "backend": "huggingface",
+    "huggingface_id": "lmsys/vicuna-33b-v1.3",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "gpt4all-13b-snoozy",
+    "backend": "huggingface",
+    "huggingface_id": "nomic-ai/gpt4all-13b-snoozy",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "CodeLlama-34b-Instruct-hf",
+    "backend": "huggingface",
+    "huggingface_id": "codellama/CodeLlama-34b-Instruct-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "zephyr-7b-alpha",
+    "backend": "huggingface",
+    "huggingface_id": "HuggingFaceH4/zephyr-7b-alpha",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "zephyr-7b-beta",
+    "backend": "huggingface",
+    "huggingface_id": "HuggingFaceH4/zephyr-7b-beta",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "openchat_3.5",
+    "backend": "huggingface",
+    "huggingface_id": "openchat/openchat_3.5",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|end_of_turn|>"
+  },
+  {
+    "model_name": "Yi-34B-Chat",
+    "backend": "huggingface",
+    "huggingface_id": "01-ai/Yi-34B-Chat",
+    "premade_chat_template": true,
+    "slow_tokenizer": true,
+    "output_split_prefix": "assistant\n",
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "deepseek-llm-7b-chat",
+    "backend": "huggingface",
+    "huggingface_id": "deepseek-ai/deepseek-llm-7b-chat",
+    "premade_chat_template": true,
+    "eos_to_cull": "<｜end▁of▁sentence｜>"
+  },
+  {
+    "model_name": "deepseek-llm-67b-chat",
+    "backend": "huggingface",
+    "huggingface_id": "deepseek-ai/deepseek-llm-67b-chat",
+    "premade_chat_template": true,
+    "eos_to_cull": "<｜end▁of▁sentence｜>"
+  },
+  {
+    "model_name": "tulu-2-dpo-7b",
+    "backend": "huggingface",
+    "huggingface_id": "allenai/tulu-2-dpo-7b",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}\n{% if message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "tulu-2-dpo-70b",
+    "backend": "huggingface",
+    "huggingface_id": "allenai/tulu-2-dpo-70b",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}\n{% if message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}",
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "Mixtral-8x7B-Instruct-v0.1",
+    "backend": "huggingface",
+    "huggingface_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "SUS-Chat-34B",
+    "backend": "huggingface",
+    "huggingface_id": "SUSTech/SUS-Chat-34B",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}",
+    "slow_tokenizer": true,
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "llama-2-7b-chat-hf",
+    "backend": "huggingface",
+    "requires_api_key": true,
+    "huggingface_id": "meta-llama/llama-2-7b-chat-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "llama-2-13b-chat-hf",
+    "backend": "huggingface",
+    "requires_api_key": true,
+    "huggingface_id": "meta-llama/llama-2-13b-chat-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "llama-2-70b-chat-hf",
+    "backend": "huggingface",
+    "requires_api_key": true,
+    "huggingface_id": "meta-llama/llama-2-70b-chat-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  }
+]
