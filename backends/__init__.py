@@ -8,6 +8,7 @@ import logging
 import logging.config
 from abc import ABC
 from types import SimpleNamespace
+from dataclasses import dataclass
 
 from typing import Dict, List, Tuple, Any, Type, Union
 
@@ -39,6 +40,7 @@ def load_credentials(backend, file_name="key.json") -> Dict:
     return creds
 
 
+@dataclass(frozen=True)
 class ModelSpec(SimpleNamespace):
     PROGRAMMATIC_SPECS = ["mock", "dry_run", "programmatic", "custom", "_slurk_response"]
     HUMAN_SPECS = ["human", "terminal"]
@@ -53,11 +55,22 @@ class ModelSpec(SimpleNamespace):
             raise ValueError(f"{self} does not unify with {other}")
         return ModelSpec(**result)
 
+    def __getitem__(self, item):
+        """ dict-like behavior """
+        return getattr(self, item)
+
+    def __contains__(self, item):
+        """ dict-like behavior """
+        return self.has_attr(item)
+
+    def has_attr(self, attribute):
+        return hasattr(self, attribute)
+
     def has_temperature(self):
-        return hasattr(self, "temperature")
+        return self.has_attr("temperature")
 
     def has_backend(self):
-        return hasattr(self, "backend")
+        return self.has_attr("backend")
 
     @classmethod
     def from_name(cls, model_name: str):
@@ -238,9 +251,27 @@ def get_model_for(model_spec: Union[str, Dict, ModelSpec]) -> Model:
             continue
 
     if not model_spec.has_backend():
-        raise ValueError(f"Model spec requires backend after unification, but there might be no entry in model registry "
-                         f"for model_name='{model_spec.model_name}'. "
-                         f"Check or update the backends/model_registry.json or pass the backend directly and try again. "
-                         f"A minimal entry is {{'model_name':<name>,'backend':<backend>}}.")
+        raise ValueError(
+            f"Model spec requires backend after unification, but there might be no entry in model registry "
+            f"for model_name='{model_spec.model_name}'. "
+            f"Check or update the backends/model_registry.json or pass the backend directly and try again. "
+            f"A minimal entry is {{'model_name':<name>,'backend':<backend>}}.")
     model = _load_model_for(model_spec)
     return model
+
+
+class ContextExceededError(Exception):
+    """
+    Exception to be raised when the messages passed to a backend instance exceed the context limit of the model.
+    """
+    tokens_used: int = int()
+    tokens_left: int = int()
+    context_size: int = int()
+
+    def __init__(self, info_str: str = "Context limit exceeded", tokens_used: int = 0,
+                 tokens_left: int = 0, context_size: int = 0):
+        info = f"{info_str} {tokens_used}/{context_size}"
+        super().__init__(info)
+        self.tokens_used = tokens_used
+        self.tokens_left = tokens_left
+        self.context_size = context_size

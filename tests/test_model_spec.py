@@ -4,6 +4,20 @@ from backends import ModelSpec
 
 
 class ModelSpecTestCase(unittest.TestCase):
+
+    def test_dict_like_get(self):
+        spec = ModelSpec(model_name="model_a")
+        self.assertEqual(spec["model_name"], "model_a")
+
+    def test_dict_like_contains(self):
+        spec = ModelSpec(model_name="model_a")
+        self.assertTrue("model_name" in spec)
+
+    def test_dict_like_set_throws_error(self):
+        spec = ModelSpec(model_name="model_a")
+        with self.assertRaises(TypeError):
+            spec["model_name"] = "model_b"
+
     def test_empty_query_unifies_with_empty_to_empty(self):
         query = ModelSpec()
         entry = ModelSpec()
