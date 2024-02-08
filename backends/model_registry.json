@@ -1,5 +1,22 @@
 [
   {
+    "model_name": "luminous-supreme-control",
+    "model_id": "luminous-supreme-control",
+    "backend": "alephalpha"
+  }, {
+  "model_name": "luminous-supreme",
+  "model_id": "luminous-supreme",
+  "backend": "alephalpha"
+}, {
+  "model_name": "luminous-extended",
+  "model_id": "luminous-extended",
+  "backend": "alephalpha"
+}, {
+  "model_name": "luminous-base",
+  "model_id": "luminous-base",
+  "backend": "alephalpha"
+},
+  {
     "model_name": "Mistral-7B-Instruct-v0.1",
     "backend": "huggingface_local",
     "huggingface_id": "mistralai/Mistral-7B-Instruct-v0.1",
@@ -69,7 +86,6 @@
     "premade_chat_template": false,
     "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '</s>\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
     "eos_to_cull": "</s>"
-
   },
   {
     "model_name": "WizardLM-13b-v1.2",

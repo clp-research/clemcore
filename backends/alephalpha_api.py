@@ -7,12 +7,6 @@ import backends
 
 logger = backends.get_logger(__name__)
 
-LUMINOUS_SUPREME_CONTROL = "luminous-supreme-control"
-LUMINOUS_SUPREME = "luminous-supreme"
-LUMINOUS_EXTENDED = "luminous-extended"
-LUMINOUS_BASE = "luminous-base"
-SUPPORTED_MODELS = [LUMINOUS_SUPREME_CONTROL, LUMINOUS_SUPREME, LUMINOUS_EXTENDED, LUMINOUS_BASE]
-
 NAME = "alephalpha"
 
 
