@@ -337,7 +337,7 @@ class DialogueGameMaster(GameMaster):
         """
         Add a player to the game.
 
-        Note: The players will be called at the same order as added!
+        Note: The players will be called in the same order as added!
 
         :param player: to be added to the game
         """
@@ -373,29 +373,50 @@ class DialogueGameMaster(GameMaster):
             for player in self.__player_sequence():
                 if not self._does_game_proceed():
                     break  # potentially stop in between player turns
-                # GM -> Player
-                history = self.messages_by_names[player.descriptor]
-                assert history, f"messages history must not be empty for {player.descriptor}"
-
-                last_entry = history[-1]
-                assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
-                                                          "b.c. this would be the role of the current player"
-                message = last_entry["content"]
-
-                action = {'type': 'send message', 'content': message}
-                self.log_event(from_='GM', to=player.descriptor, action=action)
-
-                _prompt, _response, response_message = player(history, self.current_turn)
-
-                # Player -> GM
-                action = {'type': 'get message', 'content': response_message}
-                self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
-
-                # GM -> GM
-                self.__validate_parse_and_add_player_response(player, response_message)
+                self.prompt(player)
+                while self._should_reprompt(player):
+                    self._on_before_reprompt(player)
+                    self.prompt(player, is_reprompt = True)
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
         self._on_after_game()
+
+    def prompt(self, player: Player, is_reprompt=False):
+        # GM -> Player
+        history = self.messages_by_names[player.descriptor]
+        assert history, f"messages history must not be empty for {player.descriptor}"
+
+        last_entry = history[-1]
+        assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
+                                                    "b.c. this would be the role of the current player"
+        message = last_entry["content"]
+
+        action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
+        action = {'type': action_type, 'content': message}
+        self.log_event(from_='GM', to=player.descriptor, action=action)
+
+        _prompt, _response, response_message = player(history, self.current_turn)
+
+        # Player -> GM
+        action = {'type': 'get message', 'content': response_message}
+        self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
+
+        # GM -> GM
+        self.__validate_parse_and_add_player_response(player, response_message)
+
+    def _should_reprompt(self, player: Player):
+        return False
+
+    def _on_before_reprompt(self, player: Player):
+        """
+        Hook
+
+        Change the prompt to reprompt the player on e.g. an invalid response.
+        Add the new prompt to the players message via self.add_user_message(player, new_prompt)
+
+        :param player: that produced the invalid response
+        """
+        pass
 
     def log_message_to(self, player: Player, message: str):
         """            GM -> Player        """
@@ -826,12 +847,9 @@ class GameInstanceGenerator(GameResourceLocator):
     def on_generate(self):
         raise NotImplementedError()
 
-    def generate(self):
+    def generate(self, filename="instances.json"):
         self.on_generate()
-        self.store()
-
-    def store(self):
-        self.store_file(self.instances, "instances.json", sub_dir="in")
+        self.store_file(self.instances, filename, sub_dir="in")
 
 
 def load_benchmarks(do_setup: bool = True) -> List[GameBenchmark]:
