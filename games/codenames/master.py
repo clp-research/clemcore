@@ -37,12 +37,19 @@ class Guesser(Player):
         return self.recover_utterance()
     
     def validate_response(self, utterance: str, board: List[str], number_of_allowed_guesses: int):
+        # utterance should only contain one line
+        if '\n' in utterance:
+            if IGNORE_RAMBLING:
+                utterance = utterance.split('\n')[0]
+                print('IGNORE RAMBLING')
+                # self.log_to_self("IGNORE RAMBLING")
+            else:
+                raise ValidationError(f"Your answer contained more than one line, please only give one round of guesses on one line.")
         # utterance needs to start with GUESS
         if not utterance.startswith(self.prefix):
             raise ValidationError(f"Your answer '{utterance}' did not start with the correct prefix ({self.prefix}).")
         utterance = utterance.removeprefix(self.prefix)
-        if '\n' in utterance:
-            raise ValidationError(f"Your answer contained more than one line, please only give one round of guesses on one line.")
+        
         guesses = utterance.split(', ')
         guesses = [word.strip('. ').lower() for word in guesses]
         # must contain one valid guess, but can only contain $number guesses max
@@ -51,7 +58,11 @@ class Guesser(Player):
         # guesses must be words on the board that are not revealed yet
         for guess in guesses:
             if not guess in board:
-                raise ValidationError(f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists.")
+                if IGNORE_FALSE_TARGETS_OR_GUESSES:
+                    # self.log_to_self("IGNORE FALSE GUESS")
+                    print('IGNORE FALSE GUESS')
+                else:
+                    raise ValidationError(f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists.")
             
     def parse_response(self, utterance: str) -> str:
         utterance = utterance.removeprefix(self.prefix)
@@ -84,12 +95,18 @@ class ClueGiver(Player):
         return self.recover_utterance(with_targets=True)
     
     def validate_response(self, utterance: str, board: List[str]):
+        # utterance should only contain one line
+        if '\n' in utterance:
+            if IGNORE_RAMBLING:
+                utterance = utterance.split('\n')[0]
+                # self.log_to_self("IGNORE RAMBLING")
+                print('IGNORE RAMBLING')
+            else:
+                raise ValidationError(f"Your answer contained more than one line, please only give one clue and your targets on one line.")
         # needs to start with correct prefix
         if not utterance.startswith(self.prefix):
             raise ValidationError(f"Your answer {utterance} did not start with the correct prefix ({self.prefix}).")
         utterance = utterance.removeprefix(self.prefix)
-        if '\n' in utterance:
-            raise ValidationError(f"Your answer contained more than one line, please only give one clue and your targets on one line.")
         parts = utterance.split(' | ')
         if len(parts) != 2:
             raise ValidationError(f"Your answer {utterance} did not contain enough or too many parts ({len(parts)}) of the required format (CLUE: <clue> | <targets>).")
@@ -110,16 +127,19 @@ class ClueGiver(Player):
         
         for target in targets:
             if not target in board:
-                raise ValidationError(f"Targeted word '{target}' was not listed, you can only target words provided in the lists.")
+                if IGNORE_FALSE_TARGETS_OR_GUESSES:
+                    # self.log_to_self("IGNORE FALSE TARGET")
+                    print('IGNORE FALSE TARGET')
+                    # TODO: remove target from targets?
+                else:
+                    raise ValidationError(f"Targeted word '{target}' was not listed, you can only target words provided in the lists.")
             
     def parse_response(self, utterance: str) -> str:
         utterance = utterance.removeprefix(self.prefix)
         self.clue, self.targets = utterance.split(' | ')
         self.targets = self.targets.split(', ')
-        #parts = utterance.split(', ')
         self.clue = self.clue.lower()
         self.number_of_targets = len(self.targets)
-        # self.targets = parts[2:]
         self.targets = [target.strip(' .').lower() for target in self.targets]
         return f"{self.clue}, {self.number_of_targets}"
 
@@ -155,7 +175,8 @@ class CodenamesBoard:
                 self.hidden[assignment].remove(word)
                 return assignment
 
-        raise ValueError(f"Word '{word}' was not found amongst the hidden words on the board, cannot be revealed.")
+        if not IGNORE_FALSE_TARGETS_OR_GUESSES:
+            raise ValueError(f"Word '{word}' was not found amongst the hidden words on the board, cannot be revealed.")
     
     def should_continue_after_revealing(self, word: str, by: str = TEAM):
         return word in self.revealed[by][by]
