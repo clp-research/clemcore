@@ -1,21 +1,49 @@
 [
   {
+    "model_name": "claude-v1.3",
+    "model_id": "claude-v1.3",
+    "backend": "anthropic"
+  },
+  {
+    "model_name": "claude-v1.3-100k",
+    "model_id": "claude-v1.3-100k",
+    "backend": "anthropic"
+  },
+  {
+    "model_name": "claude-instant-1.2",
+    "model_id": "claude-instant-1.2",
+    "backend": "anthropic"
+  },
+  {
+    "model_name": "claude-2",
+    "model_id": "claude-2",
+    "backend": "anthropic"
+  },
+  {
+    "model_name": "claude-2.1",
+    "model_id": "claude-2.1",
+    "backend": "anthropic"
+  },
+  {
     "model_name": "luminous-supreme-control",
     "model_id": "luminous-supreme-control",
     "backend": "alephalpha"
-  }, {
-  "model_name": "luminous-supreme",
-  "model_id": "luminous-supreme",
-  "backend": "alephalpha"
-}, {
-  "model_name": "luminous-extended",
-  "model_id": "luminous-extended",
-  "backend": "alephalpha"
-}, {
-  "model_name": "luminous-base",
-  "model_id": "luminous-base",
-  "backend": "alephalpha"
-},
+  },
+  {
+    "model_name": "luminous-supreme",
+    "model_id": "luminous-supreme",
+    "backend": "alephalpha"
+  },
+  {
+    "model_name": "luminous-extended",
+    "model_id": "luminous-extended",
+    "backend": "alephalpha"
+  },
+  {
+    "model_name": "luminous-base",
+    "model_id": "luminous-base",
+    "backend": "alephalpha"
+  },
   {
     "model_name": "Mistral-7B-Instruct-v0.1",
     "backend": "huggingface_local",

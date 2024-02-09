@@ -6,13 +6,6 @@ import json
 
 logger = backends.get_logger(__name__)
 
-MODEL_CLAUDE_13 = "claude-v1.3"
-MODEL_CLAUDE_13_100K = "claude-v1.3-100k"
-MODEL_CLAUDE_INSTANT_12 = "claude-instant-1.2"
-MODEL_CLAUDE_2 = "claude-2"
-MODEL_CLAUDE_21 = "claude-2.1"
-SUPPORTED_MODELS = [MODEL_CLAUDE_13, MODEL_CLAUDE_13_100K, MODEL_CLAUDE_INSTANT_12, MODEL_CLAUDE_2, MODEL_CLAUDE_21]
-
 NAME = "anthropic"
 
 
