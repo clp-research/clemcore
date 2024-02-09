@@ -6,10 +6,6 @@ import json
 
 logger = backends.get_logger(__name__)
 
-MODEL_COMMAND = "command"
-MODEL_COMMAND_LIGHT = "command-light"
-SUPPORTED_MODELS = [MODEL_COMMAND, MODEL_COMMAND_LIGHT]
-
 NAME = "cohere"
 
 
