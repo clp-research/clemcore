@@ -11,6 +11,8 @@ from clemgame.clemgame import load_benchmarks, load_benchmark
 logger = clemgame.get_logger(__name__)
 stdout_logger = clemgame.get_logger("benchmark.run")
 
+# look for custom user-defined models before loading the base registry
+backends.load_custom_model_registry()
 backends.load_model_registry()
 
 

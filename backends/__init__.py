@@ -55,6 +55,12 @@ class ModelSpec(SimpleNamespace):
             raise ValueError(f"{self} does not unify with {other}")
         return ModelSpec(**result)
 
+    def __repr__(self):
+        return f"ModelSpec({str(self)})"
+
+    def __str__(self):
+        return str(self.__dict__)
+
     def __getitem__(self, item):
         """ dict-like behavior """
         return getattr(self, item)
@@ -177,21 +183,30 @@ _backend_registry: Dict[str, Type] = dict()  # we store references to the class 
 _model_registry: List[ModelSpec] = list()  # we store model specs so that users might use model_name for lookup
 
 
-def load_model_registry(_model_registry_path: str = None):
+def load_custom_model_registry(_model_registry_path: str = None, is_optional=True):
+    if not _model_registry_path:
+        _model_registry_path = os.path.join(project_root, "backends", "model_registry_custom.json")
+    load_model_registry(_model_registry_path, is_mandatory=not is_optional)
+
+
+def load_model_registry(_model_registry_path: str = None, is_mandatory=True):
     if not _model_registry_path:
         _model_registry_path = os.path.join(project_root, "backends", "model_registry.json")
     if not os.path.isfile(_model_registry_path):
-        raise FileNotFoundError(f"The file model registry at '{_model_registry_path}' does not exist. "
-                                f"Create model registry as a model_registry.json file and try again.")
+        if is_mandatory:
+            raise FileNotFoundError(f"The file model registry at '{_model_registry_path}' does not exist. "
+                                    f"Create model registry as a model_registry.json file and try again.")
+        else:
+            return  # do nothing
     with open(_model_registry_path) as f:
         _model_listing = json.load(f)
         for _model_entry in _model_listing:
             _model_spec: ModelSpec = ModelSpec.from_dict(_model_entry)
             if not _model_spec.has_backend():
                 raise ValueError(
-                    f"Missing backend definition in model registry for model_name='{_model_spec.model_name}'. "
+                    f"Missing backend definition in model spec '{_model_spec}'. "
                     f"Check or update the backends/model_registry.json and try again."
-                    f"A minimal entry is {{'model_name':<name>,'backend':<backend>}}.")
+                    f"A minimal model spec is {{'model_id':<id>,'backend':<backend>}}.")
             _model_registry.append(_model_spec)
 
 
@@ -252,10 +267,9 @@ def get_model_for(model_spec: Union[str, Dict, ModelSpec]) -> Model:
 
     if not model_spec.has_backend():
         raise ValueError(
-            f"Model spec requires backend after unification, but there might be no entry in model registry "
-            f"for model_name='{model_spec.model_name}'. "
+            f"Model spec requires 'backend' after unification, but not found in model spec '{model_spec}'. "
             f"Check or update the backends/model_registry.json or pass the backend directly and try again. "
-            f"A minimal entry is {{'model_name':<name>,'backend':<backend>}}.")
+            f"A minimal model spec is {{'model_id':<id>,'backend':<backend>}}.")
     model = _load_model_for(model_spec)
     return model
 
