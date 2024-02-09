@@ -1,5 +1,20 @@
 [
   {
+    "model_name": "mistral-medium",
+    "model_id": "mistral-medium",
+    "backend": "mistral"
+  },
+  {
+    "model_name": "mistral-tiny",
+    "model_id": "mistral-tiny",
+    "backend": "mistral"
+  },
+  {
+    "model_name": "mistral-small",
+    "model_id": "mistral-small",
+    "backend": "mistral"
+  },
+  {
     "model_name": "command",
     "model_id": "command",
     "backend": "cohere"

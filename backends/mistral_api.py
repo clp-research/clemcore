@@ -7,14 +7,10 @@ import backends
 
 logger = backends.get_logger(__name__)
 
-MEDIUM = "mistral-medium"
-TINY = "mistral-tiny"
-SMALL = "mistral-small"
-SUPPORTED_MODELS = [MEDIUM, TINY, SMALL]
-
 NAME = "mistral"
 
 MAX_TOKENS = 100
+
 
 class Mistral(backends.Backend):
 
@@ -46,9 +42,9 @@ class Mistral(backends.Backend):
         for m in messages:
             prompt.append(ChatMessage(role=m['role'], content=m['content']))
         api_response = self.client.chat(model=self.model_spec.model_id,
-                                                      messages=prompt,
-                                                      temperature=self.get_temperature(),
-                                                      max_tokens=MAX_TOKENS)
+                                        messages=prompt,
+                                        temperature=self.get_temperature(),
+                                        max_tokens=MAX_TOKENS)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")
