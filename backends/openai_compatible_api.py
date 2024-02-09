@@ -10,16 +10,6 @@ logger = backends.get_logger(__name__)
 
 MAX_TOKENS = 100
 
-# For this backend, it makes less sense to talk about "supported models" than for others,
-# because what is supported depends very much on where this is pointed to.
-# E.g., if I run FastChat on my local machine, I may have very different models available
-# than if this is pointed to FastChat running on our cluster.
-# Also, what is supported depends on what the server that this is pointed to happens to be
-# serving at that moment.
-# But anyway, hopefull we'll soon have a different method for selecting backends. 2024-01-10
-SUPPORTED_MODELS = ["fsc-vicuna-13b-v1.5", "fsc-vicuna-33b-v1.3", "fsc-vicuna-7b-v1.5",
-                    "fsc-openchat-3.5-0106", "fsc-codellama-34b-instruct"]
-
 NAME = "generic_openai_compatible"
 
 
@@ -35,7 +25,7 @@ class GenericOpenAI(backends.Backend):
             ### The line below is needed because of
             ### issues with the certificates on our GPU server.
             http_client=httpx.Client(verify=False)
-            )
+        )
 
     def list_models(self):
         models = self.client.models.list()
@@ -55,12 +45,8 @@ class GenericOpenAI(backends.Backend):
                 ]
         :return: the continuation
         """
-        model_id  = self.model_spec.model_id
-        if self.model_spec.model_id.startswith('fsc-') or self.model_spec.model_id.startswith('lcp-'):
-            model_id = self.model_spec.model_id[4:]
-
         prompt = messages
-        api_response = self.client.chat.completions.create(model=model_id, messages=prompt,
+        api_response = self.client.chat.completions.create(model=self.model_spec.model_id, messages=prompt,
                                                            temperature=self.get_temperature(),
                                                            max_tokens=MAX_TOKENS)
         message = api_response.choices[0].message

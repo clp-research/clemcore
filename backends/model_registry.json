@@ -1,5 +1,25 @@
 [
   {
+    "model_name": "openchat",
+    "model_id": "openchat-3.5-0106",
+    "backend": "openai_compatible"
+  },
+  {
+    "model_name": "codellama-34b",
+    "model_id": "codellama-34b-instruct",
+    "backend": "openai_compatible"
+  },
+  {
+    "model_name": "fsc-openchat-3.5-0106",
+    "model_id": "openchat-3.5-0106",
+    "backend": "openai_compatible"
+  },
+  {
+    "model_name": "fsc-codellama-34b-instruct",
+    "model_id": "codellama-34b-instruct",
+    "backend": "openai_compatible"
+  },
+  {
     "model_name": "gpt-4-1106-preview",
     "model_id": "gpt-4-1106-preview",
     "backend": "openai"
