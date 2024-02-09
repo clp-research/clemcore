@@ -21,7 +21,7 @@ EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
 API_KEY = ""  # your key for the Merriam-Webster thesaurus
 N_INSTANCES = 20  # how many different target words; zero means "all"
 N_GUESSES = 3  # how many tries the guesser will have
-N_REATED_WORDS = 3
+N_RELATED_WORDS = 3
 LANGUAGE = "en"
 
 logger = clemgame.get_logger(__name__)
@@ -95,10 +95,10 @@ class TabooGameInstanceGenerator(GameInstanceGenerator):
 
                 game_instance = self.add_game_instance(experiment, game_id)
                 game_instance["target_word"] = target
-                game_instance["related_word"] = find_synonyms_remote(target, n=N_REATED_WORDS, api_key=API_KEY)
+                game_instance["related_word"] = find_synonyms_remote(target, n=N_RELATED_WORDS, api_key=API_KEY)
 
-                if len(game_instance["related_word"]) < N_REATED_WORDS:
-                    print(f"Found less than {N_REATED_WORDS} related words for: {target}")
+                if len(game_instance["related_word"]) < N_RELATED_WORDS:
+                    print(f"Found less than {N_RELATED_WORDS} related words for: {target}")
 
 
 if __name__ == '__main__':
