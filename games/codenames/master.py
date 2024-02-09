@@ -368,6 +368,8 @@ class CodenamesGame(DialogueGameMaster):
             parsed_utterance = player.parse_response(utterance)
             for guess in player.guesses:
                 assignment = self.board.reveal_word(guess)
+                if not assignment:
+                    continue
                 self.log_to_self(Turn_logs.TEAM_REVEALED, assignment)
                 if self._was_target(guess):
                     self.log_to_self(Turn_logs.TARGET_REVEALED, guess)
