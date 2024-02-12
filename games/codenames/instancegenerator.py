@@ -5,8 +5,9 @@ Creates files in ./in
 """
 from tqdm import tqdm
 from clemgame.clemgame import GameInstanceGenerator
-import random, copy, argparse
+import random, copy, argparse, os
 from typing import Set
+from clemgame.file_utils import file_path
 
 from games.codenames.constants import *
 
@@ -72,7 +73,6 @@ def generate_similar_across_teams(categories, required):
         i = 0
         while i < len(words):
             remaining_assignments = [key for key in assignments.keys() if len(assignments[key]) < required[key]]
-            print(remaining_assignments)
             assign_to = random.sample(remaining_assignments, min(len(remaining_assignments), len(words)))
             for alignment in assign_to:
                 assignments[alignment].append(words[i])
@@ -82,7 +82,6 @@ def generate_similar_across_teams(categories, required):
         board.extend(list(words))
     shuffle_board(board)
     shuffle_words_within_assignments(assignments)
-    print(assignments)
     return {"board": board, "assignments": assignments, "private": {"categories": list(already_taken_categories)}}
     
 def choose_instances_from_random_category(categories: Set, already_taken_words: Set, already_taken_categories: Set, maximum = 4):
@@ -164,22 +163,29 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                 experiment_names = [experiment_name]
                 # otherwise instances for all experiments changing this variable are generated
 
-            for experiment_name in experiment_names:
-                print("Generating instances for experiment: ", experiment_name)
-                experiment = self.add_experiment(experiment_name)
+            for name in experiment_names:
+                # load correct wordlist
+                if "wordlist" in experiments[name].keys():
+                    wordlist_name = experiments[name]["wordlist"]
+                else:
+                    wordlist_name = defaults["wordlist"]
+                wordlist_path = f"resources/word_lists/{wordlist_name}"
+                if not os.path.isfile(file_path(wordlist_path, GAME_NAME)):
+                    print(f"> Wordlist {wordlist_name} does not exist, skip {name}.")
+                    continue
+                wordlist = self.load_json(wordlist_path)["words"]
+
+                print("Generating instances for experiment: ", name)
+                experiment = self.add_experiment(name)
                 experiment["variable"] = variable_name
                 # set default parameters
                 for parameter in defaults:
                     experiment[parameter] = defaults[parameter]
                 # set experiment-specific parameters
-                for parameter in experiments[experiment_name]:
+                for parameter in experiments[name]:
                     print("Setting experiment parameter: ", parameter)
-                    experiment[parameter] = experiments[experiment_name][parameter]
+                    experiment[parameter] = experiments[name][parameter]
 
-                # load correct wordlist
-                wordlist_name = experiment["wordlist"]
-                wordlist = self.load_json(f"resources/word_lists/{wordlist_name}")["words"]
-                            
                 # create game instances
                 for game_id in tqdm(range(experiment["number of instances"])):
                     # choose correct generator function
