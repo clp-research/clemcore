@@ -28,9 +28,11 @@
         "word assignments": {
             "experiments": {
                 "easy assignments": {
-                    "generator": "easy word assignments"},
+                    "generator": "easy word assignments",
+                    "wordlist": "categories.json"},
                 "difficult assignments": {
-                    "generator": "difficult word assignments"}
+                    "generator": "difficult word assignments",
+                    "wordlist": "categories.json"}
             }
         },
         "opponent difficulty": {

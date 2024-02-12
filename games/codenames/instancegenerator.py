@@ -6,23 +6,24 @@ Creates files in ./in
 from tqdm import tqdm
 from clemgame.clemgame import GameInstanceGenerator
 import random, copy, argparse
+from typing import Set
 
 from games.codenames.constants import *
 
-def generate_random(wordlist, assignments):
+def generate_random(wordlist, required):
     # sample words for the board
-    total = assignments[TEAM] + assignments[OPPONENT] + assignments[INNOCENT] + assignments[ASSASSIN]
+    total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
     board = random.sample(wordlist, total)
 
     # make the assignments for the cluegiver and remove instances from 'unsampled' that were already sampled
     unsampled = copy.copy(board)
-    team_words = random.sample(unsampled, assignments[TEAM])
+    team_words = random.sample(unsampled, required[TEAM])
     unsampled = [word for word in unsampled if word not in team_words]
-    opponent_words = random.sample(unsampled, assignments[OPPONENT])
+    opponent_words = random.sample(unsampled, required[OPPONENT])
     unsampled = [word for word in unsampled if word not in opponent_words]
-    innocent_words = random.sample(unsampled, assignments[INNOCENT])
+    innocent_words = random.sample(unsampled, required[INNOCENT])
     unsampled = [word for word in unsampled if word not in innocent_words]
-    assassin_words = random.sample(unsampled, assignments[ASSASSIN])
+    assassin_words = random.sample(unsampled, required[ASSASSIN])
     unsampled = [word for word in unsampled if word not in assassin_words]
     assert len(unsampled) == 0, "Not all words have been assigned to a team!"
     return {
@@ -35,10 +36,61 @@ def generate_random(wordlist, assignments):
         }
     }
 
-def generate_similar_within_teams(wordlist, assignments):
-    pass
+def generate_similar_within_teams(categories, required):
+    total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
+    board = []
+    already_taken_words = set()
+    already_taken_categories = set()
+    required = {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1}
+    assignments = {"team": [], "opponent": [], "innocent": [], "assassin": []}
+    for alignment in assignments:
+        while len(assignments[alignment]) < required[alignment]:
+            remaining = required[alignment] - len(assignments[alignment])
+            words = choose_instances_from_random_category(categories, already_taken_words, already_taken_categories, maximum = remaining)
+            assignments[alignment].extend(list(words))
+            board.extend(list(words))    
+    
+    # shuffle all alignments within, shuffle board 
+    random.shuffle(board)
+    for alignment in assignments:
+        random.shuffle(assignments[alignment])
+    return {"board": board, "assignments": assignments, "private": {"categories": already_taken_categories}}  
+    
+def choose_instances_from_random_category(categories: Set, already_taken_words: Set, already_taken_categories: Set, maximum = 4):
+    remaining_category_names = set(categories.keys()) - already_taken_categories
+    category_name = get_random_category(list(remaining_category_names))
+    already_taken_categories.add(category_name)
 
-def generate_similar_across_teams(wordlist, assignments):
+    category_words = set(categories[category_name])
+    remaining_words = category_words - already_taken_words
+    
+    # randomly choose 2-4 words from a category, so that not only one word slot remains
+    choices = [2, 3, 4]
+    for choice in choices:
+        if maximum - choice == 1:
+            choices.remove(choice)
+            break
+    amount = random.choice(choices)
+    words = sample_words_from_category(list(remaining_words), min(amount, maximum))
+    already_taken_words.update(words)
+    return words
+    
+def sample_words_from_category(category, number_of_words):
+    if len(category) < number_of_words:
+        raise ValueError(f"The category (with length {len(category)}) does not contain the required amount of words ({number_of_words})!")
+    words = []
+    for i in range(number_of_words):
+        word = random.choice(category)
+        words.append(word)
+        category.remove(word)
+        
+    return words
+    
+def get_random_category(category_list):
+    return random.choice(category_list)
+
+def generate_similar_across_teams(categories, required):
+    total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
     pass
 
 generators={'random': generate_random,
