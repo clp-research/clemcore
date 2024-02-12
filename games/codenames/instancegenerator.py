@@ -49,11 +49,12 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
     def __init__(self):
         super().__init__(GAME_NAME)
 
-    def generate(self, variable_name=None, experiment_name=None, filename="instances.json"):
+    def generate(self, keep=False, variable_name=None, experiment_name=None, filename="instances.json"):
         # @overwrite
         self.on_generate(variable_name, experiment_name)
-        #if experiment_name:
-        #    self.replace_instances(experiment_name, filename)
+        if keep and (variable_name or experiment_name):
+            print(f"Replacing instances for {variable_name}: {experiment_name}.")
+            self.replace_instances(variable_name, experiment_name, filename)
         self.store_file(self.instances, filename, sub_dir="in")
         
     def on_generate(self, variable_name = None, experiment_name = None):
@@ -64,33 +65,37 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
         variable_names = variable_experiments.keys()
 
         if variable_name:
-            # if the variable_name was set, we will only generate instances for this experiment suite
+            if variable_name not in variable_names:
+                print(f"Variable name {variable_name} not found in experiment config file (only {', '.join(list(variable_names))}).")
+                return
+            # if the variable_name was set (correctly), we will only generate instances for this experiment suite
             print(f"(Re-)Generate only instances for experiments on {variable_name}.")
             variable_names = [variable_name]
             # otherwise instances for all variables are generated
 
         for variable_name in variable_names:
-            print("Variable name", variable_name)
+            print("Generating instances for variable: ", variable_name)
             experiments = variable_experiments[variable_name]["experiments"]
             experiment_names = experiments.keys()
             if experiment_name:
-                # if the experiment name was set, we will only generate instances for this specific experiment
+                if experiment_name not in experiment_names:
+                    print(f"Experiment name {experiment_name} not found in experiment config file for {variable_name} (only {', '.join(list(experiment_names))}).")
+                    return
+                # if the experiment name was set (correctly), we will only generate instances for this specific experiment
                 print(f"(Re-)Generate only instances for {experiment_name}.")
                 experiment_names = [experiment_name]
                 # otherwise instances for all experiments changing this variable are generated
 
             for experiment_name in experiment_names:
-                print("Experiment name", experiment_name)
+                print("Generating instances for experiment: ", experiment_name)
                 experiment = self.add_experiment(experiment_name)
                 experiment["variable"] = variable_name
-                # add variable name
-                # add
                 # set default parameters
                 for parameter in defaults:
                     experiment[parameter] = defaults[parameter]
                 # set experiment-specific parameters
                 for parameter in experiments[experiment_name]:
-                    print("Experiment parameter", parameter)
+                    print("Setting experiment parameter: ", parameter)
                     experiment[parameter] = experiments[experiment_name][parameter]
 
                 # load correct wordlist
@@ -133,27 +138,43 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
             raise ValueError(f"The sum of all assignments does not match the total number of words!")
             
         assigned_words = [x for y in board_instance[ASSIGNMENTS] for x in board_instance[ASSIGNMENTS][y]]
-        print(assigned_words)
         if set(board_instance[BOARD]) != set(assigned_words):
             raise ValueError(f"The words on the board do not match all the assigned words.")
         
-    def replace_instances(self, experiment_name, filename="instances.json"):
-        instances = self.load_json(f"in/{filename}")
-        new_instances = {}
-        for experiment in instances["experiments"]:
-            if experiment["name"] != experiment_name:
-                #instance
-                #experiment["game_instances"] = self.instances[]
-                pass
-        instances[experiment_name] = self.instances["experiments"][experiment_name]
-        self.instances = instances
+    def replace_instances(self, variable_name, experiment_name = None, filename="instances.json", ):
+        file = self.load_json(f"in/{filename}")
+        if not file:
+            print("File does not exist, can be 'overwritten'...")
+            return
+        old_experiments = file["experiments"]
+        # adding all new experiment instances
+        new_experiments = self.instances["experiments"]
+        for i in range(len(old_experiments)):
+            if old_experiments[i]["variable"] == variable_name:
+                if experiment_name and not old_experiments[i]["name"] == experiment_name:
+                    # experiment name was set, but these old instances belong to a different experiment, so should be kept
+                    print(f"Keep {old_experiments[i]['name']}.")
+                    new_experiments.append(old_experiments[i])
+                else:
+                    print(f"Replace {experiment_name}.")
+            else:
+                # if the variable name is not the same, then these instances should also be kept
+                print(f"Keep {old_experiments[i]['name']}.")
+                new_experiments.append(old_experiments[i])
+
+        # sort experiments by variable, then by experiment name
+        new_experiments.sort(key=lambda k: (k['variable'], k['name']))
+        self.instances["experiments"] = new_experiments
 
 if __name__ == '__main__':
     # The resulting instances.json is automatically saved to the "in" directory of the game folder
     parser = argparse.ArgumentParser()
+    parser.add_argument("-k", "--keep", help="Optional flag to keep already generated instances and only replace new instances that will be generated for a specific variable and/or experiment. Otherwise overwrite all old instances.", action="store_true")
     parser.add_argument("-v", "--variable-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment suite aka variable.")
     parser.add_argument("-e", "--experiment-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment (variable name must also be set!).")
     args = parser.parse_args()
-    # check that experiment name is only set when variable name is also set!
-    random.seed(SEED)
-    CodenamesInstanceGenerator().generate(variable_name = args.variable_name, experiment_name = args.experiment_name)
+    if args.experiment_name and not args.variable_name:
+        print("Running a specific experiment requires both the experiment name (-e) and the variable name (-v)!")
+    else:
+        random.seed(SEED)
+        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name)

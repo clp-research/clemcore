@@ -2,7 +2,7 @@
     "default": {
         "number of instances": 30,
         "generator": "random",
-        "experiment difficulty": 1,
+        "opponent difficulty": 1,
         "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
         "wordlist": "default.json"
     },  
@@ -36,13 +36,13 @@
         "opponent difficulty": {
             "experiments": {
                 "no opponent": {
-                    "experiment difficulty": 0},
+                    "opponent difficulty": 0},
                 "easy opponent": {
-                    "experiment difficulty": 1},
+                    "opponent difficulty": 1},
                 "medium opponent": {
-                    "experiment difficulty": 2},
+                    "opponent difficulty": 2},
                 "difficult opponent": {
-                    "experiment difficulty": 3}
+                    "opponent difficulty": 3}
             }
         },
         "word frequency": {
@@ -74,7 +74,7 @@
         "wordlist": {
             "experiments": {
                 "original words": {
-                    "wordlist": "original.json"}
+                    "wordlist": "original.json", "number of instances": 10}
             }
         }
     }
