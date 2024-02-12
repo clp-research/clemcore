@@ -36,25 +36,54 @@ def generate_random(wordlist, required):
         }
     }
 
+def shuffle_board(board):
+    random.shuffle(board)
+
+def shuffle_words_within_assignments(assignments):
+    for alignment in assignments:
+        random.shuffle(assignments[alignment])
+
 def generate_similar_within_teams(categories, required):
-    total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
     board = []
     already_taken_words = set()
     already_taken_categories = set()
-    required = {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1}
     assignments = {"team": [], "opponent": [], "innocent": [], "assassin": []}
     for alignment in assignments:
         while len(assignments[alignment]) < required[alignment]:
             remaining = required[alignment] - len(assignments[alignment])
             words = choose_instances_from_random_category(categories, already_taken_words, already_taken_categories, maximum = remaining)
             assignments[alignment].extend(list(words))
-            board.extend(list(words))    
+            board.extend(list(words))
     
-    # shuffle all alignments within, shuffle board 
-    random.shuffle(board)
-    for alignment in assignments:
-        random.shuffle(assignments[alignment])
-    return {"board": board, "assignments": assignments, "private": {"categories": already_taken_categories}}  
+    shuffle_board(board)
+    shuffle_words_within_assignments(assignments)
+    return {"board": board, "assignments": assignments, "private": {"categories": list(already_taken_categories)}}
+
+def generate_similar_across_teams(categories, required):
+    total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
+    board = []
+    already_taken_words = set()
+    already_taken_categories = set()
+    assignments = {"team": [], "opponent": [], "innocent": [], "assassin": []}
+    while len(board) < total:
+        remaining = total - len(board)
+        words = choose_instances_from_random_category(categories, already_taken_words, already_taken_categories, maximum = remaining)
+        # choose random assignments to distribute words across
+        i = 0
+        while i < len(words):
+            remaining_assignments = [key for key in assignments.keys() if len(assignments[key]) < required[key]]
+            print(remaining_assignments)
+            assign_to = random.sample(remaining_assignments, min(len(remaining_assignments), len(words)))
+            for alignment in assign_to:
+                assignments[alignment].append(words[i])
+                i += 1
+                if i == len(words):
+                    break     
+        board.extend(list(words))
+    shuffle_board(board)
+    shuffle_words_within_assignments(assignments)
+    print(assignments)
+    return {"board": board, "assignments": assignments, "private": {"categories": list(already_taken_categories)}}
     
 def choose_instances_from_random_category(categories: Set, already_taken_words: Set, already_taken_categories: Set, maximum = 4):
     remaining_category_names = set(categories.keys()) - already_taken_categories
@@ -89,10 +118,6 @@ def sample_words_from_category(category, number_of_words):
 def get_random_category(category_list):
     return random.choice(category_list)
 
-def generate_similar_across_teams(categories, required):
-    total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
-    pass
-
 generators={'random': generate_random,
             'easy word assignments': generate_similar_within_teams,
             'difficult word assignments': generate_similar_across_teams}
@@ -103,7 +128,8 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
 
     def generate(self, keep=False, variable_name=None, experiment_name=None, filename="instances.json"):
         # @overwrite
-        self.on_generate(variable_name, experiment_name)
+        if not self.on_generate(variable_name, experiment_name):
+            return
         if keep and (variable_name or experiment_name):
             print(f"Replacing instances for {variable_name}: {experiment_name}.")
             self.replace_instances(variable_name, experiment_name, filename)
@@ -119,7 +145,7 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
         if variable_name:
             if variable_name not in variable_names:
                 print(f"Variable name {variable_name} not found in experiment config file (only {', '.join(list(variable_names))}).")
-                return
+                return False
             # if the variable_name was set (correctly), we will only generate instances for this experiment suite
             print(f"(Re-)Generate only instances for experiments on {variable_name}.")
             variable_names = [variable_name]
@@ -132,7 +158,7 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
             if experiment_name:
                 if experiment_name not in experiment_names:
                     print(f"Experiment name {experiment_name} not found in experiment config file for {variable_name} (only {', '.join(list(experiment_names))}).")
-                    return
+                    return False
                 # if the experiment name was set (correctly), we will only generate instances for this specific experiment
                 print(f"(Re-)Generate only instances for {experiment_name}.")
                 experiment_names = [experiment_name]
@@ -165,8 +191,9 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                     # Create a game instance
                     game_instance = self.add_game_instance(experiment, game_id)
                     # Add game parameters
-                    game_instance[BOARD] = instance[BOARD]
-                    game_instance[ASSIGNMENTS] = instance[ASSIGNMENTS]
+                    for key in instance.keys():
+                        game_instance[key] = instance[key]
+        return True
             
     def test_instance_format(self, board_instance, params):
         # board_instance = {BOARD: [...],
