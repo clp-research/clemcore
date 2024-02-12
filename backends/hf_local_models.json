@@ -195,6 +195,34 @@
     "eos_to_cull": "<|endoftext|>"
   },
   {
+    "model_name": "CodeLlama-70b-Instruct-hf",
+    "backend": "huggingface",
+    "huggingface_id": "codellama/CodeLlama-70b-Instruct-hf",
+    "premade_chat_template": true,
+    "eos_to_cull": "<step>"
+  },
+  {
+    "model_name": "openchat-3.5-0106",
+    "backend": "huggingface",
+    "huggingface_id": "openchat/openchat-3.5-0106",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|end_of_turn|>"
+  },
+  {
+    "model_name": "openchat-3.5-1210",
+    "backend": "huggingface",
+    "huggingface_id": "openchat/openchat-3.5-1210",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|end_of_turn|>"
+  },
+  {
+    "model_name": "Nous-Hermes-2-Mixtral-8x7B-DPO",
+    "backend": "huggingface",
+    "huggingface_id": "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
     "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface",
     "requires_api_key": true,
