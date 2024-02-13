@@ -671,7 +671,7 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.error(
                         f"{self.name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def run(self, player_backends: List[str], temperature: float):
+    def run(self, player_backends: List[str], temperature: float, max_tokens: int):
         """
         Runs game-play on all game instances for a game.
         There must be an instances.json with the following structure:
@@ -697,9 +697,11 @@ class GameBenchmark(GameResourceLocator):
                                 - instance.json
                                 - interaction.json
         """
-        self.logger.warning(f"{self.name}: Detected 'temperature={temperature}'")
         # Setting this directly on the apis for now (not on the players)
+        self.logger.warning(f"{self.name}: Detected 'temperature={temperature}'")
         backends.configure(lambda backend: setattr(backend, "temperature", temperature))
+        self.logger.warning(f"{self.name}: Detected 'max_tokens={max_tokens}'")
+        backends.configure(lambda backend: setattr(backend, "max_tokens", max_tokens))
 
         experiments: List = self.instances["experiments"]
         if not experiments:

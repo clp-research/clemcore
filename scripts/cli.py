@@ -36,6 +36,7 @@ def main(args):
         benchmark.list_games()
     if args.command_name == "run":
         benchmark.run(args.game,
+                      max_tokens=args.max_tokens,
                       temperature=args.temperature,
                       models=args.models,
                       experiment_name=args.experiment_name)
@@ -67,6 +68,10 @@ if __name__ == "__main__":
       Default: None.""")
     run_parser.add_argument("-t", "--temperature", type=float, default=0.0,
                             help="Argument to specify sampling temperature for the models. Default: 0.0.")
+    run_parser.add_argument("-m", "--max-tokens", type=int, default=100,
+                            help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
+                                 "Be careful with high values which might lead to exceed your API token limits."
+                                 "Default: 100.")
     run_parser.add_argument("-e", "--experiment_name", type=str,
                             help="Optional argument to only run a specific experiment")
     run_parser.add_argument("-g", "--game", type=str,

@@ -28,6 +28,7 @@ FALLBACK_CONTEXT_SIZE = 256
 class HuggingfaceLocal(backends.Backend):
     def __init__(self):
         self.temperature: float = -1.
+        self.max_tokens: int = 100  # How many tokens to generate ('at most', but no stop sequence is defined).
         self.use_api_key: bool = False
         self.config_and_tokenizer_loaded: bool = False
         self.model_loaded: bool = False
@@ -311,7 +312,7 @@ class HuggingfaceLocal(backends.Backend):
         return fits, tokens_used, tokens_left, self.context_size
 
     def generate_response(self, messages: List[Dict], model: str,
-                          max_new_tokens: int = 100, return_full_text: bool = False,
+                          return_full_text: bool = False,
                           log_messages: bool = False) -> Tuple[Any, Any, str]:
         """
         :param messages: for example
@@ -322,7 +323,6 @@ class HuggingfaceLocal(backends.Backend):
                     {"role": "user", "content": "Where was it played?"}
                 ]
         :param model: model name
-        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
         :param return_full_text: If True, whole input context is returned.
         :param log_messages: If True, raw and cleaned messages passed will be logged.
         :return: the continuation
@@ -354,11 +354,11 @@ class HuggingfaceLocal(backends.Backend):
         prompt_tokens = prompt_tokens.to(self.device)
 
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
-        prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
+        prompt = {"inputs": prompt_text, "max_new_tokens": self.max_tokens,
                   "temperature": self.temperature, "return_full_text": return_full_text}
 
         # check context limit:
-        context_check = self._check_context_limit(prompt_tokens[0], max_new_tokens=max_new_tokens)
+        context_check = self._check_context_limit(prompt_tokens[0], max_new_tokens=self.max_tokens)
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_name} exceeded: {context_check[1]}/{context_check[3]}")
             # fail gracefully:
@@ -375,13 +375,13 @@ class HuggingfaceLocal(backends.Backend):
             model_output_ids = self.model.generate(
                 prompt_tokens,
                 temperature=self.temperature,
-                max_new_tokens=max_new_tokens,
+                max_new_tokens=self.max_tokens,
                 do_sample=do_sample
             )
         else:
             model_output_ids = self.model.generate(
                 prompt_tokens,
-                max_new_tokens=max_new_tokens,
+                max_new_tokens=self.max_tokens,
                 do_sample=do_sample
             )
 

@@ -18,6 +18,7 @@ class Cohere(backends.Backend):
         creds = backends.load_credentials(NAME)
         self.client = cohere.Client(creds[NAME]["api_key"])
         self.temperature: float = -1.
+        self.max_tokens: int = -1  # not applicable in this backend?
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict], model: str) -> Tuple[str, Any, str]:

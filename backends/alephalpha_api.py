@@ -22,6 +22,7 @@ class AlephAlpha(backends.Backend):
         creds = backends.load_credentials(NAME)
         self.client = aleph_alpha_client.Client(creds[NAME]["api_key"])
         self.temperature: float = -1.
+        self.max_tokens: int = 100
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict], model: str) -> Tuple[Any, Any, str]:
@@ -58,7 +59,7 @@ class AlephAlpha(backends.Backend):
 
         params = {
             "prompt": aleph_alpha_client.Prompt.from_text(prompt_text),
-            "maximum_tokens": 100,
+            "maximum_tokens": self.max_tokens,
             "stop_sequences": ['\n'],
             "temperature": self.temperature
         }

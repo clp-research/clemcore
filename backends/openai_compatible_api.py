@@ -8,8 +8,6 @@ import httpx
 
 logger = backends.get_logger(__name__)
 
-MAX_TOKENS = 100
-
 # For this backend, it makes less sense to talk about "supported models" than for others,
 # because what is supported depends very much on where this is pointed to.
 # E.g., if I run FastChat on my local machine, I may have very different models available
@@ -36,6 +34,7 @@ class GenericOpenAI(backends.Backend):
             http_client=httpx.Client(verify=False)
             )
         self.temperature: float = -1.
+        self.max_tokens: int = 100
 
     def list_models(self):
         models = self.client.models.list()
@@ -63,7 +62,7 @@ class GenericOpenAI(backends.Backend):
 
         prompt = messages
         api_response = self.client.chat.completions.create(model=model, messages=prompt,
-                                                         temperature=self.temperature, max_tokens=MAX_TOKENS)
+                                                         temperature=self.temperature, max_tokens=self.max_tokens)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")

@@ -18,8 +18,6 @@ SUPPORTED_MODELS = [MODEL_GPT_4_0314, MODEL_GPT_4_0613, MODEL_GPT_4_1106_PREVIEW
 
 NAME = "openai"
 
-MAX_TOKENS = 100   # 2024-01-10, das: Should this be hardcoded???
-
 class OpenAI(backends.Backend):
 
     def __init__(self):
@@ -35,6 +33,7 @@ class OpenAI(backends.Backend):
                 )
         self.chat_models: List = ["gpt-3.5-turbo-0613", "gpt-3.5-turbo-1106", "gpt-4-0314", "gpt-4-0613", "gpt-4-1106-preview", "gpt-4-0125-preview"]
         self.temperature: float = -1.
+        self.max_tokens: int = 100
 
     def list_models(self):
         models = self.client.models.list()
@@ -63,7 +62,7 @@ class OpenAI(backends.Backend):
             api_response = self.client.chat.completions.create(model=model,
                                                           messages=prompt,
                                                           temperature=self.temperature,
-                                                          max_tokens=MAX_TOKENS)
+                                                          max_tokens=self.max_tokens)
             message = api_response.choices[0].message
             if message.role != "assistant":  # safety check
                 raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")
@@ -73,7 +72,7 @@ class OpenAI(backends.Backend):
         else:  # default (text completion)
             prompt = "\n".join([message["content"] for message in messages])
             api_response = self.client.completions.create(model=model, prompt=prompt,
-                                                     temperature=self.temperature, max_tokens=100)
+                                                     temperature=self.temperature, max_tokens=self.max_tokens)
             response = json.loads(api_response.json())
             response_text = api_response.choices[0].text.strip()
         return prompt, response, response_text

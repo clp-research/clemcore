@@ -14,14 +14,13 @@ SUPPORTED_MODELS = [MEDIUM, TINY, SMALL]
 
 NAME = "mistral"
 
-MAX_TOKENS = 100
-
 class Mistral(backends.Backend):
 
     def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = MistralClient(api_key=creds[NAME]["api_key"])
         self.temperature: float = -1.
+        self.max_tokens: int = 100
 
     def list_models(self):
         models = self.client.models.list()
@@ -50,7 +49,7 @@ class Mistral(backends.Backend):
         api_response = self.client.chat(model=model,
                                                       messages=prompt,
                                                       temperature=self.temperature,
-                                                      max_tokens=MAX_TOKENS)
+                                                      max_tokens=self.max_tokens)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")

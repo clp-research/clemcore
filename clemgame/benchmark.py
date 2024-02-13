@@ -22,8 +22,9 @@ def list_games():
         stdout_logger.info(" Game: %s -> %s", game.name, game.get_description())
 
 
-def run(game_name: str, temperature: float, models: List[str] = None, experiment_name: str = None):
+def run(game_name: str, max_tokens: int, temperature: float, models: List[str] = None, experiment_name: str = None):
     assert 0.0 <= temperature <= 1.0, "Temperature must be in [0.,1.]"
+    assert max_tokens > 0, "Max tokens should be larger than zero"
     if experiment_name:
         logger.info("Only running experiment: %s", experiment_name)
     try:
@@ -33,7 +34,7 @@ def run(game_name: str, temperature: float, models: List[str] = None, experiment
         if experiment_name:
             benchmark.filter_experiment.append(experiment_name)
         time_start = datetime.now()
-        benchmark.run(player_backends=models, temperature=temperature)
+        benchmark.run(player_backends=models, temperature=temperature, max_tokens=max_tokens)
         time_end = datetime.now()
         logger.info(f"Run {benchmark.name} took {str(time_end - time_start)}")
     except Exception as e:

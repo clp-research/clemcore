@@ -21,6 +21,7 @@ class Anthropic(backends.Backend):
         creds = backends.load_credentials(NAME)
         self.client = anthropic.Anthropic(api_key=creds[NAME]["api_key"])
         self.temperature: float = -1.
+        self.max_tokens: int = 100
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict], model: str) -> Tuple[str, Any, str]:
@@ -50,7 +51,7 @@ class Anthropic(backends.Backend):
             stop_sequences=[anthropic.HUMAN_PROMPT, '\n'],
             model=model,
             temperature=self.temperature,
-            max_tokens_to_sample=100
+            max_tokens_to_sample=self.max_tokens
         )
 
         response_text = completion.completion.strip()
