@@ -128,10 +128,10 @@ class ClueGiver(Player):
         targets = [target.strip(" .!'").lower() for target in targets]
         
         # Clue needs to be a single word
-        if not clue.isalpha() or ' ' in clue:
-            raise ValidationError(f"Clue '{clue}' is not a word.")
         if ' ' in clue:
             raise ValidationError(f"Clue '{clue}' is not a single word.")
+        if not clue.isalpha():
+            raise ValidationError(f"Clue '{clue}' is not a word.")
         # Clue needs to contain a word that is not morphologically similar to any word on the board
         # TODO: morphological relatedness!
         if clue in board:

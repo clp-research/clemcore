@@ -169,7 +169,7 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                     wordlist_name = experiments[name]["wordlist"]
                 else:
                     wordlist_name = defaults["wordlist"]
-                wordlist_path = f"resources/word_lists/{wordlist_name}"
+                wordlist_path = f"resources/cleaned_wordlists/{wordlist_name}"
                 if not os.path.isfile(file_path(wordlist_path, GAME_NAME)):
                     print(f"> Wordlist {wordlist_name} does not exist, skip {name}.")
                     continue
