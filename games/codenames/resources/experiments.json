@@ -1,0 +1,83 @@
+{
+    "default": {
+        "number of instances": 30,
+        "generator": "random",
+        "opponent difficulty": 1,
+        "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
+        "wordlist": "default.json"
+    },  
+    "variables": {
+        "risk": {
+            "experiments": {
+                "high risk boards" : {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 3, "assassin": 5}},
+                "low risk boards": {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 8, "assassin": 0}}
+            }
+        },
+        "board size": {
+            "experiments": {
+                "large boards": {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1}},
+                "medium boards": {
+                    "assignments": {"team": 5, "opponent": 4, "innocent": 5, "assassin": 1}},
+                "small boards": {
+                    "assignments": {"team": 3, "opponent": 2, "innocent": 3, "assassin": 1}}
+            }
+        },
+        "word assignments": {
+            "experiments": {
+                "easy assignments": {
+                    "generator": "easy word assignments",
+                    "wordlist": "categories.json"},
+                "difficult assignments": {
+                    "generator": "difficult word assignments",
+                    "wordlist": "categories.json"}
+            }
+        },
+        "opponent difficulty": {
+            "experiments": {
+                "no opponent": {
+                    "opponent difficulty": 0},
+                "easy opponent": {
+                    "opponent difficulty": 1},
+                "medium opponent": {
+                    "opponent difficulty": 2},
+                "difficult opponent": {
+                    "opponent difficulty": 3}
+            }
+        },
+        "word frequency": {
+            "experiments": {
+                "high frequency words": {
+                    "wordlist": "high_frequency.json"},
+                "medium frequency words": {
+                    "wordlist": "medium_frequency.json"},
+                "low frequency words": {
+                    "wordlist": "low_frequency.json"}
+            }
+        },
+        "word ambiguity": {
+            "experiments": {
+                "ambiguous words": {
+                    "wordlist": "ambiguous_words.json"},
+                "unambiguous words": {
+                    "wordlist": "unambiguous_words.json"}
+            }
+        },
+        "word concreteness": {
+            "experiments": {
+                "concrete words": {
+                    "wordlist": "concrete_words.json"},
+                "abstract words": {
+                    "wordlist": "abstract_words.json"}
+            }
+        },
+        "wordlist": {
+            "experiments": {
+                "original words": {
+                    "wordlist": "original.json", "number of instances": 10}
+            }
+        }
+    }
+}
