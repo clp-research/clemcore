@@ -68,7 +68,7 @@ if __name__ == "__main__":
       Default: None.""")
     run_parser.add_argument("-t", "--temperature", type=float, default=0.0,
                             help="Argument to specify sampling temperature for the models. Default: 0.0.")
-    run_parser.add_argument("-m", "--max-tokens", type=int, default=100,
+    run_parser.add_argument("-l", "--max-tokens", type=int, default=100,
                             help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
                                  "Be careful with high values which might lead to exceed your API token limits."
                                  "Default: 100.")
