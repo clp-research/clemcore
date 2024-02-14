@@ -54,7 +54,7 @@ class Player(abc.ABC):
                 raise AttributeError("No remote model initialized for player: " + self.get_description() + "."
                                      + " You probably tried to load a Player with a backend"
                                        " that is not available or could not be loaded.")
-            prompt, response, response_text = self.remote.generate_response(messages, self.model_name)#, log_messages = True)
+            prompt, response, response_text = self.remote.generate_response(messages, self.model_name, log_messages = True)
         call_duration = datetime.now() - call_start
         response["duration"] = str(call_duration)
         return prompt, response, response_text

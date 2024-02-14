@@ -123,7 +123,7 @@ class ClueGiver(Player):
         if not targets:
             raise ValidationError(f"Your targets did not start with the correct prefix ({self.target_prefix}).")
         
-        clue = clue.lower()
+        clue = clue.lower().strip('<>')
         targets = targets.split(', ')
         targets = [target.strip(" .!'").lower() for target in targets]
         
@@ -221,7 +221,6 @@ class CodenamesGame(DialogueGameMaster):
         super().__init__(GAME_NAME, experiment, player_backends)
         # fetch experiment parameters
         self.experiment: str = experiment[NAME]
-        self.experiment_type: str = experiment[TYPE]
         self.opponent_difficulty: bool = experiment[OPPONENT_DIFFICULTY]
 
         # save player interfaces
@@ -347,6 +346,8 @@ class CodenamesGame(DialogueGameMaster):
                 self.invalid_response = True
                 self.violated_request_count += 1
                 self.last_error_message = error.message
+                # add response to history nonetheless... but without parsing it
+                self.add_assistant_message(player, utterance)
         else:
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words(), self.cluegiver.number_of_targets)
@@ -355,6 +356,8 @@ class CodenamesGame(DialogueGameMaster):
                 self.invalid_response = True
                 self.violated_request_count += 1
                 self.last_error_message = error.message
+                # add response to history nonetheless... but without parsing it
+                self.add_assistant_message(player, utterance)
         
         return not self.invalid_response
     
