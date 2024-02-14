@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple, Set
 from string import Template
-import random, string, re, statistics, math
+import random, string, re, statistics, math, nltk
 
 from clemgame.clemgame import GameMaster, GameScorer, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
@@ -14,12 +14,20 @@ IGNORE_RAMBLING = True
 IGNORE_FALSE_TARGETS_OR_GUESSES = True
 REPROMPT_ON_ERROR = True
 
+nltk.download('wordnet', quiet=True)
+EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
+
 class ValidationError(Exception):
     def __init__(self, message="Response does not follow the rules and is hence invalid."):
         self.message = message
         super().__init__(self.message)
 
 # TODO: reuse players for other codename variants, e.g. Duet?
+
+def find_line_starting_with(prefix, lines):
+    for line in lines:
+        if line.startswith(prefix):
+            return line
 
 class Guesser(Player):
     def __init__(self, model_name: str):
@@ -42,7 +50,7 @@ class Guesser(Player):
         # utterance should only contain one line
         if '\n' in utterance:
             if IGNORE_RAMBLING:
-                utterance = utterance.split('\n')[0]
+                utterance = find_line_starting_with(self.prefix, utterance.split('\n'))
                 self.ignored_rambles += 1
             else:
                 raise ValidationError(f"Your answer contained more than one line, please only give one round of guesses on one line.")
@@ -66,7 +74,7 @@ class Guesser(Player):
             
     def parse_response(self, utterance: str) -> str:
         if IGNORE_RAMBLING:
-            utterance = utterance.split('\n')[0]
+            utterance = find_line_starting_with(self.prefix, utterance.split('\n'))
         utterance = utterance.removeprefix(self.prefix)
         self.guesses = utterance.split(', ')
         self.guesses = [word.strip('. ').lower() for word in self.guesses]
@@ -98,6 +106,14 @@ class ClueGiver(Player):
         self.number_of_targets = len(self.targets)
         self.clue = "".join(random.sample(list(string.ascii_lowercase), 6))
         return self.recover_utterance(with_targets=True)
+
+    def check_morphological_similarity(self, clue, board):
+        # lemma checks
+        clue_lemma = EN_LEMMATIZER.lemmatize(clue_word)
+        board_words_lemmas = [EN_LEMMATIZER.lemmatize(word) for word in board]
+        if clue_lemma in board_words_lemmas:
+            similar_board_word = board[board_words_lemmas.index(clue_lemma)]
+            raise ValidationError("Your clue is morphologically similar to the word {similar_board_word}, please choose another clue word.")
     
     def validate_response(self, utterance: str, board: List[str]):
         # utterance should contain two lines, one with the clue, one with the targets
@@ -110,14 +126,8 @@ class ClueGiver(Player):
             else:
                 self.ignored_rambles += 1
 
-        clue = None
-        targets = None
-        for part in parts:
-            if part.startswith(self.clue_prefix):
-                clue = part.removeprefix(self.clue_prefix)
-            elif part.startswith(self.target_prefix):
-                targets = part.removeprefix(self.target_prefix)
-
+        clue = find_line_starting_with(self.clue_prefix, parts)
+        targets = find_line_starting_with(self.target_prefix, parts)
         if not clue:
             raise ValidationError(f"Your clue did not start with the correct prefix ({self.clue_prefix}).")
         if not targets:
@@ -149,12 +159,8 @@ class ClueGiver(Player):
             
     def parse_response(self, utterance: str) -> str:
         parts = utterance.split('\n')
-        for part in parts:
-            if part.startswith(self.clue_prefix):
-                clue = part.removeprefix(self.clue_prefix)
-            elif part.startswith(self.target_prefix):
-                targets = part.removeprefix(self.target_prefix)
-        
+        clue = find_line_starting_with(self.clue_prefix, parts).removeprefix(self.clue_prefix)
+        targets = find_line_starting_with(self.target_prefix, parts).removeprefix(self.target_prefix)
         self.clue = clue.lower()
         self.targets = targets.split(', ')
         self.targets = [target.strip(' .').lower() for target in self.targets]
