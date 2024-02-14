@@ -210,7 +210,7 @@ def _check_context_limit(context_size, prompt_tokens, max_new_tokens: int = 100)
     return fits, tokens_used, tokens_left, context_size
 
 
-def _clean_messages(self, messages: List[Dict]) -> List[Dict]:
+def _clean_messages(messages: List[Dict]) -> List[Dict]:
     """
     Remove message issues indiscriminately for compatibility with certain model's chat templates. Empty first system
     message is removed (for Mistral models and others that do not use system messages). Messages are concatenated
