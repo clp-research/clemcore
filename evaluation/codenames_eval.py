@@ -5,6 +5,8 @@ import pandas as pd
 
 import evaluation.evalutils as utils
 import clemgame.metrics as clemmetrics
+from games.codenames.constants import *
+from collections import Counter
 
 TABLE_NAME = 'results'
 
@@ -95,8 +97,25 @@ def save_clem_table(df: pd.DataFrame, path: str) -> None:
     df_results.to_html(Path(path) / f'{TABLE_NAME}.html')
     print(f'\n Saved results into {path}/{TABLE_NAME}.csv and .html')
 
-def error_evaluation():
+def error_evaluation(results_path):
     # load interaction files
+    errors = {}
+    interactions = utils.load_interactions(GAME_NAME)
+    for key, interaction in interactions.items():
+        game, experiment = interaction
+        players = game["players"]
+        errors["players"] = Counter()
+        turns = game["turns"]
+        for turn in turns:
+            for event in turn:
+                action = event["action"]
+                match action["type"]:
+                    case "validation error":
+                        error_type = action["content"]["type"]
+                        error_cause = action["content"]["cause"]
+                        errors[players][error_type] += 1
+
+        break
     # loop through interactions
     # keep track per model, which error messages occurred
     #   for that put error names and error messages into ValidationError and log both when logging _to_self
