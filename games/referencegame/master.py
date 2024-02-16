@@ -16,10 +16,9 @@ logger = get_logger(__name__)
 
 class ReferenceGameMaster(GameMaster):
 
-    def __init__(self, experiment: Dict, player_backends: List[Model]):
-        super().__init__(GAME_NAME, experiment, player_backends)
+    def __init__(self, experiment: Dict, player_models: List[Model]):
+        super().__init__(GAME_NAME, experiment, player_models)
         self.experiment = experiment
-        self.player_backends = player_backends
         self.game = None
         self.player_a_pattern = r'^Expression:\s*(.+)\n*(.+)*$'
         self.player_b_pattern = r"^Answer:\s*(?!.*\b(?:first|second|third|First|Second|Third)\b.*\b(?:first|second|third)\b).*\b(?:first grid|second grid|first|second|third grid|third|First grid|Second grid|Third grid)\b.*$"
@@ -35,12 +34,12 @@ class ReferenceGameMaster(GameMaster):
     def _on_setup(self, **game_instance):
         self.game_instance = game_instance
 
-        self.game = ReferenceGame(self.game_instance, self.player_backends)
+        self.game = ReferenceGame(self.game_instance, self.player_models)
 
         self.log_players({
             "GM": "Game master for referencegame",
-            "Player_1": self.player_backends[0],
-            "Player_2": self.player_backends[1]}
+            "Player_1": self.player_models[0].get_name(),
+            "Player_2": self.player_models[1].get_name()}
         )
 
     def setup(self, **kwargs):
@@ -293,8 +292,8 @@ class ReferenceGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Reference Game simulation to generate referring expressions and guess the grid"
 
-    def create_game_master(self, experiment: Dict, player_backends: List[Model]) -> GameMaster:
-        return ReferenceGameMaster(experiment, player_backends)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return ReferenceGameMaster(experiment, player_models)
 
 
 def main():

@@ -14,10 +14,10 @@ GAME_NAME = "wordle"
 
 
 class WordleGameMaster(GameMaster):
-    def __init__(self, game_name: str, experiment: Dict, players_backends: List[Model]):
-        super().__init__(game_name, experiment, players_backends)
+    def __init__(self, game_name: str, experiment: Dict, player_models: List[Model]):
+        super().__init__(game_name, experiment, player_models)
         self.config = experiment
-        self.player_model_names = [player_backend.model_spec.model_name for player_backend in players_backends]
+        self.player_model_names = [player_model.get_name() for player_model in player_models]
 
         self.cm = ComputeMetrics()
 
@@ -42,7 +42,7 @@ class WordleGameMaster(GameMaster):
         self.target_word = target_word.strip()
         self.target_word_clue = target_word_clue.strip()
         if self.config["use_clue"]:
-            if isinstance(self.player_backends[0], HumanModel):
+            if isinstance(self.player_models[0], HumanModel):
                 logger.info(f"Target word clue: {self.target_word_clue}")
         self.target_word_difficulty = target_word_difficulty
 
@@ -61,7 +61,7 @@ class WordleGameMaster(GameMaster):
             "max_critic_opinion_count"
         ]
         game_config["english_words_list"] = self.config["english_words"]
-        game_config["model_names"] = self.player_backends
+        game_config["model_names"] = self.player_models
 
         prompt_generator_config = {}
         prompt_generator_config["use_error_explanation"] = self.config["common_config"][
@@ -708,10 +708,8 @@ class WordleGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Wordle Game"
 
-    def create_game_master(
-        self, experiment: Dict, player_backend: List[Model]
-    ) -> GameMaster:
-        return WordleGameMaster(self.name, experiment, player_backend)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return WordleGameMaster(self.name, experiment, player_models)
 
     def is_single_player(self) -> bool:
         return True

@@ -15,10 +15,8 @@ class WordleWithClueGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Wordle Game with a clue given to the guesser"
 
-    def create_game_master(
-        self, experiment: Dict, player_backend: List[Model]
-    ) -> GameMaster:
-        return WordleGameMaster(self.name, experiment, player_backend)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return WordleGameMaster(self.name, experiment, player_models)
 
     def is_single_player(self) -> bool:
         return True

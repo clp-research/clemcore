@@ -4,6 +4,7 @@ import os
 import logging
 from time import sleep
 
+from backends import Model, CustomResponseModel, ModelSpec
 from clemgame.clemgame import GameMaster, GameBenchmark
 from clemgame.slurkbot import APIChatBot
 from clemgame import get_logger
@@ -29,17 +30,17 @@ class Chat(GameMaster, APIChatBot):
     """
     def __init__(self,
                  experiment: Dict,
-                 player_backends: Tuple[str],
+                 player_models: Tuple[Model],
                  slurk_token: str,
                  slurk_user: int,
                  slurk_task: int,
                  slurk_host: str,
                  slurk_port: str
                  ):
-        GameMaster.__init__(self, GAME_NAME, experiment, player_backends)
+        GameMaster.__init__(self, GAME_NAME, experiment, player_models)
         APIChatBot.__init__(self, slurk_token, slurk_user, slurk_task, slurk_host, slurk_port)
         self.experiment = experiment
-        self.player_backends = player_backends
+        self.player_models = player_models
         self.game = None
         # the general slurk connection logic is defined in the parent classes
         # here we just need to take care of the core interaction logic that is
@@ -108,7 +109,7 @@ class Chat(GameMaster, APIChatBot):
 
     def _on_setup(self, **game_instance):
         self.game_instance = game_instance
-        self.game = ChatGame(self.game_instance, self.player_backends)
+        self.game = ChatGame(self.game_instance, self.player_models)
 
     def setup(self, **kwargs):
         self._on_setup(**kwargs)
@@ -157,9 +158,8 @@ class ChatGameBenchmark(GameBenchmark):
     def get_description(self):
         return "A chat setting in which a user can ask questions to a bot."
 
-    def create_game_master(self, experiment: Dict, dry_run: bool) -> GameMaster:
-
-        return Chat(experiment, dry_run)
+    def create_game_master(self, experiment: Dict, player_models: bool) -> GameMaster:
+        return Chat(experiment, player_models)
 
 
 def main():
@@ -177,7 +177,8 @@ def main():
 
     # Change "mock" to a model in order to connect to a LM,
     # e.g. OpenAI.MODEL_GPT_3
-    player_backends = ("_slurk_response", "mock")
+    player_backends = (CustomResponseModel(ModelSpec(model_name="_slurk_response")),
+                       CustomResponseModel(ModelSpec(model_name="mock")))
     master = Chat(instance, player_backends, token, user, task, host, port)
     master.waiting_room = waiting_room
     master.setup(**instance)

@@ -21,7 +21,7 @@ class WordleGame:
         use_critic: bool,
         max_critic_opinion_count: int,
         english_words_list: str,
-        model_names: List[Model],
+        models: List[Model],
     ):
         self.max_attempts = max_attempts_per_game
         self.max_retry = max_retry_per_error
@@ -29,23 +29,23 @@ class WordleGame:
         self.use_critic = use_critic
         self.max_critic_opinion_count = max_critic_opinion_count
         self.english_words_list = english_words_list
-        self.model_names = model_names
+        self.models = models
 
-        self.guesser = Guesser(self.model_names[0])
-        self.guesser_mode = self.model_names[0].model_spec.model_name
+        self.guesser = Guesser(self.models[0])
+        self.guesser_mode = self.models[0].get_name()
 
-        if len(self.model_names) > 1:
-            if self.model_names[0] == self.model_names[1]:
+        if len(self.models) > 1:
+            if self.models[0] == self.models[1]:
                 # Both Guesser and Critic using same model
-                self.guess_critic = Critic(self.model_names[0])
-                self.guess_critic_mode = self.model_names[0].model_spec.model_name
+                self.guess_critic = Critic(self.models[0])
+                self.guess_critic_mode = self.models[0].get_name()
             else:
-                self.guess_critic = Critic(self.model_names[1])
-                self.guess_critic_mode = self.model_names[1].model_spec.model_name
+                self.guess_critic = Critic(self.models[1])
+                self.guess_critic_mode = self.models[1].get_name()
         else:
             # Both Guesser and Critic using same model
-            self.guess_critic = Critic(self.model_names[0])
-            self.guess_critic_mode = self.model_names[0].model_spec.model_name
+            self.guess_critic = Critic(self.models[0])
+            self.guess_critic_mode = self.models[0].get_name()
 
         self.guesser_prompt = []
         self.critic_prompt = []

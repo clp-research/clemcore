@@ -110,6 +110,11 @@ class Model(abc.ABC):
     def __str__(self):
         return self.get_name()
 
+    def __eq__(self, other: "Model"):
+        if not isinstance(other, Model):
+            return False
+        return self.get_name() == other.get_name()
+
     @abc.abstractmethod
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """Put prompt in model-specific format and get its response.
@@ -153,7 +158,7 @@ class Backend(abc.ABC):
         return f"{self.__class__.__name__}"
 
 
-class MockModel(Model):
+class CustomResponseModel(Model):
 
     def __init__(self, model_spec=ModelSpec(model_name="programmatic")):
         super().__init__(model_spec)
@@ -254,7 +259,7 @@ def get_model_for(model_spec: Union[str, Dict, ModelSpec]) -> Model:
     if model_spec.is_human():
         return HumanModel(model_spec)
     if model_spec.is_programmatic():
-        return MockModel(model_spec)
+        return CustomResponseModel(model_spec)
 
     for registered_spec in _model_registry:
         try:

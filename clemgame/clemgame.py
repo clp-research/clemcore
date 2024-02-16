@@ -8,7 +8,7 @@ from typing import List, Dict, Tuple, Any
 from tqdm import tqdm
 
 import backends
-from backends import Model, MockModel, HumanModel
+from backends import Model, CustomResponseModel, HumanModel
 import clemgame
 from clemgame import file_utils, string_utils, transcript_utils
 
@@ -28,24 +28,24 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, backend: Model):
-        self.backend = backend
+    def __init__(self, model: Model):
+        self.model = model
         self.descriptor: str = None
         logger.info("Player %s", self.get_description())
 
     def get_description(self) -> str:
-        return f"{self.__class__.__name__}, {self.backend}"
+        return f"{self.__class__.__name__}, {self.model}"
 
     def __call__(self, messages: List[Dict], turn_idx) -> Tuple[Any, Any, str]:
         call_start = datetime.now()
-        if isinstance(self.backend, MockModel):
+        if isinstance(self.model, CustomResponseModel):
             prompt, response, response_text = messages, {"response": "programmatic"}, \
                 self._custom_response(messages, turn_idx)
-        elif isinstance(self.backend, HumanModel):
+        elif isinstance(self.model, HumanModel):
             prompt, response, response_text = messages, {"response": "human"}, \
                 self._terminal_response(messages, turn_idx)
         else:
-            prompt, response, response_text = self.backend.generate_response(messages)
+            prompt, response, response_text = self.model.generate_response(messages)
         call_duration = datetime.now() - call_start
         response["duration"] = str(call_duration)
         return prompt, response, response_text
