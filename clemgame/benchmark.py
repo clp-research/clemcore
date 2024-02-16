@@ -30,14 +30,14 @@ def run(game_name: str, model_specs: List[backends.ModelSpec] = None, experiment
     if experiment_name:
         logger.info("Only running experiment: %s", experiment_name)
     try:
-        player_backends = [backends.get_model_for(model_spec) for model_spec in model_specs]
+        player_models = [backends.get_model_for(model_spec) for model_spec in model_specs]
         benchmark = load_benchmark(game_name)
-        logger.info("Running benchmark for: %s (backends=%s)", game_name,
-                    player_backends if player_backends is not None else "see experiment configs")
+        logger.info("Running benchmark for '%s' (models=%s)", game_name,
+                    player_models if player_models is not None else "see experiment configs")
         if experiment_name:
             benchmark.filter_experiment.append(experiment_name)
         time_start = datetime.now()
-        benchmark.run(player_backends=player_backends)
+        benchmark.run(player_models=player_models)
         time_end = datetime.now()
         logger.info(f"Run {benchmark.name} took {str(time_end - time_start)}")
     except Exception as e:

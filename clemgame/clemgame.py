@@ -292,14 +292,14 @@ class GameMaster(GameRecorder):
 
     """
 
-    def __init__(self, name: str, experiment: Dict, player_backends: List[Model] = None):
+    def __init__(self, name: str, experiment: Dict, player_models: List[Model] = None):
         """
         :param name: of the game
-        :param player_backends: to use for (remote) calls. For one or two players.
+        :param player_models: to use for one or two players.
         """
         super().__init__(name)
         self.experiment: Dict = experiment
-        self.player_backends: List[Model] = player_backends
+        self.player_models: List[Model] = player_models
 
     def setup(self, **kwargs):
         """
@@ -323,8 +323,8 @@ class GameMaster(GameRecorder):
 
 class DialogueGameMaster(GameMaster):
 
-    def __init__(self, name: str, experiment: dict, player_backends: List[Model]):
-        super().__init__(name, experiment, player_backends)
+    def __init__(self, name: str, experiment: dict, player_models: List[Model]):
+        super().__init__(name, experiment, player_models)
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.messages_by_names: Dict[str, List] = dict()
@@ -655,7 +655,7 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.error(
                         f"{self.name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def run(self, player_backends: List[Model]):
+    def run(self, player_models: List[Model]):
         """
         Runs game-play on all game instances for a game.
         There must be an instances.json with the following structure:
@@ -694,15 +694,15 @@ class GameBenchmark(GameResourceLocator):
             # Determine dialogue partners: How often to run the experiment with different partners
             dialogue_partners: List[List[Model]] = []
 
-            if player_backends:  # favor runtime argument over experiment config
-                dialogue_partners = [player_backends]
+            if player_models:  # favor runtime argument over experiment config
+                dialogue_partners = [player_models]
             elif "dialogue_partners" in experiment:  # edge-case when names are given in experiment config
                 for dialogue_pair_names in experiment["dialogue_partners"]:
-                    player_backends = []
+                    player_models = []
                     for model_name in dialogue_pair_names:
-                        model_backend = backends.get_model_for(model_name)
-                        player_backends.append(model_backend)
-                    dialogue_partners.append(player_backends)
+                        player_model = backends.get_model_for(model_name)
+                        player_models.append(player_model)
+                    dialogue_partners.append(player_models)
                 self.logger.info(f"{self.name}: Detected 'dialogue_partners' in experiment config. "
                                  f"Will run with: {dialogue_partners}")
 
@@ -791,7 +791,7 @@ class GameBenchmark(GameResourceLocator):
         """
         return False
 
-    def create_game_master(self, experiment: Dict, player_backends: List[Model]) -> GameMaster:
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
         raise NotImplementedError()
 
 

@@ -15,8 +15,7 @@ NAME = "generic_openai_compatible"
 
 class GenericOpenAI(backends.Backend):
 
-    def __init__(self, model_spec: backends.ModelSpec):
-        super().__init__(model_spec)
+    def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = openai.OpenAI(
             base_url=creds[NAME]["base_url"],
@@ -32,6 +31,16 @@ class GenericOpenAI(backends.Backend):
         names = [item.id for item in models.data]
         names = sorted(names)
         return names
+
+    def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        return GenericOpenAIModel(self.client, model_spec)
+
+
+class GenericOpenAIModel(backends.Model):
+
+    def __init__(self, client: openai.OpenAI, model_spec: backends.ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:

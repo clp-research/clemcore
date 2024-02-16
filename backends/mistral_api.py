@@ -14,8 +14,7 @@ MAX_TOKENS = 100
 
 class Mistral(backends.Backend):
 
-    def __init__(self, model_spec: backends.ModelSpec):
-        super().__init__(model_spec)
+    def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = MistralClient(api_key=creds[NAME]["api_key"])
 
@@ -24,6 +23,16 @@ class Mistral(backends.Backend):
         names = [item.id for item in models.data]
         names = sorted(names)
         return names
+
+    def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        return MistralModel(self.client, model_spec)
+
+
+class MistralModel(backends.Model):
+
+    def __init__(self, client: MistralClient, model_spec: backends.ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:

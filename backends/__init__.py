@@ -6,7 +6,6 @@ import os
 import nltk
 import logging
 import logging.config
-from abc import ABC
 from types import SimpleNamespace
 from dataclasses import dataclass
 
@@ -96,6 +95,7 @@ class ModelSpec(SimpleNamespace):
 
 
 class Model(abc.ABC):
+    """ A local/remote proxy for a model to be called. """
 
     def __init__(self, model_spec: ModelSpec):
         self.model_spec = model_spec
@@ -104,10 +104,11 @@ class Model(abc.ABC):
     def get_name(self) -> str:
         return self.model_spec.model_name
 
-    @abc.abstractmethod
-    def get_temperature(self) -> float:
-        # note: we need this for now to create the results folder
-        pass
+    def __repr__(self):
+        return str(self)
+
+    def __str__(self):
+        return self.get_name()
 
     @abc.abstractmethod
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
@@ -138,39 +139,36 @@ class Model(abc.ABC):
         pass
 
 
-class Backend(Model, ABC):
-    """ Marker class for a model provider. For now the Backend itself acts as if it would be the Model."""
+class Backend(abc.ABC):
+    """ Marker class for a model provider."""
 
-    def __init__(self, model_spec: ModelSpec):
-        super().__init__(model_spec)
-        self.temperature = model_spec.temperature if model_spec.has_temperature() else 0.0
-
-    def get_temperature(self) -> float:
-        return self.temperature
+    @abc.abstractmethod
+    def get_model_for(self, model_spec: ModelSpec) -> Model:
+        pass
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return f"{self.__class__.__name__}({self.model_spec.model_name})"
+        return f"{self.__class__.__name__}"
 
 
-class MockModel(Backend):
+class MockModel(Model):
 
     def __init__(self, model_spec=ModelSpec(model_name="programmatic")):
         super().__init__(model_spec)
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
-        raise NotImplementedError("This should never be called but is handled in Player")
+        raise NotImplementedError("This should never be called but is handled in Player for now.")
 
 
-class HumanModel(Backend):
+class HumanModel(Model):
 
     def __init__(self, model_spec=ModelSpec(model_name="human")):
         super().__init__(model_spec)
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
-        raise NotImplementedError("This should never be called but is handled in Player")
+        raise NotImplementedError("This should never be called but is handled in Player for now.")
 
 
 def is_backend(obj):
@@ -179,7 +177,7 @@ def is_backend(obj):
     return False
 
 
-_backend_registry: Dict[str, Type] = dict()  # we store references to the class constructor
+_backend_registry: Dict[str, Backend] = dict()  # we store references to the class constructor
 _model_registry: List[ModelSpec] = list()  # we store model specs so that users might use model_name for lookup
 
 
@@ -231,7 +229,7 @@ def _register_backend(backend_name: str):
     if len(backend_subclasses) > 1:
         raise LookupError(f"There is more than one Backend defined in {backend_module}.")
     _, backend_cls = backend_subclasses[0]
-    _backend_registry[backend_name] = backend_cls
+    _backend_registry[backend_name] = backend_cls()
     return backend_cls
 
 
@@ -240,7 +238,7 @@ def _load_model_for(model_spec: ModelSpec) -> Model:
     if backend_name not in _backend_registry:
         _register_backend(backend_name)
     backend_cls = _backend_registry[backend_name]
-    return backend_cls(model_spec)
+    return backend_cls.get_model_for(model_spec)
 
 
 def get_model_for(model_spec: Union[str, Dict, ModelSpec]) -> Model:

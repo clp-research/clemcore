@@ -14,8 +14,7 @@ MAX_TOKENS = 100  # 2024-01-10, das: Should this be hardcoded???
 
 class OpenAI(backends.Backend):
 
-    def __init__(self, model_spec: backends.ModelSpec):
-        super().__init__(model_spec)
+    def __init__(self):
         creds = backends.load_credentials(NAME)
         api_key = creds[NAME]["api_key"]
         organization = creds[NAME]["organisation"] if "organisation" in creds[NAME] else None
@@ -27,6 +26,16 @@ class OpenAI(backends.Backend):
         names = sorted(names)
         return names
         # [print(n) for n in names]   # 2024-01-10: what was this? a side effect-only method?
+
+    def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        return OpenAIModel(self.client, model_spec)
+
+
+class OpenAIModel(backends.Model):
+
+    def __init__(self, client: openai.OpenAI, model_spec: backends.ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:

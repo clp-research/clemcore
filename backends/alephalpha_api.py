@@ -4,6 +4,7 @@ from retry import retry
 import aleph_alpha_client
 import anthropic
 import backends
+from backends import ModelSpec, Model
 
 logger = backends.get_logger(__name__)
 
@@ -12,10 +13,19 @@ NAME = "alephalpha"
 
 class AlephAlpha(backends.Backend):
 
-    def __init__(self, model_spec: backends.ModelSpec):
-        super().__init__(model_spec)
+    def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = aleph_alpha_client.Client(creds[NAME]["api_key"])
+
+    def get_model_for(self, model_spec: ModelSpec) -> Model:
+        return AlephAlphaModel(self.client, model_spec)
+
+
+class AlephAlphaModel(backends.Model):
+
+    def __init__(self, client: aleph_alpha_client.Client, model_spec: ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:

@@ -100,6 +100,15 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
 class HuggingfaceLocal(backends.Backend):
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
+
+    def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        return HuggingfaceLocalModel(model_spec)
+
+
+class HuggingfaceLocalModel(backends.Model):
+
+    def __init__(self, model_spec: backends.ModelSpec):
+        super().__init__(model_spec)
         # fail-fast
         self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
         self.model = load_model(model_spec)

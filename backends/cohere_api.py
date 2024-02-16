@@ -10,10 +10,20 @@ NAME = "cohere"
 
 
 class Cohere(backends.Backend):
-    def __init__(self, model_spec: backends.ModelSpec):
-        super().__init__(model_spec)
+
+    def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = cohere.Client(creds[NAME]["api_key"])
+
+    def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        return CohereModel(self.client, model_spec)
+
+
+class CohereModel(backends.Model):
+
+    def __init__(self, client: cohere.Client, model_spec: backends.ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
