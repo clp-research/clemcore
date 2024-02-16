@@ -7,6 +7,7 @@ from clemgame import get_logger
 from clemgame.metrics import METRIC_ABORTED, METRIC_LOSE, METRIC_REQUEST_COUNT, \
     METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED, BENCH_SCORE
 from games.codenames.constants import *
+from games.codenames.validation_errors import *
 
 logger = get_logger(__name__)
 
@@ -17,10 +18,6 @@ REPROMPT_ON_ERROR = True
 nltk.download('wordnet', quiet=True)
 EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
 
-class ValidationError(Exception):
-    def __init__(self, message="Response does not follow the rules and is hence invalid."):
-        self.message = message
-        super().__init__(self.message)
 
 # TODO: reuse players for other codename variants, e.g. Duet?
 
@@ -53,24 +50,25 @@ class Guesser(Player):
                 utterance = find_line_starting_with(self.prefix, utterance.split('\n'))
                 self.ignored_rambles += 1
             else:
-                raise ValidationError(f"Your answer contained more than one line, please only give one round of guesses on one line.")
+                raise GuesserRamblingError(utterance)
         # utterance needs to start with GUESS
         if not utterance.startswith(self.prefix):
-            raise ValidationError(f"Your answer '{utterance}' did not start with the correct prefix ({self.prefix}).")
+            raise MissingGuessPrefix(utterance, self.prefix)
         utterance = utterance.removeprefix(self.prefix)
         
         guesses = utterance.split(', ')
         guesses = [word.strip('. ').lower() for word in guesses]
         # must contain one valid guess, but can only contain $number guesses max
         if not (0 < len(guesses) <= number_of_allowed_guesses):
-            raise ValidationError(f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}.")
+            raise WrongNumberOfGuessesError(utterance, guesses, number_of_allowed_guesses)
         # guesses must be words on the board that are not revealed yet
         for guess in guesses:
             if not guess in board:
                 if IGNORE_FALSE_TARGETS_OR_GUESSES:
                     self.ignored_guesses += 1
+                    # TODO: log this somehow
                 else:
-                    raise ValidationError(f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists.")
+                    raise InvalidGuessError(utterance, guess, board)
             
     def parse_response(self, utterance: str) -> str:
         if IGNORE_RAMBLING:
@@ -113,39 +111,40 @@ class ClueGiver(Player):
         board_words_lemmas = [EN_LEMMATIZER.lemmatize(word) for word in board]
         if clue_lemma in board_words_lemmas:
             similar_board_word = board[board_words_lemmas.index(clue_lemma)]
-            raise ValidationError("Your clue is morphologically similar to the word {similar_board_word}, please choose another clue word.")
+            raise RelatedClueError(utterance, clue, similar_board_word)
     
     def validate_response(self, utterance: str, board: List[str]):
         # utterance should contain two lines, one with the clue, one with the targets
         parts = utterance.split('\n')
         if len(parts) < 1:
-            raise ValidationError("Your answer did not contain clue and targets on two separate lines.")
+            raise TooFewTextError(utterance)
         elif len(parts) > 2:
             if not IGNORE_RAMBLING:
-                raise ValidationError(f"Your answer contained more than two lines, please only give one clue and your targets on two separate lines.")
+                raise CluegiverRamblingError(utterance)
             else:
                 self.ignored_rambles += 1
 
         clue = find_line_starting_with(self.clue_prefix, parts)
         targets = find_line_starting_with(self.target_prefix, parts)
         if not clue:
-            raise ValidationError(f"Your clue did not start with the correct prefix ({self.clue_prefix}).")
+            raise MissingCluePrefix(utterance, self.clue_prefix)
         if not targets:
-            raise ValidationError(f"Your targets did not start with the correct prefix ({self.target_prefix}).")
+            raise MissingTargetPrefix(utterance, self.target_prefix)
         
-        clue = clue.lower().strip('<>')
-        targets = targets.split(', ')
+
+        clue = clue.removeprefix(self.clue_prefix).lower().strip('<>')
+        targets = targets.removeprefix(self.target_prefix).split(', ')
         targets = [target.strip(" .!'").lower() for target in targets]
         
         # Clue needs to be a single word
         if ' ' in clue:
-            raise ValidationError(f"Clue '{clue}' is not a single word.")
+            raise ClueContainsSpaces(utterance, clue)
         if not clue.isalpha():
-            raise ValidationError(f"Clue '{clue}' is not a word.")
+            raise ClueContainsNonAlphabeticalCharacters(utterance, clue)
         # Clue needs to contain a word that is not morphologically similar to any word on the board
         # TODO: morphological relatedness!
         if clue in board:
-            raise ValidationError(f"Clue '{clue}' is one of the words on the board, please come up with a new word.")
+            raise ClueOnBoardError(utterance, clue, board)
         
         for target in targets:
             if not target in board:
@@ -155,7 +154,7 @@ class ClueGiver(Player):
                     self.ignored_targets += 1
                     # TODO: remove target from targets?
                 else:
-                    raise ValidationError(f"Targeted word '{target}' was not listed, you can only target words provided in the lists.")
+                    raise InvalidTargetError(utterance, target, board)
             
     def parse_response(self, utterance: str) -> str:
         parts = utterance.split('\n')
@@ -348,7 +347,7 @@ class CodenamesGame(DialogueGameMaster):
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words())
             except ValidationError as error:
-                self.log_to_self(Turn_logs.CLUEGIVER_INVALID_FORMAT, error.message)
+                self.log_to_self(Turn_logs.CLUEGIVER_INVALID_FORMAT, error.get_dict())
                 self.invalid_response = True
                 self.violated_request_count += 1
                 self.last_error_message = error.message
@@ -358,7 +357,7 @@ class CodenamesGame(DialogueGameMaster):
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words(), self.cluegiver.number_of_targets)
             except ValidationError as error:
-                self.log_to_self(Turn_logs.GUESSER_INVALID_FORMAT, error.message)
+                self.log_to_self(Turn_logs.GUESSER_INVALID_FORMAT, error.get_dict())
                 self.invalid_response = True
                 self.violated_request_count += 1
                 self.last_error_message = error.message
