@@ -16,6 +16,7 @@ aleph-alpha-client==3.1.0
 openai==1.7.0
 anthropic==0.3.0
 cohere==4.34
+mistralai==0.0.12
 # Slurk Integration
 python-engineio==4.4.0
 python-socketio==5.7.2
