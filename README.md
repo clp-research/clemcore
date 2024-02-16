@@ -1,3 +1,5 @@
+### UPDATE (16.02.24): We released v0.3 of the benchmark code. The main branch will continue as v1.0-beta which has changes that effect the game code. Follow [this guide](docs/howto_update_to_v1.md) to update your game.
+
 # clembench: A Framework for the Systematic Evaluation of Chat-Optimized Language Models as Conversational Agents
 
 The cLLM (chat-optimized Large Language Model, "clem") framework tests such models' ability to engage in games – rule-constituted activities played using language.
