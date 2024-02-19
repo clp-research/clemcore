@@ -3,7 +3,7 @@ from typing import Dict, Tuple, List
 import numpy as np
 
 from backends import Model
-from clemgame.clemgame import GameMaster, GameBenchmark, Player, DialogueGameMaster
+from clemgame.clemgame import GameMaster, GameBenchmark, Player, DialogueGameMaster, GameScorer
 from clemgame.metrics import METRIC_ABORTED, METRIC_SUCCESS, METRIC_LOSE, METRIC_REQUEST_COUNT, \
     METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_SUCCESS, BENCH_SCORE
 from clemgame import get_logger
@@ -204,6 +204,11 @@ class Taboo(DialogueGameMaster):
             # which would be player 1's initial clue.
             self.log_message_to(self.guesser, self.guesser_initial_prompt)
 
+
+class TabooScorer(GameScorer):
+    def __init__(self, experiment: Dict, game_instance: Dict):
+        super().__init__(GAME_NAME, experiment, game_instance)
+
     def compute_scores(self, episode_interactions: Dict) -> None:
         """ Episode level scores"""
         turn_scores = []
@@ -294,8 +299,11 @@ class TabooGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Taboo game between two agents where one has to describe a word for the other to guess."
 
-    def create_game_master(self, experiment: Dict, player_models: List[str]) -> GameMaster:
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
         return Taboo(experiment, player_models)
+
+    def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
+        return TabooScorer(experiment, game_instance)
 
 
 def main():
