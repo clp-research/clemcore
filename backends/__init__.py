@@ -98,8 +98,42 @@ class Model(abc.ABC):
     """ A local/remote proxy for a model to be called. """
 
     def __init__(self, model_spec: ModelSpec):
+        """
+
+        :param model_spec: that specifies the model and the backend to be used
+        """
+        assert hasattr(model_spec, "model_name"), "The passed ModelSpec must have a `model_name` attribute"
         self.model_spec = model_spec
-        assert hasattr(model_spec, "model_name"), "The passed ModelSpec must have a model_name attributed"
+        self.__gen_args = dict()
+
+    def set_gen_args(self, **gen_args):
+        """
+        :param gen_args: set extra information needed for the generation process
+        """
+        self.__gen_args = dict(gen_args)
+
+    def set_gen_arg(self, arg_name, arg_value):
+        """ Set a particular argument needed for the generation process
+        :param arg_name: the name of the generation argument
+        :param arg_value: the value of the generation argument
+        """
+        self.__gen_args[arg_name] = arg_value
+
+    def get_gen_arg(self, arg_name):
+        assert arg_name in self.__gen_args, f"No '{arg_name}' in gen_args given but is expected"
+        return self.__gen_args[arg_name]
+
+    def get_temperature(self):
+        """
+        :return: the sampling temperature used for the generation process
+        """
+        return self.get_gen_arg("temperature")
+
+    def get_max_tokens(self):
+        """
+        :return: the maximal number of tokens generated during the generation process
+        """
+        return self.get_gen_arg("max_tokens")
 
     def get_name(self) -> str:
         return self.model_spec.model_name
@@ -124,7 +158,6 @@ class Model(abc.ABC):
                 of turns. Entry element is a dictionary containing one key
                 "role", whose value is either "user" or "assistant", and one
                 key "content", whose value is the message as a string.
-            model (str): the name of the model
 
         Returns:
             Tuple[Any, Any, str]: The first element is the prompt object as
@@ -162,6 +195,7 @@ class CustomResponseModel(Model):
 
     def __init__(self, model_spec=ModelSpec(model_name="programmatic")):
         super().__init__(model_spec)
+        self.set_gen_args(temperature=0.0)  # dummy value for get_temperature()
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         raise NotImplementedError("This should never be called but is handled in Player for now.")
@@ -171,6 +205,7 @@ class HumanModel(Model):
 
     def __init__(self, model_spec=ModelSpec(model_name="human")):
         super().__init__(model_spec)
+        self.set_gen_args(temperature=0.0)  # dummy value for get_temperature()
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         raise NotImplementedError("This should never be called but is handled in Player for now.")
@@ -251,6 +286,8 @@ def get_model_for(model_spec: Union[str, Dict, ModelSpec]) -> Model:
     :param model_spec: the model spec for which a supporting backend has to be found
     :return: the backend registered that supports the model
     """
+    assert len(_model_registry) > 0, "Model registry is empty. Load a model registry and try again."
+
     if isinstance(model_spec, str):
         model_spec = ModelSpec.from_name(model_spec)
     if isinstance(model_spec, dict):

@@ -9,8 +9,6 @@ logger = backends.get_logger(__name__)
 
 NAME = "mistral"
 
-MAX_TOKENS = 100
-
 
 class Mistral(backends.Backend):
 
@@ -53,7 +51,7 @@ class MistralModel(backends.Model):
         api_response = self.client.chat(model=self.model_spec.model_id,
                                         messages=prompt,
                                         temperature=self.get_temperature(),
-                                        max_tokens=MAX_TOKENS)
+                                        max_tokens=self.get_max_tokens())
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")

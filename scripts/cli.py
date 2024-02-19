@@ -48,11 +48,18 @@ def read_model_specs(model_strings: List[str]):
     return model_specs
 
 
-def main(args):
+def read_gen_args(args: argparse.Namespace):
+    return dict(temperature=args.temperature, max_tokens=args.max_tokens)
+
+
+def main(args: argparse.Namespace):
     if args.command_name == "ls":
         benchmark.list_games()
     if args.command_name == "run":
-        benchmark.run(args.game, model_specs=read_model_specs(args.models), experiment_name=args.experiment_name)
+        benchmark.run(args.game,
+                      model_specs=read_model_specs(args.models),
+                      gen_args=read_gen_args(args),
+                      experiment_name=args.experiment_name)
     if args.command_name == "score":
         benchmark.score(args.game, experiment_name=args.experiment_name)
     if args.command_name == "transcribe":
@@ -83,6 +90,12 @@ if __name__ == "__main__":
                             help="Optional argument to only run a specific experiment")
     run_parser.add_argument("-g", "--game", type=str,
                             required=True, help="A specific game name (see ls).")
+    run_parser.add_argument("-t", "--temperature", type=float, default=0.0,
+                            help="Argument to specify sampling temperature for the models. Default: 0.0.")
+    run_parser.add_argument("-l", "--max_tokens", type=int, default=100,
+                            help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
+                                 "Be careful with high values which might lead to exceed your API token limits."
+                                 "Default: 100.")
 
     score_parser = sub_parsers.add_parser("score")
     score_parser.add_argument("-e", "--experiment_name", type=str,
@@ -96,5 +109,4 @@ if __name__ == "__main__":
     transcribe_parser.add_argument("-g", "--game", type=str,
                                    help="A specific game name (see ls).", default="all")
 
-    args = parser.parse_args()
-    main(args)
+    main(parser.parse_args())

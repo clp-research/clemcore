@@ -60,7 +60,7 @@ class AlephAlphaModel(backends.Model):
 
         params = {
             "prompt": aleph_alpha_client.Prompt.from_text(prompt_text),
-            "maximum_tokens": 100,
+            "maximum_tokens": self.get_max_tokens(),
             "stop_sequences": ['\n'],
             "temperature": self.get_temperature()
         }

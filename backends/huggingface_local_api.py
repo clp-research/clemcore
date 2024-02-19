@@ -115,7 +115,7 @@ class HuggingfaceLocalModel(backends.Model):
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def generate_response(self, messages: List[Dict],
-                          max_new_tokens: int = 100, return_full_text: bool = False,
+                          return_full_text: bool = False,
                           log_messages: bool = False) -> Tuple[Any, Any, str]:
         """
         :param messages: for example
@@ -126,7 +126,6 @@ class HuggingfaceLocalModel(backends.Model):
                     {"role": "user", "content": "Where was it played?"}
                 ]
         :param model: model name
-        :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
         :param return_full_text: If True, whole input context is returned.
         :param log_messages: If True, raw and cleaned messages passed will be logged.
         :return: the continuation
@@ -147,11 +146,12 @@ class HuggingfaceLocalModel(backends.Model):
         prompt_tokens = prompt_tokens.to(self.device)
 
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
-        prompt = {"inputs": prompt_text, "max_new_tokens": max_new_tokens,
-                  "temperature": self.temperature, "return_full_text": return_full_text}
+        prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
+                  "temperature": self.get_temperature(), "return_full_text": return_full_text}
 
         # check context limit:
-        context_check = _check_context_limit(self.context_size, prompt_tokens[0], max_new_tokens=max_new_tokens)
+        context_check = _check_context_limit(self.context_size, prompt_tokens[0],
+                                             max_new_tokens=self.get_max_tokens())
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
@@ -162,20 +162,20 @@ class HuggingfaceLocalModel(backends.Model):
 
         # greedy decoding:
         do_sample: bool = False
-        if self.temperature > 0.0:
+        if self.get_temperature() > 0.0:
             do_sample = True
 
         if do_sample:
             model_output_ids = self.model.generate(
                 prompt_tokens,
-                temperature=self.temperature,
-                max_new_tokens=max_new_tokens,
+                temperature=self.get_temperature(),
+                max_new_tokens=self.get_max_tokens(),
                 do_sample=do_sample
             )
         else:
             model_output_ids = self.model.generate(
                 prompt_tokens,
-                max_new_tokens=max_new_tokens,
+                max_new_tokens=self.get_max_tokens(),
                 do_sample=do_sample
             )
 
