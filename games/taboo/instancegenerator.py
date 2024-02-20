@@ -71,10 +71,10 @@ class TabooGameInstanceGenerator(GameInstanceGenerator):
         super().__init__(GAME_NAME)
 
     def on_generate(self):
-        for difficulty in ["high", "medium", "low"]:
-
+        for frequency in ["high", "medium", "low"]:
+            print("Sampling from freq:", frequency)
             # first choose target words based on the difficultly
-            fp = f"resources/target_words/{LANGUAGE}/{difficulty}_freq_100"
+            fp = f"resources/target_words/{LANGUAGE}/{frequency}_freq_100_v1.5"
             target_words = self.load_file(file_name=fp, file_ending=".txt").split('\n')
             if N_INSTANCES > 0:
                 assert len(target_words) >= N_INSTANCES, \
@@ -82,7 +82,7 @@ class TabooGameInstanceGenerator(GameInstanceGenerator):
                 target_words = random.sample(target_words, k=N_INSTANCES)
 
             # use the same target_words for the different player assignments
-            experiment = self.add_experiment(f"{difficulty}_{LANGUAGE}")
+            experiment = self.add_experiment(f"{frequency}_{LANGUAGE}")
             experiment["max_turns"] = N_GUESSES
 
             describer_prompt = self.load_template("resources/initial_prompts/initial_describer")
