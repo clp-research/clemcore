@@ -42,7 +42,6 @@ def read_model_specs(model_strings: List[str]):
             model_dict = json.loads(model_string)
             model_spec = ModelSpec.from_dict(model_dict)
         except Exception as e:  # likely not a json
-            print(e)
             model_spec = ModelSpec.from_name(model_string)
         model_specs.append(model_spec)
     return model_specs
