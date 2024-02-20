@@ -33,7 +33,7 @@ class Game_ends(str, Enum):
     OPPONENT_WON_THROUGH_ASSASSIN = f"{OPPONENT_WON} through assassin"
 BOARD_STATUS = "board status"
 NUMBER_OF_TURNS = "number of turns"
-GAME_END = "game end"
+GAME_END_THROUGH_ASSASSIN = "game ended through assassin"
 
 class ValidationError_types(str, Enum):
     CLUEGIVER = "cluegiver"

@@ -11,9 +11,13 @@ from games.codenames.validation_errors import *
 
 logger = get_logger(__name__)
 
+# TODO: log all flags when used!!!
 IGNORE_RAMBLING = True
 IGNORE_FALSE_TARGETS_OR_GUESSES = True
 REPROMPT_ON_ERROR = True
+STRIP = True
+IGNORE_NUMBER_OF_TARGETS = True
+
 
 nltk.download('wordnet', quiet=True)
 EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
@@ -40,15 +44,17 @@ class Guesser(Player):
         board = prompt.split('\n\n')[1].split(', ')
         number_of_allowed_guesses = int(re.search(r"up to ([0-9]+) words", prompt).group(1))
         self.guesses = random.sample(board, number_of_allowed_guesses)
-        self.guesses = [word.strip('. ') for word in self.guesses]       # was not an issue but also does not hurt
+        self.guesses = [word.strip('. <>\"') for word in self.guesses]       # was not an issue but also does not hurt
         return self.recover_utterance()
     
-    def validate_response(self, utterance: str, board: List[str], number_of_allowed_guesses: int):
+    def validate_response(self, utterance: str, remaining_words: List[str], number_of_allowed_guesses: int):
         # utterance should only contain one line
         if '\n' in utterance:
             if IGNORE_RAMBLING:
-                utterance = find_line_starting_with(self.prefix, utterance.split('\n'))
+                line = find_line_starting_with(self.prefix, utterance.split('\n'))
                 self.ignored_rambles += 1
+                if line:
+                    utterance = line
             else:
                 raise GuesserRamblingError(utterance)
         # utterance needs to start with GUESS
@@ -57,25 +63,25 @@ class Guesser(Player):
         utterance = utterance.removeprefix(self.prefix)
         
         guesses = utterance.split(', ')
-        guesses = [word.strip('. ').lower() for word in guesses]
+        guesses = [word.strip('. <>\"').lower() for word in guesses]
         # must contain one valid guess, but can only contain $number guesses max
         if not (0 < len(guesses) <= number_of_allowed_guesses):
             raise WrongNumberOfGuessesError(utterance, guesses, number_of_allowed_guesses)
         # guesses must be words on the board that are not revealed yet
         for guess in guesses:
-            if not guess in board:
+            if not guess in remaining_words:
                 if IGNORE_FALSE_TARGETS_OR_GUESSES:
                     self.ignored_guesses += 1
                     # TODO: log this somehow
                 else:
-                    raise InvalidGuessError(utterance, guess, board)
+                    raise InvalidGuessError(utterance, guess, remaining_words)
             
     def parse_response(self, utterance: str) -> str:
         if IGNORE_RAMBLING:
             utterance = find_line_starting_with(self.prefix, utterance.split('\n'))
         utterance = utterance.removeprefix(self.prefix)
         self.guesses = utterance.split(', ')
-        self.guesses = [word.strip('. ').lower() for word in self.guesses]
+        self.guesses = [word.strip('. <>\"').lower() for word in self.guesses]
         return f"{', '.join(self.guesses)}"
             
     def recover_utterance(self) -> str:
@@ -113,7 +119,7 @@ class ClueGiver(Player):
             similar_board_word = board[board_words_lemmas.index(clue_lemma)]
             raise RelatedClueError(utterance, clue, similar_board_word)
     
-    def validate_response(self, utterance: str, board: List[str]):
+    def validate_response(self, utterance: str, remaining_words: List[str]):
         # utterance should contain two lines, one with the clue, one with the targets
         parts = utterance.split('\n')
         if len(parts) < 1:
@@ -132,9 +138,13 @@ class ClueGiver(Player):
             raise MissingTargetPrefix(utterance, self.target_prefix)
         
 
-        clue = clue.removeprefix(self.clue_prefix).lower().strip('<>')
+        clue = clue.removeprefix(self.clue_prefix).lower()
+        if STRIP:
+            clue = clue.strip('<>\"')
+        if IGNORE_NUMBER_OF_TARGETS:
+            clue  = clue.strip(', 1234567890')
         targets = targets.removeprefix(self.target_prefix).split(', ')
-        targets = [target.strip(" .!'").lower() for target in targets]
+        targets = [target.strip(" .!'<>\"").lower() for target in targets]
         
         # Clue needs to be a single word
         if ' ' in clue:
@@ -143,26 +153,31 @@ class ClueGiver(Player):
             raise ClueContainsNonAlphabeticalCharacters(utterance, clue)
         # Clue needs to contain a word that is not morphologically similar to any word on the board
         # TODO: morphological relatedness!
-        if clue in board:
-            raise ClueOnBoardError(utterance, clue, board)
+        if clue in remaining_words:
+            raise ClueOnBoardError(utterance, clue, remaining_words)
         
         for target in targets:
-            if not target in board:
+            if not target in remaining_words:
                 if IGNORE_FALSE_TARGETS_OR_GUESSES:
                     # self.log_to_self("IGNORE FALSE TARGET")
                     print('IGNORE FALSE TARGET')
                     self.ignored_targets += 1
                     # TODO: remove target from targets?
                 else:
-                    raise InvalidTargetError(utterance, target, board)
+                    raise InvalidTargetError(utterance, target, remaining_words)
             
     def parse_response(self, utterance: str) -> str:
         parts = utterance.split('\n')
         clue = find_line_starting_with(self.clue_prefix, parts).removeprefix(self.clue_prefix)
         targets = find_line_starting_with(self.target_prefix, parts).removeprefix(self.target_prefix)
-        self.clue = clue.lower()
+        clue = clue.lower()
+        if STRIP:
+            clue = clue.strip('<>\"')
+        if IGNORE_NUMBER_OF_TARGETS:
+            clue = clue.strip(', 1234567890')
+        self.clue = clue
         self.targets = targets.split(', ')
-        self.targets = [target.strip(' .').lower() for target in self.targets]
+        self.targets = [target.strip(' .<>\"').lower() for target in self.targets]
         self.number_of_targets = len(self.targets)
         return f"{self.clue}, {self.number_of_targets}"
 
@@ -490,12 +505,23 @@ class CodenamesScorer(GameScorer):
 
     def score_game(self):
         # game-specific scores
-        self.log_episode_score("ignore rambling", IGNORE_RAMBLING)
-        self.log_episode_score("ignore false targets or guesses", IGNORE_FALSE_TARGETS_OR_GUESSES)
+        # log flags and counted metrics for those
+        # TODO: log all these metrics!
+        if REPROMPT_ON_ERROR:
+            pass
+        if IGNORE_RAMBLING:
+            self.log_episode_score("ignore rambling", self.episode_interactions[IGNORE_RAMBLING])
+        if IGNORE_FALSE_TARGETS_OR_GUESSES:
+            self.log_episode_score("ignore false targets or guesses", self.episode_interactions[IGNORE_FALSE_TARGETS_OR_GUESSES])
+        if STRIP:
+            pass
+        if IGNORE_NUMBER_OF_TARGETS:
+            pass
+            #self.log_episode_score()
 
         number_of_turns = self.episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
-        efficiency = 1 / number_of_turns
+        efficiency = min(4.5 / number_of_turns, 1) # TODO: 4.5 magic number: team assignment length / 2, replace!
         self.log_episode_score("efficiency", efficiency)
         target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
         avg_target_f1s = statistics.mean(target_f1s)
@@ -511,18 +537,14 @@ class CodenamesScorer(GameScorer):
 
         # TODO: should ratios also be 0 or NaN when the game was aborted?
 
-        game_end = self.episode_interactions[GAME_END]
-        end_score = 5       # assume that game was aborted
-        match game_end:
-            case Game_ends.TEAM_WON:
-                end_score = 1
-            case Game_ends.TEAM_WON_THROUGH_ASSASSIN:
-                end_score = 2
-            case Game_ends.OPPONENT_WON:
-                end_score = 3
-            case Game_ends.OPPONENT_WON_THROUGH_ASSASSIN:
-                end_score = 4
-        self.log_episode_score(GAME_END, end_score)
+        game_end = self.episode_interactions[GAME_END_THROUGH_ASSASSIN]
+        game_ended_through_assassin = False       # assume that game was aborted
+        match game_ended_through_assassin:
+            case Game_ends.TEAM_WON | Game_ends.OPPONENT_WON:
+                game_ended_through_assassin = False
+            case Game_ends.TEAM_WON_THROUGH_ASSASSIN | Game_ends.OPPONENT_WON_THROUGH_ASSASSIN:
+                game_ended_through_assassin = True
+        self.log_episode_score(GAME_END, game_ended_through_assassin)
 
         self.board_at_end = self.episode_interactions[BOARD_STATUS]
         # self.log_episode_score(BOARD_STATUS, board_at_end)
@@ -539,6 +561,8 @@ class CodenamesScorer(GameScorer):
             return
 
         # Main Score: harmonic mean of success (revealed team words / all team words (recall)) and efficiency (1/number of turns)
+        # TODO: better efficiency: average two targets per turn? Everything better gets ignored
+        # is that fair, when you have 9 words? For the last one you cannot average 2...
         success = self.scores["episode scores"]["team words revealed/all team words"]
         efficiency = self.scores["episode scores"]["efficiency"]
         main_score = statistics.harmonic_mean([success, efficiency])
