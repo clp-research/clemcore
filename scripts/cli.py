@@ -59,7 +59,8 @@ def main(args: argparse.Namespace):
         benchmark.run(args.game,
                       model_specs=read_model_specs(args.models),
                       gen_args=read_gen_args(args),
-                      experiment_name=args.experiment_name)
+                      experiment_name=args.experiment_name,
+                      instances_name=args.instances_name)
     if args.command_name == "score":
         benchmark.score(args.game, experiment_name=args.experiment_name)
     if args.command_name == "transcribe":
@@ -96,6 +97,8 @@ if __name__ == "__main__":
                             help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
                                  "Be careful with high values which might lead to exceed your API token limits."
                                  "Default: 100.")
+    run_parser.add_argument("-i", "--instances_name", type=str, default="instances",
+                            required=True, help="The instances file name (.json suffix will be added automatically.")
 
     score_parser = sub_parsers.add_parser("score")
     score_parser.add_argument("-e", "--experiment_name", type=str,

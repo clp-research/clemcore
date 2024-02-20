@@ -593,9 +593,10 @@ class GameBenchmark(GameResourceLocator):
         """
         raise NotImplementedError()
 
-    def setup(self):
-        # For now, we assume a single instances.json
-        self.instances = self.load_json("in/instances.json")
+    def setup(self, instances_name: str = None):
+        if instances_name is None:
+            instances_name = "instances"
+        self.instances = self.load_json(f"in/{instances_name}")
 
     def build_transcripts(self):
         results_root = file_utils.results_root()
@@ -907,10 +908,10 @@ def load_benchmarks(do_setup: bool = True) -> List[GameBenchmark]:
     return game_benchmarks
 
 
-def load_benchmark(game_name: str, do_setup: bool = True) -> GameBenchmark:
+def load_benchmark(game_name: str, do_setup: bool = True, instances_name: str = None) -> GameBenchmark:
     gm = find_benchmark(game_name)
     if do_setup:
-        gm.setup()
+        gm.setup(instances_name)
     return gm
 
 
