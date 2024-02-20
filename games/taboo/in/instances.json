@@ -5,260 +5,262 @@
       "game_instances": [
         {
           "game_id": 0,
-          "target_word": "multimedia",
-          "related_word": []
+          "target_word": "responsibility",
+          "related_word": ["blame", "obligation", "reliability"]
         }, {
           "game_id": 1,
-          "target_word": "orlando",
-          "related_word": []
+          "target_word": "boy",
+          "related_word": ["kid", "lad", "teenager"]
         }, {
           "game_id": 2,
-          "target_word": "front",
-          "related_word": ["forward", "frontal", "frontward"]
+          "target_word": "transit",
+          "related_word": ["transport", "cross", "traverse"]
         }, {
           "game_id": 3,
-          "target_word": "switch",
-          "related_word": ["birch", "swap", "flagellate"]
+          "target_word": "rate",
+          "related_word": ["quality", "estimate", "ratio"]
         }, {
           "game_id": 4,
-          "target_word": "msn",
-          "related_word": []
+          "target_word": "host",
+          "related_word": ["swarm", "army", "announcer"]
         }, {
           "game_id": 5,
-          "target_word": "index",
-          "related_word": ["hand", "needle", "indicator"]
+          "target_word": "output",
+          "related_word": ["product", "yield", "result"]
         }, {
           "game_id": 6,
-          "target_word": "array",
-          "related_word": ["distribution", "band", "ordering"]
+          "target_word": "likely",
+          "related_word": ["credible", "stunning", "heartening"]
         }, {
           "game_id": 7,
-          "target_word": "pre",
-          "related_word": ["crèche", "nursery school", "day nursery"]
+          "target_word": "resume",
+          "related_word": ["renew", "proceed", "restart"]
         }, {
           "game_id": 8,
-          "target_word": "beat",
-          "related_word": ["balk", "birch", "gravel"]
+          "target_word": "clear",
+          "related_word": ["inculpable", "lustrous", "effulgent"]
         }, {
           "game_id": 9,
-          "target_word": "motorola",
-          "related_word": []
+          "target_word": "short",
+          "related_word": ["blunt", "brief", "embrittled"]
         }, {
           "game_id": 10,
-          "target_word": "page",
-          "related_word": ["beckon", "demand", "command"]
+          "target_word": "touch",
+          "related_word": ["influence", "blemish", "adjoin"]
         }, {
           "game_id": 11,
-          "target_word": "carolina",
-          "related_word": []
+          "target_word": "rental",
+          "related_word": ["indemnity", "redress", "recoupment"]
         }, {
           "game_id": 12,
           "target_word": "provide",
-          "related_word": ["deliver", "supply", "hand over"]
+          "related_word": ["give", "supply", "hand"]
         }, {
           "game_id": 13,
-          "target_word": "transit",
-          "related_word": ["transport", "joyride", "spin"]
+          "target_word": "fat",
+          "related_word": ["adiposity", "surplus", "plus"]
         }, {
           "game_id": 14,
-          "target_word": "soccer",
-          "related_word": []
+          "target_word": "pre",
+          "related_word": ["prekindergarten", "nursery", "creche"]
         }, {
           "game_id": 15,
-          "target_word": "digital",
-          "related_word": []
+          "target_word": "filter",
+          "related_word": ["distill", "fine", "strain"]
         }, {
           "game_id": 16,
-          "target_word": "outcome",
-          "related_word": ["sequence", "upshot", "product"]
+          "target_word": "array",
+          "related_word": ["group", "battalion", "muster"]
         }, {
           "game_id": 17,
-          "target_word": "hard",
-          "related_word": ["bitter", "hard-boiled", "arduous"]
+          "target_word": "combination",
+          "related_word": ["league", "composite", "alloy"]
         }, {
           "game_id": 18,
-          "target_word": "william",
-          "related_word": []
+          "target_word": "none",
+          "related_word": ["scarcely", "no", "nothing"]
         }, {
           "game_id": 19,
-          "target_word": "birthday",
-          "related_word": ["bareness", "nude", "nakedness"]
+          "target_word": "career",
+          "related_word": ["service", "berth", "post"]
         }
       ],
       "max_turns": 3,
       "describer_initial_prompt": "You are playing a collaborative word guessing game in which you have to describe a target word for another player to guess.\n\nRules:\n(a) You have to reply in the form: CLUE: <some text>. Guesses from the other player will start with GUESS.\n(b) You cannot use the target word itself, parts or morphological variants of it in your description.\n(c) In addition, the same rules apply for related words which are provided below.\n\nEnd conditions:\n(i) If you use the target word or a related word in your description, then you lose.\n(ii) If the other player can guess the target word in $N$ tries, you both win.\n\nLet us start.\n\nThis is the target word that you need to describe and that the other player needs to guess:\n\n$TARGET_WORD$\n\nRelated words are:\n\n$REL_WORD$\n\nImportant: You are under time pressure, give short descriptions that are to the point!",
       "guesser_initial_prompt": "You are playing a collaborative word guessing game in which you have to guess a target word that another player describes to you.\n\nYou can make one guess at each trial. You win when you guess the target word. You lose when you cannot guess it in $N$ tries.\n\nAfter each trial you will get a new hint from the other player which starts with CLUE.\n\nMake your guesses by just saying the word using the following form: GUESS: <a word>\n\nLet us start.\n"
-    }, {
+    },
+    {
       "name": "medium_en",
       "game_instances": [
         {
           "game_id": 0,
-          "target_word": "quarterly",
-          "related_word": ["recurrent", "frequent", "serial"]
+          "target_word": "assure",
+          "related_word": ["comfort", "guaranty", "console"]
         }, {
           "game_id": 1,
-          "target_word": "quit",
-          "related_word": ["liquidate", "run along", "blink"]
+          "target_word": "haven",
+          "related_word": ["harbor", "asylum", "refuge"]
         }, {
           "game_id": 2,
-          "target_word": "athlete",
-          "related_word": []
+          "target_word": "limousine",
+          "related_word": ["minicar", "clunker", "suv"]
         }, {
           "game_id": 3,
-          "target_word": "subsequent",
-          "related_word": ["after", "later", "ensuing"]
+          "target_word": "induce",
+          "related_word": ["prompt", "beget", "breed"]
         }, {
           "game_id": 4,
-          "target_word": "edinburgh",
-          "related_word": []
+          "target_word": "stimulate",
+          "related_word": ["arouse", "provoke", "stir"]
         }, {
           "game_id": 5,
-          "target_word": "hampshire",
-          "related_word": []
+          "target_word": "plaza",
+          "related_word": ["patio", "enclosure", "deck"]
         }, {
           "game_id": 6,
-          "target_word": "myth",
-          "related_word": ["legend", "illusion", "mythology"]
+          "target_word": "envelope",
+          "related_word": ["capsule", "shield", "jacket"]
         }, {
           "game_id": 7,
-          "target_word": "haven",
-          "related_word": ["anchorage", "harborage", "sanctum"]
+          "target_word": "implication",
+          "related_word": ["allusion", "aftereffect", "censure"]
         }, {
           "game_id": 8,
-          "target_word": "recorder",
-          "related_word": ["bookkeeper", "archivist", "annalist"]
+          "target_word": "planner",
+          "related_word": ["researcher", "founder", "producer"]
         }, {
           "game_id": 9,
-          "target_word": "guestbook",
-          "related_word": []
+          "target_word": "myth",
+          "related_word": ["misbelief", "misconception", "delusion"]
         }, {
           "game_id": 10,
           "target_word": "fighter",
-          "related_word": ["disputant", "brawler", "warrior"]
+          "related_word": ["soldier", "warrior", "raider"]
         }, {
           "game_id": 11,
-          "target_word": "regardless",
-          "related_word": ["whatever", "anyhow", "anyway"]
+          "target_word": "obvious",
+          "related_word": ["manifest", "clear", "apparent"]
         }, {
           "game_id": 12,
-          "target_word": "structural",
-          "related_word": []
+          "target_word": "recorder",
+          "related_word": ["secretary", "chronicler", "documenter"]
         }, {
           "game_id": 13,
-          "target_word": "exemption",
-          "related_word": ["impunity", "immunity"]
+          "target_word": "contributor",
+          "related_word": ["protector", "angel", "patron"]
         }, {
           "game_id": 14,
-          "target_word": "caribbean",
-          "related_word": []
+          "target_word": "passage",
+          "related_word": ["approach", "onrush", "excerpt"]
         }, {
           "game_id": 15,
-          "target_word": "czech",
-          "related_word": []
+          "target_word": "quarterly",
+          "related_word": ["routine", "monthly", "recurrent"]
         }, {
           "game_id": 16,
-          "target_word": "doubt",
-          "related_word": ["skepticism", "reservation", "query"]
+          "target_word": "cabinet",
+          "related_word": ["sideboard", "hutch", "buffet"]
         }, {
           "game_id": 17,
-          "target_word": "utilize",
-          "related_word": ["apply", "exercise", "use"]
+          "target_word": "subsidiary",
+          "related_word": ["appendage", "complement", "accoutrement"]
         }, {
           "game_id": 18,
-          "target_word": "courtesy",
-          "related_word": ["benevolence", "mercy", "attention"]
+          "target_word": "orient",
+          "related_word": ["initiate", "introduce", "orientate"]
         }, {
           "game_id": 19,
-          "target_word": "anchor",
-          "related_word": ["dependence", "standby", "anchorperson"]
+          "target_word": "anymore",
+          "related_word": ["right now", "currently", "now"]
         }
       ],
       "max_turns": 3,
       "describer_initial_prompt": "You are playing a collaborative word guessing game in which you have to describe a target word for another player to guess.\n\nRules:\n(a) You have to reply in the form: CLUE: <some text>. Guesses from the other player will start with GUESS.\n(b) You cannot use the target word itself, parts or morphological variants of it in your description.\n(c) In addition, the same rules apply for related words which are provided below.\n\nEnd conditions:\n(i) If you use the target word or a related word in your description, then you lose.\n(ii) If the other player can guess the target word in $N$ tries, you both win.\n\nLet us start.\n\nThis is the target word that you need to describe and that the other player needs to guess:\n\n$TARGET_WORD$\n\nRelated words are:\n\n$REL_WORD$\n\nImportant: You are under time pressure, give short descriptions that are to the point!",
       "guesser_initial_prompt": "You are playing a collaborative word guessing game in which you have to guess a target word that another player describes to you.\n\nYou can make one guess at each trial. You win when you guess the target word. You lose when you cannot guess it in $N$ tries.\n\nAfter each trial you will get a new hint from the other player which starts with CLUE.\n\nMake your guesses by just saying the word using the following form: GUESS: <a word>\n\nLet us start.\n"
-    }, {
+    },
+    {
       "name": "low_en",
       "game_instances": [
         {
           "game_id": 0,
-          "target_word": "eva",
-          "related_word": []
+          "target_word": "autograph",
+          "related_word": ["signature", "John Hancock", "hand"]
         }, {
           "game_id": 1,
-          "target_word": "antibiotic",
-          "related_word": ["capsule", "botanical", "physic"]
+          "target_word": "synthesis",
+          "related_word": ["cocktail", "mix", "compound"]
         }, {
           "game_id": 2,
-          "target_word": "synthesis",
-          "related_word": ["alloy", "admixture", "conflation"]
+          "target_word": "seize",
+          "related_word": ["assimilate", "nail", "intuit"]
         }, {
           "game_id": 3,
-          "target_word": "davy",
-          "related_word": ["ocean", "deep", "blue water"]
+          "target_word": "scoop",
+          "related_word": ["ladle", "lowdown", "spoon"]
         }, {
           "game_id": 4,
-          "target_word": "deduction",
-          "related_word": ["subtraction", "sequitur", "discount"]
+          "target_word": "nil",
+          "related_word": ["cipher", "zero", "o"]
         }, {
           "game_id": 5,
-          "target_word": "mailman",
-          "related_word": ["letter carrier", "postie", "mail carrier"]
+          "target_word": "invasion",
+          "related_word": ["foray", "raid", "irruption"]
         }, {
           "game_id": 6,
-          "target_word": "bernard",
-          "related_word": []
+          "target_word": "squeeze",
+          "related_word": ["jostle", "scrape (up or together)", "wring"]
         }, {
           "game_id": 7,
-          "target_word": "addict",
-          "related_word": ["doper", "sucker", "fanatic"]
+          "target_word": "shark",
+          "related_word": ["predator", "wizard", "dodger"]
         }, {
           "game_id": 8,
-          "target_word": "levy",
-          "related_word": ["assessment", "imposition", "duty"]
+          "target_word": "harmony",
+          "related_word": ["symmetry", "congruence", "congruity"]
         }, {
           "game_id": 9,
-          "target_word": "transplant",
-          "related_word": ["move", "overseed", "dislocate"]
+          "target_word": "sear",
+          "related_word": ["parch", "desiccate", "dehydrate"]
         }, {
           "game_id": 10,
-          "target_word": "budapest",
-          "related_word": []
+          "target_word": "regret",
+          "related_word": ["rue", "lament", "repent"]
         }, {
           "game_id": 11,
-          "target_word": "pastor",
-          "related_word": ["archbishop", "oblate", "monastic"]
+          "target_word": "transplant",
+          "related_word": ["budge", "supersede", "remake"]
         }, {
           "game_id": 12,
-          "target_word": "accreditation",
-          "related_word": ["authorization", "empowerment", "delegation"]
+          "target_word": "bypass",
+          "related_word": ["slur (over)", "ignore", "slight"]
         }, {
           "game_id": 13,
-          "target_word": "ipaq",
-          "related_word": []
+          "target_word": "conform",
+          "related_word": ["key", "adapt", "edit"]
         }, {
           "game_id": 14,
-          "target_word": "vein",
-          "related_word": ["locution", "manner", "style"]
+          "target_word": "peaceful",
+          "related_word": ["still", "recollected", "unworried"]
         }, {
           "game_id": 15,
-          "target_word": "designation",
-          "related_word": ["assignment", "title", "appellation"]
+          "target_word": "independently",
+          "related_word": ["singly", "unaided", "unassisted"]
         }, {
           "game_id": 16,
-          "target_word": "independently",
-          "related_word": ["singly", "single-handed", "solely"]
+          "target_word": "davy",
+          "related_word": ["Neptune", "basin", "ocean"]
         }, {
           "game_id": 17,
-          "target_word": "squeeze",
-          "related_word": ["sucker", "express", "diddle"]
+          "target_word": "designation",
+          "related_word": ["appellation", "commission", "handle"]
         }, {
           "game_id": 18,
-          "target_word": "applet",
-          "related_word": []
+          "target_word": "embroidery",
+          "related_word": ["elaboration", "embellishment", "stretching"]
         }, {
           "game_id": 19,
-          "target_word": "scoop",
-          "related_word": ["dope", "dipper", "411"]
+          "target_word": "pastor",
+          "related_word": ["monastic", "prelate", "missionizer"]
         }
       ],
       "max_turns": 3,

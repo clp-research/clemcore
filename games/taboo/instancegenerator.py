@@ -18,7 +18,7 @@ from clemgame.clemgame import GameInstanceGenerator
 nltk.download('wordnet', quiet=True)
 EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
 
-API_KEY = ""  # your key for the Merriam-Webster thesaurus
+API_KEY = "c9fa7948-6985-4eeb-91e2-03b36632f8ff"  # your key for the Merriam-Webster thesaurus
 N_INSTANCES = 20  # how many different target words; zero means "all"
 N_GUESSES = 3  # how many tries the guesser will have
 N_REATED_WORDS = 3
@@ -71,7 +71,8 @@ class TabooGameInstanceGenerator(GameInstanceGenerator):
         super().__init__(GAME_NAME)
 
     def on_generate(self):
-        for frequency in ["high", "medium", "low"]:
+        #for frequency in ["high", "medium", "low"]:
+        for frequency in ["low"]:
             print("Sampling from freq:", frequency)
             # first choose target words based on the difficultly
             fp = f"resources/target_words/{LANGUAGE}/{frequency}_freq_100_v1.5"
