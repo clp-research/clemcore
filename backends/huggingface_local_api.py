@@ -98,8 +98,8 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
 
 
 class HuggingfaceLocal(backends.Backend):
-    def __init__(self, model_spec: backends.ModelSpec):
-        super().__init__(model_spec)
+    def __init__(self):
+        super().__init__()
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         return HuggingfaceLocalModel(model_spec)
