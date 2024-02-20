@@ -404,6 +404,9 @@ class HuggingfaceLocal(backends.Backend):
         else:
             response_text = model_output.strip()
 
+        if log_messages:
+            logger.info(f"Response message: {response_text}")
+
         return prompt, response, response_text
 
     def supports(self, model_name: str):
