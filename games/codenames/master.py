@@ -263,8 +263,8 @@ class CodenamesGame(DialogueGameMaster):
         self.violated_request_count = 0
 
         # Create the players
-        self.cluegiver: Player = ClueGiver(self.player_backends[0])
-        self.guesser: Player = Guesser(self.player_backends[1])
+        self.cluegiver: Player = ClueGiver(self.model_a)
+        self.guesser: Player = Guesser(self.model_b)
 
         # Add the players: these will be logged to the records interactions.json
         # Note: During game play the players will be called in the order added here
