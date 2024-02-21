@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+from backends import Model
 from clemgame.clemgame import Player
 
 
@@ -46,8 +47,8 @@ class Instruction:
 
 class InstructionFollower(Player):
 
-    def __init__(self, model_name):
-        super().__init__(model_name)
+    def __init__(self, model: Model):
+        super().__init__(model)
 
     def __call__(self, instruction: Instruction, turn_idx):
         return super().__call__(instruction.convert_to_query_messages(), turn_idx)
@@ -58,8 +59,8 @@ class InstructionFollower(Player):
 
 class InstructionGiver(Player):
 
-    def __init__(self, model_name):
-        super().__init__(model_name)
+    def __init__(self, model: Model):
+        super().__init__(model)
 
     def __call__(self, instruction: Instruction, turn_idx):
         return super().__call__(instruction.convert_to_query_messages(), turn_idx)
@@ -70,13 +71,11 @@ class InstructionGiver(Player):
 
 class ReferenceGame:
 
-    def __init__(self, game_instance: Dict, player_backends: List[str]):
-        self.player_backends = player_backends
+    def __init__(self, game_instance: Dict, player_models: List[Model]):
         self.game_id = game_instance['game_id']
         self.player_1_prompt_header = game_instance['player_1_prompt_header']
         self.player_2_prompt_header = game_instance['player_2_prompt_header']
         self.target_grid_name = game_instance['target_grid_name']
-        self.player_backends = player_backends
         self.edit_distance_interval = game_instance['edit_distance_interval']
 
         self.player_1_target_grid = game_instance['player_1_target_grid']
@@ -87,8 +86,8 @@ class ReferenceGame:
         self.player_2_second_grid = game_instance['player_2_second_grid']
         self.player_2_third_grid = game_instance['player_2_third_grid']
 
-        self.instruction_giver = InstructionGiver(player_backends[0])
-        self.instruction_follower = InstructionFollower(player_backends[1])
+        self.instruction_giver = InstructionGiver(player_models[0])
+        self.instruction_follower = InstructionFollower(player_models[1])
 
         self.given_instruction = Instruction()
         self.followed_instruction = Instruction()

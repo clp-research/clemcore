@@ -1,5 +1,6 @@
 from typing import List, Dict, Tuple
 
+from backends import CustomResponseModel, Model, ModelSpec
 from clemgame.clemgame import Player
 from clemgame import get_logger
 
@@ -14,8 +15,8 @@ class Human(Player):
     whether there has been a reply or not.
     """
 
-    def __init__(self, backend="_slurk_response"):
-        super().__init__(backend)
+    def __init__(self, model = CustomResponseModel(ModelSpec(model_name="_slurk_response"))):
+        super().__init__(model)
         self._latest_slurk_message = None  # this will be set when a message event comes in form the slurk server
         self.replied = True
 
@@ -33,8 +34,8 @@ class Human(Player):
 
 class Answerer(Player):
 
-    def __init__(self, backend="mock", max_turns=0):
-        super().__init__(backend)
+    def __init__(self, model=CustomResponseModel(), max_turns=0):
+        super().__init__(model)
         self.max_turns = max_turns
         self.current_contribution = None
 
@@ -50,15 +51,15 @@ class ChatGame:
     and a LM (Answerer)
     """
 
-    def __init__(self, game_instance: Dict, player_backends: Tuple[str]):
-        self.player_backends = player_backends
+    def __init__(self, game_instance: Dict, player_models: Tuple[Model]):
+        self.player_models = player_models
         self.game_id = game_instance['game_id']
         self.max_turns = game_instance['max_turns']
         self.current_turn: int = 1
         initial_prompt = game_instance['player_2_initial_prompt']
 
-        self.questioner: Human = Human(player_backends[0])
-        self.answerer: Answerer = Answerer(player_backends[1], max_turns=self.max_turns)
+        self.questioner: Human = Human(player_models[0])
+        self.answerer: Answerer = Answerer(player_models[1], max_turns=self.max_turns)
         self.messages: List = [{"role": "system", "content": initial_prompt}]
 
     def proceeds(self):

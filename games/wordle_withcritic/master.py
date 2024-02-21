@@ -1,7 +1,8 @@
 from typing import Dict, List
 
-from clemgame.clemgame import GameBenchmark, GameMaster
-from games.wordle.master import WordleGameMaster
+from backends import Model
+from clemgame.clemgame import GameBenchmark, GameMaster, GameScorer
+from games.wordle.master import WordleGameMaster, WordleGameScorer
 
 GAME_NAME = "wordle_withcritic"
 
@@ -13,7 +14,8 @@ class WordleWithClueAndCriticGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Wordle Game with a clue given to the guesser and a critic for the clue"
 
-    def create_game_master(
-        self, experiment: Dict, player_backend: List[str]
-    ) -> GameMaster:
-        return WordleGameMaster(self.name, experiment, player_backend)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return WordleGameMaster(self.name, experiment, player_models)
+
+    def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
+        return WordleGameScorer(experiment, game_instance)

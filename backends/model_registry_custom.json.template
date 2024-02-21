@@ -1,0 +1,9 @@
+[
+  {
+    "model_name": "the model name to be used in the cli call e.g openchat",
+    "model_id": "the model id how it is known to the backend e.g. openchat-3.5",
+    "backend": "the name of the backend as a placeholder to load <backend>_api.py e.g. openai_compatible",
+    "comment": "if this file exists (without .template), then it is loaded before the model_registry.json",
+    "comment_ext": "this means that entries listed here are preferred over the ones in the core registry"
+  }
+]

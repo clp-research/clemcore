@@ -189,14 +189,14 @@ The player could also be LLMs defined by the `player_backends` descriptor string
 
 ```python
  def _on_setup(self, **game_instance):
-     logger.info("_on_setup")
-     self.game_instance = game_instance
+    logger.info("_on_setup")
+    self.game_instance = game_instance
 
-     self.describer = WordDescriber(self.player_backends[0], self.max_turns)
-     self.guesser = WordGuesser(self.player_backends[1])
+    self.describer = WordDescriber(self.player_models[0], self.max_turns)
+    self.guesser = WordGuesser(self.player_models[1])
 
-     self.add_player(self.describer)
-     self.add_player(self.guesser)
+    self.add_player(self.describer)
+    self.add_player(self.guesser)
 ```
 
 We use the general game hook to set the initial prompts for both players

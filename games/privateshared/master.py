@@ -10,8 +10,9 @@ from sklearn.metrics import accuracy_score as acc_score
 from sklearn.metrics import cohen_kappa_score
 
 import clemgame.metrics as ms
+from backends import Model
 from clemgame import file_utils
-from clemgame.clemgame import GameMaster, GameBenchmark
+from clemgame.clemgame import GameMaster, GameBenchmark, GameScorer
 from clemgame import get_logger
 
 from games.privateshared.game import PrivateSharedGame
@@ -26,10 +27,10 @@ logger = get_logger(__name__)
 
 class PrivateShared(GameMaster):
     """Implement mechanisms for playing PrivateShared."""
-    def __init__(self, experiment: Dict, player_backends: List[str]):
-        super().__init__(GAME_NAME, experiment, player_backends)
+    def __init__(self, experiment: Dict, player_models: List[Model]):
+        super().__init__(GAME_NAME, experiment, player_models)
         self.subtype = experiment['name']
-        self.model_name = self.player_backends[0]
+        self.model_name = self.player_models[0].get_name()
         # load necessary texts
         probes_path = PROBES_PATH.format(self.subtype)
         self.probing_questions = self.load_json(probes_path)
@@ -64,7 +65,7 @@ class PrivateShared(GameMaster):
         self.probing = probes
         self.probe_gt = {slot: i for i, slot in enumerate(request_order)}
         self.game = PrivateSharedGame(
-            self.subtype, request_order, requests, slots, self.model_name)
+            self.subtype, request_order, requests, slots, self.player_models[0])
         # one probing before the game starts and one after each request
         self.n_probe_turns = self.game.max_turns + 1
         # initialise turn counters
@@ -202,11 +203,6 @@ class PrivateShared(GameMaster):
                 self.log_event(from_='GM', to='GM', action=action)
                 self.probe_gt[slot] = turn
 
-    def _get_gold_pred(self, turns: List) -> Tuple[List, List]:
-        """Retrieve the gold standard and the predictions for all turns."""
-        gold, pred = zip(*[(item['gt'], item['value']) for item in turns])
-        return gold, pred
-
     def _log_eval_assets(self) -> None:
         """Log everything needed for the evaluation."""
         self.log_key(ms.METRIC_REQUEST_COUNT,
@@ -218,93 +214,6 @@ class PrivateShared(GameMaster):
         self.log_key('Filled Slots', self.filled_slots)
         self.log_key('Aborted', self.aborted)
         self.log_key('Played Probe Rounds', self.played_probing_rounds)
-
-    def _compute_turn_scores(self, logs: Dict, turn: int) -> Tuple[List, List]:
-        """Compute and log turn-level scores."""
-        # common scores
-        reqs = logs[ms.METRIC_REQUEST_COUNT][turn]
-        p_reqs = logs[ms.METRIC_REQUEST_COUNT_PARSED][turn]
-        v_reqs = logs[ms.METRIC_REQUEST_COUNT_VIOLATED][turn]
-
-        self.log_turn_score(turn, ms.METRIC_REQUEST_COUNT, reqs)
-        self.log_turn_score(turn, ms.METRIC_REQUEST_COUNT_PARSED, p_reqs)
-        self.log_turn_score(turn, ms.METRIC_REQUEST_COUNT_VIOLATED, v_reqs)
-
-        # specific scores
-        turn_gt, turn_pred = self._get_gold_pred(logs['probes'][turn])
-        acc = acc_score(turn_gt, turn_pred)
-        self.log_turn_score(turn, 'Accuracy', acc)
-        if turn != 0:
-            # no slot in the first probing round
-            # -1 because the probing turn ids are shifted one step
-            filled = int(logs['Filled Slots'][turn - 1])
-            self.log_turn_score(turn, 'Slot Filled?', filled)
-
-        return turn_gt, turn_pred
-
-    def _compute_episode_scores(self,
-                                gold: List,
-                                pred: List,
-                                logs: Dict,
-                                aborted: bool
-                                ) -> None:
-        """Compute and log episode-level scores."""
-        # specific scores
-        acc = acc_score(gold, pred) if not aborted else np.nan
-        kappa = cohen_kappa_score(gold, pred) if not aborted else np.nan
-        # we truncate kappa to be between 0 and 1
-        trunc_kappa = max(0, kappa) if not aborted else np.nan
-        filled = logs['Filled Slots']
-        sf_acc = sum(filled) / len(filled) if not aborted else np.nan
-        bench_score = self.compute_bench_score(sf_acc, trunc_kappa)
-
-        self.log_episode_score('Accuracy', acc)
-        self.log_episode_score('Kappa', kappa)
-        self.log_episode_score('Truncated Kappa', trunc_kappa)
-        self.log_episode_score('Slot-Filling-Accuracy', sf_acc)
-        self.log_episode_score(ms.BENCH_SCORE, bench_score)
-
-        # common scores
-        success_ratio = int(acc == 1. and sf_acc == 1.) if not aborted else 0
-        lose_ratio = int(not success_ratio) if not aborted else 0
-        reqs = sum(logs[ms.METRIC_REQUEST_COUNT])
-        parsed_reqs = sum(logs[ms.METRIC_REQUEST_COUNT_PARSED])
-        violated_reqs = sum(logs[ms.METRIC_REQUEST_COUNT_VIOLATED])
-
-        self.log_episode_score(ms.METRIC_ABORTED, int(aborted))
-        self.log_episode_score(ms.METRIC_LOSE, lose_ratio)
-        self.log_episode_score(ms.METRIC_SUCCESS, success_ratio)
-        self.log_episode_score(ms.METRIC_REQUEST_COUNT, reqs)
-        self.log_episode_score(ms.METRIC_REQUEST_COUNT_PARSED, parsed_reqs)
-        self.log_episode_score(ms.METRIC_REQUEST_COUNT_VIOLATED, violated_reqs)
-        self.log_episode_score(ms.METRIC_REQUEST_SUCCESS, parsed_reqs / reqs)
-
-    def compute_scores(self, episode_interactions: Dict) -> None:
-        logs = episode_interactions
-        gold = []
-        pred = []
-        aborted = logs['Aborted']
-        for turn in range(logs['Played Probe Rounds']):
-            turn_gt, turn_pred = self._compute_turn_scores(logs, turn)
-            gold += turn_gt
-            pred += turn_pred
-            # n_probes = n_slots + 1, we take the third round of probing here
-            if turn == int((len(self.game.slots) + 1) / 2) - 1:
-                mid_acc = acc_score(turn_gt, turn_pred) if not aborted else np.nan
-                self.log_episode_score('Middle-Accuracy', mid_acc)
-
-        self._compute_episode_scores(gold, pred, logs, aborted)
-
-    @staticmethod
-    def compute_bench_score(sf_acc: float, kappa: float) -> float:
-        """Compute the preferred score in [0, 100] for the benchmark."""
-        if np.isnan(sf_acc) or np.isnan(kappa):
-            return np.nan
-        if sf_acc + kappa == 0:
-            return 0
-        # harmonic mean between accuracy and truncated kappa
-        # normalised to 0-100
-        return 100 * (2 * sf_acc * kappa / (sf_acc + kappa))
 
     def _get_gt(self, turn_idx: int, question_type: str) -> int:
         """Retrieve the ground truth value for a slot at a given turn."""
@@ -436,6 +345,105 @@ class PrivateShared(GameMaster):
         return game_name == GAME_NAME
 
 
+class PrivateSharedScorer(GameScorer):
+
+    def __init__(self, experiment: Dict, game_instance: Dict):
+        super().__init__(GAME_NAME, experiment, game_instance)
+        self.slots = game_instance["slots"]
+
+    def compute_scores(self, episode_interactions: Dict) -> None:
+        logs = episode_interactions
+        gold = []
+        pred = []
+        aborted = logs['Aborted']
+        for turn in range(logs['Played Probe Rounds']):
+            turn_gt, turn_pred = self._compute_turn_scores(logs, turn)
+            gold += turn_gt
+            pred += turn_pred
+            # n_probes = n_slots + 1, we take the third round of probing here
+            if turn == int((len(self.slots) + 1) / 2) - 1:
+                mid_acc = acc_score(turn_gt, turn_pred) if not aborted else np.nan
+                self.log_episode_score('Middle-Accuracy', mid_acc)
+
+        self._compute_episode_scores(gold, pred, logs, aborted)
+
+    def _compute_turn_scores(self, logs: Dict, turn: int) -> Tuple[List, List]:
+        """Compute and log turn-level scores."""
+        # common scores
+        reqs = logs[ms.METRIC_REQUEST_COUNT][turn]
+        p_reqs = logs[ms.METRIC_REQUEST_COUNT_PARSED][turn]
+        v_reqs = logs[ms.METRIC_REQUEST_COUNT_VIOLATED][turn]
+
+        self.log_turn_score(turn, ms.METRIC_REQUEST_COUNT, reqs)
+        self.log_turn_score(turn, ms.METRIC_REQUEST_COUNT_PARSED, p_reqs)
+        self.log_turn_score(turn, ms.METRIC_REQUEST_COUNT_VIOLATED, v_reqs)
+
+        # specific scores
+        turn_gt, turn_pred = self._get_gold_pred(logs['probes'][turn])
+        acc = acc_score(turn_gt, turn_pred)
+        self.log_turn_score(turn, 'Accuracy', acc)
+        if turn != 0:
+            # no slot in the first probing round
+            # -1 because the probing turn ids are shifted one step
+            filled = int(logs['Filled Slots'][turn - 1])
+            self.log_turn_score(turn, 'Slot Filled?', filled)
+
+        return turn_gt, turn_pred
+
+    def _compute_episode_scores(self,
+                                gold: List,
+                                pred: List,
+                                logs: Dict,
+                                aborted: bool
+                                ) -> None:
+        """Compute and log episode-level scores."""
+        # specific scores
+        acc = acc_score(gold, pred) if not aborted else np.nan
+        kappa = cohen_kappa_score(gold, pred) if not aborted else np.nan
+        # we truncate kappa to be between 0 and 1
+        trunc_kappa = max(0, kappa) if not aborted else np.nan
+        filled = logs['Filled Slots']
+        sf_acc = sum(filled) / len(filled) if not aborted else np.nan
+        bench_score = PrivateSharedScorer.compute_bench_score(sf_acc, trunc_kappa)
+
+        self.log_episode_score('Accuracy', acc)
+        self.log_episode_score('Kappa', kappa)
+        self.log_episode_score('Truncated Kappa', trunc_kappa)
+        self.log_episode_score('Slot-Filling-Accuracy', sf_acc)
+        self.log_episode_score(ms.BENCH_SCORE, bench_score)
+
+        # common scores
+        success_ratio = int(acc == 1. and sf_acc == 1.) if not aborted else 0
+        lose_ratio = int(not success_ratio) if not aborted else 0
+        reqs = sum(logs[ms.METRIC_REQUEST_COUNT])
+        parsed_reqs = sum(logs[ms.METRIC_REQUEST_COUNT_PARSED])
+        violated_reqs = sum(logs[ms.METRIC_REQUEST_COUNT_VIOLATED])
+
+        self.log_episode_score(ms.METRIC_ABORTED, int(aborted))
+        self.log_episode_score(ms.METRIC_LOSE, lose_ratio)
+        self.log_episode_score(ms.METRIC_SUCCESS, success_ratio)
+        self.log_episode_score(ms.METRIC_REQUEST_COUNT, reqs)
+        self.log_episode_score(ms.METRIC_REQUEST_COUNT_PARSED, parsed_reqs)
+        self.log_episode_score(ms.METRIC_REQUEST_COUNT_VIOLATED, violated_reqs)
+        self.log_episode_score(ms.METRIC_REQUEST_SUCCESS, parsed_reqs / reqs)
+
+    def _get_gold_pred(self, turns: List) -> Tuple[List, List]:
+        """Retrieve the gold standard and the predictions for all turns."""
+        gold, pred = zip(*[(item['gt'], item['value']) for item in turns])
+        return gold, pred
+
+    @staticmethod
+    def compute_bench_score(sf_acc: float, kappa: float) -> float:
+        """Compute the preferred score in [0, 100] for the benchmark."""
+        if np.isnan(sf_acc) or np.isnan(kappa):
+            return np.nan
+        if sf_acc + kappa == 0:
+            return 0
+        # harmonic mean between accuracy and truncated kappa
+        # normalised to 0-100
+        return 100 * (2 * sf_acc * kappa / (sf_acc + kappa))
+
+
 class PrivateSharedGameBenchmark(GameBenchmark):
     """Integrate the game into the benchmark run."""
     def __init__(self):
@@ -447,12 +455,11 @@ class PrivateSharedGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Questioner and answerer in scorekeeping game."
 
-    def create_game_master(self,
-                           experiment: Dict,
-                           player_backends: List[str]
-                           ) -> GameMaster:
-        return PrivateShared(experiment, player_backends)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return PrivateShared(experiment, player_models)
 
+    def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
+        return PrivateSharedScorer(experiment, game_instance)
 
 def main():
     """Play the first episode in the instances."""

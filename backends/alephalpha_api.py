@@ -4,14 +4,9 @@ from retry import retry
 import aleph_alpha_client
 import anthropic
 import backends
+from backends import ModelSpec, Model
 
 logger = backends.get_logger(__name__)
-
-LUMINOUS_SUPREME_CONTROL = "luminous-supreme-control"
-LUMINOUS_SUPREME = "luminous-supreme"
-LUMINOUS_EXTENDED = "luminous-extended"
-LUMINOUS_BASE = "luminous-base"
-SUPPORTED_MODELS = [LUMINOUS_SUPREME_CONTROL, LUMINOUS_SUPREME, LUMINOUS_EXTENDED, LUMINOUS_BASE]
 
 NAME = "alephalpha"
 
@@ -21,10 +16,19 @@ class AlephAlpha(backends.Backend):
     def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = aleph_alpha_client.Client(creds[NAME]["api_key"])
-        self.temperature: float = -1.
+
+    def get_model_for(self, model_spec: ModelSpec) -> Model:
+        return AlephAlphaModel(self.client, model_spec)
+
+
+class AlephAlphaModel(backends.Model):
+
+    def __init__(self, client: aleph_alpha_client.Client, model_spec: ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
-    def generate_response(self, messages: List[Dict], model: str) -> Tuple[Any, Any, str]:
+    def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """
         :param messages: for example
                 [
@@ -33,13 +37,11 @@ class AlephAlpha(backends.Backend):
                     {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                     {"role": "user", "content": "Where was it played?"}
                 ]
-        :param model: model name
         :return: the continuation
         """
-        assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
         prompt_text = ''
 
-        if 'control' in model:
+        if 'control' in self.model_spec.model_id:
             for message in messages:
                 content = message["content"]
                 if message['role'] == 'assistant':
@@ -58,13 +60,13 @@ class AlephAlpha(backends.Backend):
 
         params = {
             "prompt": aleph_alpha_client.Prompt.from_text(prompt_text),
-            "maximum_tokens": 100,
+            "maximum_tokens": self.get_max_tokens(),
             "stop_sequences": ['\n'],
-            "temperature": self.temperature
+            "temperature": self.get_temperature()
         }
 
         request = aleph_alpha_client.CompletionRequest(**params)
-        api_response = self.client.complete(request=request, model=model)
+        api_response = self.client.complete(request=request, model=self.model_spec.model_id)
         response = api_response.to_json()
         response_text = api_response.completions[0].completion.strip()
 
@@ -72,6 +74,3 @@ class AlephAlpha(backends.Backend):
         prompt['prompt'] = prompt_text
 
         return prompt, response, response_text
-
-    def supports(self, model_name: str):
-        return model_name in SUPPORTED_MODELS

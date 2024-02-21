@@ -1,6 +1,7 @@
 import string
 from typing import Dict, List
 
+from backends import Model, CustomResponseModel
 from clemgame.clemgame import GameMaster, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
 
@@ -12,7 +13,7 @@ GAME_NAME = "hellogame"
 class Greeted(Player):
 
     def __init__(self, name):
-        super().__init__("programmatic")
+        super().__init__(CustomResponseModel())
         self.name = name
 
     def _custom_response(self, messages, turn_idx):
@@ -21,8 +22,8 @@ class Greeted(Player):
 
 class Greeter(Player):
 
-    def __init__(self, model_name):
-        super().__init__(model_name)
+    def __init__(self, model: Model):
+        super().__init__(model)
 
     def _custom_response(self, messages, turn_idx):
         raise NotImplementedError("This should not be called, but the remote APIs.")
@@ -33,8 +34,8 @@ class HelloGame(DialogueGameMaster):
     is greeting another player with a target name.
     """
 
-    def __init__(self, experiment: Dict, player_backends: List[str]):
-        super().__init__(GAME_NAME, experiment, player_backends)
+    def __init__(self, experiment: Dict, player_models: List[Model]):
+        super().__init__(GAME_NAME, experiment, player_models)
         self.language: int = experiment["language"]  # fetch experiment parameters here
         self.turns = []
         self.required_words = ["welcome", "hello"]
@@ -45,7 +46,7 @@ class HelloGame(DialogueGameMaster):
 
         # Create the players
         self.greeted = Greeted(game_instance["target_name"])
-        self.greeter = Greeter(self.player_backends[0])
+        self.greeter = Greeter(self.player_models[0])
 
         # Add the players: these will be logged to the records interactions.json
         # Note: During game play the players will be called in the order added here
@@ -101,5 +102,5 @@ class HelloGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Hello game between a greeter and a greeted player"
 
-    def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster:
-        return HelloGame(experiment, player_backends)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return HelloGame(experiment, player_models)

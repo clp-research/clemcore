@@ -6,6 +6,7 @@ import copy
 import random
 from typing import List, Dict, Any, Tuple
 
+from backends import Model, CustomResponseModel
 from clemgame.clemgame import Player
 from clemgame.file_utils import load_json
 from games.privateshared.constants import (REQUESTS_PATH, GAME_NAME, YES, NO, 
@@ -14,8 +15,8 @@ from games.privateshared.constants import (REQUESTS_PATH, GAME_NAME, YES, NO,
 
 class Answerer(Player):
     """Implement the Answerer player, making API calls to get utterances."""
-    def __init__(self, model_name: str):
-        super().__init__(model_name)
+    def __init__(self, model: Model):
+        super().__init__(model)
 
     def _custom_response(self, messages: Any, turn_idx: int) -> str:
         """Return a mock response with a tag and possibly a yes/no prefix."""
@@ -39,7 +40,7 @@ class Questioner(Player):
                  question_order: List[str],
                  requests: Dict[str, int]
                  ):
-        super().__init__("programmatic")
+        super().__init__(CustomResponseModel())
         request_strings = load_json(REQUESTS_PATH.format(exp_name), GAME_NAME)
         self.max_turns = max_turns
         self.question_order = question_order
@@ -62,12 +63,12 @@ class PrivateSharedGame:
                  request_order: List[str],
                  requests: Dict[str, int],
                  slots: Dict[str, str],
-                 model_name: str
+                 model: Model
                  ):
         self.slots = slots
         self.max_turns: int = len(self.slots)
         self.request_order = request_order
-        self.answerer: Answerer = Answerer(model_name)
+        self.answerer: Answerer = Answerer(model)
         self.questioner: Questioner = Questioner(
             subtype, self.max_turns, request_order, requests)
         self.messages: List = []

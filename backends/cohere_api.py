@@ -6,21 +6,27 @@ import json
 
 logger = backends.get_logger(__name__)
 
-MODEL_COMMAND = "command"
-MODEL_COMMAND_LIGHT = "command-light"
-SUPPORTED_MODELS = [MODEL_COMMAND, MODEL_COMMAND_LIGHT]
-
 NAME = "cohere"
 
 
 class Cohere(backends.Backend):
+
     def __init__(self):
         creds = backends.load_credentials(NAME)
         self.client = cohere.Client(creds[NAME]["api_key"])
-        self.temperature: float = -1.
+
+    def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        return CohereModel(self.client, model_spec)
+
+
+class CohereModel(backends.Model):
+
+    def __init__(self, client: cohere.Client, model_spec: backends.ModelSpec):
+        super().__init__(model_spec)
+        self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
-    def generate_response(self, messages: List[Dict], model: str) -> Tuple[str, Any, str]:
+    def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """
         :param messages: for example
                 [
@@ -29,10 +35,8 @@ class Cohere(backends.Backend):
                     {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                     {"role": "user", "content": "Where was it played?"}
                 ]
-        :param model: model name
         :return: the continuation
         """
-        assert 0.0 <= self.temperature <= 1.0, "Temperature must be in [0.,1.]"
         chat_history = []
 
         # all other messages except the last one. It is passed to the API with the variable message.
@@ -51,9 +55,9 @@ class Cohere(backends.Backend):
 
         output = self.client.chat(
             message=message,
-            model=model,
+            model=self.model_spec.model_id,
             chat_history=chat_history,
-            temperature=self.temperature
+            temperature=self.get_temperature()
         )
 
         response_text = output.text
@@ -64,6 +68,3 @@ class Cohere(backends.Backend):
         response.pop('token_count')
 
         return prompt, response, response_text
-
-    def supports(self, model_name: str):
-        return model_name in SUPPORTED_MODELS

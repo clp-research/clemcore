@@ -2,6 +2,7 @@ from typing import Dict, Tuple, List
 
 import numpy as np
 
+from backends import Model
 from clemgame.clemgame import GameMaster, GameBenchmark, Player, DialogueGameMaster, GameScorer
 from clemgame.metrics import METRIC_ABORTED, METRIC_SUCCESS, METRIC_LOSE, METRIC_REQUEST_COUNT, \
     METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_SUCCESS, BENCH_SCORE
@@ -27,8 +28,8 @@ logger = get_logger(__name__)
 
 class WordGuesser(Player):
 
-    def __init__(self, model_name):
-        super().__init__(model_name)
+    def __init__(self, model: Model):
+        super().__init__(model)
 
     def _custom_response(self, messages, turn_idx):
         # mock response
@@ -37,8 +38,8 @@ class WordGuesser(Player):
 
 class WordDescriber(Player):
 
-    def __init__(self, model_name, max_turns):
-        super().__init__(model_name)
+    def __init__(self, model: Model, max_turns):
+        super().__init__(model)
         self.max_turns = max_turns
 
     def _custom_response(self, messages, turn_idx):
@@ -93,8 +94,8 @@ class Taboo(DialogueGameMaster):
     word or related words in their explanation. Morphology is checked in check_clue().
     """
 
-    def __init__(self, experiment: Dict, player_backends: List[str]):
-        super().__init__(GAME_NAME, experiment, player_backends)
+    def __init__(self, experiment: Dict, player_models: List[Model]):
+        super().__init__(GAME_NAME, experiment, player_models)
         self.max_turns: int = experiment["max_turns"]
         self.describer_initial_prompt = self.experiment["describer_initial_prompt"]
         self.guesser_initial_prompt = self.experiment["guesser_initial_prompt"]
@@ -112,8 +113,8 @@ class Taboo(DialogueGameMaster):
         self.describer_initial_prompt = self.describer_initial_prompt.replace("$N$", str(self.max_turns))
         self.guesser_initial_prompt = self.guesser_initial_prompt.replace("$N$", str(self.max_turns))
 
-        self.describer = WordDescriber(self.player_backends[0], self.max_turns)
-        self.guesser = WordGuesser(self.player_backends[1])
+        self.describer = WordDescriber(self.player_models[0], self.max_turns)
+        self.guesser = WordGuesser(self.player_models[1])
 
         self.add_player(self.describer)
         self.add_player(self.guesser)
@@ -203,9 +204,10 @@ class Taboo(DialogueGameMaster):
             # which would be player 1's initial clue.
             self.log_message_to(self.guesser, self.guesser_initial_prompt)
 
+
 class TabooScorer(GameScorer):
-    def __init__(self):
-        super().__init__(GAME_NAME)
+    def __init__(self, experiment: Dict, game_instance: Dict):
+        super().__init__(GAME_NAME, experiment, game_instance)
 
     def compute_scores(self, episode_interactions: Dict) -> None:
         """ Episode level scores"""
@@ -297,11 +299,11 @@ class TabooGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Taboo game between two agents where one has to describe a word for the other to guess."
 
-    def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster:
-        return Taboo(experiment, player_backends)
-    
-    def create_game_scorer(self) -> GameScorer:
-        return TabooScorer()
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return Taboo(experiment, player_models)
+
+    def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
+        return TabooScorer(experiment, game_instance)
 
 
 def main():

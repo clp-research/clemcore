@@ -1,0 +1,21 @@
+[
+  {
+    "model_name": "model1",
+    "backend": "huggingface_local",
+    "model_id": "model_id1",
+    "custom_chat_template": "custom_chat_template",
+    "eos_to_cull": "<|end_of_turn|>"
+  }, {
+  "model_name": "model2",
+  "backend": "huggingface_local",
+  "model_id": "model_id2",
+  "custom_chat_template": "custom_chat_template",
+  "eos_to_cull": "<|end_of_turn|>"
+}, {
+  "model_name": "model1",
+  "backend": "openai",
+  "model_id": "model_id3",
+  "custom_chat_template": "custom_chat_template",
+  "eos_to_cull": "<|end_of_turn|>"
+}
+]
