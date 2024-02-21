@@ -12,6 +12,7 @@ from games.codenames.validation_errors import *
 logger = get_logger(__name__)
 
 # TODO: log all flags when used!!!
+# TODO: make flags experiment parameters?
 IGNORE_RAMBLING = True
 IGNORE_FALSE_TARGETS_OR_GUESSES = True
 REPROMPT_ON_ERROR = True
@@ -21,7 +22,6 @@ IGNORE_NUMBER_OF_TARGETS = True
 
 nltk.download('wordnet', quiet=True)
 EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
-
 
 # TODO: reuse players for other codename variants, e.g. Duet?
 
@@ -438,8 +438,8 @@ class CodenamesGame(DialogueGameMaster):
         self.log_key("Guesser ignored false guesses", self.guesser.ignored_guesses) 
 
 class CodenamesScorer(GameScorer):
-    def __init__(self):
-        super().__init__(GAME_NAME)
+    def __init__(self, experiment_config, game_instance):
+        super().__init__(GAME_NAME, experiment_config, game_instance)
 
     def log_turn_score(self, turn_idx, name, value, scale=False):
         if type(value) == int or type(value) == float:
@@ -452,8 +452,8 @@ class CodenamesScorer(GameScorer):
         value = value * 100 if scale else value
         super().log_episode_score(name, value)
 
-    def score_turns(self):
-        for turn_idx, turn in enumerate(self.episode_interactions["turns"]):
+    def score_turns(self, episode_interactions):
+        for turn_idx, turn in enumerate(episode_interactions["turns"]):
             # Metrics per turn:
             # target-precision, target-recall, target-f1
             # team-precision
@@ -508,7 +508,7 @@ class CodenamesScorer(GameScorer):
             self.log_turn_score(turn_idx, "target f1", target_f1)
             self.log_turn_score(turn_idx, "team precision", team_precision)
 
-    def score_game(self):
+    def score_game(self, episode_interactions):
         # game-specific scores
         # log flags and counted metrics for those
         # TODO: log all these metrics!
@@ -516,18 +516,18 @@ class CodenamesScorer(GameScorer):
         if REPROMPT_ON_ERROR:
             pass
         if IGNORE_RAMBLING:
-            self.log_episode_score("Cluegiver ignored rambling", self.episode_interactions["Cluegiver ignored rambling"])
-            self.log_episode_score("Guesser ignored rambling", self.episode_interactions["Guesser ignored rambling"])
+            self.log_episode_score("Cluegiver ignored rambling", episode_interactions["Cluegiver ignored rambling"])
+            self.log_episode_score("Guesser ignored rambling", episode_interactions["Guesser ignored rambling"])
         if IGNORE_FALSE_TARGETS_OR_GUESSES:
-            self.log_episode_score("Cluegiver ignored false targets", self.episode_interactions["Cluegiver ignored false targets"])
-            self.log_episode_score("Guesser ignored false guesses", self.episode_interactions["Guesser ignored false guesses"])
+            self.log_episode_score("Cluegiver ignored false targets", episode_interactions["Cluegiver ignored false targets"])
+            self.log_episode_score("Guesser ignored false guesses", episode_interactions["Guesser ignored false guesses"])
         if STRIP:
             pass
         if IGNORE_NUMBER_OF_TARGETS:
             pass
             #self.log_episode_score()
 
-        number_of_turns = self.episode_interactions[NUMBER_OF_TURNS]
+        number_of_turns = episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
         # TODO: better efficiency: average two targets per turn? Everything better gets ignored
         # is that fair, when you have 9 words? For the last one you cannot average 2...
@@ -538,16 +538,16 @@ class CodenamesScorer(GameScorer):
         self.log_episode_score("avg target f1", avg_target_f1s)
 
         # plus all required game scores
-        super().score_game()
+        super().score_game(episode_interactions)
     
-    def score_game_end(self):
-        super().score_game_end()
+    def score_game_end(self, episode_interactions):
+        super().score_game_end(episode_interactions)
         # plus game specific things
         # won or lost through assassin or through revealing all words of one team
 
-        # TODO: should ratios also be 0 or NaN when the game was aborted?
+        # TODO: should ratios also be 0 or NaN when the game was aborted? yes they should...
 
-        game_end = self.episode_interactions[GAME_END]#_THROUGH_ASSASSIN]
+        game_end = episode_interactions[GAME_END]#_THROUGH_ASSASSIN]
         game_ended_through_assassin = False       # assume that game was aborted
         match game_ended_through_assassin:
             case Game_ends.TEAM_WON | Game_ends.OPPONENT_WON:
@@ -556,14 +556,14 @@ class CodenamesScorer(GameScorer):
                 game_ended_through_assassin = True
         self.log_episode_score(GAME_END, game_ended_through_assassin)
 
-        self.board_at_end = self.episode_interactions[BOARD_STATUS]
+        self.board_at_end = episode_interactions[BOARD_STATUS]
         # self.log_episode_score(BOARD_STATUS, board_at_end)
 
         # TODO: magic numbers!!!
-        self.log_episode_score("team words revealed/all team words", len(self.board_at_end[REVEALED][TEAM][TEAM]) / 9)
-        self.log_episode_score("other words not revealed/all other words", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / 16)
+        self.log_episode_score("episode recall", len(self.board_at_end[REVEALED][TEAM][TEAM]) / 9)
+        self.log_episode_score("episode negative recall", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / 16)
        
-    def log_main_score(self):
+    def log_main_score(self, episode_interactions):
         # all logged scores are available via self.scores["episode scores"][score_name]
         # or self.scores["turn scores"][turn_idx][score_name]
 
@@ -572,7 +572,7 @@ class CodenamesScorer(GameScorer):
             return
 
         # Main Score: harmonic mean of success (revealed team words / all team words (recall)) and efficiency (1/number of turns)
-        success = self.scores["episode scores"]["team words revealed/all team words"]
+        success = self.scores["episode scores"]["episode recall"]
         efficiency = self.scores["episode scores"]["efficiency"]
         main_score = statistics.harmonic_mean([success, efficiency])
         self.log_episode_score(BENCH_SCORE, main_score, scale=True)
@@ -589,5 +589,5 @@ class CodenamesGameBenchmark(GameBenchmark):
     def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster:
         return CodenamesGame(experiment, player_backends)
 
-    def create_game_scorer(self) -> GameScorer:
-        return CodenamesScorer()
+    def create_game_scorer(self, experiment_config, game_instance) -> GameScorer:
+        return CodenamesScorer(experiment_config, game_instance)

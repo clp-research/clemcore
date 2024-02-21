@@ -673,14 +673,14 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.info(f"Skip experiment {experiment_name}")
                     continue
                 stdout_logger.info(f"Scoring: {experiment_name}")
-                # experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}", dialogue_pair)
+                experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}", dialogue_pair)
                 episode_dirs = [file for file in os.listdir(experiment_path)
                                 if os.path.isdir(os.path.join(experiment_path, file))]
                 error_count = 0
                 for episode_dir in tqdm(episode_dirs, desc="Scoring episodes"):
                     try:
                         rel_episode_path = f"{experiment_dir}/{episode_dir}"
-                        # game_instance = self.load_results_json(f"{rel_episode_path}/instance", dialogue_pair)
+                        game_instance = self.load_results_json(f"{rel_episode_path}/instance", dialogue_pair)
                         game_interactions = self.load_results_json(f"{rel_episode_path}/interactions",
                                                                    dialogue_pair)
 
