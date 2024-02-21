@@ -306,7 +306,7 @@ class CodenamesGame(DialogueGameMaster):
         opponent_words = random.sample(self.board.get_hidden_words(OPPONENT), self.opponent_difficulty)
         for word in opponent_words:
             assignment = self.board.reveal_word(word, OPPONENT)
-            self.log_to_self(Turn_logs.OPPONENT_REVEALED, assignment)            
+            self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"assignment": assignment, "word": word})
     
     def _on_before_game(self):
         pass
@@ -362,7 +362,7 @@ class CodenamesGame(DialogueGameMaster):
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words())
             except ValidationError as error:
-                self.log_to_self(Turn_logs.CLUEGIVER_INVALID_FORMAT, error.get_dict())
+                self.log_to_self(Turn_logs.VALIDATION_ERROR, error.get_dict())
                 self.invalid_response = True
                 self.violated_request_count += 1
                 self.last_error_message = error.message
@@ -372,7 +372,7 @@ class CodenamesGame(DialogueGameMaster):
             try:
                 player.validate_response(utterance, self.board.get_all_hidden_words(), self.cluegiver.number_of_targets)
             except ValidationError as error:
-                self.log_to_self(Turn_logs.GUESSER_INVALID_FORMAT, error.get_dict())
+                self.log_to_self(Turn_logs.VALIDATION_ERROR, error.get_dict())
                 self.invalid_response = True
                 self.violated_request_count += 1
                 self.last_error_message = error.message
@@ -393,7 +393,7 @@ class CodenamesGame(DialogueGameMaster):
                 assignment = self.board.reveal_word(guess)
                 if not assignment:
                     continue
-                self.log_to_self(Turn_logs.TEAM_REVEALED, assignment)
+                self.log_to_self(Turn_logs.TEAM_REVEALED, {"assignment": assignment, "word": guess})
                 if self._was_target(guess):
                     self.log_to_self(Turn_logs.TARGET_REVEALED, guess)
                 if not self.board.should_continue_after_revealing(guess):
@@ -467,6 +467,11 @@ class CodenamesScorer(GameScorer):
                         turn_score[Turn_logs.CLUEGIVER_INVALID_FORMAT] += 1
                     case Turn_logs.GUESSER_INVALID_FORMAT:
                         turn_score[Turn_logs.GUESSER_INVALID_FORMAT] += 1
+                    case Turn_logs.VALIDATION_ERROR:
+                        if action["content"]["player"] == GUESSER:
+                            turn_score[Turn_logs.GUESSER_INVALID_FORMAT] += 1
+                        else:
+                            turn_score[Turn_logs.CLUEGIVER_INVALID_FORMAT] += 1
                     case Turn_logs.TARGETS:
                         turn_score[Turn_logs.TARGETS] = action["content"]
                     case Turn_logs.TEAM_REVEALED:
@@ -507,12 +512,15 @@ class CodenamesScorer(GameScorer):
         # game-specific scores
         # log flags and counted metrics for those
         # TODO: log all these metrics!
+        
         if REPROMPT_ON_ERROR:
             pass
         if IGNORE_RAMBLING:
-            self.log_episode_score("ignore rambling", self.episode_interactions[IGNORE_RAMBLING])
+            self.log_episode_score("Cluegiver ignored rambling", self.episode_interactions["Cluegiver ignored rambling"])
+            self.log_episode_score("Guesser ignored rambling", self.episode_interactions["Guesser ignored rambling"])
         if IGNORE_FALSE_TARGETS_OR_GUESSES:
-            self.log_episode_score("ignore false targets or guesses", self.episode_interactions[IGNORE_FALSE_TARGETS_OR_GUESSES])
+            self.log_episode_score("Cluegiver ignored false targets", self.episode_interactions["Cluegiver ignored false targets"])
+            self.log_episode_score("Guesser ignored false guesses", self.episode_interactions["Guesser ignored false guesses"])
         if STRIP:
             pass
         if IGNORE_NUMBER_OF_TARGETS:
@@ -537,7 +545,7 @@ class CodenamesScorer(GameScorer):
 
         # TODO: should ratios also be 0 or NaN when the game was aborted?
 
-        game_end = self.episode_interactions[GAME_END_THROUGH_ASSASSIN]
+        game_end = self.episode_interactions[GAME_END]#_THROUGH_ASSASSIN]
         game_ended_through_assassin = False       # assume that game was aborted
         match game_ended_through_assassin:
             case Game_ends.TEAM_WON | Game_ends.OPPONENT_WON:

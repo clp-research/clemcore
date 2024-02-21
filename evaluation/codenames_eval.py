@@ -47,12 +47,12 @@ def score_amount_played(df_episode_scores):
     return aux
 
 def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
-    # TODO: remove double metrics, as I only am interested in my own game, not everyone elses game
     """Create benchmark results as a table."""
     df_aux = df[df['metric'].isin(utils.MAIN_METRICS)]
+    df_aux = df_aux[df_aux['game'] == GAME_NAME]
 
     # compute mean benchscore and mean played (which is binary, so a proportion)
-    df_a = (df_aux.groupby(['game', 'model', 'metric'])
+    df_a = (df_aux.groupby(['model', 'metric'])
                   .mean(numeric_only=True)
                   .reset_index())
     df_a.loc[df_a.metric == clemmetrics.METRIC_PLAYED, 'value'] *= 100
@@ -63,7 +63,7 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
 
     # compute the std of benchscore
     df_aux_b = df_aux[df_aux.metric == clemmetrics.BENCH_SCORE]
-    df_b = (df_aux_b.groupby(['game', 'model', 'metric'])
+    df_b = (df_aux_b.groupby(['model', 'metric'])
                     .std(numeric_only=True)
                     .reset_index()
                     .round(2))
@@ -71,34 +71,24 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
         {clemmetrics.BENCH_SCORE: clemmetrics.BENCH_SCORE+' (std)'},
         inplace=True)
 
-    # compute the macro-average main score over games, per model
-    df_all = (df_a.groupby(['model', 'metric'])
-                  .mean(numeric_only=True)
-                  .reset_index()
-                  .round(2))
-    # add columns for standard format in concatenation below
-    df_all['game'] = 'all'
-    df_all['metric'] = 'Average ' + df_all['metric']
-
     # merge all data and make it one model per row
-    df_full = pd.concat([df_a, df_b, df_all], axis=0, ignore_index=True)
+    df_full = pd.concat([df_a, df_b], axis=0, ignore_index=True)
     # sort just so all metrics are close to each other in a game column
-    df_full.sort_values(by=['game', 'metric'], inplace=True)
+    df_full.sort_values(by=['metric'], inplace=True)
     # rename according to paper
     df_full['metric'] = df_full['metric'].str.replace(clemmetrics.BENCH_SCORE, 'Quality Score')
-    df_full = df_full.pivot(columns=['game', 'metric'], index=['model'])
+    df_full = df_full.pivot(columns=['metric'], index=['model'])
     df_full = df_full.droplevel(0, axis=1)
 
     # compute clemscores and add to df
-    clemscore = ((df_full[('all', 'Average % Played')] / 100)
-                 * df_full[('all', 'Average Quality Score')])
-    clemscore = clemscore.round(2).to_frame(name=('-', 'clemscore'))
+    clemscore = ((df_full['% Played'] / 100)
+                 * df_full['Quality Score'])
+    clemscore = clemscore.round(2).to_frame(name='clemscore')
     df_results = pd.concat([clemscore, df_full], axis=1)
 
     # flatten header
     df_results.index.name = None
     df_results.columns = df_results.columns.to_flat_index() 
-    df_results.columns = [', '.join(x) for x in df_results.columns]
 
     return df_results
 
@@ -114,7 +104,7 @@ def make_codenames_table(df: pd.DataFrame) -> pd.DataFrame:
     df_aux = df_aux.droplevel(0, axis=1)
 
     df_game_metrics = df_aux[['Aborted', 'Played', 'Success', 'Lose', 'game end', 'number of turns', 'efficiency', 'avg target f1', 'team words revealed/all team words', 'other words not revealed/all other words',]]
-    df_requests = df_aux[['Request Count', 'Parsed Request Count', 'Violated Request Count', 'Request Success Ratio', 'ignore false targets or guesses', 'ignore rambling']]
+    df_requests = df_aux[['Request Count', 'Parsed Request Count', 'Violated Request Count', 'Request Success Ratio', 'Cluegiver ignored false targets', 'Guesser ignored false guesses', 'Cluegiver ignored rambling', 'Guesser ignored rambling']]
     # TODO: use game_end Enum somehow to one-hot-encode game ends, mean does not tell anything!
     return df_game_metrics, df_requests
     
@@ -146,7 +136,7 @@ def error_evaluation(results_path):
                 action = event["action"]
                 match action["type"]:
                     case Turn_logs.CLUEGIVER_INVALID_FORMAT | Turn_logs.GUESSER_INVALID_FORMAT:
-                        # TODO: only log invalid format the same for both players
+                        # FIXME: only log invalid format the same for both players
                         error_type = action["content"]["type"]
                         errors[players][error_type] += 1
 
@@ -154,7 +144,6 @@ def error_evaluation(results_path):
                         if error_type not in error_causes[players][-1]:
                             error_causes[players][-1][error_type] = []
                         error_causes[players][-1][error_type].append(error_cause)
-                        # TODO: log error causes in an extra file
 
     # save errors aggregated over models as a table
     error_df = pd.DataFrame.from_dict(errors)
