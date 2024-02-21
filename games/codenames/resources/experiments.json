@@ -1,6 +1,6 @@
 {
     "default": {
-        "number of instances": 30,
+        "number of instances": 3,
         "generator": "random",
         "opponent difficulty": 1,
         "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
