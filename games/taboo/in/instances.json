@@ -30,59 +30,59 @@
         }, {
           "game_id": 6,
           "target_word": "likely",
-          "related_word": ["credible", "stunning", "heartening"]
+          "related_word": ["probable", "promising", "plausible"]
         }, {
           "game_id": 7,
           "target_word": "resume",
-          "related_word": ["renew", "proceed", "restart"]
+          "related_word": ["continue", "summary", "restart"]
         }, {
           "game_id": 8,
           "target_word": "clear",
-          "related_word": ["inculpable", "lustrous", "effulgent"]
+          "related_word": ["crystal", "obvious", "confident"]
         }, {
           "game_id": 9,
           "target_word": "short",
-          "related_word": ["blunt", "brief", "embrittled"]
+          "related_word": ["little", "brief", "lacking"]
         }, {
           "game_id": 10,
           "target_word": "touch",
-          "related_word": ["influence", "blemish", "adjoin"]
+          "related_word": ["feel", "influence", "taint"]
         }, {
           "game_id": 11,
           "target_word": "rental",
-          "related_word": ["indemnity", "redress", "recoupment"]
+          "related_word": ["rent", "reimbursement", "overpayment"]
         }, {
           "game_id": 12,
           "target_word": "provide",
-          "related_word": ["give", "supply", "hand"]
+          "related_word": ["give", "supply", "furnish"]
         }, {
           "game_id": 13,
           "target_word": "fat",
-          "related_word": ["adiposity", "surplus", "plus"]
+          "related_word": ["plump", "filled", "wide"]
         }, {
           "game_id": 14,
-          "target_word": "pre",
-          "related_word": ["prekindergarten", "nursery", "creche"]
+          "target_word": "principal",
+          "related_word": ["star", "main", "chief"]
         }, {
           "game_id": 15,
           "target_word": "filter",
-          "related_word": ["distill", "fine", "strain"]
+          "related_word": ["strain", "clarify", "purifier"]
         }, {
           "game_id": 16,
           "target_word": "array",
-          "related_word": ["group", "battalion", "muster"]
+          "related_word": ["cluster", "grouping", "attire"]
         }, {
           "game_id": 17,
           "target_word": "combination",
-          "related_word": ["league", "composite", "alloy"]
+          "related_word": ["mixture", "merger", "cartel"]
         }, {
           "game_id": 18,
           "target_word": "none",
-          "related_word": ["scarcely", "no", "nothing"]
+          "related_word": ["no", "never", "nobody"]
         }, {
           "game_id": 19,
           "target_word": "career",
-          "related_word": ["service", "berth", "post"]
+          "related_word": ["practice", "living", "race"]
         }
       ],
       "max_turns": 3,
@@ -95,19 +95,19 @@
         {
           "game_id": 0,
           "target_word": "assure",
-          "related_word": ["comfort", "guaranty", "console"]
+          "related_word": ["comfort", "ensure", "guarantee"]
         }, {
           "game_id": 1,
           "target_word": "haven",
-          "related_word": ["harbor", "asylum", "refuge"]
+          "related_word": ["harbor", "port", "refuge"]
         }, {
           "game_id": 2,
           "target_word": "limousine",
-          "related_word": ["minicar", "clunker", "suv"]
+          "related_word": ["car", "coupe", "automobile"]
         }, {
           "game_id": 3,
           "target_word": "induce",
-          "related_word": ["prompt", "beget", "breed"]
+          "related_word": ["cause", "create", "persuade"]
         }, {
           "game_id": 4,
           "target_word": "stimulate",
@@ -115,63 +115,63 @@
         }, {
           "game_id": 5,
           "target_word": "plaza",
-          "related_word": ["patio", "enclosure", "deck"]
+          "related_word": ["square", "atrium", "forecourt"]
         }, {
           "game_id": 6,
           "target_word": "envelope",
-          "related_word": ["capsule", "shield", "jacket"]
+          "related_word": ["package", "wrapper", "mail"]
         }, {
           "game_id": 7,
           "target_word": "implication",
-          "related_word": ["allusion", "aftereffect", "censure"]
+          "related_word": ["inference", "outcome", "allegation"]
         }, {
           "game_id": 8,
           "target_word": "planner",
-          "related_word": ["researcher", "founder", "producer"]
+          "related_word": ["researcher", "pioneer", "journal"]
         }, {
           "game_id": 9,
           "target_word": "myth",
-          "related_word": ["misbelief", "misconception", "delusion"]
+          "related_word": ["legend", "folklore", "illusion"]
         }, {
           "game_id": 10,
           "target_word": "fighter",
-          "related_word": ["soldier", "warrior", "raider"]
+          "related_word": ["warrior", "boxer", "defendant"]
         }, {
           "game_id": 11,
           "target_word": "obvious",
-          "related_word": ["manifest", "clear", "apparent"]
+          "related_word": ["apparent", "evident", "blatant"]
         }, {
           "game_id": 12,
           "target_word": "recorder",
-          "related_word": ["secretary", "chronicler", "documenter"]
+          "related_word": ["reporter", "bookkeeper", "archivist"]
         }, {
           "game_id": 13,
           "target_word": "contributor",
-          "related_word": ["protector", "angel", "patron"]
+          "related_word": ["donor", "benefactor", "giver"]
         }, {
           "game_id": 14,
           "target_word": "passage",
-          "related_word": ["approach", "onrush", "excerpt"]
+          "related_word": ["route", "trip", "excerpt"]
         }, {
           "game_id": 15,
           "target_word": "quarterly",
-          "related_word": ["routine", "monthly", "recurrent"]
+          "related_word": ["monthly", "weekly", "daily"]
         }, {
           "game_id": 16,
           "target_word": "cabinet",
-          "related_word": ["sideboard", "hutch", "buffet"]
+          "related_word": ["cupboard", "closet", "locker"]
         }, {
           "game_id": 17,
           "target_word": "subsidiary",
-          "related_word": ["appendage", "complement", "accoutrement"]
+          "related_word": ["additive", "option", "subordinate"]
         }, {
           "game_id": 18,
           "target_word": "orient",
-          "related_word": ["initiate", "introduce", "orientate"]
+          "related_word": ["introduce", "educate", "familiarize"]
         }, {
           "game_id": 19,
           "target_word": "anymore",
-          "related_word": ["right now", "currently", "now"]
+          "related_word": ["now", "currently", "today"]
         }
       ],
       "max_turns": 3,
@@ -184,83 +184,83 @@
         {
           "game_id": 0,
           "target_word": "autograph",
-          "related_word": ["signature", "John Hancock", "hand"]
+          "related_word": ["signature", "hand", "sign"]
         }, {
           "game_id": 1,
           "target_word": "synthesis",
-          "related_word": ["cocktail", "mix", "compound"]
+          "related_word": ["mixture", "amalgamation", "blend"]
         }, {
           "game_id": 2,
           "target_word": "seize",
-          "related_word": ["assimilate", "nail", "intuit"]
+          "related_word": ["understand", "arrest", "grab"]
         }, {
           "game_id": 3,
           "target_word": "scoop",
-          "related_word": ["ladle", "lowdown", "spoon"]
+          "related_word": ["spoon", "tip", "bucket"]
         }, {
           "game_id": 4,
           "target_word": "nil",
-          "related_word": ["cipher", "zero", "o"]
+          "related_word": ["zero", "nothing", "naught"]
         }, {
           "game_id": 5,
           "target_word": "invasion",
-          "related_word": ["foray", "raid", "irruption"]
+          "related_word": ["incursion", "raid", "foray"]
         }, {
           "game_id": 6,
           "target_word": "squeeze",
-          "related_word": ["jostle", "scrape (up or together)", "wring"]
+          "related_word": ["crush", "cram", "earn"]
         }, {
           "game_id": 7,
           "target_word": "shark",
-          "related_word": ["predator", "wizard", "dodger"]
+          "related_word": ["dodger", "expert", "predator"]
         }, {
           "game_id": 8,
           "target_word": "harmony",
-          "related_word": ["symmetry", "congruence", "congruity"]
+          "related_word": ["symmetry", "peace", "accordance"]
         }, {
           "game_id": 9,
           "target_word": "sear",
-          "related_word": ["parch", "desiccate", "dehydrate"]
+          "related_word": ["char", "dry", "burn"]
         }, {
           "game_id": 10,
           "target_word": "regret",
-          "related_word": ["rue", "lament", "repent"]
+          "related_word": ["lament", "repent", "remorse"]
         }, {
           "game_id": 11,
           "target_word": "transplant",
-          "related_word": ["budge", "supersede", "remake"]
+          "related_word": ["relocate", "transport", "drive"]
         }, {
           "game_id": 12,
           "target_word": "bypass",
-          "related_word": ["slur (over)", "ignore", "slight"]
+          "related_word": ["circumvent", "ignore", "avoid"]
         }, {
           "game_id": 13,
           "target_word": "conform",
-          "related_word": ["key", "adapt", "edit"]
+          "related_word": ["correspond", "blend", "reconcile"]
         }, {
           "game_id": 14,
           "target_word": "peaceful",
-          "related_word": ["still", "recollected", "unworried"]
+          "related_word": ["pacifistic", "nonviolent", "quiet"]
         }, {
           "game_id": 15,
           "target_word": "independently",
-          "related_word": ["singly", "unaided", "unassisted"]
+          "related_word": ["separately", "alone", "individually"]
         }, {
           "game_id": 16,
-          "target_word": "davy",
-          "related_word": ["Neptune", "basin", "ocean"]
+          "target_word": "deduction",
+          "related_word": ["discount", "subtraction", "inference"]
         }, {
           "game_id": 17,
           "target_word": "designation",
-          "related_word": ["appellation", "commission", "handle"]
+          "related_word": ["moniker", "name", "appointment"]
         }, {
           "game_id": 18,
           "target_word": "embroidery",
-          "related_word": ["elaboration", "embellishment", "stretching"]
+          "related_word": ["needlework", "exaggeration", "caricature"]
         }, {
           "game_id": 19,
           "target_word": "pastor",
-          "related_word": ["monastic", "prelate", "missionizer"]
+          "related_word": ["rector", "clergyman", "vicar"]
         }
       ],
       "max_turns": 3,

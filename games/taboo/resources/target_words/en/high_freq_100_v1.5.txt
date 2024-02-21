@@ -39,7 +39,6 @@ output
 pa
 page
 power
-pre
 principal
 print
 provide
