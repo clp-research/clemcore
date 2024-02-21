@@ -25,6 +25,16 @@
     "backend": "openai"
   },
   {
+    "model_name": "gpt-4-0125-preview",
+    "model_id": "gpt-4-0125-preview",
+    "backend": "openai"
+  },
+  {
+    "model_name": "gpt-3.5-turbo-0125",
+    "model_id": "gpt-3.5-turbo-0125",
+    "backend": "openai"
+  },
+  {
     "model_name": "gpt-4-0613",
     "model_id": "gpt-4-0613",
     "backend": "openai"

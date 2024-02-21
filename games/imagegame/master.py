@@ -11,10 +11,6 @@ import math
 
 GAME_NAME = "imagegame"
 
-PLAYER_B_PATTERN = r'^\n*([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n*$'
-PLAYER_A_PATTERN = r'^Instruction:\s*(.+)\n*(.+)*$'
-TERMINATE_PATTERN = r'^Instruction:\s*(DONE|Done|done)'
-
 logger = get_logger(__name__)
 
 
@@ -85,7 +81,7 @@ class ImageGameMaster(GameMaster):
         self.game.given_instruction.add_system_message(player_1_response_text)
 
         # check if it reached the end on 1 side
-        match = re.match(TERMINATE_PATTERN, player_1_response_text)
+        match = re.match(self.game.player_1_terminate_pattern, player_1_response_text)
         if match:
             self.parsed_request_count += 1
             self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
@@ -93,18 +89,15 @@ class ImageGameMaster(GameMaster):
             return
         else:
             # continue if the Player didn't say -> Instruction: DONE
-
             # check if Player 1 message follows the rule => start with "Instruction:"
-            player_1_message_matched = False
-            parsed_instruction = ''
-            if player_1_response_text.startswith('Instruction:'):
+            player_1_message_matched = re.match(self.game.player_1_response_pattern, player_1_response_text)
+            if player_1_message_matched:
+                parsed_instruction = ''
                 if '\n' in player_1_response_text:
                     parsed_instruction = player_1_response_text.split('\n')[0]
                 else:
                     parsed_instruction = player_1_response_text
-                player_1_message_matched = True
 
-            if player_1_message_matched:
                 self.parsed_request_count += 1
                 self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
                 action = {'type': 'parse', 'content': parsed_instruction,
@@ -150,7 +143,7 @@ class ImageGameMaster(GameMaster):
             self.request_count += 1
 
             # check if Player 2 message has the required format: grid
-            match = re.compile(PLAYER_B_PATTERN).match(player_2_response_text)
+            match = re.compile(self.game.player_2_response_pattern).match(player_2_response_text)
             if match:
                 self.parsed_request_count += 1
                 self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
@@ -179,6 +172,9 @@ class ImageGameScorer(GameScorer):
     def __init__(self, experiment: Dict, game_instance: Dict):
         super().__init__(GAME_NAME, experiment, game_instance)
         self.target_grid = game_instance["target_grid"]
+        self.player1_response_pattern = game_instance["player_1_response_pattern"]
+        self.player2_response_pattern = game_instance["player_2_response_pattern"]
+        self.player1_terminate_pattern = game_instance["player_1_terminate_pattern"]
 
     def compute_scores(self, episode_interactions: Dict) -> None:
 
@@ -209,7 +205,7 @@ class ImageGameScorer(GameScorer):
             player_1_message = turn[1]['action']['content']
 
             # Player generates "DONE"
-            match = re.match(TERMINATE_PATTERN, player_1_message)
+            match = re.match(self.player1_terminate_pattern, player_1_message)
             if match:
                 break
 
@@ -217,15 +213,12 @@ class ImageGameScorer(GameScorer):
             episode_request_count += 1
 
             # check the Player 1 message if it matches the rule, start with "Instruction:"
-            player_1_message_matched = False
-            if player_1_message.startswith('Instruction:'):
+            player_1_message_matched = re.compile(self.player1_response_pattern).match(player_1_message)
+            if player_1_message_matched:
                 if '\n' in player_1_message:
                     parsed_instruction = player_1_message.split('\n')[0]
                     player_1_message = parsed_instruction
-                player_1_message_matched = True
 
-
-            if player_1_message_matched:
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
             else:
@@ -247,7 +240,7 @@ class ImageGameScorer(GameScorer):
             episode_request_count += 1
 
             # check Player 2 message if it matches the instruction => grid
-            match = re.compile(PLAYER_B_PATTERN).match(player_2_message)
+            match = re.compile(self.player2_response_pattern).match(player_2_message)
             if match:
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1

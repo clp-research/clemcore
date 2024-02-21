@@ -27,21 +27,4 @@ Instruction: Fill the last row with X
 What is your next instruction?
 Instruction: DONE
 
-Another example with the following 5 by 5 grid:
-
-W ▢ ▢ ▢ ▢
-▢ W ▢ ▢ ▢
-▢ ▢ W ▢ ▢
-▢ ▢ ▢ W ▢
-Z ▢ ▢ ▢ W
-
-What is your next instruction?
-Instruction: Put an W in five cells diagonally starting from top left going to bottom right
-
-What is your next instruction?
-Instruction: Put Z in the last row first column
-
-What is your next instruction?
-Instruction: DONE
-
 Ok. Please do this for the following example, which is a GRID_DIMENSION grid.

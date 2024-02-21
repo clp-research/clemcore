@@ -81,6 +81,9 @@ class ImageGame:
         self.number_of_letters = game_instance['number_of_letters']
         self.fill_row = game_instance['fill_row']
         self.fill_column = game_instance['fill_column']
+        self.player_1_response_pattern = r'{}'.format(game_instance['player_1_response_pattern'])
+        self.player_1_terminate_pattern = r'{}'.format(game_instance['player_1_terminate_pattern'])
+        self.player_2_response_pattern = r'{}'.format(game_instance['player_2_response_pattern'])
 
         self.instruction_follower = InstructionFollower(player_models[1])
         self.instruction_giver = InstructionGiver(player_models[0])

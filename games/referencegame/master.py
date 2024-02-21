@@ -10,10 +10,6 @@ import re
 import math
 
 GAME_NAME = "referencegame"
-
-PLAYER_A_PATTERN = r'^Expression:\s*(.+)\n*(.+)*$'
-PLAYER_B_PATTERN= r"^Answer:\s*(?!.*\b(?:first|second|third|First|Second|Third)\b.*\b(?:first|second|third)\b).*\b(?:first grid|second grid|first|second|third grid|third|First grid|Second grid|Third grid)\b.*$"
-
 logger = get_logger(__name__)
 
 
@@ -74,16 +70,13 @@ class ReferenceGameMaster(GameMaster):
 
         self.request_count += 1
 
-        player_1_message_matched = False
-        parsed_instruction = ''
-        if player_1_response_text.startswith('Expression:'):
+        if re.match(self.game.player_1_response_pattern, player_1_response_text.lower()):
+            parsed_instruction = ''
             if '\n' in player_1_response_text:
                 parsed_instruction = player_1_response_text.split('\n')[0]
             else:
                 parsed_instruction = player_1_response_text
-            player_1_message_matched = True
 
-        if player_1_message_matched:
             action = {'type': 'parse', 'content': parsed_instruction,
                       'original_content': player_1_response_text}
             self.log_event(from_="GM", to="GM", action=action)
@@ -119,7 +112,7 @@ class ReferenceGameMaster(GameMaster):
         self.request_count += 1
 
         # check if the Player 2 message matches the rule => grid
-        if re.match(PLAYER_B_PATTERN, player_2_response_text):
+        if re.match(self.game.player_2_response_pattern, player_2_response_text.lower()):
             self.parsed_request_count += 1
 
             action = {'type': 'parse', 'content': player_2_response_text,
@@ -141,6 +134,10 @@ class ReferenceGameScorer(GameScorer):
     def __init__(self, experiment: Dict, game_instance: Dict):
         super().__init__(GAME_NAME, experiment, game_instance)
         self.target_grid_name = game_instance["target_grid_name"]
+        self.player_1_response_pattern = game_instance["player_1_response_pattern"]
+        self.player_2_response_pattern = game_instance["player_2_response_pattern"]
+        self.player_2_response_tag = game_instance["player_2_response_tag"]
+        self.player_1_response_tag = game_instance["player_1_response_tag"]
 
     def compute_scores(self, episode_interactions: Dict) -> None:
 
@@ -169,15 +166,7 @@ class ReferenceGameScorer(GameScorer):
             episode_request_count += 1
 
             # check if the Player 1 message follows the rule
-            player_1_message_matched = False
-            if player_1_message.startswith('Expression:'):
-
-                player_1_message_matched = True
-                if '\n' in player_1_message:
-                    parsed_instruction = player_1_message.split('\n')[0]
-                    player_1_message = parsed_instruction
-
-            if player_1_message_matched:
+            if re.match(self.player_1_response_pattern, player_1_message.lower()):
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
             else:
@@ -194,13 +183,12 @@ class ReferenceGameScorer(GameScorer):
             episode_request_count += 1
 
             # check if the Player 2 message matches the rule -> start "Answer: ..."
-            match = re.compile(PLAYER_B_PATTERN).match(player_2_message)
-            if match:
+            if re.match(self.player_2_response_pattern, player_2_message.lower()):
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
 
                 # check if the target grid number matches the output from Player 2
-                if self.target_grid_name.lower() in player_2_message.replace('Answer:', '').lower():
+                if self.target_grid_name.lower() in player_2_message.lower().replace(self.player_2_response_tag, '').strip():
                     success = 1
                 else:
                     lost_count = 1
@@ -211,12 +199,12 @@ class ReferenceGameScorer(GameScorer):
                 break
 
             # log the Player 1 - message length
-            expression_length = len(player_1_message.replace('Expression:', '').strip())
+            expression_length = len(player_1_message.lower().replace(self.player_1_response_tag, '').strip())
             self.log_turn_score(t_index, 'Generated Expression Length', expression_length)
             expression_length_sum += expression_length
 
             # log the Player 1 - number of tokens in the generated expression
-            number_of_tokens = len(player_1_message.replace('Expression:', '').strip().split(' '))
+            number_of_tokens = len(player_1_message.lower().replace(self.player_1_response_tag, '').strip().split(' '))
             self.log_turn_score(t_index, 'Generated Expression Number of Tokens', number_of_tokens)
             expression_number_of_tokens += number_of_tokens
 

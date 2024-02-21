@@ -31,36 +31,6 @@ Expression: Filled as T.
 Question: Which grid does the expression refer to? Generate only the names of the grids like "first", "second" or "third", exclude any other word.
 Answer: second
 
-Here is another example with grids and the referring expression. Generate only the number (in text) of the grid that the given expression matches to by selecting first, second, or third.
-
-First grid:
-
-▢ ▢ ▢ ▢ ▢
-▢ ▢ ▢ ▢ ▢
-▢ ▢ X ▢ ▢
-▢ ▢ ▢ ▢ ▢
-▢ ▢ ▢ ▢ ▢
-
-Second grid:
-
-▢ ▢ ▢ ▢ ▢
-▢ ▢ ▢ ▢ ▢
-▢ ▢ ▢ ▢ ▢
-▢ ▢ X ▢ ▢
-▢ ▢ ▢ ▢ ▢
-
-Third grid:
-
-X X X X X
-▢ ▢ ▢ ▢ ▢
-▢ ▢ ▢ ▢ ▢
-▢ ▢ ▢ ▢ ▢
-X X X X X
-
-Expression: First and last rows are filled
-Question: Which grid does the expression refer to? Generate only the names of the grids like "first", "second" or "third", exclude any other word.
-Answer: third
-
 Ok. Now do this for the following grids.Generate only the number (in text) of the grid that the given expression matches to by selecting first, second, or third.
 
 First grid:
