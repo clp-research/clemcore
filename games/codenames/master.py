@@ -529,6 +529,8 @@ class CodenamesScorer(GameScorer):
 
         number_of_turns = self.episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
+        # TODO: better efficiency: average two targets per turn? Everything better gets ignored
+        # is that fair, when you have 9 words? For the last one you cannot average 2...
         efficiency = min(4.5 / number_of_turns, 1) # TODO: 4.5 magic number: team assignment length / 2, replace!
         self.log_episode_score("efficiency", efficiency)
         target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
@@ -557,6 +559,7 @@ class CodenamesScorer(GameScorer):
         self.board_at_end = self.episode_interactions[BOARD_STATUS]
         # self.log_episode_score(BOARD_STATUS, board_at_end)
 
+        # TODO: magic numbers!!!
         self.log_episode_score("team words revealed/all team words", len(self.board_at_end[REVEALED][TEAM][TEAM]) / 9)
         self.log_episode_score("other words not revealed/all other words", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / 16)
        
@@ -569,8 +572,6 @@ class CodenamesScorer(GameScorer):
             return
 
         # Main Score: harmonic mean of success (revealed team words / all team words (recall)) and efficiency (1/number of turns)
-        # TODO: better efficiency: average two targets per turn? Everything better gets ignored
-        # is that fair, when you have 9 words? For the last one you cannot average 2...
         success = self.scores["episode scores"]["team words revealed/all team words"]
         efficiency = self.scores["episode scores"]["efficiency"]
         main_score = statistics.harmonic_mean([success, efficiency])
