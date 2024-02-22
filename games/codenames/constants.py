@@ -1,9 +1,11 @@
 from enum import Enum
+import string
 
 ### Game related constants
 SEED = 42
 MAX_RETRIES = 2
-CHARS_TO_STRIP = [" .,<>\"'"]
+CHARS_TO_STRIP = " .,<>\"'"
+NUMBERS_TO_STRIP = " ," + ''.join(string.digits)
 
 ### Game related string constants
 GAME_NAME = "codenames"

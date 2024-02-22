@@ -1,5 +1,5 @@
 from enum import Enum
-from constants import CLUEGIVER, GUESSER
+from .constants import CLUEGIVER, GUESSER
 
 class ValidationErrorTypes(str, Enum):
     RAMBLING_ERROR = "rambling error"
