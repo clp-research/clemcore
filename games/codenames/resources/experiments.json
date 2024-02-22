@@ -4,7 +4,14 @@
         "generator": "random",
         "opponent difficulty": 1,
         "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
-        "wordlist": "default.json"
+        "wordlist": "default.json",
+        "flags": {
+            "IGNORE RAMBLING" : true,
+            "IGNORE FALSE TARGETS OR GUESSES" : true,
+            "REPROMPT ON ERROR" : true,
+            "STRIP WORDS" : true,
+            "IGNORE NUMBER OF TARGETS" : true
+        }
     },  
     "variables": {
         "risk": {
@@ -76,7 +83,7 @@
         "wordlist": {
             "experiments": {
                 "original words": {
-                    "wordlist": "original.json", "number of instances": 10}
+                    "wordlist": "original.json"}
             }
         }
     }
