@@ -1,6 +1,3 @@
-Please select up to $number words from the following list that best relate or are most closely associated with the word '$clue'.
-
-Always give your guess(es) as a comma-separated list in the format below, make your answer as short as possible and never include any other text than is required in this form:
-GUESS: <LIST OF WORDS>
+Provide a comma-separated list of up to $number words from the following list that best relate or are most closely associated with the word '$clue'. Always start your list of guess(es) with 'GUESS: ' and do not include any other text in your answer.
 
 $board
