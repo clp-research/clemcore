@@ -1,3 +1,5 @@
-Now select at least one and up to $number words from the new remaining words that best relate or are most closely associated with the word '$clue', in the same required format as before:
+Now select at least 1 and up to $number words from the following list of remaining words that best relate or are most closely associated with the word '$clue', in the same required format as before:
+
+GUESS: <LIST OF WORDS>
 
 $board
