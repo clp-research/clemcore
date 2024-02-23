@@ -3,6 +3,8 @@ from clemgame.clemgame import GameScorer
 from clemgame.metrics import BENCH_SCORE, METRIC_ABORTED
 from .constants import Turn_logs, CLUEGIVER, GUESSER, REVEALED, TARGET, TEAM, OPPONENT, INNOCENT, ASSASSIN, GAME_NAME, NUMBER_OF_TURNS, GAME_ENDED_THROUGH_ASSASSIN
 
+EXPECTED_WORDS_PER_TURN = 2
+
 class CodenamesScorer(GameScorer):
     def __init__(self, experiment_config, game_instance):
         super().__init__(GAME_NAME, experiment_config, game_instance)
@@ -80,8 +82,7 @@ class CodenamesScorer(GameScorer):
         number_of_turns = episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
         number_of_team_words = self.experiment["assignments"]["team"]
-        efficiency_multiplier = 2 # expecting two team words to be revealed each turn
-        efficiency = min(1/efficiency_multiplier * number_of_team_words * 1/number_of_turns, 1)
+        efficiency = min(1/EXPECTED_WORDS_PER_TURN * number_of_team_words * 1/number_of_turns, 1)
         self.log_episode_score("efficiency", efficiency)
         target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
         avg_target_f1s = statistics.mean(target_f1s)
@@ -98,9 +99,6 @@ class CodenamesScorer(GameScorer):
         # TODO: should ratios also be 0 or NaN when the game was aborted? yes they should...
 
         self.log_episode_score(GAME_ENDED_THROUGH_ASSASSIN, episode_interactions[GAME_ENDED_THROUGH_ASSASSIN])
-
-        # self.board_at_end = episode_interactions[BOARD_STATUS]
-        # self.log_episode_score(BOARD_STATUS, board_at_end)
 
         number_of_team_words = self.experiment["assignment"]["team"]
         number_of_non_team_words = self.experiment["assignment"]["opponent"] + self.experiment["assignment"]["innocent"] + self.experiment["assignment"]["assassin"]

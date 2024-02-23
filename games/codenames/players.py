@@ -1,5 +1,6 @@
 # TODO: reuse players for other codename variants, e.g. Duet?
 # TODO: check whether target is only a number -> validation error, not ignoring targets!
+# TODO: check whether clue is *only* a number
 
 from typing import Dict, List
 import re, random, string, nltk
@@ -40,12 +41,13 @@ class ClueGiver(Player):
         self.clue = "".join(random.sample(list(string.ascii_lowercase), 6))
         return self.recover_utterance(with_targets=True)
 
-    def check_morphological_similarity(self, utterance, clue, board):
-        # lemma checks
+    def check_morphological_similarity(self, utterance, clue, remaining_words):
         clue_lemma = EN_LEMMATIZER.lemmatize(clue)
-        board_words_lemmas = [EN_LEMMATIZER.lemmatize(word) for word in board]
-        if clue_lemma in board_words_lemmas:
-            similar_board_word = board[board_words_lemmas.index(clue_lemma)]
+        remaining_word_lemmas = [EN_LEMMATIZER.lemmatize(word) for word in remaining_words]
+        print(clue_lemma)
+        print(remaining_word_lemmas)
+        if clue_lemma in remaining_word_lemmas:
+            similar_board_word = remaining_words[remaining_word_lemmas.index(clue_lemma)]
             raise RelatedClueError(utterance, clue, similar_board_word)
     
     def validate_response(self, utterance: str, remaining_words: List[str]):
@@ -95,7 +97,7 @@ class ClueGiver(Player):
         if not clue.isalpha():
             raise ClueContainsNonAlphabeticalCharacters(utterance, clue)
         # Clue needs to contain a word that is not morphologically similar to any word on the board
-        # TODO: morphological relatedness!
+        self.check_morphological_similarity(utterance, clue, remaining_words)
         if clue in remaining_words:
             raise ClueOnBoardError(utterance, clue, remaining_words)
         
@@ -110,7 +112,7 @@ class ClueGiver(Player):
         parts = utterance.split('\n')
         clue = find_line_starting_with(self.clue_prefix, parts).removeprefix(self.clue_prefix)
         targets = find_line_starting_with(self.target_prefix, parts).removeprefix(self.target_prefix)
-        self.clueclue = clue.lower().strip(CHARS_TO_STRIP).strip(NUMBERS_TO_STRIP)
+        self.clue = clue.lower().strip(CHARS_TO_STRIP).strip(NUMBERS_TO_STRIP)
         self.targets = targets.split(', ')
         self.targets = [target.strip(CHARS_TO_STRIP).lower() for target in self.targets]
         self.number_of_targets = len(self.targets)

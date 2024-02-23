@@ -165,7 +165,7 @@ class ClueContainsSpaces(ValidationError):
 
 class ClueContainsNonAlphabeticalCharacters(ValidationError):
     def __init__(self, utterance, clue):
-        message = f"Clue '{clue}' contains non-alphabetical charracters."
+        message = f"Clue '{clue}' contains non-alphabetical characters."
         super().__init__(CLUEGIVER, ValidationErrorTypes.CLUE_CONTAINS_INVALID_CHARACTERS, utterance, message)
         self.clue = clue
 

@@ -22,16 +22,14 @@ class CodenamesGame(DialogueGameMaster):
 
     def __init__(self, experiment: Dict, player_backends: List[str]):
         super().__init__(GAME_NAME, experiment, player_backends)
-        # fetch experiment parameters
         self.experiment = experiment
         self.opponent_difficulty: bool = experiment[OPPONENT_DIFFICULTY]
 
-        # save player interfaces
         self.model_a: str = player_backends[0]
         self.model_b: str = player_backends[1]
         
     def _on_setup(self, **game_instance):
-        self.game_instance = game_instance  # fetch game parameters here
+        self.game_instance = game_instance
         self.board: CodenamesBoard = CodenamesBoard(game_instance[ASSIGNMENTS][TEAM], 
                                                     game_instance[ASSIGNMENTS][OPPONENT], 
                                                     game_instance[ASSIGNMENTS][INNOCENT],
@@ -47,12 +45,8 @@ class CodenamesGame(DialogueGameMaster):
         self.parsed_request_count = 0
         self.violated_request_count = 0
 
-        # Create the players
         self.cluegiver: Player = ClueGiver(self.model_a, self.experiment["flags"])
         self.guesser: Player = Guesser(self.model_b, self.experiment["flags"])
-
-        # Add the players: these will be logged to the records interactions.json
-        # Note: During game play the players will be called in the order added here
         self.add_player(self.cluegiver)
         self.add_player(self.guesser)
     
@@ -93,24 +87,19 @@ class CodenamesGame(DialogueGameMaster):
             assignment = self.board.reveal_word(word, OPPONENT)
             self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"word": word, "assignment": assignment})
     
-    def _on_before_game(self):
-        pass
-        # self.add_user_message(self.cluegiver, self._get_cluegiver_prompt(initial=True))
-
     def _on_before_turn(self, current_turn):
         # let mock opponent reveal their cards
         if self.number_of_turns > 0:
             self._opponent_turn()
 
-        # add new cluegiver prompt
         self.cluegiver.retries = 0
         self.guesser.retries = 0
         self.number_of_turns += 1
         initial = True if self.number_of_turns == 1 else False
+        # add new cluegiver prompt
         self.add_user_message(self.cluegiver, self._get_cluegiver_prompt(initial))
 
     def _does_game_proceed(self) -> bool:
-        # Determine if the game should proceed. This is also called once initially.
         continue_game = True
         if self.invalid_response:
             self.aborted = True
@@ -198,7 +187,6 @@ class CodenamesGame(DialogueGameMaster):
         self.add_user_message(player, f"Your answer did not follow the requested format: {self.last_error_message}")
     
     def _should_reprompt(self, player: Player):
-        # return False
         if player.flags["REPROMPT ON ERROR"]:
             if player.retries < MAX_RETRIES:
                 return self.invalid_response
