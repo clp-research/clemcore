@@ -91,7 +91,7 @@ class CodenamesGame(DialogueGameMaster):
         opponent_words = random.sample(self.board.get_hidden_words(OPPONENT), self.opponent_difficulty)
         for word in opponent_words:
             assignment = self.board.reveal_word(word, OPPONENT)
-            self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"assignment": assignment, "word": word})
+            self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"word": word, "assignment": assignment})
     
     def _on_before_game(self):
         pass
@@ -170,8 +170,10 @@ class CodenamesGame(DialogueGameMaster):
         if player == self.cluegiver:
             utterance = player.parse_response(utterance)
             self.log_to_self(Turn_logs.CLUE, player.clue)
-            # TODO: log target assignments here!
             self.log_to_self(Turn_logs.TARGETS, player.targets)
+            for target in player.targets:
+                assignment = self.board.get_word_assignment(target)
+                self.log_to_self(Turn_logs.WORD_TARGETED, {"word": target, "assignment": assignment})
             return utterance, False
         else:
             parsed_utterance = player.parse_response(utterance)
@@ -180,9 +182,9 @@ class CodenamesGame(DialogueGameMaster):
                 assignment = self.board.reveal_word(guess)
                 if not assignment:
                     continue
-                self.log_to_self(Turn_logs.TEAM_REVEALED, {"assignment": assignment, "word": guess})
+                self.log_to_self(Turn_logs.TEAM_REVEALED, {"word": guess, "assignment": assignment})
                 if self._was_target(guess):
-                    self.log_to_self(Turn_logs.TARGET_REVEALED, {"assignment": assignment, "word": guess})
+                    self.log_to_self(Turn_logs.TARGET_REVEALED, {"word": guess, "assignment": assignment})
                 if not self.board.should_continue_after_revealing(guess):
                     self.log_to_self("turn end after", guess)
                     break

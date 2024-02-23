@@ -11,6 +11,16 @@ class CodenamesBoard:
     def get_current_board(self) -> Dict:
         return {HIDDEN: self.hidden, 
                 REVEALED: self.revealed}
+    
+    def get_word_assignment(self, word) -> str:
+        for assignment in self.hidden:
+            if word in self.hidden[assignment]:
+                return assignment
+            
+        for team in self.revealed:
+            for assignment in self.revealed[team]:
+                if word in self.revealed[team]:
+                    return assignment
 
     def get_all_hidden_words(self) -> List:
         hidden_words = []

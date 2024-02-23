@@ -29,6 +29,7 @@ class Turn_logs(str, Enum):
     TEAM_REVEALED = f"{TEAM} {REVEALED}"
     OPPONENT_REVEALED = f"{OPPONENT} {REVEALED}"
     TARGET_REVEALED = f"target {REVEALED}"
+    WORD_TARGETED = f"word targeted"
     TURN_END_AFTER = "turn end after"
 
 BOARD_STATUS = "board status"
