@@ -1,6 +1,7 @@
 # TODO: reuse players for other codename variants, e.g. Duet?
 # TODO: check whether target is only a number -> validation error, not ignoring targets!
 # TODO: check whether clue is *only* a number
+# TODO: ignore wrong guesses/targets first, before inferring amount of words!
 
 from typing import Dict, List
 import re, random, string, nltk
@@ -75,7 +76,7 @@ class ClueGiver(Player):
                 clue = clue.strip(CHARS_TO_STRIP)
             else:
                 raise ClueContainsNonAlphabeticalCharacters(utterance, clue)
-        if any(character in clue for character in NUMBERS_TO_STRIP):
+        if re.search(r", [0-9]+", clue):
             if self.flags["IGNORE NUMBER OF TARGETS"]:
                 self.flags_engaged["IGNORE NUMBER OF TARGETS"] += 1
                 clue  = clue.strip(NUMBERS_TO_STRIP)
@@ -116,13 +117,11 @@ class ClueGiver(Player):
         self.targets = targets.split(', ')
         self.targets = [target.strip(CHARS_TO_STRIP).lower() for target in self.targets]
         self.number_of_targets = len(self.targets)
-        return f"{self.clue}, {self.number_of_targets}"
+        return self.recover_utterance()
 
-    def recover_utterance(self, with_targets = False) -> str:
-        if with_targets:
-            targets = ', '.join(self.targets)
-            return f"{self.clue_prefix}{self.clue}\n{self.target_prefix}{targets}"
-        return f"{self.clue_prefix}{self.clue}, {len(self.targets)}"
+    def recover_utterance(self) -> str:
+        targets = ', '.join(self.targets)
+        return f"{self.clue_prefix}{self.clue}\n{self.target_prefix}{targets}"
 
 
 class Guesser(Player):
@@ -184,7 +183,7 @@ class Guesser(Player):
         utterance = utterance.removeprefix(self.prefix)
         self.guesses = utterance.split(', ')
         self.guesses = [word.strip(CHARS_TO_STRIP).lower() for word in self.guesses]
-        return f"{', '.join(self.guesses)}"
+        return self.recover_utterance()
             
     def recover_utterance(self) -> str:
         return f"{self.prefix}{', '.join(self.guesses)}"

@@ -54,7 +54,7 @@ class GuesserRamblingError(ValidationError):
 
 class WrongNumberOfGuessesError(ValidationError):
     def __init__(self, utterance, guesses, number_of_allowed_guesses):
-        message = f"Number of guesses made ({len(guesses)}) is not between 0 and {number_of_allowed_guesses}."
+        message = f"You made too many guesses ({len(guesses)}). You are only allowed to make {number_of_allowed_guesses} guesses!"
         super().__init__(GUESSER, ValidationErrorTypes.WRONG_NUMBER_OF_GUESSES, utterance, message)
 
         self.guesses = guesses
@@ -165,7 +165,7 @@ class ClueContainsSpaces(ValidationError):
 
 class ClueContainsNonAlphabeticalCharacters(ValidationError):
     def __init__(self, utterance, clue):
-        message = f"Clue '{clue}' contains non-alphabetical characters."
+        message = f"Clue '{clue}' contains non-alphabetical characters, please give a correct single English word."
         super().__init__(CLUEGIVER, ValidationErrorTypes.CLUE_CONTAINS_INVALID_CHARACTERS, utterance, message)
         self.clue = clue
 
@@ -174,8 +174,6 @@ class ClueContainsNonAlphabeticalCharacters(ValidationError):
         result["clue"] = self.clue
         return result
     
-
-
 class MissingCluePrefix(PrefixError):
     def __init__(self, utterance, prefix):
         message = f"Your clue did not start with the correct prefix ({prefix})."
