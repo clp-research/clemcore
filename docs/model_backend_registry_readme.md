@@ -1,5 +1,4 @@
 # Model Registry
-**Currently only applies to the local huggingface backend!**  
 The model registry holds information and settings for each of the models currently supported by clembench.  
 It is stored as a JSON file in the `backends` directory. This file contains a list of model entry objects.  
 ## Model Entry Components
