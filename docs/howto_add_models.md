@@ -13,8 +13,8 @@ To add support for a new model, go through the following steps:
 **backend** that holds the required inference or remote API code. One backend can handle any number of similar models, 
 using the same remote API request or inference code, requiring only a small amount of additional data. Already 
 implemented backends can be found in the `backends` directory, with file names ending in `_api.py`. Supported models and 
-the corresponding backends are listed in the **model registry**, `backends/model_registry.json`. See 
-`model_backend_registry_readme.md` for more information on the model registry.
+the corresponding backends are listed in the **model registry**, `backends/model_registry.json`. See the 
+[model registry readme](model_backend_registry_readme.md) for more information on the model registry.
 - If there is *no* implemented backend that supports your model, you have to implement one. See [Adding a backend](#how-to-add-a-new-backend).
 - If there is an implemented backend that supports your model, you need to add a new model entry to the **model registry**. 
 See [Adding a model to the model registry](#adding-a-model-to-the-model-registry).
@@ -54,8 +54,8 @@ JSON list.
 specifications (the data of which is contained in the model entries), and the first model entry that matches the partial 
 specification will be used to load/access the model if there are multiple available implementations.
 ### HuggingFace models
-This section explains how to add a LLM hosted on the HuggingFace (HF) model repository to the local HuggingFace backend of 
-clembench. Due to the variety of models available via Huggingface, model registry entries for these models can hold an 
+This section explains how to add a LLM hosted on the HuggingFace (HF) model repository to the model registry to make it 
+available for the local HuggingFace backend of clembench. Due to the variety of models available via Huggingface, model registry entries for these models can hold an 
 extensive amount of additional data used by the backend for inference.  
 Each model hosted on [HuggingFace](http://huggingface.co) is identified by its **model ID**, which is the combination of
 the **model uploader's username** and the individual **model name**.  
@@ -71,7 +71,7 @@ You should thoroughly read the model card for the model to be added to be inform
 good idea to look at the community tab of a model repository to see if there are common issues with the model.
 #### II. Check the model's tokenizer
 The clembench HuggingFace local backend relies on the `transformers` and indirectly on the `tokenizers` libraries for 
-model-dependent input tokenization. It also relies the **chat template** utility of the libraries' tokenizer classes. 
+model-dependent input tokenization. It also relies on the **chat template** utility of the libraries' tokenizer classes. 
 This first step is to make sure that a candidate model hosted on HuggingFace has the required configuration to be used 
 with the clembench backend.  
 To perform a preliminary check for compatibility, run `python3 backends/initial_hf_check.py -m <MODEL ID>`.  
@@ -86,7 +86,7 @@ the huggingface-local backend. To make a new model available, an entry for it ne
 ##### Basic model entry
 A minimal model entry contains the model name, the backend to handle it, its HF ID, a bool that determines if a premade 
 chat template for it will be loaded from HF and the EOS string to be culled from its outputs:  
-```
+```json
 {
   "model_name": "Mistral-7B-Instruct-v0.1",
   "backend": "huggingface",
@@ -101,7 +101,7 @@ entry. This indicates that the model's tokenizer properly applies a chat templat
 If it does not pass the check or otherwise requires chat template changes, the entry must contain 
 `"premade_chat_template": false` and include the custom chat template to be used in jinja2 string format.  
 **For example:**  
-```
+```json
 {
   "model_name": "sheep-duck-llama-2-70b-v1.1",
   "backend": "huggingface",
@@ -115,7 +115,7 @@ If it does not pass the check or otherwise requires chat template changes, the e
 If the model requires the use of the 'slow' tokenizer class, which should be noted on the model card, the model entry 
 must contain `"slow_tokenizer": true`.  
 **For example:**  
-```
+```json
 {
   "model_name": "SUS-Chat-34B",
   "backend": "huggingface",
@@ -132,7 +132,7 @@ output, requiring the model output to be split to be properly handled by clemben
 predeces the model output proper needs to be contained in the model entry. (This will likely be found in testing the 
 model.)  
 **For example:**  
-```
+```json
 {
   "model_name": "Yi-34B-Chat",
   "backend": "huggingface",
@@ -148,7 +148,7 @@ model.)
 If the model to be added is *gated*, the model entry must contain `"requires_api_key": true`. Make sure that `key.json` 
 exists and has a viable HF API access key when the model is to be used.  
 **For example:**  
-```
+```json
 {
   "model_name": "llama-2-7b-hf",
   "backend": "huggingface",

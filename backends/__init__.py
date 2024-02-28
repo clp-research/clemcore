@@ -31,6 +31,12 @@ def get_logger(name):
 # Load backend dynamically from "backends" sibling directory
 # Note: The backends might use get_logger (circular import)
 def load_credentials(backend, file_name="key.json") -> Dict:
+    """
+    Load login credentials and API keys from JSON file.
+    :param backend: Name of the backend/API provider to load key for.
+    :param file_name: Name of the key file. Defaults to key.json in the clembench root directory.
+    :return: Dictionary with {backend: {api_key: key}}.
+    """
     key_file = os.path.join(project_root, file_name)
     with open(key_file) as f:
         creds = json.load(f)
@@ -41,6 +47,11 @@ def load_credentials(backend, file_name="key.json") -> Dict:
 
 @dataclass(frozen=True)
 class ModelSpec(SimpleNamespace):
+    """
+    Base class for model specifications.
+    Holds all necessary information to make a model available for clembench: Responsible backend and any arbitrary data
+    required by the backend. Also covers non-LLM 'models' like programmatic, slurk and direct user input.
+    """
     PROGRAMMATIC_SPECS = ["mock", "dry_run", "programmatic", "custom", "_slurk_response"]
     HUMAN_SPECS = ["human", "terminal"]
 
@@ -85,6 +96,10 @@ class ModelSpec(SimpleNamespace):
 
     @classmethod
     def from_dict(cls, spec: Dict):
+        """
+        Initialize a ModelSpec from a dictionary. Can be used to directly create a ModelSpec from a model registry entry
+        dictionary.
+        """
         return cls(**spec)
 
     def is_programmatic(self):
