@@ -17,6 +17,13 @@ FALLBACK_CONTEXT_SIZE = 256
 
 
 def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Union[AutoTokenizer, AutoConfig, int]:
+    """
+    Load a HuggingFace model's standard config and tokenizer, and get context token limit from config. If the model
+    config does not contain the context limit, it is set to 256 as fallback. Does not load the model weights, allowing
+    for prototyping on non-GPU systems.
+    :param model_spec: The ModelSpec for the model.
+    :return: Tokenizer, model config and context token limit (int).
+    """
     logger.info(f'Loading huggingface model config and tokenizer: {model_spec.model_name}')
 
     use_api_key = False
@@ -80,6 +87,12 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Union[AutoToken
 
 
 def load_model(model_spec: backends.ModelSpec) -> Any:
+    """
+    Load Huggingface model weights, into VRAM if available. Weights are distributed over all available GPUs for maximum
+    speed - make sure to limit the available GPUs using environment variables if only a subset is to be used.
+    :param model_spec: The ModelSpec for the model.
+    :return: The transformers model class instance of the loaded model.
+    """
     logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
 
     hf_model_str = model_spec['huggingface_id']
@@ -98,15 +111,26 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
 
 
 class HuggingfaceLocal(backends.Backend):
+    """
+    Model/backend handler class for locally-run Huggingface models.
+    """
     def __init__(self):
         super().__init__()
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
+        """
+        Get a HuggingFaceLocalModel instance with the passed model and settings. Will load all required data for using
+        the model upon initialization.
+        :param model_spec: The ModelSpec for the model.
+        :return: The Model class instance of the model.
+        """
         return HuggingfaceLocalModel(model_spec)
 
 
 class HuggingfaceLocalModel(backends.Model):
-
+    """
+    Class for loaded models ready for generation.
+    """
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
         # fail-fast
@@ -125,7 +149,6 @@ class HuggingfaceLocalModel(backends.Model):
                     {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                     {"role": "user", "content": "Where was it played?"}
                 ]
-        :param model: model name
         :param return_full_text: If True, whole input context is returned.
         :param log_messages: If True, raw and cleaned messages passed will be logged.
         :return: the continuation
@@ -260,7 +283,7 @@ def check_messages(messages: List[Dict], model_spec: backends.ModelSpec) -> bool
     as passed, before the standard flattening done for generation. This allows clemgame developers to construct
     message lists that are sound as-is and are not affected by the indiscriminate flattening of the generation
     method. Deliberately verbose.
-    :param model_spec: model spec
+    :param model_spec: The ModelSpec for the model.
     :param messages: for example
             [
                 {"role": "system", "content": "You are a helpful assistant."},
@@ -355,7 +378,7 @@ def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
                 {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
                 {"role": "user", "content": "Where was it played?"}
             ]
-    :param model: model name
+    :param model_spec: The ModelSpec for the model.
     :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
     :param clean_messages: If True, the standard cleaning method for message lists will be applied.
     :param verbose: If True, prettyprint token counts.
