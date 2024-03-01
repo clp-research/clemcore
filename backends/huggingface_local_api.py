@@ -1,5 +1,5 @@
 """
-    Backend using HuggingFace transformers & ungated models.
+    Backend using HuggingFace transformers models.
     Uses HF tokenizers instruct/chat templates for proper input format per model.
 """
 from typing import List, Dict, Tuple, Any, Union
