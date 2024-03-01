@@ -81,8 +81,9 @@ class ImageGameMaster(GameMaster):
         self.game.given_instruction.add_system_message(player_1_response_text)
 
         # check if it reached the end on 1 side
-        match = re.match(self.game.player_1_terminate_pattern, player_1_response_text)
+        match = re.compile(self.game.player_1_terminate_pattern, re.IGNORECASE).match(player_1_response_text)
         if match:
+            print('Parsed output: {} '.format(True))
             self.parsed_request_count += 1
             self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
             self.game.terminate = True
@@ -90,7 +91,7 @@ class ImageGameMaster(GameMaster):
         else:
             # continue if the Player didn't say -> Instruction: DONE
             # check if Player 1 message follows the rule => start with "Instruction:"
-            player_1_message_matched = re.match(self.game.player_1_response_pattern, player_1_response_text)
+            player_1_message_matched = re.compile(self.game.player_1_response_pattern, re.IGNORECASE).match(player_1_response_text)
             if player_1_message_matched:
                 parsed_instruction = ''
                 if '\n' in player_1_response_text:
@@ -205,15 +206,15 @@ class ImageGameScorer(GameScorer):
             player_1_message = turn[1]['action']['content']
 
             # Player generates "DONE"
-            match = re.match(self.player1_terminate_pattern, player_1_message)
+            match = re.compile(self.player1_terminate_pattern, re.IGNORECASE).match(player_1_message)
             if match:
                 break
 
             turn_request_count += 1
             episode_request_count += 1
 
-            # check the Player 1 message if it matches the rule, start with "Instruction:"
-            player_1_message_matched = re.compile(self.player1_response_pattern).match(player_1_message)
+            # check the Player 1 message if it matches the rule
+            player_1_message_matched = re.compile(self.player1_response_pattern, re.IGNORECASE).match(player_1_message)
             if player_1_message_matched:
                 if '\n' in player_1_message:
                     parsed_instruction = player_1_message.split('\n')[0]
