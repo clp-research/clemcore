@@ -89,4 +89,6 @@ If all you need is a table with the leaderboard results (% played, main score an
 python3 evaluation/bencheval.py -p results
 ```
 
-You can also skip the `-p results` where the evaluation code by default looks in that folder path. The script above creates `results.csv` and `results.html`
+You can also skip the `-p results` where the evaluation code by default looks in that folder path. The script above creates `results.csv` and `results.html`.
+
+Each game requires a custom analysis. The notebook ```howto_evaluate.ipynb``` shows examples of how to begin evaluating games. In particular, it generates tables with an overview of all metrics and also detailed by experiment. It also reproduces Figure 10 from the paper.

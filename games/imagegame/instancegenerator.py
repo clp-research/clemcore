@@ -147,8 +147,8 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
                 game_instance["player_1_question"] = prompt_question
                 game_instance['grid_dimension'] = grid_dimension
                 game_instance['number_of_letters'] = grid.count('X')
-                game_instance['player_1_response_pattern'] = '^Instruction:\s*(.+)\n*(.+)*$'
-                game_instance['player_1_terminate_pattern'] = '^Instruction:\s*(DONE|Done|done)'
+                game_instance['player_1_response_pattern'] = '^instruction: [^\n]+$'
+                game_instance['player_1_terminate_pattern'] = '^instruction:\s*(?i)done\b'
                 game_instance['player_2_response_pattern'] = '^\n*([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n*$'
                 game_instance['fill_row'] = False
                 game_instance['fill_column'] = False

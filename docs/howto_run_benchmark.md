@@ -181,3 +181,5 @@ python3 evaluation/bencheval.py -p PATH_TO_RESULTS
 where ```PATH_TO_RESULTS``` is your results folder. By default it will access ```./results/```.
 
 The latest relies solely on the structure of the results directory, so it can be run with any games and models you have. The table will be saved into ```PATH_TO_RESULTS/results.csv```, with a copy in html.
+
+Each game requires a custom analysis. The notebook ```howto_evaluate.ipynb``` shows examples of how to begin evaluating games. In particular, it generates tables with an overview of all metrics and also detailed by experiment. It also reproduces Figure 10 from the paper.

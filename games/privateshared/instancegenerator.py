@@ -1,5 +1,5 @@
 """
-Randomly generate templates for the private/shared game.
+Randomly generate templates for the private/shared game in English.
 
 Creates files in ./instances and ./requests
 """
@@ -11,11 +11,19 @@ from tqdm import tqdm
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 from games.privateshared.constants import (
-    ASIDE, ANSWER, ME, GAME_NAME, PROBES_PATH, REQUESTS_PATH, SLOT_PATH,
-    PROMPT_PATH, EXPERIMENTS, N_INSTANCES, tags, what_slot)
+    PROBES_PATH, REQUESTS_PATH, SLOT_PATH, PROMPT_PATH, WORDS_PATH,
+    GAME_NAME, EXPERIMENTS)
 
 ID = 1
+LANG = 'en'
 SEED = 2102
+N_INSTANCES = 10
+
+what_slot = {'travel-booking': 'Travel',
+             'job-interview': 'Job Application',
+             'restaurant': 'Restaurant',
+             'things-places': 'Things at places',
+             'letter-number': 'Numbered letters'}
 
 logger = clemgame.get_logger(__name__)
 
@@ -64,9 +72,15 @@ class PrivateSharedGameInstanceGenerator(GameInstanceGenerator):
 
     def __init__(self):
         super().__init__(GAME_NAME)
+        words = self.load_json(WORDS_PATH.format(LANG))
+        self.tags = words['tags']
+        self.answer = words["ANSWER"]
+        self.aside = words["ASIDE"]
+        self.me = words["ME"]
 
     def on_generate(self):
         """Generate configuration of all experiments."""
+
         for exp_name in EXPERIMENTS:
             # load all necessary contents
             probes = self.load_json(PROBES_PATH.format(exp_name))
@@ -81,21 +95,22 @@ class PrivateSharedGameInstanceGenerator(GameInstanceGenerator):
                 inst_dic, inst_str = sample_instance(slot_values, what_value)
                 n_slots = len(inst_dic)
                 # create the instance
-                game_instance['tag'] = tags[exp_name]
+                game_instance['tag'] = self.tags[exp_name]
                 game_instance['slots'] = inst_dic
                 game_instance['initial_prompt'] = self.create_prompt(
-                    prompt, inst_str, tags[exp_name])
+                    prompt, inst_str, self.tags[exp_name])
                 game_instance['request_order'] = sample_request_order(requests)
                 game_instance['requests'] = sample_request_texts(requests)
                 game_instance['probes'] = sample_probes(probes, n_slots)
+                game_instance['lang'] = LANG
 
     def create_prompt(self, prompt: str, instance: str, tag: str) -> str:
         """Fill in the initial prompt variables."""
         text = prompt.replace('$INSTANCE$', instance)
         text = text.replace('$QUESTIONER$', tag)
-        text = text.replace('$ANSWER$', ANSWER)
-        text = text.replace('$ASIDE$', ASIDE)
-        text = text.replace('$ME$', ME)
+        text = text.replace('$ANSWER$', self.answer)
+        text = text.replace('$ASIDE$', self.aside)
+        text = text.replace('$ME$', self.me)
         return text
 
 
