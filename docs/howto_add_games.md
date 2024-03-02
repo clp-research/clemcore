@@ -445,7 +445,7 @@ history.
 ## Huggingface Prototyping Check Methods
 The huggingface-local backend offers two functions to check messages lists that clemgames might pass to the backend 
 without the need to load the full model weights. This allows to prototype clemgames locally with minimal hardware demand
-and prevent common issues.
+and prevent common issues. See the [model registry readme](model_backend_registry_readme.md) for `ModelSpec`.
 ### Messages Checking
 The `check_messages` function in `backends/huggingface_local_api.py` takes a `messages` list and a `ModelSpec` as 
 arguments.  

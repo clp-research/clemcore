@@ -30,6 +30,6 @@ Please simply open a pull request. You can find more information on how to use t
 
 - [How to run the benchmark and evaluation locally](docs/howto_run_benchmark.md)
 - [How to run the benchmark, update leaderboard workflow](docs/howto_benchmark_workflow.md)
-- [How to add a new model as a backend](docs/howto_add_backend.md)
+- [How to add a new model](docs/howto_add_models.md)
 - [How to add and run your own game](docs/howto_add_games.md)
 - [How to integrate with Slurk](docs/howto_slurk.md)
