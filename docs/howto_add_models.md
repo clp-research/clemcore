@@ -89,7 +89,7 @@ chat template for it will be loaded from HF and the EOS string to be culled from
 ```json
 {
   "model_name": "Mistral-7B-Instruct-v0.1",
-  "backend": "huggingface",
+  "backend": "huggingface_local",
   "huggingface_id": "mistralai/Mistral-7B-Instruct-v0.1",
   "premade_chat_template": true,
   "eos_to_cull": "</s>"
@@ -104,7 +104,7 @@ If it does not pass the check or otherwise requires chat template changes, the e
 ```json
 {
   "model_name": "sheep-duck-llama-2-70b-v1.1",
-  "backend": "huggingface",
+  "backend": "huggingface_local",
   "huggingface_id": "Riiid/sheep-duck-llama-2-70b-v1.1",
   "premade_chat_template": false,
   "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### User:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'system' %}{{ '### System:\\n' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant:\\n' + message['content'] + '\\n\\n' }}{% endif %}{% if loop.last %}{{ '### Assistant:\\n' }}{% endif %}{% endfor %}",
@@ -118,7 +118,7 @@ must contain `"slow_tokenizer": true`.
 ```json
 {
   "model_name": "SUS-Chat-34B",
-  "backend": "huggingface",
+  "backend": "huggingface_local",
   "huggingface_id": "SUSTech/SUS-Chat-34B",
   "premade_chat_template": false,
   "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}",
@@ -135,7 +135,7 @@ model.)
 ```json
 {
   "model_name": "Yi-34B-Chat",
-  "backend": "huggingface",
+  "backend": "huggingface_local",
   "huggingface_id": "01-ai/Yi-34B-Chat",
   "premade_chat_template": false,
   "custom_chat_template": "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = true %}{% endif %}{% for message in messages %}{{'<|im_start|>' + message['role'] + '\n' + message['content'] + '<|im_end|>' + '\n'}}{% endfor %}{% if add_generation_prompt %}{{ '<|im_start|>assistant\n' }}{% endif %}",
@@ -151,7 +151,7 @@ exists and has a viable HF API access key when the model is to be used.
 ```json
 {
   "model_name": "llama-2-7b-hf",
-  "backend": "huggingface",
+  "backend": "huggingface_local",
   "requires_api_key": true,
   "huggingface_id": "meta-llama/llama-2-7b-hf",
   "premade_chat_template": true,
