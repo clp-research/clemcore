@@ -9,14 +9,18 @@ from typing import List, Dict, Any, Tuple
 from backends import Model, CustomResponseModel
 from clemgame.clemgame import Player
 from clemgame.file_utils import load_json
-from games.privateshared.constants import (REQUESTS_PATH, GAME_NAME, YES, NO, 
-                                           ANSWER, ASIDE)
+from games.privateshared.constants import REQUESTS_PATH, GAME_NAME
 
 
 class Answerer(Player):
     """Implement the Answerer player, making API calls to get utterances."""
-    def __init__(self, model: Model):
+    def __init__(self, model: Model, words: Dict):
         super().__init__(model)
+
+        self.answer = words['ANSWER']
+        self.aside = words['ASIDE']
+        self.yes = words['YES']
+        self.no = words['NO']
 
     def _custom_response(self, messages: Any, turn_idx: int) -> str:
         """Return a mock response with a tag and possibly a yes/no prefix."""
@@ -24,11 +28,11 @@ class Answerer(Player):
         # randomly decide whether to start with yes, no or nothing
         begin = ''
         if r < 0.33:
-            begin = f'{NO}, '
+            begin = f'{self.no}, '
         elif r < 0.66:
-            begin = f'{YES}, '
+            begin = f'{self.yes}, '
         # randomly select an initial tag.
-        tag = ANSWER if random.random() < 0.5 else ASIDE
+        tag = self.answer if random.random() < 0.5 else self.aside
         return f'{tag}{begin}placeholder for turn {turn_idx}.'
 
 
@@ -63,12 +67,13 @@ class PrivateSharedGame:
                  request_order: List[str],
                  requests: Dict[str, int],
                  slots: Dict[str, str],
-                 model: Model
+                 model: Model,
+                 words: Dict
                  ):
         self.slots = slots
         self.max_turns: int = len(self.slots)
         self.request_order = request_order
-        self.answerer: Answerer = Answerer(model)
+        self.answerer: Answerer = Answerer(model, words)
         self.questioner: Questioner = Questioner(
             subtype, self.max_turns, request_order, requests)
         self.messages: List = []

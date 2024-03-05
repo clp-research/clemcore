@@ -108,4 +108,9 @@ if __name__ == '__main__':
     # We need ignore_index=True to reset the indices (otherwise we have duplicates)
     df_episode_scores = pd.concat([df_episode_scores, aux], ignore_index=True)
 
+    # save raw scores
+    df_episode_scores.to_csv(Path(args.results_path) / f'raw.csv')
+    print(f'\n Saved raw scores into {args.results_path}/raw.csv')
+
+    # save main table
     save_clem_table(df_episode_scores, args.results_path)

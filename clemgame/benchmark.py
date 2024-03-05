@@ -46,6 +46,7 @@ def run(game_name: str, model_specs: List[backends.ModelSpec], gen_args: Dict,
         time_end = datetime.now()
         logger.info(f"Run {benchmark.name} took {str(time_end - time_start)}")
     except Exception as e:
+        stdout_logger.exception(e)
         logger.error(e, exc_info=True)
 
 

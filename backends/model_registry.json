@@ -55,18 +55,23 @@
     "backend": "openai"
   },
   {
-    "model_name": "mistral-medium",
-    "model_id": "mistral-medium",
+    "model_name": "mistral-medium-2312",
+    "model_id": "mistral-medium-2312",
     "backend": "mistral"
   },
   {
-    "model_name": "mistral-tiny",
-    "model_id": "mistral-tiny",
+    "model_name": "mistral-tiny-2312",
+    "model_id": "mistral-tiny-2312",
     "backend": "mistral"
   },
   {
-    "model_name": "mistral-small",
-    "model_id": "mistral-small",
+    "model_name": "mistral-small-2312",
+    "model_id": "mistral-small-2312",
+    "backend": "mistral"
+  },
+  {
+    "model_name": "mistral-large-2402",
+    "model_id": "mistral-large-2402",
     "backend": "mistral"
   },
   {

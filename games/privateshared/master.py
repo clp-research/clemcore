@@ -17,9 +17,8 @@ from clemgame import get_logger
 
 from games.privateshared.game import PrivateSharedGame
 from games.privateshared.constants import (
-    GAME_NAME, PROBES_PATH, RETRIES_PATH, DUMMY_PROMPT, ANSWER, UPDATE,
-    INVALID_LABEL, INVALID, PROBE, YES, NO, SUCCESS, NOT_SUCCESS, NOT_PARSED,
-    ASIDE, RESULT, ME)
+    GAME_NAME, PROBES_PATH, RETRIES_PATH, UPDATE, WORDS_PATH,
+    INVALID_LABEL, INVALID, SUCCESS, NOT_SUCCESS, NOT_PARSED, RESULT)
 
 
 logger = get_logger(__name__)
@@ -57,22 +56,34 @@ class PrivateShared(GameMaster):
               requests: Dict[str, int],
               probes: Dict[int, Dict[str, int]],
               slots: Dict[str, str],
-              tag: str
+              tag: str,
+              lang: str,
               ) -> None:
+
+        # load language specific words
+        words = self.load_json(WORDS_PATH.format(lang))
+        self.answer = words['ANSWER']
+        self.aside = words['ASIDE']
+        self.me = words['ME']
+        self.dummy_prompt = words['DUMMY_PROMPT']
+        self.probe_text = words['PROBE']
+        self.yes = words['YES']
+        self.no = words['NO']
 
         self.questioner_tag = f"{tag}: "
         self.initial_prompt = initial_prompt
         self.probing = probes
         self.probe_gt = {slot: i for i, slot in enumerate(request_order)}
         self.game = PrivateSharedGame(
-            self.subtype, request_order, requests, slots, self.player_models[0])
+            self.subtype, request_order, requests, slots,
+            self.player_models[0], words)
         # one probing before the game starts and one after each request
         self.n_probe_turns = self.game.max_turns + 1
         # initialise turn counters
         self.request_counts = [0] * self.n_probe_turns
         self.parsed_request_counts = [0] * self.n_probe_turns
         self.violated_request_counts = [0] * self.n_probe_turns
-
+    
         self.log_players({
             'GM': 'Game master for privateshared',
             'Player 1': f'Answerer: {self.model_name}',
@@ -128,7 +139,7 @@ class PrivateShared(GameMaster):
         logger.info('Game turn: %d', self.game.current_turn)
 
         # pseudo prompt to questioner
-        action = {'type': 'send message', 'content': DUMMY_PROMPT}
+        action = {'type': 'send message', 'content': self.dummy_prompt}
         self.log_event(from_='GM', to='Player 2', action=action)
 
         # get request
@@ -179,10 +190,10 @@ class PrivateShared(GameMaster):
 
     def _parse_slot_response(self, response: str) -> str:
         """Extract parsed answer in slot filling turn."""
-        if not response.startswith(ANSWER.strip()):
+        if not response.startswith(self.answer.strip()):
             logger.warning(NOT_PARSED)
             return INVALID
-        clean_response = self._filter_tag(response, ANSWER.strip())
+        clean_response = self._filter_tag(response, self.answer.strip())
         return clean_response
 
     def _is_slot_filled(self, answer: str) -> bool:
@@ -223,7 +234,7 @@ class PrivateShared(GameMaster):
         """Return the initialised probe dictionary."""
         question = self.probing_questions[key][idx]
         return {'target': key.upper(),
-                'question': PROBE.format(question),
+                'question': self.probe_text.format(question),
                 'gt': self._get_gt(turn_idx, key)}
 
     def _create_turn_probes(self, turn_idx: int) -> List[Dict]:
@@ -289,7 +300,7 @@ class PrivateShared(GameMaster):
             action = {'type': 'parse', 'content': parsed_response}
             self.log_event(from_='GM', to='GM', action=action)
             # check if valid response, otherwise try again
-            if parsed_response in (YES, NO):
+            if parsed_response in (self.yes, self.no):
                 successful = True
                 self.parsed_request_counts[turn] += 1
                 break
@@ -300,7 +311,7 @@ class PrivateShared(GameMaster):
 
     def _get_probe_content(self, question: str, tries: int) -> str:
         """Build probing question."""
-        return question[:].replace(ME, f'{ME}{self.retries[tries - 1]} ')
+        return question[:].replace(self.me, f'{self.me}{self.retries[tries - 1]} ')
 
     def _log_probing_outcome(self, probe: Dict, successful: bool, tries: int):
         if not successful:
@@ -324,22 +335,21 @@ class PrivateShared(GameMaster):
 
     def _parse_probing_response(self, response: str) -> str:
         """Extract parsed answer in probing turn."""
-        if not response.startswith(ASIDE.strip()):
+        if not response.startswith(self.aside.strip()):
             return INVALID
-        clean_response = self._filter_tag(response, ASIDE.strip())
-        if clean_response.lower().startswith(YES):
-            return YES
-        if clean_response.lower().startswith(NO):
-            return NO
+        clean_response = self._filter_tag(response, self.aside.strip())
+        if clean_response.lower().startswith(self.yes):
+            return self.yes
+        if clean_response.lower().startswith(self.no):
+            return self.no
         logger.warning(NOT_PARSED)
         return INVALID
 
-    @staticmethod
-    def _convert_response(response: str) -> bool:
+    def _convert_response(self, response: str) -> bool:
         """Turn probing response into integer (0: negation, 1: affirmation)."""
-        if response == YES:
+        if response == self.yes:
             return 1
-        if response == NO:
+        if response == self.no:
             return 0
         return INVALID_LABEL
 
