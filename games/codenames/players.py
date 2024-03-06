@@ -100,8 +100,6 @@ class ClueGiver(Player):
         # Clue needs to be a single word
         if ' ' in clue:
             raise ClueContainsSpaces(utterance, clue)
-        if not clue.isalpha():
-            raise ClueContainsNonAlphabeticalCharacters(utterance, clue)
         # Clue needs to contain a word that is not morphologically similar to any word on the board
         self.check_morphological_similarity(utterance, clue, remaining_words)
         if clue in remaining_words:
