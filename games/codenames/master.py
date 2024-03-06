@@ -82,7 +82,8 @@ class CodenamesGame(DialogueGameMaster):
     
     def _opponent_turn(self):
         # reveal as many opponent cards as the opponent difficulty
-        opponent_words = random.sample(self.board.get_hidden_words(OPPONENT), self.opponent_difficulty)
+        hidden_opponent_words = self.board.get_hidden_words(OPPONENT)
+        opponent_words = random.sample(hidden_opponent_words, min(self.opponent_difficulty, len(hidden_opponent_words)))
         for word in opponent_words:
             assignment = self.board.reveal_word(word, OPPONENT)
             self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"word": word, "assignment": assignment})

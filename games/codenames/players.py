@@ -4,7 +4,7 @@
 # TODO: ignore wrong guesses/targets first, before inferring amount of words!
 
 from typing import Dict, List
-import re, random, string, nltk
+import re, random, string, nltk, backends
 
 from clemgame.clemgame import Player
 from .constants import *
@@ -30,6 +30,13 @@ class ClueGiver(Player):
         self.flags = flags
         self.flags_engaged = {key: 0 for key, value in flags.items()}
 
+    def __call__(self, history, current_turn):
+        try:
+            return super().__call__(history, current_turn)
+        except backends.ContextExceededError:
+            prompt = history[-1]
+            return prompt, "CONTEXT EXCEEDED" , "CONTEXT EXCEEDED!"
+
     def _custom_response(self, history, turn) -> str:
         prompt = history[-1]["content"]
         match = re.search(r"team words are: (.*)\.", prompt)
@@ -40,13 +47,11 @@ class ClueGiver(Player):
             self.targets = random.sample(team_words, min(2, len(team_words)))
         self.number_of_targets = len(self.targets)
         self.clue = "".join(random.sample(list(string.ascii_lowercase), 6))
-        return self.recover_utterance(with_targets=True)
+        return self.recover_utterance()
 
     def check_morphological_similarity(self, utterance, clue, remaining_words):
         clue_lemma = EN_LEMMATIZER.lemmatize(clue)
         remaining_word_lemmas = [EN_LEMMATIZER.lemmatize(word) for word in remaining_words]
-        print(clue_lemma)
-        print(remaining_word_lemmas)
         if clue_lemma in remaining_word_lemmas:
             similar_board_word = remaining_words[remaining_word_lemmas.index(clue_lemma)]
             raise RelatedClueError(utterance, clue, similar_board_word)
@@ -170,12 +175,17 @@ class Guesser(Player):
         if not (0 < len(guesses) <= number_of_allowed_guesses):
             raise WrongNumberOfGuessesError(utterance, guesses, number_of_allowed_guesses)
         # guesses must be words on the board that are not revealed yet
+        incorrect_guesses = 0
         for guess in guesses:
             if not guess in remaining_words:
+                incorrect_guesses += 1
                 if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
                     self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
                 else:
                     raise InvalidGuessError(utterance, guess, remaining_words)
+        if len(guesses) == incorrect_guesses:
+            raise NoCorrectGuessError(utterance, guesses, remaining_words)
+        
             
     def parse_response(self, utterance: str) -> str:
         if self.flags["IGNORE RAMBLING"]:

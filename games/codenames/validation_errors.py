@@ -5,6 +5,7 @@ class ValidationErrorTypes(str, Enum):
     RAMBLING_ERROR = "rambling error"
     PREFIX_ERROR = "prefix error"
     WRONG_NUMBER_OF_GUESSES = "wrong number of guesses"
+    NO_CORRECT_GUESS = "no correct guess"
     INVALID_GUESS = "invalid guess"
     RELATED_CLUE_ERROR = "clue is morphologically related to word on the board"
     TOO_FEW_TEXT = "answer only contained one line"
@@ -63,7 +64,20 @@ class WrongNumberOfGuessesError(ValidationError):
     def get_dict(self):
         result = super().get_dict()
         result["guesses"] = self.guesses
-        result["nummber of allowed guesses"] = self.number_of_allowed_guesses
+        result["number of allowed guesses"] = self.number_of_allowed_guesses
+        return result
+
+class NoCorrectGuessError(ValidationError):
+    def __init__(self, utterance, guesses, remaining_words):
+        message = f"All of your guesses are incorrect and are not present anymore. You can only choose words as guesses from the remaining words and at least one guess has to be correct."
+        super().__init__(GUESSER, ValidationErrorTypes.NO_CORRECT_GUESS, utterance, message)
+        self.guesses = guesses
+        self.remaining_words = remaining_words
+
+    def get_dict(self):
+        result = super().get_dict()
+        result["guesses"] = self.guesses
+        result["remaining words"] = self.remaining_words
         return result
     
 class GuessContainsInvalidCharacters(ValidationError):

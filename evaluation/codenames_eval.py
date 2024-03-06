@@ -34,9 +34,10 @@ def score_evaluation(args):
     save_table(df, args.results_path, "results")
 
     # create and save codenames tables
-    df_metrics, df_requests = make_codenames_table(df_episode_scores)
+    df_metrics, df_requests, df_flags = make_codenames_table(df_episode_scores)
     save_table(df_metrics, args.results_path, "codenames-specific results")
     save_table(df_requests, args.results_path, "codenames-requests")
+    save_table(df_flags, args.results_path, "codenames-flags")
 
 def score_amount_played(df_episode_scores):
     if clemmetrics.METRIC_PLAYED in df_episode_scores['metric'].unique():
@@ -103,11 +104,10 @@ def make_codenames_table(df: pd.DataFrame) -> pd.DataFrame:
     df_aux = df_aux.pivot(columns=['metric'], index=['model'])
     df_aux = df_aux.droplevel(0, axis=1)
 
-    df_game_metrics = df_aux[['Aborted', 'Played', 'Success', 'Lose', 'game end', 'number of turns', 'efficiency', 'avg target f1', 'team words revealed/all team words', 'other words not revealed/all other words',]]
-    df_requests = df_aux[['Request Count', 'Parsed Request Count', 'Violated Request Count', 'Request Success Ratio', 'Cluegiver ignored false targets', 'Guesser ignored false guesses', 'Cluegiver ignored rambling', 'Guesser ignored rambling']]
-    # TODO: use game_end Enum somehow to one-hot-encode game ends, mean does not tell anything!
-    return df_game_metrics, df_requests
-    
+    df_game_metrics = df_aux[['Aborted', 'Played', 'Success', 'Lose', GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, 'efficiency', 'avg target f1', 'episode recall', 'episode negative recall',]]
+    df_requests = df_aux[['Request Count', 'Parsed Request Count', 'Violated Request Count', 'Request Success Ratio']]
+    df_flags = df_aux.filter(regex='Cluegiver|Guesser')
+    return df_game_metrics, df_requests, df_flags
     # also put main clem scoring into this table as well?
 
 def save_table(df, path, table_name):
@@ -135,8 +135,7 @@ def error_evaluation(results_path):
             for event in turn:
                 action = event["action"]
                 match action["type"]:
-                    case Turn_logs.CLUEGIVER_INVALID_FORMAT | Turn_logs.GUESSER_INVALID_FORMAT:
-                        # FIXME: only log invalid format the same for both players
+                    case Turn_logs.VALIDATION_ERROR:
                         error_type = action["content"]["type"]
                         errors[players][error_type] += 1
 
@@ -149,7 +148,8 @@ def error_evaluation(results_path):
     error_df = pd.DataFrame.from_dict(errors)
     error_df = error_df.transpose().fillna(0)
     print(error_df)
-    error_df.to_csv(f"{results_path}/errors.csv")
+    save_table(error_df, results_path, "errors")
+    # error_df.to_csv(f"{results_path}/errors.csv")
 
     # save errors with double index player-episode, put utterances in there as well?
     with open(f"{results_path}/error_causes.json", 'w') as file:

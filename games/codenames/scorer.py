@@ -1,7 +1,7 @@
 import statistics, math
 from clemgame.clemgame import GameScorer
 from clemgame.metrics import BENCH_SCORE, METRIC_ABORTED
-from .constants import Turn_logs, CLUEGIVER, GUESSER, REVEALED, TARGET, TEAM, OPPONENT, INNOCENT, ASSASSIN, GAME_NAME, NUMBER_OF_TURNS, GAME_ENDED_THROUGH_ASSASSIN
+from .constants import Turn_logs, CLUEGIVER, GUESSER, REVEALED, TARGET, TEAM, OPPONENT, INNOCENT, ASSASSIN, GAME_NAME, NUMBER_OF_TURNS, GAME_ENDED_THROUGH_ASSASSIN, BOARD_STATUS
 
 EXPECTED_WORDS_PER_TURN = 2
 
@@ -76,8 +76,8 @@ class CodenamesScorer(GameScorer):
 
         for flag_name, value in self.experiment["flags"].items():
             if value:
-                self.log_episode_score(f"Cluegiver {flag_name}", episode_interactions["Cluegiver engaged flags"][flag_name])
-                self.log_episode_score(f"Guesser {flag_name}", episode_interactions["Guesser engaged flags"][flag_name])       
+                self.log_episode_score(f"Cluegiver {flag_name.lower()}", episode_interactions["Cluegiver engaged flags"][flag_name])
+                self.log_episode_score(f"Guesser {flag_name.lower()}", episode_interactions["Guesser engaged flags"][flag_name])       
 
         number_of_turns = episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
@@ -99,9 +99,10 @@ class CodenamesScorer(GameScorer):
         # TODO: should ratios also be 0 or NaN when the game was aborted? yes they should...
 
         self.log_episode_score(GAME_ENDED_THROUGH_ASSASSIN, episode_interactions[GAME_ENDED_THROUGH_ASSASSIN])
+        self.board_at_end = episode_interactions[BOARD_STATUS]
 
-        number_of_team_words = self.experiment["assignment"]["team"]
-        number_of_non_team_words = self.experiment["assignment"]["opponent"] + self.experiment["assignment"]["innocent"] + self.experiment["assignment"]["assassin"]
+        number_of_team_words = self.experiment["assignments"]["team"]
+        number_of_non_team_words = self.experiment["assignments"]["opponent"] + self.experiment["assignments"]["innocent"] + self.experiment["assignments"]["assassin"]
         self.log_episode_score("episode recall", len(self.board_at_end[REVEALED][TEAM][TEAM]) / number_of_team_words)
         self.log_episode_score("episode negative recall", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / number_of_non_team_words)
        
