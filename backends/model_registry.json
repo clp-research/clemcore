@@ -25,6 +25,16 @@
     "backend": "openai"
   },
   {
+    "model_name": "gpt-4-0125-preview",
+    "model_id": "gpt-4-0125-preview",
+    "backend": "openai"
+  },
+  {
+    "model_name": "gpt-3.5-turbo-0125",
+    "model_id": "gpt-3.5-turbo-0125",
+    "backend": "openai"
+  },
+  {
     "model_name": "gpt-4-0613",
     "model_id": "gpt-4-0613",
     "backend": "openai"
@@ -45,18 +55,23 @@
     "backend": "openai"
   },
   {
-    "model_name": "mistral-medium",
-    "model_id": "mistral-medium",
+    "model_name": "mistral-medium-2312",
+    "model_id": "mistral-medium-2312",
     "backend": "mistral"
   },
   {
-    "model_name": "mistral-tiny",
-    "model_id": "mistral-tiny",
+    "model_name": "mistral-tiny-2312",
+    "model_id": "mistral-tiny-2312",
     "backend": "mistral"
   },
   {
-    "model_name": "mistral-small",
-    "model_id": "mistral-small",
+    "model_name": "mistral-small-2312",
+    "model_id": "mistral-small-2312",
+    "backend": "mistral"
+  },
+  {
+    "model_name": "mistral-large-2402",
+    "model_id": "mistral-large-2402",
     "backend": "mistral"
   },
   {

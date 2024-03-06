@@ -17,7 +17,9 @@ class WordleGameMaster(GameMaster):
     def __init__(self, game_name: str, experiment: Dict, player_models: List[Model]):
         super().__init__(game_name, experiment, player_models)
         self.config = experiment
-        self.player_model_names = [player_model.get_name() for player_model in player_models]
+        self.player_model_names = [
+            player_model.get_name() for player_model in player_models
+        ]
 
     def setup(self, game_id, target_word, target_word_clue, target_word_difficulty):
         self.game_id = game_id
@@ -53,13 +55,19 @@ class WordleGameMaster(GameMaster):
         game_config["max_retry_per_error"] = self.config["common_config"][
             "max_retry_per_error"
         ]
+        game_config["max_retry_invalid_word"] = self.config["common_config"][
+            "max_retry_invalid_word"
+        ]
         game_config["max_word_length"] = self.config["common_config"]["max_word_length"]
         game_config["use_critic"] = self.config["use_critic"]
         game_config["max_critic_opinion_count"] = self.config["common_config"][
             "max_critic_opinion_count"
         ]
         game_config["english_words_list"] = self.config["english_words"]
-        game_config["model_names"] = self.player_models
+        game_config["models"] = self.player_models
+        game_config["response_format_keywords"] = self.config[
+            "response_format_keywords"
+        ]
 
         prompt_generator_config = {}
         prompt_generator_config["use_error_explanation"] = self.config["common_config"][
@@ -202,8 +210,8 @@ class WordleGameMaster(GameMaster):
             self._log_api_calls(
                 utterance, send_prompt, message, response, result, "Player 1", "GM"
             )
-            guess = result["guess:"]
-            explanation = result["explanation:"]
+            guess = result[self.config["response_format_keywords"]["guess"]]
+            explanation = result[self.config["response_format_keywords"]["explanation"]]
             logger.debug("Receieved guess = {%s}", guess)
             return guess, explanation, error
         else:
@@ -211,8 +219,12 @@ class WordleGameMaster(GameMaster):
             self._log_api_calls(
                 utterance, send_prompt, message, response, result, "Player 2", "GM"
             )
-            critic_agreement = result["agreement:"]
-            critic_explanation = result["explanation:"]
+            critic_agreement = result[
+                self.config["response_format_keywords"]["agreement"]
+            ]
+            critic_explanation = result[
+                self.config["response_format_keywords"]["explanation"]
+            ]
             return critic_agreement, critic_explanation, error
 
     def _validate_guess(self, guess):
@@ -475,9 +487,8 @@ class WordleGameMaster(GameMaster):
 
 
 class WordleGameScorer(GameScorer):
-
-    def __init__(self, experiment: Dict, game_instance: Dict):
-        super().__init__(GAME_NAME, experiment, game_instance)
+    def __init__(self, game_name: str, experiment: Dict, game_instance: Dict):
+        super().__init__(game_name, experiment, game_instance)
         self.cm = ComputeMetrics()
 
     def compute_scores(self, episode_interactions: Dict) -> None:
@@ -713,11 +724,13 @@ class WordleGameBenchmark(GameBenchmark):
     def get_description(self):
         return "Wordle Game"
 
-    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+    def create_game_master(
+        self, experiment: Dict, player_models: List[Model]
+    ) -> GameMaster:
         return WordleGameMaster(self.name, experiment, player_models)
 
     def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
-        return WordleGameScorer(experiment, game_instance)
+        return WordleGameScorer(self.name, experiment, game_instance)
 
     def is_single_player(self) -> bool:
         return True

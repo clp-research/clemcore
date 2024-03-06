@@ -5,7 +5,8 @@ from clemgame.clemgame import Player
 
 
 class Guesser(Player):
-    def __init__(self, model: Model = None):
+    def __init__(self, model: Model = None, response_format_keywords: Dict = None):
+        self.response_format_keywords = response_format_keywords
         super().__init__(model)
 
     def __call__(self, messages: List[Dict], turn_idx) -> str:
@@ -18,5 +19,5 @@ class Guesser(Player):
 
     def _custom_response(self, messages, turn_idx) -> str:
         # Repeating the same to maintain similar results w.r.t LLM mode
-        dummy_response = "guess:<dummy> explanation:<dummy>"
+        dummy_response = f'{self.response_format_keywords["guess"]}:dummy\n{self.response_format_keywords["explanation"]}:dummy'
         return dummy_response

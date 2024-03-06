@@ -5,84 +5,124 @@
       "game_instances": [
         {
           "game_id": 0,
-          "target_word": "length",
-          "related_word": ["stretch", "plain", "expansion"]
+          "target_word": "responsibility",
+          "related_word": ["blame", "obligation", "reliability"],
+          "target_word_stem": "respons",
+          "related_word_stem": ["blame", "oblig", "reliabl"]
         }, {
           "game_id": 1,
-          "target_word": "deliver",
-          "related_word": ["supply", "transmit", "cough up"]
+          "target_word": "boy",
+          "related_word": ["kid", "lad", "teenager"],
+          "target_word_stem": "boy",
+          "related_word_stem": ["kid", "lad", "teenag"]
         }, {
           "game_id": 2,
-          "target_word": "film",
-          "related_word": ["cinema", "motion picture", "picture"]
+          "target_word": "transit",
+          "related_word": ["transport", "cross", "traverse"],
+          "target_word_stem": "transit",
+          "related_word_stem": ["transport", "cross", "travers"]
         }, {
           "game_id": 3,
-          "target_word": "disk",
-          "related_word": ["bit", "shiver", "chip"]
+          "target_word": "rate",
+          "related_word": ["quality", "estimate", "ratio"],
+          "target_word_stem": "rate",
+          "related_word_stem": ["qualiti", "estim", "ratio"]
         }, {
           "game_id": 4,
-          "target_word": "several",
-          "related_word": ["manifold", "innumerable", "multiplex"]
+          "target_word": "host",
+          "related_word": ["swarm", "army", "announcer"],
+          "target_word_stem": "host",
+          "related_word_stem": ["swarm", "armi", "announc"]
         }, {
           "game_id": 5,
-          "target_word": "agenda",
-          "related_word": ["schedule", "calendar", "docket"]
+          "target_word": "output",
+          "related_word": ["product", "yield", "result"],
+          "target_word_stem": "output",
+          "related_word_stem": ["product", "yield", "result"]
         }, {
           "game_id": 6,
-          "target_word": "future",
-          "related_word": ["hereafter", "fortune", "offing"]
+          "target_word": "likely",
+          "related_word": ["probable", "promising", "plausible"],
+          "target_word_stem": "like",
+          "related_word_stem": ["probabl", "promis", "plausibl"]
         }, {
           "game_id": 7,
-          "target_word": "park",
-          "related_word": ["nestle", "curl up", "deploy"]
+          "target_word": "resume",
+          "related_word": ["continue", "summary", "restart"],
+          "target_word_stem": "resum",
+          "related_word_stem": ["continu", "summari", "restart"]
         }, {
           "game_id": 8,
-          "target_word": "involve",
-          "related_word": ["grip", "bower", "engage"]
+          "target_word": "clear",
+          "related_word": ["crystal", "obvious", "confident"],
+          "target_word_stem": "clear",
+          "related_word_stem": ["crystal", "obvious", "confid"]
         }, {
           "game_id": 9,
-          "target_word": "census",
-          "related_word": ["count", "tally", "tale"]
+          "target_word": "short",
+          "related_word": ["little", "brief", "lacking"],
+          "target_word_stem": "short",
+          "related_word_stem": ["littl", "brief", "lack"]
         }, {
           "game_id": 10,
-          "target_word": "applicant",
-          "related_word": ["candidate", "expectant", "hopeful"]
+          "target_word": "touch",
+          "related_word": ["feel", "influence", "taint"],
+          "target_word_stem": "touch",
+          "related_word_stem": ["feel", "influenc", "taint"]
         }, {
           "game_id": 11,
-          "target_word": "tea",
-          "related_word": ["feast", "table", "gulp"]
+          "target_word": "rental",
+          "related_word": ["rent", "reimbursement", "overpayment"],
+          "target_word_stem": "rental",
+          "related_word_stem": ["rent", "reimburs", "overpay"]
         }, {
           "game_id": 12,
-          "target_word": "counsel",
-          "related_word": ["conference", "talk", "consult"]
+          "target_word": "provide",
+          "related_word": ["give", "supply", "furnish"],
+          "target_word_stem": "provid",
+          "related_word_stem": ["give", "suppli", "furnish"]
         }, {
           "game_id": 13,
-          "target_word": "street",
-          "related_word": ["high road", "thruway", "roadway"]
+          "target_word": "fat",
+          "related_word": ["plump", "filled", "wide"],
+          "target_word_stem": "fat",
+          "related_word_stem": ["plump", "fill", "wide"]
         }, {
           "game_id": 14,
-          "target_word": "top",
-          "related_word": ["fab", "maximum", "cracking"]
+          "target_word": "principal",
+          "related_word": ["star", "main", "chief"],
+          "target_word_stem": "princip",
+          "related_word_stem": ["star", "main", "chief"]
         }, {
           "game_id": 15,
-          "target_word": "breakfast",
-          "related_word": ["cookout", "collation", "luncheon"]
+          "target_word": "filter",
+          "related_word": ["strain", "clarify", "purifier"],
+          "target_word_stem": "filter",
+          "related_word_stem": ["strain", "clarifi", "purifi"]
         }, {
           "game_id": 16,
-          "target_word": "minnesota",
-          "related_word": ["river", "state", "saint paul"]
+          "target_word": "array",
+          "related_word": ["cluster", "grouping", "attire"],
+          "target_word_stem": "array",
+          "related_word_stem": ["cluster", "group", "attir"]
         }, {
           "game_id": 17,
-          "target_word": "election",
-          "related_word": ["druthers", "preference", "discretion"]
+          "target_word": "combination",
+          "related_word": ["mixture", "merger", "cartel"],
+          "target_word_stem": "combin",
+          "related_word_stem": ["mixtur", "merger", "cartel"]
         }, {
           "game_id": 18,
-          "target_word": "yahoo",
-          "related_word": ["glory", "hooray", "huzzah"]
+          "target_word": "none",
+          "related_word": ["no", "never", "nobody"],
+          "target_word_stem": "none",
+          "related_word_stem": ["no", "never", "nobodi"]
         }, {
           "game_id": 19,
-          "target_word": "mark",
-          "related_word": ["label", "tag", "stamp"]
+          "target_word": "career",
+          "related_word": ["practice", "living", "race"],
+          "target_word_stem": "career",
+          "related_word_stem": ["practic", "live", "race"]
         }
       ],
       "max_turns": 3,
@@ -93,84 +133,124 @@
       "game_instances": [
         {
           "game_id": 0,
-          "target_word": "coalition",
-          "related_word": ["party", "bloc", "wing"]
+          "target_word": "assure",
+          "related_word": ["comfort", "ensure", "guarantee"],
+          "target_word_stem": "assur",
+          "related_word_stem": ["comfort", "ensur", "guarante"]
         }, {
           "game_id": 1,
-          "target_word": "reflection",
-          "related_word": ["scandal", "thought", "remark"]
+          "target_word": "haven",
+          "related_word": ["harbor", "port", "refuge"],
+          "target_word_stem": "haven",
+          "related_word_stem": ["harbor", "port", "refug"]
         }, {
           "game_id": 2,
-          "target_word": "transmit",
-          "related_word": ["pack off", "send", "communicate"]
+          "target_word": "limousine",
+          "related_word": ["car", "coupe", "automobile"],
+          "target_word_stem": "limousin",
+          "related_word_stem": ["car", "coup", "automobil"]
         }, {
           "game_id": 3,
-          "target_word": "agricultural",
-          "related_word": ["agrarian", "farming"]
+          "target_word": "induce",
+          "related_word": ["cause", "create", "persuade"],
+          "target_word_stem": "induc",
+          "related_word_stem": ["caus", "creat", "persuad"]
         }, {
           "game_id": 4,
-          "target_word": "statute",
-          "related_word": ["law", "act", "enactment"]
+          "target_word": "stimulate",
+          "related_word": ["arouse", "provoke", "stir"],
+          "target_word_stem": "stimul",
+          "related_word_stem": ["arous", "provok", "stir"]
         }, {
           "game_id": 5,
-          "target_word": "puppy",
-          "related_word": ["pup", "whelp", "dog"]
+          "target_word": "plaza",
+          "related_word": ["square", "atrium", "forecourt"],
+          "target_word_stem": "plaza",
+          "related_word_stem": ["squar", "atrium", "forecourt"]
         }, {
           "game_id": 6,
-          "target_word": "bull",
-          "related_word": ["fiat", "diktat", "directive"]
+          "target_word": "envelope",
+          "related_word": ["package", "wrapper", "mail"],
+          "target_word_stem": "envelop",
+          "related_word_stem": ["packag", "wrapper", "mail"]
         }, {
           "game_id": 7,
-          "target_word": "stewart",
-          "related_word": ["name", "actor", "river"]
+          "target_word": "implication",
+          "related_word": ["inference", "outcome", "allegation"],
+          "target_word_stem": "implic",
+          "related_word_stem": ["infer", "outcom", "alleg"]
         }, {
           "game_id": 8,
-          "target_word": "bend",
-          "related_word": ["pervert", "give", "misrelate"]
+          "target_word": "planner",
+          "related_word": ["researcher", "pioneer", "journal"],
+          "target_word_stem": "planner",
+          "related_word_stem": ["research", "pioneer", "journal"]
         }, {
           "game_id": 9,
-          "target_word": "liable",
-          "related_word": ["accountable", "answerable", "subject (to)"]
+          "target_word": "myth",
+          "related_word": ["legend", "folklore", "illusion"],
+          "target_word_stem": "myth",
+          "related_word_stem": ["legend", "folklor", "illus"]
         }, {
           "game_id": 10,
-          "target_word": "sole",
-          "related_word": ["exclusive", "only", "lone"]
+          "target_word": "fighter",
+          "related_word": ["warrior", "boxer", "defendant"],
+          "target_word_stem": "fighter",
+          "related_word_stem": ["warrior", "boxer", "defend"]
         }, {
           "game_id": 11,
-          "target_word": "clause",
-          "related_word": ["group", "words", "sentence"]
+          "target_word": "obvious",
+          "related_word": ["apparent", "evident", "blatant"],
+          "target_word_stem": "obvious",
+          "related_word_stem": ["appar", "evid", "blatant"]
         }, {
           "game_id": 12,
-          "target_word": "beginner",
-          "related_word": ["novice", "abecedarian", "cub"]
+          "target_word": "recorder",
+          "related_word": ["reporter", "bookkeeper", "archivist"],
+          "target_word_stem": "record",
+          "related_word_stem": ["report", "bookkeep", "archivist"]
         }, {
           "game_id": 13,
-          "target_word": "biology",
-          "related_word": ["organisms", "plant", "life"]
+          "target_word": "contributor",
+          "related_word": ["donor", "benefactor", "giver"],
+          "target_word_stem": "contributor",
+          "related_word_stem": ["donor", "benefactor", "giver"]
         }, {
           "game_id": 14,
-          "target_word": "viewer",
-          "related_word": ["watcher", "onlooker", "spectator"]
+          "target_word": "passage",
+          "related_word": ["route", "trip", "excerpt"],
+          "target_word_stem": "passag",
+          "related_word_stem": ["rout", "trip", "excerpt"]
         }, {
           "game_id": 15,
-          "target_word": "scholarship",
-          "related_word": ["erudition", "education", "knowledge"]
+          "target_word": "quarterly",
+          "related_word": ["monthly", "weekly", "daily"],
+          "target_word_stem": "quarter",
+          "related_word_stem": ["month", "week", "daili"]
         }, {
           "game_id": 16,
-          "target_word": "shake",
-          "related_word": ["jounce", "get around", "shudder"]
+          "target_word": "cabinet",
+          "related_word": ["cupboard", "closet", "locker"],
+          "target_word_stem": "cabinet",
+          "related_word_stem": ["cupboard", "closet", "locker"]
         }, {
           "game_id": 17,
-          "target_word": "scream",
-          "related_word": ["whinge", "grumble", "cackle"]
+          "target_word": "subsidiary",
+          "related_word": ["additive", "option", "subordinate"],
+          "target_word_stem": "subsidiari",
+          "related_word_stem": ["addit", "option", "subordin"]
         }, {
           "game_id": 18,
-          "target_word": "recycle",
-          "related_word": ["recover", "reclaim", "reuse"]
+          "target_word": "orient",
+          "related_word": ["introduce", "educate", "familiarize"],
+          "target_word_stem": "orient",
+          "related_word_stem": ["introduc", "educ", "familiar"]
         }, {
           "game_id": 19,
-          "target_word": "pursue",
-          "related_word": ["chase", "track", "follow"]
+          "target_word": "anymore",
+          "related_word": ["now", "currently", "today"],
+          "target_word_stem": "anymor",
+          "related_word_stem": ["now", "current", "today"]
         }
       ],
       "max_turns": 3,
@@ -181,84 +261,124 @@
       "game_instances": [
         {
           "game_id": 0,
-          "target_word": "atmospheric",
-          "related_word": ["atmosphere", "air", "aesthetic"]
+          "target_word": "autograph",
+          "related_word": ["signature", "hand", "sign"],
+          "target_word_stem": "autograph",
+          "related_word_stem": ["signatur", "hand", "sign"]
         }, {
           "game_id": 1,
-          "target_word": "dude",
-          "related_word": ["fella", "joe", "jay"]
+          "target_word": "synthesis",
+          "related_word": ["mixture", "amalgamation", "blend"],
+          "target_word_stem": "synthesi",
+          "related_word_stem": ["mixtur", "amalgam", "blend"]
         }, {
           "game_id": 2,
-          "target_word": "steady",
-          "related_word": ["regular", "down-the-line", "periodical"]
+          "target_word": "seize",
+          "related_word": ["understand", "arrest", "grab"],
+          "target_word_stem": "seiz",
+          "related_word_stem": ["understand", "arrest", "grab"]
         }, {
           "game_id": 3,
-          "target_word": "enclose",
-          "related_word": ["surround", "cage", "house"]
+          "target_word": "scoop",
+          "related_word": ["spoon", "tip", "bucket"],
+          "target_word_stem": "scoop",
+          "related_word_stem": ["spoon", "tip", "bucket"]
         }, {
           "game_id": 4,
-          "target_word": "photographic",
-          "related_word": ["visual", "iconographic", "hieroglyphic"]
+          "target_word": "nil",
+          "related_word": ["zero", "nothing", "naught"],
+          "target_word_stem": "nil",
+          "related_word_stem": ["zero", "noth", "naught"]
         }, {
           "game_id": 5,
-          "target_word": "gravity",
-          "related_word": ["intentness", "seriousness", "earnestness"]
+          "target_word": "invasion",
+          "related_word": ["incursion", "raid", "foray"],
+          "target_word_stem": "invas",
+          "related_word_stem": ["incurs", "raid", "foray"]
         }, {
           "game_id": 6,
-          "target_word": "liberia",
-          "related_word": ["country", "monrovia", "africa"]
+          "target_word": "squeeze",
+          "related_word": ["crush", "cram", "earn"],
+          "target_word_stem": "squeez",
+          "related_word_stem": ["crush", "cram", "earn"]
         }, {
           "game_id": 7,
-          "target_word": "enclose",
-          "related_word": ["closet", "lap", "encompass"]
+          "target_word": "shark",
+          "related_word": ["dodger", "expert", "predator"],
+          "target_word_stem": "shark",
+          "related_word_stem": ["dodger", "expert", "predat"]
         }, {
           "game_id": 8,
-          "target_word": "nonprofit",
-          "related_word": ["profit", "free", "money"]
+          "target_word": "harmony",
+          "related_word": ["symmetry", "peace", "accordance"],
+          "target_word_stem": "harmoni",
+          "related_word_stem": ["symmetri", "peac", "accord"]
         }, {
           "game_id": 9,
-          "target_word": "undo",
-          "related_word": ["unbind", "unsettle", "unhinge"]
+          "target_word": "sear",
+          "related_word": ["char", "dry", "burn"],
+          "target_word_stem": "sear",
+          "related_word_stem": ["char", "dri", "burn"]
         }, {
           "game_id": 10,
-          "target_word": "magnitude",
-          "related_word": ["moment", "weightiness", "account"]
+          "target_word": "regret",
+          "related_word": ["lament", "repent", "remorse"],
+          "target_word_stem": "regret",
+          "related_word_stem": ["lament", "repent", "remors"]
         }, {
           "game_id": 11,
-          "target_word": "slovak",
-          "related_word": ["slavic", "people", "slovakia"]
+          "target_word": "transplant",
+          "related_word": ["relocate", "transport", "drive"],
+          "target_word_stem": "transplant",
+          "related_word_stem": ["reloc", "transport", "drive"]
         }, {
           "game_id": 12,
-          "target_word": "yankee",
-          "related_word": ["native", "england", "inhabitant"]
+          "target_word": "bypass",
+          "related_word": ["circumvent", "ignore", "avoid"],
+          "target_word_stem": "bypass",
+          "related_word_stem": ["circumv", "ignor", "avoid"]
         }, {
           "game_id": 13,
-          "target_word": "hobby",
-          "related_word": ["avocation", "hobbyhorse", "recreation"]
+          "target_word": "conform",
+          "related_word": ["correspond", "blend", "reconcile"],
+          "target_word_stem": "conform",
+          "related_word_stem": ["correspond", "blend", "reconcil"]
         }, {
           "game_id": 14,
-          "target_word": "flux",
-          "related_word": ["Delhi belly", "inflow", "Montezuma's revenge"]
+          "target_word": "peaceful",
+          "related_word": ["pacifistic", "nonviolent", "quiet"],
+          "target_word_stem": "peac",
+          "related_word_stem": ["pacifist", "nonviol", "quiet"]
         }, {
           "game_id": 15,
-          "target_word": "cameroon",
-          "related_word": ["country", "yaounde", "africa"]
+          "target_word": "independently",
+          "related_word": ["separately", "alone", "individually"],
+          "target_word_stem": "independ",
+          "related_word_stem": ["separ", "alon", "individu"]
         }, {
           "game_id": 16,
-          "target_word": "guild",
-          "related_word": ["consortium", "league", "club"]
+          "target_word": "deduction",
+          "related_word": ["discount", "subtraction", "inference"],
+          "target_word_stem": "deduct",
+          "related_word_stem": ["discount", "subtract", "infer"]
         }, {
           "game_id": 17,
-          "target_word": "diy",
-          "related_word": ["do", "it", "yourself"]
+          "target_word": "designation",
+          "related_word": ["moniker", "name", "appointment"],
+          "target_word_stem": "design",
+          "related_word_stem": ["monik", "name", "appoint"]
         }, {
           "game_id": 18,
-          "target_word": "orbit",
-          "related_word": ["path", "circle", "trajectory"]
+          "target_word": "embroidery",
+          "related_word": ["needle", "exaggeration", "caricature"],
+          "target_word_stem": "embroideri",
+          "related_word_stem": ["needl", "exagger", "caricatur"]
         }, {
           "game_id": 19,
-          "target_word": "bloody",
-          "related_word": ["bloodstained", "gory", "sanguineous"]
+          "target_word": "pastor",
+          "related_word": ["rector", "clergy", "vicar"],
+          "target_word_stem": "pastor",
+          "related_word_stem": ["rector", "clergi", "vicar"]
         }
       ],
       "max_turns": 3,

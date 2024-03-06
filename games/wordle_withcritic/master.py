@@ -18,4 +18,4 @@ class WordleWithClueAndCriticGameBenchmark(GameBenchmark):
         return WordleGameMaster(self.name, experiment, player_models)
 
     def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
-        return WordleGameScorer(experiment, game_instance)
+        return WordleGameScorer(self.name, experiment, game_instance)

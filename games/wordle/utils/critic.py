@@ -5,7 +5,8 @@ from clemgame.clemgame import Player
 
 
 class Critic(Player):
-    def __init__(self, model_name: Model = None):
+    def __init__(self, model_name: Model = None, response_format_keywords: Dict = None):
+        self.response_format_keywords = response_format_keywords
         super().__init__(model_name)
 
     def __call__(self, messages: List[Dict], turn_idx) -> str:
@@ -18,5 +19,5 @@ class Critic(Player):
 
     def _custom_response(self, messages, turn_idx) -> str:
         # Repeating the same to maintain similar results w.r.t LLM mode
-        dummy_response = "agreement:<yes> explanation:<agree with your guess>"
+        dummy_response = f'{self.response_format_keywords["agreement"]}:yes\n{self.response_format_keywords["explanation"]}:agree with your guess'
         return dummy_response

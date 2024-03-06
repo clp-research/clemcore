@@ -1,5 +1,4 @@
 # Model Registry
-**Currently only applies to the local huggingface backend!**  
 The model registry holds information and settings for each of the models currently supported by clembench.  
 It is stored as a JSON file in the `backends` directory. This file contains a list of model entry objects.  
 ## Model Entry Components
@@ -18,3 +17,14 @@ The following key/values are **optional**, but should be defined for models that
 `custom_chat_template`(string): A jinja2 template string of the chat template to be applied for this model. This should be set if `premade_chat_template` is `false` for the model, as the generic fallback chat template that will be used if this is not defined is likely to lead to bad model performance.  
 `slow_tokenizer`(bool): If `true`, the backend will load the model's tokenizer with `use_fast=False`. Some models require the use of a 'slow' tokenizer class to assure proper tokenization.  
 `output_split_prefix`(string): The model's raw output will be rsplit using this string, and the remaining output following this string will be considered the model output. This is necessary for some models that decode tokens differently than they encode them, to assure that the prompt is properly removed from model responses. Example: `assistant\n`
+# Backend Classes
+Model registry entries are mainly used for two classes: `backends.ModelSpec` and `backends.Model`.
+## ModelSpec
+The `backends.ModelSpec` class is used to hold model-specific data, as defined in a model entry, and default 
+generation parameters. All backend functions and methods expect instances of this class as arguments for model loading.  
+As part of a benchmark run, `ModelSpec` is initialized using the model name only, and the settings are loaded from the 
+model registry, from the first entry with the given name, unifying with the entry contents.  
+For testing and prototyping, a `ModelSpec` can be initialized from a `dict` with the same structure as a model entry, 
+using `ModelSpec.from_dict()`.
+## Model
+The `backends.Model` class is used for fully loaded model instances ready for generation.

@@ -16,24 +16,4 @@ X ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-Or for another instruction such as "fill the fifth column with T", you return the updated grid by applying the given instruction in all places that the command corresponds to, like so:
-
-Instruction: fill the fifth column with T
-
-X ▢ ▢ ▢ T
-▢ ▢ ▢ ▢ T
-▢ ▢ ▢ ▢ T
-▢ ▢ ▢ ▢ T
-▢ ▢ ▢ ▢ T
-
-Or for another instruction such as "fill the fourth column second row with P", you return the updated grid by applying the given instruction in all places that the command corresponds to, like so:
-
-Instruction: fill the fourth column second row with P
-
-X ▢ ▢ ▢ T
-▢ ▢ ▢ P T
-▢ ▢ ▢ ▢ T
-▢ ▢ ▢ ▢ T
-▢ ▢ ▢ ▢ T
-
 Now create an empty grid with a size GRID_DIMENSION and execute the following commands at each step. Once you execute the command, return only the grid and exclude all other text from the output.

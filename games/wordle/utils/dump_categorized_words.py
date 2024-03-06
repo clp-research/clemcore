@@ -43,6 +43,15 @@ def write_to_file(data, filename):
     with open(filename, "w") as fp:
         fp.write("\n".join(data))
 
+# Function to classify each frequency
+def classify_frequency(freq, mean_freq, std_dev_freq):
+    if freq > mean_freq + std_dev_freq:
+        return 'High'
+    elif freq < mean_freq - std_dev_freq:
+        return 'Low'
+    else:
+        return 'Medium'
+
 
 def start_word_categorization():
     unigram_freq_file = "unigram_freq.csv"
@@ -55,20 +64,47 @@ def start_word_categorization():
     target_words = read_file_contents(target_words_file)
     clue_words = read_file_contents(clue_file, file_ext="csv")
 
+    sorted_unigram_freq = sorted(unigram_freq.items(), key=lambda x: int(x[1]), reverse=True)
+    print(f"Unigram Frequency:: Min = {sorted_unigram_freq[-1][1]}, Max = {sorted_unigram_freq[0][1]}, Median = {sorted_unigram_freq[int(len(sorted_unigram_freq)/2)][1]}")
+
     target_words_freq_dict = get_freq(target_words, unigram_freq, clue_words)
     # Sort the dictionary by value
-    sorted_dict = sorted(target_words_freq_dict.items(), key=lambda x: x[1])
+    sorted_dict = sorted(target_words_freq_dict.items(), key=lambda x: int(x[1]), reverse=True)
 
-    # Divide the dictionary into 3 parts
-    easy_words = sorted_dict[: int(len(sorted_dict) / 3)]
-    medium_words = sorted_dict[
-        int(len(sorted_dict) / 3) : int(2 * len(sorted_dict) / 3)
-    ]
-    hard_words = sorted_dict[int(2 * len(sorted_dict) / 3) :]
+    # Get the word frequencies
+    target_word_frequencies = [int(word[1]) for word in sorted_dict]
+    mean_freq = np.mean(target_word_frequencies)
+    std_dev_freq = np.std(target_word_frequencies)
 
-    print(f"Easy Words:: Length = {len(easy_words)}, {easy_words[:5]}")
-    print(f"Medium Words:: Length = {len(medium_words)}, {medium_words[:5]}")
-    print(f"Hard Words:: Length = {len(hard_words)}, {hard_words[:5]}")
+    # Classify the frequencies
+    """
+    High: Frequency > mean + std_dev
+    Low: Frequency < mean - std_dev
+    Medium: mean - std_dev < Frequency < mean + std_dev
+
+    This classification is based on the assumption that the frequency distribution is normal
+    However most of the words are in the medium category and no words are in the low category
+
+    Since clemgame analysis is not based on the frequency categorization, keeping the classification as is
+
+    For future work:
+    1. The classification can be improved by using a different method to classify the frequencies
+    2. Use a different frequency distribution file
+    3. The word may be complex depending on the letters used in the word [complex word with simple letters, simple word with complex letters, etc.]
+    """
+    easy_words, medium_words, hard_words = [], [], []
+    for word, freq in sorted_dict:
+        freq = int(freq)
+        if classify_frequency(freq, mean_freq, std_dev_freq) == 'High':
+            easy_words.append((word, freq))
+        elif classify_frequency(freq, mean_freq, std_dev_freq) == 'Low':
+            hard_words.append((word, freq))
+        else:
+            medium_words.append((word, freq))
+
+    print(f"Easy Words:: Length = {len(easy_words)}")
+    print(f"Medium Words:: Length = {len(medium_words)}")
+    print(f"Hard Words:: Length = {len(hard_words)}")
 
     easy_words = [word[0] for word in easy_words]
     medium_words = [word[0] for word in medium_words]
@@ -76,16 +112,17 @@ def start_word_categorization():
 
     write_to_file(
         easy_words,
-        "/home/admin/Desktop/codebase/cllm-eval-games/wordle/git_code/untouched_code/101_clembench/games/wordle/resources/easy_words.txt",
+        "games/wordle/resources/easy_words.txt",
     )
     write_to_file(
         medium_words,
-        "/home/admin/Desktop/codebase/cllm-eval-games/wordle/git_code/untouched_code/101_clembench/games/wordle/resources/medium_words.txt",
+        "games/wordle/resources/medium_words.txt",
     )
     write_to_file(
         hard_words,
-        "/home/admin/Desktop/codebase/cllm-eval-games/wordle/git_code/untouched_code/101_clembench/games/wordle/resources/hard_words.txt",
+        "games/wordle/resources/hard_words.txt",
     )
+
 
 
 if __name__ == "__main__":

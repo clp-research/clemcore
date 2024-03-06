@@ -1,0 +1,16 @@
+{
+    "ANSWER": "ANSWER: ",
+    "ASIDE": "ASIDE: ",
+    "ME": "ME: ",
+    "PROBE": "ME: {} Please answer yes or no.",
+    "DUMMY_PROMPT": "What is the next request?",
+    "YES": "yes",
+    "NO": "no",
+    "tags": {
+        "travel-booking": "TRAVEL-AGENT",
+        "job-interview": "RECRUITER",
+        "restaurant": "WAITER",
+        "things-places": "QUESTIONER",
+        "letter-number": "QUESTIONER"
+    }
+}

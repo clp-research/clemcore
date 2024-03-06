@@ -1,0 +1,21 @@
+You are given three grids, where each of them is 5 by 5 in size.
+Grids have empty cells marked with "▢" and filled cells marked with "X".
+You are also given a referring expression that describes one of the given grids.
+Your task is to select the grid that matches the given referring expression.
+Generate only the number (in text) of the grid that matches the given expression by selecting first, second, or third.
+
+First:
+
+FIRST_GRID
+
+Second:
+
+SECOND_GRID
+
+Third:
+
+THIRD_GRID
+
+TARGET_EXPRESSION
+Question: Which grid does the expression refer to?
+Start with the tag "Answer: ", followed by your selection. Omit any other text.

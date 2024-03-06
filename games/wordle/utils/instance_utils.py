@@ -119,8 +119,12 @@ class InstanceUtils:
                     print(f"File {filename} not found")
                     return []
 
-            words_list = words.split("\n")
-            words_list = [word.lower().strip() for word in words_list]
+            words = words.strip()
+            if words:
+                words_list = words.split("\n")
+                words_list = [word.lower().strip() for word in words_list]
+            else:
+                words_list = []
             return words_list
 
     def categorize_target_words(self, unigram_freq_sorted_dict, clue_words_dict):
@@ -221,20 +225,25 @@ class InstanceUtils:
             return target_words_test_dict
 
         if "high_frequency" in self.common_config["supported_word_difficulty"]:
-            random.seed(use_seed)
-            target_words_test_dict["high_frequency"] = random.choices(
-                self.easy_words_list, k=number_of_target_words
-            )
+            if self.easy_words_list:
+                random.seed(use_seed)
+                target_words_test_dict["high_frequency"] = random.choices(
+                    self.easy_words_list, k=number_of_target_words["high_frequency"]
+                )
+
         if "medium_frequency" in self.common_config["supported_word_difficulty"]:
-            random.seed(use_seed)
-            target_words_test_dict["medium_frequency"] = random.choices(
-                self.medium_words_list, k=number_of_target_words
-            )
+            if self.medium_words_list:
+                random.seed(use_seed)
+                target_words_test_dict["medium_frequency"] = random.choices(
+                    self.medium_words_list, k=number_of_target_words["medium_frequency"]
+                )
+
         if "low_frequency" in self.common_config["supported_word_difficulty"]:
-            random.seed(use_seed)
-            target_words_test_dict["low_frequency"] = random.choices(
-                self.hard_words_list, k=number_of_target_words
-            )
+            if self.hard_words_list:
+                random.seed(use_seed)
+                target_words_test_dict["low_frequency"] = random.choices(
+                    self.hard_words_list, k=number_of_target_words["low_frequency"]
+                )
 
         return target_words_test_dict
 
@@ -252,6 +261,7 @@ class InstanceUtils:
         experiment["system_definition"] = system_definition
         experiment["guesser_prompt"] = guesser_prompt
         experiment["guesser_critic_prompt"] = guesser_critic_prompt
+        experiment["response_format_keywords"] = self.common_config["response_format_keywords"]
 
     def update_game_instance_dict(self, game_instance, word, difficulty):
         game_instance["target_word"] = word

@@ -106,7 +106,7 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
         player_a_prompt_header = self.load_template(f"resources/initial_prompts/player_a_prompt_header.template")
         player_b_prompt_header = self.load_template(f"resources/initial_prompts/player_b_prompt_header.template")
         prompt_question = self.load_template(f"resources/initial_prompts/prompt_question.template")
-        initial_grids = self.load_json("resources/grids_v02.json")
+        initial_grids = self.load_json("resources/grids_v1_5.json")
 
         compact_grids = []
         random_grids = []
@@ -147,6 +147,9 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
                 game_instance["player_1_question"] = prompt_question
                 game_instance['grid_dimension'] = grid_dimension
                 game_instance['number_of_letters'] = grid.count('X')
+                game_instance['player_1_response_pattern'] = '^instruction: [^\n]+$'
+                game_instance['player_1_terminate_pattern'] = '^instruction:\s*(?i)done\b'
+                game_instance['player_2_response_pattern'] = '^\n*([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n*$'
                 game_instance['fill_row'] = False
                 game_instance['fill_column'] = False
                 game_instance['target_grid'] = grid

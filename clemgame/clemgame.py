@@ -39,16 +39,21 @@ class Player(abc.ABC):
 
     def __call__(self, messages: List[Dict], turn_idx) -> Tuple[Any, Any, str]:
         call_start = datetime.now()
+        prompt = messages
+        response = dict()
         if isinstance(self.model, CustomResponseModel):
-            prompt, response, response_text = messages, {"response": "programmatic"}, \
-                self._custom_response(messages, turn_idx)
+            response_text = self._custom_response(messages, turn_idx)
         elif isinstance(self.model, HumanModel):
-            prompt, response, response_text = messages, {"response": "human"}, \
-                self._terminal_response(messages, turn_idx)
+            response_text = self._terminal_response(messages, turn_idx)
         else:
             prompt, response, response_text = self.model.generate_response(messages)
         call_duration = datetime.now() - call_start
-        response["duration"] = str(call_duration)
+        response["clem_player"] = {
+            "call_start": str(call_start),
+            "call_duration": str(call_duration),
+            "response": response_text,
+            "model_name": self.model.get_name()
+        }
         return prompt, response, response_text
 
     def _terminal_response(self, messages, turn_idx) -> str:
@@ -607,9 +612,6 @@ class GameBenchmark(GameResourceLocator):
             if not os.path.exists(game_result_path) or not os.path.isdir(game_result_path):
                 stdout_logger.info("No results directory found at: " + game_result_path)
                 continue
-
-            model_pair = string_utils.to_model_pair(dialogue_pair)
-            model_pair = ["-".join(m.split("-")[:-1]) for m in model_pair]  # remove -t0.0
 
             experiment_dirs = [file for file in os.listdir(game_result_path)
                                if os.path.isdir(os.path.join(game_result_path, file))]

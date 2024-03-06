@@ -2,6 +2,7 @@
     "max_word_length": 5,
     "max_attempts_per_game": 6,
     "max_retry_per_error": 2,
+    "max_retry_invalid_word": 5,
     "use_error_explanation": true,        
     "use_system_message": false,
     "system_definition_file_name": "system_definition.txt",
@@ -10,9 +11,14 @@
     "guess_prompt_with_critic_file_name": "guess_prompt_with_critic.json",
     "critic_prompt_file_name": "critic_prompt.json",
     "use_language": "english",
-    "seed_to_select_target_word": 87,
+    "seed_to_select_target_word": 17,
+    "previous_used_seeds": [87],
     "supported_word_difficulty": ["high_frequency", "medium_frequency", "low_frequency"],
-    "number_of_target_words": 10,
+    "number_of_target_words": {
+                                "high_frequency": 10,
+                                "medium_frequency": 20,
+                                "low_frequency": 10
+    },
     "official_recognized_english_words_file": "wordle_recognized_english_words.txt",
     "official_recognized_english_words_file_url": "https://raw.githubusercontent.com/3b1b/videos/master/_2022/wordle/data/allowed_words.txt",
     "word_clues_file_name": "nytcrosswords.csv",
@@ -21,5 +27,13 @@
     "medium_words_file_name": "medium_words.txt",
     "hard_words_file_name": "hard_words.txt",
     "max_token_limit_openai_models": 3800,
-    "max_critic_opinion_count": 1
+    "max_critic_opinion_count": 1,
+    "response_format_keywords": {
+        "guess": "guess",
+        "explanation": "explanation",
+        "agreement": "agreement",
+        "agreement_match_keywords": ["yes", "no", "Yes", "No", "YES", "NO"],
+        "agreement_not_matched": ["no"]
+
+    }
 }

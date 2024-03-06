@@ -1,0 +1,269 @@
+{
+  "experiments": [
+    {
+      "name": "high_en",
+      "game_instances": [
+        {
+          "game_id": 0,
+          "target_word": "length",
+          "related_word": ["stretch", "plain", "expansion"]
+        }, {
+          "game_id": 1,
+          "target_word": "deliver",
+          "related_word": ["supply", "transmit", "cough up"]
+        }, {
+          "game_id": 2,
+          "target_word": "film",
+          "related_word": ["cinema", "motion picture", "picture"]
+        }, {
+          "game_id": 3,
+          "target_word": "disk",
+          "related_word": ["bit", "shiver", "chip"]
+        }, {
+          "game_id": 4,
+          "target_word": "several",
+          "related_word": ["manifold", "innumerable", "multiplex"]
+        }, {
+          "game_id": 5,
+          "target_word": "agenda",
+          "related_word": ["schedule", "calendar", "docket"]
+        }, {
+          "game_id": 6,
+          "target_word": "future",
+          "related_word": ["hereafter", "fortune", "offing"]
+        }, {
+          "game_id": 7,
+          "target_word": "park",
+          "related_word": ["nestle", "curl up", "deploy"]
+        }, {
+          "game_id": 8,
+          "target_word": "involve",
+          "related_word": ["grip", "bower", "engage"]
+        }, {
+          "game_id": 9,
+          "target_word": "census",
+          "related_word": ["count", "tally", "tale"]
+        }, {
+          "game_id": 10,
+          "target_word": "applicant",
+          "related_word": ["candidate", "expectant", "hopeful"]
+        }, {
+          "game_id": 11,
+          "target_word": "tea",
+          "related_word": ["feast", "table", "gulp"]
+        }, {
+          "game_id": 12,
+          "target_word": "counsel",
+          "related_word": ["conference", "talk", "consult"]
+        }, {
+          "game_id": 13,
+          "target_word": "street",
+          "related_word": ["high road", "thruway", "roadway"]
+        }, {
+          "game_id": 14,
+          "target_word": "top",
+          "related_word": ["fab", "maximum", "cracking"]
+        }, {
+          "game_id": 15,
+          "target_word": "breakfast",
+          "related_word": ["cookout", "collation", "luncheon"]
+        }, {
+          "game_id": 16,
+          "target_word": "minnesota",
+          "related_word": ["river", "state", "saint paul"]
+        }, {
+          "game_id": 17,
+          "target_word": "election",
+          "related_word": ["druthers", "preference", "discretion"]
+        }, {
+          "game_id": 18,
+          "target_word": "yahoo",
+          "related_word": ["glory", "hooray", "huzzah"]
+        }, {
+          "game_id": 19,
+          "target_word": "mark",
+          "related_word": ["label", "tag", "stamp"]
+        }
+      ],
+      "max_turns": 3,
+      "describer_initial_prompt": "You are playing a collaborative word guessing game in which you have to describe a target word for another player to guess.\n\nRules:\n(a) You have to reply in the form: CLUE: <some text>. Guesses from the other player will start with GUESS.\n(b) You cannot use the target word itself, parts or morphological variants of it in your description.\n(c) In addition, the same rules apply for related words which are provided below.\n\nEnd conditions:\n(i) If you use the target word or a related word in your description, then you lose.\n(ii) If the other player can guess the target word in $N$ tries, you both win.\n\nLet us start.\n\nThis is the target word that you need to describe and that the other player needs to guess:\n\n$TARGET_WORD$\n\nRelated words are:\n\n$REL_WORD$\n\nImportant: You are under time pressure, give short descriptions that are to the point!",
+      "guesser_initial_prompt": "You are playing a collaborative word guessing game in which you have to guess a target word that another player describes to you.\n\nYou can make one guess at each trial. You win when you guess the target word. You lose when you cannot guess it in $N$ tries.\n\nAfter each trial you will get a new hint from the other player which starts with CLUE.\n\nMake your guesses by just saying the word using the following form: GUESS: <a word>\n\nLet us start.\n"
+    }, {
+      "name": "medium_en",
+      "game_instances": [
+        {
+          "game_id": 0,
+          "target_word": "coalition",
+          "related_word": ["party", "bloc", "wing"]
+        }, {
+          "game_id": 1,
+          "target_word": "reflection",
+          "related_word": ["scandal", "thought", "remark"]
+        }, {
+          "game_id": 2,
+          "target_word": "transmit",
+          "related_word": ["pack off", "send", "communicate"]
+        }, {
+          "game_id": 3,
+          "target_word": "agricultural",
+          "related_word": ["agrarian", "farming"]
+        }, {
+          "game_id": 4,
+          "target_word": "statute",
+          "related_word": ["law", "act", "enactment"]
+        }, {
+          "game_id": 5,
+          "target_word": "puppy",
+          "related_word": ["pup", "whelp", "dog"]
+        }, {
+          "game_id": 6,
+          "target_word": "bull",
+          "related_word": ["fiat", "diktat", "directive"]
+        }, {
+          "game_id": 7,
+          "target_word": "stewart",
+          "related_word": ["name", "actor", "river"]
+        }, {
+          "game_id": 8,
+          "target_word": "bend",
+          "related_word": ["pervert", "give", "misrelate"]
+        }, {
+          "game_id": 9,
+          "target_word": "liable",
+          "related_word": ["accountable", "answerable", "subject (to)"]
+        }, {
+          "game_id": 10,
+          "target_word": "sole",
+          "related_word": ["exclusive", "only", "lone"]
+        }, {
+          "game_id": 11,
+          "target_word": "clause",
+          "related_word": ["group", "words", "sentence"]
+        }, {
+          "game_id": 12,
+          "target_word": "beginner",
+          "related_word": ["novice", "abecedarian", "cub"]
+        }, {
+          "game_id": 13,
+          "target_word": "biology",
+          "related_word": ["organisms", "plant", "life"]
+        }, {
+          "game_id": 14,
+          "target_word": "viewer",
+          "related_word": ["watcher", "onlooker", "spectator"]
+        }, {
+          "game_id": 15,
+          "target_word": "scholarship",
+          "related_word": ["erudition", "education", "knowledge"]
+        }, {
+          "game_id": 16,
+          "target_word": "shake",
+          "related_word": ["jounce", "get around", "shudder"]
+        }, {
+          "game_id": 17,
+          "target_word": "scream",
+          "related_word": ["whinge", "grumble", "cackle"]
+        }, {
+          "game_id": 18,
+          "target_word": "recycle",
+          "related_word": ["recover", "reclaim", "reuse"]
+        }, {
+          "game_id": 19,
+          "target_word": "pursue",
+          "related_word": ["chase", "track", "follow"]
+        }
+      ],
+      "max_turns": 3,
+      "describer_initial_prompt": "You are playing a collaborative word guessing game in which you have to describe a target word for another player to guess.\n\nRules:\n(a) You have to reply in the form: CLUE: <some text>. Guesses from the other player will start with GUESS.\n(b) You cannot use the target word itself, parts or morphological variants of it in your description.\n(c) In addition, the same rules apply for related words which are provided below.\n\nEnd conditions:\n(i) If you use the target word or a related word in your description, then you lose.\n(ii) If the other player can guess the target word in $N$ tries, you both win.\n\nLet us start.\n\nThis is the target word that you need to describe and that the other player needs to guess:\n\n$TARGET_WORD$\n\nRelated words are:\n\n$REL_WORD$\n\nImportant: You are under time pressure, give short descriptions that are to the point!",
+      "guesser_initial_prompt": "You are playing a collaborative word guessing game in which you have to guess a target word that another player describes to you.\n\nYou can make one guess at each trial. You win when you guess the target word. You lose when you cannot guess it in $N$ tries.\n\nAfter each trial you will get a new hint from the other player which starts with CLUE.\n\nMake your guesses by just saying the word using the following form: GUESS: <a word>\n\nLet us start.\n"
+    }, {
+      "name": "low_en",
+      "game_instances": [
+        {
+          "game_id": 0,
+          "target_word": "atmospheric",
+          "related_word": ["atmosphere", "air", "aesthetic"]
+        }, {
+          "game_id": 1,
+          "target_word": "dude",
+          "related_word": ["fella", "joe", "jay"]
+        }, {
+          "game_id": 2,
+          "target_word": "steady",
+          "related_word": ["regular", "down-the-line", "periodical"]
+        }, {
+          "game_id": 3,
+          "target_word": "enclose",
+          "related_word": ["surround", "cage", "house"]
+        }, {
+          "game_id": 4,
+          "target_word": "photographic",
+          "related_word": ["visual", "iconographic", "hieroglyphic"]
+        }, {
+          "game_id": 5,
+          "target_word": "gravity",
+          "related_word": ["intentness", "seriousness", "earnestness"]
+        }, {
+          "game_id": 6,
+          "target_word": "liberia",
+          "related_word": ["country", "monrovia", "africa"]
+        }, {
+          "game_id": 7,
+          "target_word": "enclose",
+          "related_word": ["closet", "lap", "encompass"]
+        }, {
+          "game_id": 8,
+          "target_word": "nonprofit",
+          "related_word": ["profit", "free", "money"]
+        }, {
+          "game_id": 9,
+          "target_word": "undo",
+          "related_word": ["unbind", "unsettle", "unhinge"]
+        }, {
+          "game_id": 10,
+          "target_word": "magnitude",
+          "related_word": ["moment", "weightiness", "account"]
+        }, {
+          "game_id": 11,
+          "target_word": "slovak",
+          "related_word": ["slavic", "people", "slovakia"]
+        }, {
+          "game_id": 12,
+          "target_word": "yankee",
+          "related_word": ["native", "england", "inhabitant"]
+        }, {
+          "game_id": 13,
+          "target_word": "hobby",
+          "related_word": ["avocation", "hobbyhorse", "recreation"]
+        }, {
+          "game_id": 14,
+          "target_word": "flux",
+          "related_word": ["Delhi belly", "inflow", "Montezuma's revenge"]
+        }, {
+          "game_id": 15,
+          "target_word": "cameroon",
+          "related_word": ["country", "yaounde", "africa"]
+        }, {
+          "game_id": 16,
+          "target_word": "guild",
+          "related_word": ["consortium", "league", "club"]
+        }, {
+          "game_id": 17,
+          "target_word": "diy",
+          "related_word": ["do", "it", "yourself"]
+        }, {
+          "game_id": 18,
+          "target_word": "orbit",
+          "related_word": ["path", "circle", "trajectory"]
+        }, {
+          "game_id": 19,
+          "target_word": "bloody",
+          "related_word": ["bloodstained", "gory", "sanguineous"]
+        }
+      ],
+      "max_turns": 3,
+      "describer_initial_prompt": "You are playing a collaborative word guessing game in which you have to describe a target word for another player to guess.\n\nRules:\n(a) You have to reply in the form: CLUE: <some text>. Guesses from the other player will start with GUESS.\n(b) You cannot use the target word itself, parts or morphological variants of it in your description.\n(c) In addition, the same rules apply for related words which are provided below.\n\nEnd conditions:\n(i) If you use the target word or a related word in your description, then you lose.\n(ii) If the other player can guess the target word in $N$ tries, you both win.\n\nLet us start.\n\nThis is the target word that you need to describe and that the other player needs to guess:\n\n$TARGET_WORD$\n\nRelated words are:\n\n$REL_WORD$\n\nImportant: You are under time pressure, give short descriptions that are to the point!",
+      "guesser_initial_prompt": "You are playing a collaborative word guessing game in which you have to guess a target word that another player describes to you.\n\nYou can make one guess at each trial. You win when you guess the target word. You lose when you cannot guess it in $N$ tries.\n\nAfter each trial you will get a new hint from the other player which starts with CLUE.\n\nMake your guesses by just saying the word using the following form: GUESS: <a word>\n\nLet us start.\n"
+    }
+  ]
+}

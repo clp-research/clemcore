@@ -1,28 +1,27 @@
 {
     "appetizer": [
         "Bruschetta",
-        "Spring rolls",
+        "Peanuts",
         "Antipasti",
-        "Guacamole and nachos",
+        "Guacamole",
         "Fries",
-        "Tomato soup",
-        "Bread and butter",
-        "Onion rings",
-        "Stuffed mushrooms",
-        "Garlic bread"
+        "Cheese",
+        "Bread",
+        "Olives",
+        "Mushrooms",
+        "Hummus"
     ],
     "drink": [
         "Wine",
         "Bier",
-        "Orange juice",
+        "Juice",
         "Soda",
-        "Sparkling water",
-        "Apple juice",
+        "Water",
+        "Cocktail",
         "Lemonade",
-        "Ginger ale",
+        "Coffee",
         "Tea",
         "Champagne"
-
     ],
     "main-dish": [
         "Lasagna",
@@ -31,33 +30,33 @@
         "Polenta",
         "Falafel",
         "Biryani",
-        "Burrito bowl",
-        "Potato curry",
-        "Lentil soup",
-        "Grilled vegetables"
+        "Burrito",
+        "Curry",
+        "Soup",
+        "Pasta"
     ],
     "dessert": [
-        "Chocolate cake",
+        "Shortcake",
         "Tiramisu",
-        "Ice cream",
-        "Strudel",
+        "Gelato",
+        "Cookies",
         "Waffles",
-        "Fruit salad",
-        "Crème brûlée",
-        "Lemon pie",
+        "Fruits",
+        "Fudge",
+        "Pie",
         "Brownie",
-        "Macaroons"
+        "Muffin"
     ],
     "salad": [
         "Caesar",
-        "Tomato salad",
-        "Greek salad",
-        "Avocado salad",
-        "Tofu salad",
-        "Rocket salad",
-        "Lettuce salad",
-        "Cucumber salad",
-        "Zucchini and olive salad",
-        "Baby spinach salad"
+        "Tomato",
+        "Greek",
+        "Avocado",
+        "Tofu",
+        "Rocket",
+        "Lettuce",
+        "Cucumber",
+        "Beetroot",
+        "Spinach"
     ]
 }

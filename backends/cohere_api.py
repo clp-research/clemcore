@@ -57,7 +57,8 @@ class CohereModel(backends.Model):
             message=message,
             model=self.model_spec.model_id,
             chat_history=chat_history,
-            temperature=self.get_temperature()
+            temperature=self.get_temperature(),
+            max_tokens = self.get_max_tokens()
         )
 
         response_text = output.text
