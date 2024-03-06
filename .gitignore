@@ -2,6 +2,7 @@
 key*.json
 results
 results_eval
+old_results
 /venv
 evaltmp.ipynb
 
