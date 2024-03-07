@@ -391,6 +391,6 @@
     "requires_api_key": true,
     "huggingface_id": "google/gemma-7b-it",
     "premade_chat_template": true,
-    "eos_to_cull": "<end_of_turn>"
+    "eos_to_cull": "<eos>"
   }
 ]
