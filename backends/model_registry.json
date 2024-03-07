@@ -384,5 +384,13 @@
     "huggingface_id": "meta-llama/llama-2-70b-chat-hf",
     "premade_chat_template": true,
     "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "gemma-7b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-7b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<end_of_turn>"
   }
 ]
