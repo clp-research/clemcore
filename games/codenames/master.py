@@ -93,6 +93,8 @@ class CodenamesGame(DialogueGameMaster):
         if self.number_of_turns > 0:
             self._opponent_turn()
 
+        self.log_to_self(Turn_logs.BOARD_STATUS, self.board.get_current_board())
+
         self.cluegiver.retries = 0
         self.guesser.retries = 0
         self.number_of_turns += 1

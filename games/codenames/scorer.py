@@ -6,6 +6,8 @@ from .constants import Turn_logs, CLUEGIVER, GUESSER, REVEALED, HIDDEN, TARGETED
 EXPECTED_WORDS_PER_TURN = 2
 
 def f1(precision, recall, weight = 2):
+    if precision + recall == 0:
+        return 0
     return weight * precision * recall / (precision + recall)
 
 class CodenamesScorer(GameScorer):
@@ -53,7 +55,7 @@ class CodenamesScorer(GameScorer):
             self.log_turn_score(turn_idx, f"{GUESSER} {Turn_logs.VALIDATION_ERROR}", turn_score[GUESSER][Turn_logs.VALIDATION_ERROR])
 
             cluegiver_number_of_targets = turn_score[TARGETED]["total"]
-            number_of_remaining_team_words = board_status[HIDDEN][TEAM] + turn_score[TARGETED][TEAM]
+            number_of_remaining_team_words = len(board_status[HIDDEN][TEAM]) + turn_score[TARGETED][TEAM]
             cluegiver_team_precision = 0
             cluegiver_team_recall = 0
             cluegiver_team_f1 = 0
@@ -80,7 +82,7 @@ class CodenamesScorer(GameScorer):
             if guesser_number_of_revealed_words:
                 guesser_target_precision = turn_score[REVEALED][TARGET] / guesser_number_of_revealed_words
                 guesser_team_precision = turn_score[REVEALED][TEAM] / guesser_number_of_revealed_words
-            if len(turn_score[TARGETED]["total"]) > 0:
+            if turn_score[TARGETED]["total"] > 0:
                 guesser_target_recall = turn_score[REVEALED][TARGET] / cluegiver_number_of_targets
             if guesser_target_precision + guesser_target_recall > 0:
                 guesser_target_f1 = f1(guesser_target_precision, guesser_target_recall)
@@ -111,7 +113,7 @@ class CodenamesScorer(GameScorer):
         number_of_team_words = self.experiment["assignments"]["team"]
         efficiency = min(1/EXPECTED_WORDS_PER_TURN * number_of_team_words * 1/number_of_turns, 1)
         self.log_episode_score("efficiency", efficiency)
-        target_f1s = [self.scores["turn scores"][x]["target f1"] for x in self.scores["turn scores"]]
+        target_f1s = [self.scores["turn scores"][x]["guesser target f1"] for x in self.scores["turn scores"]]
         avg_target_f1s = statistics.mean(target_f1s)
         self.log_episode_score("avg target f1", avg_target_f1s)
 
