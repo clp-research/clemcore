@@ -1,8 +1,6 @@
 # Ours
 key*.json
-results
-results_eval
-old_results
+*results*
 /venv
 evaltmp.ipynb
 

@@ -86,6 +86,7 @@ def generate_similar_across_teams(categories, required):
     
 def choose_instances_from_random_category(categories: Set, already_taken_words: Set, already_taken_categories: Set, maximum = 4):
     remaining_category_names = set(categories.keys()) - already_taken_categories
+    # TODO: sample category by size, bigger categories should be selected more often!
     category_name = get_random_category(list(remaining_category_names))
     already_taken_categories.add(category_name)
 

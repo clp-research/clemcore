@@ -11,7 +11,7 @@ echo "==================================================="
 echo "PIPELINE: Starting"
 echo "==================================================="
 echo
-game_runs=(
+game_runs_gpu_server=(
   # Same-team codenames
   #"codenames mock"
   # Huggingface models
@@ -26,6 +26,15 @@ game_runs=(
   #"codenames gpt-4-1106-preview"
   # Multi-player codenames
 )
+
+game_runs=(
+  "codenames fsc-openchat-3.5-0106"
+  "codenames fsc-codellama-34b-instruct"
+  "codenames mock"
+)
+
+# game_runs=game_runs_api
+
 total_runs=${#game_runs[@]}
 echo "Number of benchmark runs: $total_runs"
 current_runs=1

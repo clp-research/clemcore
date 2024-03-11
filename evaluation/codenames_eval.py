@@ -8,6 +8,7 @@ import clemgame.metrics as clemmetrics
 from games.codenames.constants import *
 from collections import Counter
 import json
+# from .bencheval import PlayedScoreError
 
 # from evaluation.evalutils:
 #   save_raw_turn_scores()
@@ -28,6 +29,7 @@ def score_evaluation(args):
     
     # We need ignore_index=True to reset the indices (otherwise we have duplicates)
     df_episode_scores = pd.concat([df_episode_scores, aux], ignore_index=True)
+    save_table(df_episode_scores, args.results_path, "raw results")
 
     # create and save main benchmark table
     df = make_clem_table(df_episode_scores)
