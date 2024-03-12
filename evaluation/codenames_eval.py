@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 from pathlib import Path
 
 import pandas as pd
+import numpy as np
 
 import evaluation.evalutils as utils
 from clemgame.metrics import *
@@ -37,7 +38,7 @@ def load_episode_scores(results_path):
     df = df[df['game'] == GAME_NAME].drop(columns=['game'])
     df = df.set_index(['model', 'experiment', 'episode', 'metric'])
     df = df['value'].unstack()
-    df = df.mask(df[METRIC_ABORTED] == True)
+    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED]]] = np.nan
     return df
 
 def score_models(args):
@@ -93,11 +94,9 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     return df_mean
 
 def make_codenames_table(df: pd.DataFrame) -> pd.DataFrame:
-    print(df)
     df_aux = (df.groupby(['model'])
                   .mean(numeric_only=True)
                   .round(2))
-    print(df_aux.columns)
 
     df_game_metrics = df_aux[GAME_METRICS]
     df_requests = df_aux[REQUEST_METRICS]

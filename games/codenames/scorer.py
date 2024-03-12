@@ -38,6 +38,9 @@ class CodenamesScorer(GameScorer):
                         player = action["content"]["player"]
                         turn_score[player][Turn_logs.VALIDATION_ERROR] += 1
                     case Turn_logs.WORD_TARGETED:
+                        # FIXME: this should not be needed when wrong targets and guesses are removed from the utterances!
+                        if not action["content"]["assignment"]:
+                            break
                         turn_score[TARGETED][action["content"]["assignment"]] += 1
                         turn_score[TARGETED][TOTAL] += 1
                     case Turn_logs.GUESSES:
