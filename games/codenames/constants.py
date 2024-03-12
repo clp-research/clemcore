@@ -65,6 +65,12 @@ class Turn_Scores(str, Enum):
     GUESSER_TEAM_RECALL = "guesser team recall"
     GUESSER_TEAM_F1 = "guesser team f1"
 
+class Episode_Scores(str, Enum):
+    EFFICIENCY = "efficiency"
+    TARGET_F1 = "average target f1"
+    RECALL = "episode recall"
+    NEGATIVE_RECALL = "episode negative recall"
+
 ### Experiment related string constants
 NAME = "name"
 TYPE = "type"

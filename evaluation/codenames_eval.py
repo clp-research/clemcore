@@ -4,11 +4,14 @@ from pathlib import Path
 import pandas as pd
 
 import evaluation.evalutils as utils
-import clemgame.metrics as clemmetrics
+from clemgame.metrics import *
 from games.codenames.constants import *
 from collections import Counter
 import json
 from evaluation.bencheval import PlayedScoreError
+
+REQUEST_METRICS = [METRIC_REQUEST_COUNT, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_SUCCESS]
+GAME_METRICS = [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, Episode_Scores.EFFICIENCY, Episode_Scores.RECALL, Episode_Scores.NEGATIVE_RECALL]
 
 # from evaluation.evalutils:
 #   save_raw_turn_scores()
@@ -19,16 +22,26 @@ from evaluation.bencheval import PlayedScoreError
 #   load_interactions(game_name)
 #   load_scores(game_name, results)
 
-def score_evaluation(args):
+def load_episode_scores(results_path):
     # Get all episode scores as a pandas dataframe
     scores = utils.load_scores(path=args.results_path)
     df_episode_scores = utils.build_df_episode_scores(scores)
 
     # Create the PLAYED variable, inferring it from ABORTED
-    aux = score_amount_played(df_episode_scores)
+    df_played = score_amount_played(df_episode_scores)
     
     # We need ignore_index=True to reset the indices (otherwise we have duplicates)
-    df_episode_scores = pd.concat([df_episode_scores, aux], ignore_index=True)
+    df = pd.concat([df_episode_scores, df_played], ignore_index=True)
+
+    # dropping all rows not concerning codenames
+    df = df[df['game'] == GAME_NAME].drop(columns=['game'])
+    df = df.set_index(['model', 'experiment', 'episode', 'metric'])
+    df = df['value'].unstack()
+    df = df.mask(df[METRIC_ABORTED] == True)
+    return df
+
+def score_models(args):
+    df_episode_scores = load_episode_scores(args.results_path)
     save_table(df_episode_scores, args.results_path, "raw results")
 
     # create and save main benchmark table
@@ -41,73 +54,53 @@ def score_evaluation(args):
     save_table(df_requests, args.results_path, "codenames-requests")
     save_table(df_flags, args.results_path, "codenames-flags")
 
+def score_experiments(args):
+    episode_df = load_episode_scores(args.results_path)
+
 def score_amount_played(df_episode_scores):
-    if clemmetrics.METRIC_PLAYED in df_episode_scores['metric'].unique():
+    if METRIC_PLAYED in df_episode_scores['metric'].unique():
         raise PlayedScoreError("Computed scores should not contain METRIC_PLAYED.")
-    aux = df_episode_scores[df_episode_scores["metric"] == clemmetrics.METRIC_ABORTED].copy()
-    aux["metric"] = clemmetrics.METRIC_PLAYED
+    aux = df_episode_scores[df_episode_scores["metric"] == METRIC_ABORTED].copy()
+    aux["metric"] = METRIC_PLAYED
     aux["value"] = 1 - aux["value"]
     return aux
 
 def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     """Create benchmark results as a table."""
-    df_aux = df[df['metric'].isin(utils.MAIN_METRICS)]
-    df_aux = df_aux[df_aux['game'] == GAME_NAME]
+    columns = [column for column in df.columns if column in utils.MAIN_METRICS]
+    df_aux = df[columns]
 
     # compute mean benchscore and mean played (which is binary, so a proportion)
-    df_a = (df_aux.groupby(['model', 'metric'])
-                  .mean(numeric_only=True)
-                  .reset_index())
-    df_a.loc[df_a.metric == clemmetrics.METRIC_PLAYED, 'value'] *= 100
-    df_a = df_a.round(2)
-    df_a['metric'].replace(
-        {clemmetrics.METRIC_PLAYED: '% '+clemmetrics.METRIC_PLAYED},
-        inplace=True)
+    df_mean = (df_aux.groupby(['model'])
+                  .mean(numeric_only=True))
+    df_mean[METRIC_PLAYED] *= 100
+    df_mean = df_mean.round(2)
+    df_mean.rename(columns={METRIC_PLAYED : f'% {METRIC_PLAYED}'}, inplace=True)
+    df_mean = df_mean[sorted(df_mean.columns)]
 
     # compute the std of benchscore
-    df_aux_b = df_aux[df_aux.metric == clemmetrics.BENCH_SCORE]
-    df_b = (df_aux_b.groupby(['model', 'metric'])
+    df_std_benchscore = df_aux[BENCH_SCORE]
+    df_std_benchscore = (df_std_benchscore.groupby(['model'])
                     .std(numeric_only=True)
-                    .reset_index()
                     .round(2))
-    df_b['metric'].replace(
-        {clemmetrics.BENCH_SCORE: clemmetrics.BENCH_SCORE+' (std)'},
-        inplace=True)
-
-    # merge all data and make it one model per row
-    df_full = pd.concat([df_a, df_b], axis=0, ignore_index=True)
-    # sort just so all metrics are close to each other in a game column
-    df_full.sort_values(by=['metric'], inplace=True)
-    # rename according to paper
-    df_full['metric'] = df_full['metric'].str.replace(clemmetrics.BENCH_SCORE, 'Quality Score')
-    df_full = df_full.pivot(columns=['metric'], index=['model'])
-    df_full = df_full.droplevel(0, axis=1)
+    df_mean.insert(len(df_mean.columns), f'{BENCH_SCORE} (std)', df_std_benchscore)
 
     # compute clemscores and add to df
-    clemscore = ((df_full['% Played'] / 100)
-                 * df_full['Quality Score'])
-    clemscore = clemscore.round(2).to_frame(name='clemscore')
-    df_results = pd.concat([clemscore, df_full], axis=1)
+    clemscore = ((df_mean['% Played'] / 100)
+                 * df_mean[BENCH_SCORE])
+    df_mean.insert(0, 'clemscore', clemscore.round(2))
 
-    # flatten header
-    df_results.index.name = None
-    df_results.columns = df_results.columns.to_flat_index() 
-
-    return df_results
+    return df_mean
 
 def make_codenames_table(df: pd.DataFrame) -> pd.DataFrame:
-    df_aux = df[df['game'] == GAME_NAME]
-    print(df_aux)
-    # compute mean benchscore and mean played (which is binary, so a proportion)
-    df_aux = (df.groupby(['model', 'metric'])
+    print(df)
+    df_aux = (df.groupby(['model'])
                   .mean(numeric_only=True)
-                  .reset_index()
                   .round(2))
-    df_aux = df_aux.pivot(columns=['metric'], index=['model'])
-    df_aux = df_aux.droplevel(0, axis=1)
+    print(df_aux.columns)
 
-    df_game_metrics = df_aux[['Aborted', 'Played', 'Success', 'Lose', GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, 'efficiency', 'avg target f1', 'episode recall', 'episode negative recall',]]
-    df_requests = df_aux[['Request Count', 'Parsed Request Count', 'Violated Request Count', 'Request Success Ratio']]
+    df_game_metrics = df_aux[GAME_METRICS]
+    df_requests = df_aux[REQUEST_METRICS]
     df_flags = df_aux.filter(regex='Cluegiver|Guesser')
     return df_game_metrics, df_requests, df_flags
     # also put main clem scoring into this table as well?
@@ -157,26 +150,31 @@ def error_evaluation(results_path):
     with open(f"{results_path}/error_causes.json", 'w') as file:
         json.dump(error_causes, file)
 
-
 def main(args):
-    if args.command_name == "scores":
-        score_evaluation(args)
+    if args.command_name == "models":
+        score_models(args)
+    elif args.command_name == "experiments":
+        score_experiments(args)
     elif args.command_name == "errors":
         error_evaluation(args.results_path)
     else:
-        print("Usage: $: python3 evaluation/codenames_eval.py [scores|errors]")
+        print("Usage: $: python3 evaluation/codenames_eval.py [models|experiments|errors]")
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     sub_parsers = parser.add_subparsers(dest="command_name")
 
-    score_parser = sub_parsers.add_parser("scores")
-    score_parser.add_argument("-p", "--results_path", type=str, default='./results',
-                              help="Path to the results folder containing scores.")
+    model_parser = sub_parsers.add_parser("models")
+    model_parser.add_argument("-p", "--results_path", type=str, default='./results',
+                              help="Path to the results folder containing model scores.")
+    
+    experiment_parser = sub_parsers.add_parser("experiments")
+    experiment_parser.add_argument("-p", "--results_path", type=str, default='./results',
+                              help="Path to the results folder containing experiment scores.")
 
     error_parser = sub_parsers.add_parser("errors")
     error_parser.add_argument("-p", "--results_path", type=str, default='./results',
-                              help="Path to the results folder containing interactions.")
+                              help="Path to the results folder containing collected interaction errors.")
 
     args = parser.parse_args()
     main(args)

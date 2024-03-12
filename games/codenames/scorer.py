@@ -1,7 +1,7 @@
 import statistics, math
 from clemgame.clemgame import GameScorer
 from clemgame.metrics import BENCH_SCORE, METRIC_ABORTED
-from .constants import Turn_logs, Turn_Scores, CLUEGIVER, GUESSER, REVEALED, HIDDEN, TARGETED, TARGET, TEAM, OPPONENT, INNOCENT, ASSASSIN, TOTAL, GAME_NAME, NUMBER_OF_TURNS, GAME_ENDED_THROUGH_ASSASSIN, BOARD_END_STATUS
+from .constants import *
 
 EXPECTED_WORDS_PER_TURN = 2
 
@@ -102,18 +102,10 @@ class CodenamesScorer(GameScorer):
 
     def score_game(self, episode_interactions):
         # game-specific scores
-
         for flag_name, value in self.experiment["flags"].items():
             if value:
                 self.log_episode_score(f"Cluegiver {flag_name.lower()}", episode_interactions["Cluegiver engaged flags"][flag_name])
-                self.log_episode_score(f"Guesser {flag_name.lower()}", episode_interactions["Guesser engaged flags"][flag_name])       
-
-        number_of_turns = episode_interactions[NUMBER_OF_TURNS]
-        self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
-        number_of_team_words = self.experiment["assignments"]["team"]
-        efficiency = min(1/EXPECTED_WORDS_PER_TURN * number_of_team_words * 1/number_of_turns, 1)
-        self.log_episode_score("efficiency", efficiency)
-
+                self.log_episode_score(f"Guesser {flag_name.lower()}", episode_interactions["Guesser engaged flags"][flag_name])
 
         # average turn scores
         for score_const in Turn_Scores:
@@ -133,10 +125,15 @@ class CodenamesScorer(GameScorer):
         self.log_episode_score(GAME_ENDED_THROUGH_ASSASSIN, episode_interactions[GAME_ENDED_THROUGH_ASSASSIN])
         self.board_at_end = episode_interactions[BOARD_END_STATUS]
 
-        number_of_team_words = self.experiment["assignments"]["team"]
-        number_of_non_team_words = self.experiment["assignments"]["opponent"] + self.experiment["assignments"]["innocent"] + self.experiment["assignments"]["assassin"]
-        self.log_episode_score("episode recall", len(self.board_at_end[REVEALED][TEAM][TEAM]) / number_of_team_words)
-        self.log_episode_score("episode negative recall", 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / number_of_non_team_words)
+        number_of_team_words = self.experiment[ASSIGNMENTS][TEAM]
+        number_of_non_team_words = self.experiment[ASSIGNMENTS][OPPONENT] + self.experiment[ASSIGNMENTS][INNOCENT] + self.experiment[ASSIGNMENTS][ASSASSIN]
+        number_of_revealed_words = len(self.board_at_end[REVEALED][TEAM][TEAM])
+        self.log_episode_score(Episode_Scores.RECALL, number_of_revealed_words / number_of_team_words)
+        self.log_episode_score(Episode_Scores.NEGATIVE_RECALL, 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / number_of_non_team_words)
+        number_of_turns = episode_interactions[NUMBER_OF_TURNS]
+        self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
+        efficiency = min(1/EXPECTED_WORDS_PER_TURN * number_of_revealed_words/number_of_turns, 1)
+        self.log_episode_score(Episode_Scores.EFFICIENCY, efficiency)
        
     def log_main_score(self, episode_interactions):
         # all logged scores are available via self.scores["episode scores"][score_name]
@@ -147,7 +144,7 @@ class CodenamesScorer(GameScorer):
             return
 
         # Main Score: harmonic mean of success (revealed team words / all team words (recall)) and efficiency (1/number of turns)
-        success = self.scores["episode scores"]["episode recall"]
-        efficiency = self.scores["episode scores"]["efficiency"]
-        main_score = statistics.harmonic_mean([success, efficiency])
+        progress = self.scores["episode scores"][Episode_Scores.RECALL]
+        efficiency = self.scores["episode scores"][Episode_Scores.EFFICIENCY]
+        main_score = statistics.harmonic_mean([progress, efficiency])
         self.log_episode_score(BENCH_SCORE, main_score, scale=True)
