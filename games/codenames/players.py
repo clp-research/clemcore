@@ -45,7 +45,7 @@ class ClueGiver(Player):
             # Player was actually prompted (otherwise it was reprompted and the team_words stay the same)
             team_words = match.group(1)
             team_words = team_words.split(', ')
-            self.targets = random.sample(team_words, min(2, len(team_words)))
+            self.targets = random.sample(team_words, min(1, len(team_words)))
         self.number_of_targets = len(self.targets)
         self.clue = "".join(random.sample(list(string.ascii_lowercase), 6))
         return self.recover_utterance()
