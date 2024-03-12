@@ -1,6 +1,6 @@
 from typing import Dict, List, Tuple, Set
 from string import Template
-import random
+import random, copy
 
 from clemgame.clemgame import GameMaster, GameScorer, GameBenchmark, Player, DialogueGameMaster
 from clemgame import get_logger
@@ -93,6 +93,7 @@ class CodenamesGame(DialogueGameMaster):
         if self.number_of_turns > 0:
             self._opponent_turn()
 
+        # print(self.board.get_current_board())
         self.log_to_self(Turn_logs.BOARD_STATUS, self.board.get_current_board())
 
         self.cluegiver.retries = 0
@@ -205,7 +206,7 @@ class CodenamesGame(DialogueGameMaster):
 
     def _log_game_end(self):
         # log everything that is needed for score calculation and game evaluation
-        self.log_key(BOARD_STATUS, self.board.get_current_board())
+        self.log_key(BOARD_END_STATUS, self.board.get_current_board())
         self.log_key(NUMBER_OF_TURNS, self.number_of_turns)
         self.log_key(METRIC_ABORTED, self.aborted)
         self.log_key(METRIC_LOSE, self.lost)

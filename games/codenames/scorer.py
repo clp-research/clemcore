@@ -1,7 +1,7 @@
 import statistics, math
 from clemgame.clemgame import GameScorer
 from clemgame.metrics import BENCH_SCORE, METRIC_ABORTED
-from .constants import Turn_logs, CLUEGIVER, GUESSER, REVEALED, HIDDEN, TARGETED, TARGET, TEAM, OPPONENT, INNOCENT, ASSASSIN, GAME_NAME, NUMBER_OF_TURNS, GAME_ENDED_THROUGH_ASSASSIN, BOARD_STATUS
+from .constants import Turn_logs, Turn_Scores, CLUEGIVER, GUESSER, REVEALED, HIDDEN, TARGETED, TARGET, TEAM, OPPONENT, INNOCENT, ASSASSIN, TOTAL, GAME_NAME, NUMBER_OF_TURNS, GAME_ENDED_THROUGH_ASSASSIN, BOARD_END_STATUS
 
 EXPECTED_WORDS_PER_TURN = 2
 
@@ -29,8 +29,8 @@ class CodenamesScorer(GameScorer):
         for turn_idx, turn in enumerate(episode_interactions["turns"]):
             board_status = {}
             turn_score = {CLUEGIVER: {Turn_logs.VALIDATION_ERROR: 0}, GUESSER: {Turn_logs.VALIDATION_ERROR: 0}, 
-                          TARGETED: {TEAM: 0, OPPONENT: 0, INNOCENT: 0, ASSASSIN: 0, "total": 0}, Turn_logs.GUESSES: [],
-                          REVEALED: {TARGET: 0, TEAM: 0, OPPONENT: 0, INNOCENT: 0, ASSASSIN: 0, "total": 0}}
+                          TARGETED: {TEAM: 0, OPPONENT: 0, INNOCENT: 0, ASSASSIN: 0, TOTAL: 0}, Turn_logs.GUESSES: [],
+                          REVEALED: {TARGET: 0, TEAM: 0, OPPONENT: 0, INNOCENT: 0, ASSASSIN: 0, TOTAL: 0}}
             for event in turn:
                 action = event["action"]
                 match action["type"]:
@@ -39,23 +39,23 @@ class CodenamesScorer(GameScorer):
                         turn_score[player][Turn_logs.VALIDATION_ERROR] += 1
                     case Turn_logs.WORD_TARGETED:
                         turn_score[TARGETED][action["content"]["assignment"]] += 1
-                        turn_score[TARGETED]["total"] += 1
+                        turn_score[TARGETED][TOTAL] += 1
                     case Turn_logs.GUESSES:
                         turn_score[Turn_logs.GUESSES] =  action["content"]
                     case Turn_logs.TEAM_REVEALED:
                         turn_score[REVEALED][action["content"]["assignment"]] += 1
-                        turn_score[REVEALED]["total"] += 1
+                        turn_score[REVEALED][TOTAL] += 1
                     case Turn_logs.TARGET_REVEALED:
                         turn_score[REVEALED][TARGET] += 1
                     case Turn_logs.BOARD_STATUS:
                         board_status = action["content"]
                     
             self.log_turn_score(turn_idx, "turn", turn_score) # TODO: needed?
-            self.log_turn_score(turn_idx, f"{CLUEGIVER} {Turn_logs.VALIDATION_ERROR}", turn_score[CLUEGIVER][Turn_logs.VALIDATION_ERROR])
-            self.log_turn_score(turn_idx, f"{GUESSER} {Turn_logs.VALIDATION_ERROR}", turn_score[GUESSER][Turn_logs.VALIDATION_ERROR])
+            self.log_turn_score(turn_idx, f"{CLUEGIVER} {Turn_logs.VALIDATION_ERROR.value}", turn_score[CLUEGIVER][Turn_logs.VALIDATION_ERROR])
+            self.log_turn_score(turn_idx, f"{GUESSER} {Turn_logs.VALIDATION_ERROR.value}", turn_score[GUESSER][Turn_logs.VALIDATION_ERROR])
 
-            cluegiver_number_of_targets = turn_score[TARGETED]["total"]
-            number_of_remaining_team_words = len(board_status[HIDDEN][TEAM]) + turn_score[TARGETED][TEAM]
+            cluegiver_number_of_targets = turn_score[TARGETED][TOTAL]
+            number_of_remaining_team_words = len(board_status[HIDDEN][TEAM])
             cluegiver_team_precision = 0
             cluegiver_team_recall = 0
             cluegiver_team_f1 = 0
@@ -64,13 +64,13 @@ class CodenamesScorer(GameScorer):
             cluegiver_team_recall = turn_score[TARGETED][TEAM] / number_of_remaining_team_words
             if cluegiver_team_precision + cluegiver_team_recall > 0:
                 cluegiver_team_f1 = f1(cluegiver_team_precision, cluegiver_team_recall)
-            self.log_turn_score(turn_idx, "cluegiver number of targets", cluegiver_number_of_targets)
-            self.log_turn_score(turn_idx, "cluegiver team precision", cluegiver_team_precision)
-            self.log_turn_score(turn_idx, "cluegiver team recall", cluegiver_team_recall)
-            self.log_turn_score(turn_idx, "cluegiver team f1", cluegiver_team_f1) # probably not useful
+            self.log_turn_score(turn_idx, Turn_Scores.CLUEGIVER_NUMBER_OF_TARGETS, cluegiver_number_of_targets)
+            self.log_turn_score(turn_idx, Turn_Scores.CLUEGIVER_TEAM_PRECISION, cluegiver_team_precision)
+            self.log_turn_score(turn_idx, Turn_Scores.CLUEGIVER_TEAM_RECALL, cluegiver_team_recall)
+            self.log_turn_score(turn_idx, Turn_Scores.CLUEGIVER_TEAM_F1, cluegiver_team_f1) # probably not useful
 
             guesser_number_of_guesses = len(turn_score[Turn_logs.GUESSES])
-            guesser_number_of_revealed_words = turn_score[REVEALED]["total"]
+            guesser_number_of_revealed_words = turn_score[REVEALED][TOTAL]
             guesser_number_of_unrevealed_guesses = guesser_number_of_guesses - guesser_number_of_revealed_words
             guesser_target_precision = 0
             guesser_target_recall = 0
@@ -82,7 +82,7 @@ class CodenamesScorer(GameScorer):
             if guesser_number_of_revealed_words:
                 guesser_target_precision = turn_score[REVEALED][TARGET] / guesser_number_of_revealed_words
                 guesser_team_precision = turn_score[REVEALED][TEAM] / guesser_number_of_revealed_words
-            if turn_score[TARGETED]["total"] > 0:
+            if turn_score[TARGETED][TOTAL] > 0:
                 guesser_target_recall = turn_score[REVEALED][TARGET] / cluegiver_number_of_targets
             if guesser_target_precision + guesser_target_recall > 0:
                 guesser_target_f1 = f1(guesser_target_precision, guesser_target_recall)
@@ -90,15 +90,15 @@ class CodenamesScorer(GameScorer):
             guesser_team_recall = turn_score[REVEALED][TEAM] / number_of_remaining_team_words
             guesser_team_f1 = f1(guesser_team_precision, guesser_team_recall)
 
-            self.log_turn_score(turn_idx, "guesser number of guesses", guesser_number_of_guesses)
-            self.log_turn_score(turn_idx, "guesser number of revealed words", guesser_number_of_revealed_words)
-            self.log_turn_score(turn_idx, "guesser number of unrevealed guesses", guesser_number_of_unrevealed_guesses)
-            self.log_turn_score(turn_idx, "guesser target precision", guesser_target_precision)
-            self.log_turn_score(turn_idx, "guesser target recall", guesser_target_recall)
-            self.log_turn_score(turn_idx, "guesser target f1", guesser_target_f1)
-            self.log_turn_score(turn_idx, "guesser team precision", guesser_team_precision)
-            self.log_turn_score(turn_idx, "guesser team recall", guesser_team_recall)
-            self.log_turn_score(turn_idx, "guesser team f1", guesser_team_f1)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_NUMBER_OF_GUESSES, guesser_number_of_guesses)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_NUMBER_OF_REVEALED_WORDS, guesser_number_of_revealed_words)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_NUMBER_OF_UNREVEALED_GUESSES, guesser_number_of_unrevealed_guesses)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TARGET_PRECISION, guesser_target_precision)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TARGET_RECALL, guesser_target_recall)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TARGET_F1, guesser_target_f1)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TEAM_PRECISION, guesser_team_precision)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TEAM_RECALL, guesser_team_recall)
+            self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TEAM_F1, guesser_team_f1) # probably not useful
 
     def score_game(self, episode_interactions):
         # game-specific scores
@@ -113,9 +113,12 @@ class CodenamesScorer(GameScorer):
         number_of_team_words = self.experiment["assignments"]["team"]
         efficiency = min(1/EXPECTED_WORDS_PER_TURN * number_of_team_words * 1/number_of_turns, 1)
         self.log_episode_score("efficiency", efficiency)
-        target_f1s = [self.scores["turn scores"][x]["guesser target f1"] for x in self.scores["turn scores"]]
-        avg_target_f1s = statistics.mean(target_f1s)
-        self.log_episode_score("avg target f1", avg_target_f1s)
+
+
+        # average turn scores
+        for score_const in Turn_Scores:
+            score = statistics.mean([self.scores["turn scores"][x][score_const.value] for x in self.scores["turn scores"]])
+            self.log_episode_score(f"average {score_const.value}", score)
 
         # plus all required game scores
         super().score_game(episode_interactions)
@@ -128,7 +131,7 @@ class CodenamesScorer(GameScorer):
         # TODO: should ratios also be 0 or NaN when the game was aborted? yes they should...
 
         self.log_episode_score(GAME_ENDED_THROUGH_ASSASSIN, episode_interactions[GAME_ENDED_THROUGH_ASSASSIN])
-        self.board_at_end = episode_interactions[BOARD_STATUS]
+        self.board_at_end = episode_interactions[BOARD_END_STATUS]
 
         number_of_team_words = self.experiment["assignments"]["team"]
         number_of_non_team_words = self.experiment["assignments"]["opponent"] + self.experiment["assignments"]["innocent"] + self.experiment["assignments"]["assassin"]

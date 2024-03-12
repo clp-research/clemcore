@@ -34,7 +34,7 @@ class Turn_logs(str, Enum):
     TURN_END_AFTER = "turn end after"
     BOARD_STATUS = "board status"
 
-BOARD_STATUS = "board status"
+BOARD_END_STATUS = "board end status"
 NUMBER_OF_TURNS = "Number of turns"
 GAME_ENDED_THROUGH_ASSASSIN = "Game ended through assassin"
 
@@ -49,6 +49,21 @@ class ValidationError_types(str, Enum):
     CLUE_NOT_WORD = "clue is not a word"
     CLUE_ON_BOARD = "clue is word on board"
     INVALID_TARGET = "target is invalid"
+
+class Turn_Scores(str, Enum):
+    CLUEGIVER_NUMBER_OF_TARGETS = "cluegiver number of targets"
+    CLUEGIVER_TEAM_PRECISION = "cluegiver team precision"
+    CLUEGIVER_TEAM_RECALL = "cluegiver team recall"
+    CLUEGIVER_TEAM_F1 = "cluegiver team f1"
+    GUESSER_NUMBER_OF_GUESSES = "guesser number of guesses"
+    GUESSER_NUMBER_OF_REVEALED_WORDS = "guesser number of revealed words"
+    GUESSER_NUMBER_OF_UNREVEALED_GUESSES = "guesser number of unrevealed guesses"
+    GUESSER_TARGET_PRECISION = "guesser target precision"
+    GUESSER_TARGET_RECALL = "guesser target recall"
+    GUESSER_TARGET_F1 = "guesser target f1"
+    GUESSER_TEAM_PRECISION = "guesser team precision"
+    GUESSER_TEAM_RECALL = "guesser team recall"
+    GUESSER_TEAM_F1 = "guesser team f1"
 
 ### Experiment related string constants
 NAME = "name"

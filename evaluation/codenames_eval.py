@@ -8,7 +8,7 @@ import clemgame.metrics as clemmetrics
 from games.codenames.constants import *
 from collections import Counter
 import json
-# from .bencheval import PlayedScoreError
+from evaluation.bencheval import PlayedScoreError
 
 # from evaluation.evalutils:
 #   save_raw_turn_scores()
