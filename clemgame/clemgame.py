@@ -10,7 +10,7 @@ from tqdm import tqdm
 import backends
 from backends import Model, CustomResponseModel, HumanModel
 import clemgame
-from clemgame import file_utils, string_utils, transcript_utils
+from clemgame import file_utils, transcript_utils
 import clemgame.metrics as ms
 
 logger = clemgame.get_logger(__name__)
@@ -120,13 +120,13 @@ class GameResourceLocator(abc.ABC):
         """
         return file_utils.load_json(file_name, self.name)
 
-    def load_results_json(self, file_name: str, dialogue_pair: str) -> Dict:
+    def load_results_json(self, file_name: str, results_dir: str, dialogue_pair: str) -> Dict:
         """
         Load a .json file from your game (or game results) directory
         :param file_name: can have subdirectories e.g. "sub/my_file"
         :return: the file contents
         """
-        return file_utils.load_results_json(file_name, dialogue_pair, self.name)
+        return file_utils.load_results_json(file_name, results_dir, dialogue_pair, self.name)
 
     def load_csv(self, file_name: str) -> Dict:
         """
@@ -156,19 +156,21 @@ class GameResourceLocator(abc.ABC):
         fp = file_utils.store_game_file(data, file_name, self.name, sub_dir=sub_dir)
         self.logger.info("Game file stored to %s", fp)
 
-    def store_results_file(self, data, file_name: str, dialogue_pair: str, sub_dir: str = None):
+    def store_results_file(self, data, file_name: str, dialogue_pair: str, sub_dir: str = None, root_dir: str = None):
         """
         Store a results file in your game results' directory. The top-level directory is 'results'.
 
         :param sub_dir: automatically created when given; otherwise an error will be thrown.
         :param data: to store
         :param file_name: can have subdirectories e.g. "sub/my_file"
+        :param root_dir: an alternative results directory structure given as a relative or absolute path
         """
-        fp = file_utils.store_game_results_file(data, file_name, dialogue_pair, self.name, sub_dir=sub_dir)
+        fp = file_utils.store_game_results_file(data, file_name, dialogue_pair, self.name,
+                                                sub_dir=sub_dir, root_dir=root_dir)
         self.logger.info("Results file stored to %s", fp)
 
-    def results_path_for(self, dialogue_pair: str):
-        return file_utils.game_results_dir_for(dialogue_pair, self.name)
+    def results_path_for(self, results_dir: str, dialogue_pair: str):
+        return file_utils.game_results_dir_for(results_dir, dialogue_pair, self.name)
 
     def applies_to(self, game_name: str) -> bool:
         return game_name == self.name
@@ -239,7 +241,7 @@ class GameRecorder(GameResourceLocator):
             return call_obj[:]
         return call_obj
 
-    def store_records(self, dialogue_pair_desc: str, game_id: int, game_record_dir: str):
+    def store_records(self, results_root: str, dialogue_pair_desc: str, game_record_dir: str):
         """Raise warnings if a mandatory element is empty or format is wrong."""
         if not self.interactions["players"]:
             self.logger.warning(f"Players metadada is missing!")
@@ -256,10 +258,12 @@ class GameRecorder(GameResourceLocator):
             self.logger.warning(f"No calls logged!")
         self.store_results_file(self.interactions, "interactions.json",
                                 dialogue_pair_desc,
-                                sub_dir=game_record_dir)
+                                sub_dir=game_record_dir,
+                                root_dir=results_root)
         self.store_results_file(self.requests, "requests.json",
                                 dialogue_pair_desc,
-                                sub_dir=game_record_dir)
+                                sub_dir=game_record_dir,
+                                root_dir=results_root)
 
 
 class GameMaster(GameRecorder):
@@ -309,8 +313,11 @@ class GameScorer(GameResourceLocator):
             "episode scores": {},
         }
 
-    def store_scores(self, dialogue_pair, game_record_dir):
-        self.store_results_file(self.scores, "scores.json", dialogue_pair, sub_dir=game_record_dir)
+    def store_scores(self, results_root: str, dialogue_pair: str, game_record_dir: str):
+        self.store_results_file(self.scores, "scores.json",
+                                dialogue_pair=dialogue_pair,
+                                sub_dir=game_record_dir,
+                                root_dir=results_root)
 
     def log_turn_score(self, turn_idx, score_name, score_value):
         if isinstance(score_value, bool):
@@ -603,12 +610,12 @@ class GameBenchmark(GameResourceLocator):
             instances_name = "instances"
         self.instances = self.load_json(f"in/{instances_name}")
 
-    def build_transcripts(self):
-        results_root = file_utils.results_root()
+    def build_transcripts(self, results_dir: str = None):
+        results_root = file_utils.results_root(results_dir)
         dialogue_partners = [file for file in os.listdir(results_root)
                              if os.path.isdir(os.path.join(results_root, file))]
         for dialogue_pair in dialogue_partners:
-            game_result_path = self.results_path_for(dialogue_pair)
+            game_result_path = self.results_path_for(results_root, dialogue_pair)
             if not os.path.exists(game_result_path) or not os.path.isdir(game_result_path):
                 stdout_logger.info("No results directory found at: " + game_result_path)
                 continue
@@ -625,25 +632,29 @@ class GameBenchmark(GameResourceLocator):
                     continue
                 stdout_logger.info(f"Transcribe: {experiment_name}")
                 experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}",
-                                                           dialogue_pair)
+                                                           results_root, dialogue_pair)
                 episode_dirs = [file for file in os.listdir(experiment_path)
                                 if os.path.isdir(os.path.join(experiment_path, file))]
                 error_count = 0
                 for episode_dir in tqdm(episode_dirs, desc="Building transcripts"):
                     try:
                         rel_episode_path = f"{experiment_dir}/{episode_dir}"
-                        game_instance = self.load_results_json(f"{rel_episode_path}/instance", dialogue_pair)
-                        game_interactions = self.load_results_json(f"{rel_episode_path}/interactions", dialogue_pair)
+                        game_instance = self.load_results_json(f"{rel_episode_path}/instance",
+                                                               results_root, dialogue_pair)
+                        game_interactions = self.load_results_json(f"{rel_episode_path}/interactions",
+                                                                   results_root, dialogue_pair)
 
                         transcript = transcript_utils.build_transcript(game_interactions, experiment_config,
                                                                        game_instance, dialogue_pair)
                         self.store_results_file(transcript, "transcript.html",
                                                 dialogue_pair,
-                                                sub_dir=rel_episode_path)
+                                                sub_dir=rel_episode_path,
+                                                root_dir=results_root)
                         transcript_tex = transcript_utils.build_tex(game_interactions)
                         self.store_results_file(transcript_tex, "transcript.tex",
                                                 dialogue_pair,
-                                                sub_dir=rel_episode_path)
+                                                sub_dir=rel_episode_path,
+                                                root_dir=results_root)
                     except Exception:  # continue with other episodes if something goes wrong
                         self.logger.exception(f"{self.name}: Cannot transcribe {episode_dir} (but continue)")
                         error_count += 1
@@ -651,18 +662,15 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.error(
                         f"{self.name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def compute_scores(self):
-        results_root = file_utils.results_root()
+    def compute_scores(self, results_dir: str = None):
+        results_root = file_utils.results_root(results_dir)
         dialogue_partners = [file for file in os.listdir(results_root)
                              if os.path.isdir(os.path.join(results_root, file))]
         for dialogue_pair in dialogue_partners:
-            game_result_path = self.results_path_for(dialogue_pair)
+            game_result_path = self.results_path_for(results_root, dialogue_pair)
             if not os.path.exists(game_result_path) or not os.path.isdir(game_result_path):
                 stdout_logger.info("No results directory found at: " + game_result_path)
                 continue
-
-            model_pair = string_utils.to_model_pair(dialogue_pair)
-            model_pair = ["-".join(m.split("-")[:-1]) for m in model_pair]  # remove -t0.0
 
             experiment_dirs = [file for file in os.listdir(game_result_path)
                                if os.path.isdir(os.path.join(game_result_path, file))]
@@ -676,7 +684,7 @@ class GameBenchmark(GameResourceLocator):
                     continue
                 stdout_logger.info(f"Scoring: {experiment_name}")
                 experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}",
-                                                           dialogue_pair)
+                                                           results_root, dialogue_pair)
                 episode_dirs = [file for file in os.listdir(experiment_path)
                                 if os.path.isdir(os.path.join(experiment_path, file))]
                 error_count = 0
@@ -684,13 +692,13 @@ class GameBenchmark(GameResourceLocator):
                     try:
                         rel_episode_path = f"{experiment_dir}/{episode_dir}"
                         game_instance = self.load_results_json(f"{rel_episode_path}/instance",
-                                                               dialogue_pair)
+                                                               results_root, dialogue_pair)
                         game_interactions = self.load_results_json(f"{rel_episode_path}/interactions",
-                                                                   dialogue_pair)
+                                                                   results_root, dialogue_pair)
 
                         game_scorer = self.create_game_scorer(experiment_config, game_instance)
                         game_scorer.compute_scores(game_interactions)
-                        game_scorer.store_scores(dialogue_pair, rel_episode_path)
+                        game_scorer.store_scores(results_root, dialogue_pair, rel_episode_path)
                     except Exception:  # continue with other episodes if something goes wrong
                         self.logger.exception(f"{self.name}: Cannot score {episode_dir} (but continue)")
                         error_count += 1
@@ -698,7 +706,7 @@ class GameBenchmark(GameResourceLocator):
                     stdout_logger.error(
                         f"{self.name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def run(self, player_models: List[Model]):
+    def run(self, player_models: List[Model], results_dir: str = None):
         """
         Runs game-play on all game instances for a game.
         There must be an instances.json with the following structure:
@@ -724,6 +732,7 @@ class GameBenchmark(GameResourceLocator):
                                 - instance.json
                                 - interaction.json
         """
+        results_root = "results" if results_dir is None else results_dir
         experiments: List = self.instances["experiments"]
         if not experiments:
             self.logger.warning(f"{self.name}: No experiments for %s", self.name)
@@ -792,7 +801,8 @@ class GameBenchmark(GameResourceLocator):
                 self.store_results_file(experiment_config,
                                         f"experiment_{experiment_name}.json",
                                         dialogue_pair_desc,
-                                        sub_dir=experiment_record_dir)
+                                        sub_dir=experiment_record_dir,
+                                        root_dir=results_root)
 
                 error_count = 0
                 time_experiment_start = datetime.now()
@@ -805,12 +815,13 @@ class GameBenchmark(GameResourceLocator):
                     self.store_results_file(game_instance,
                                             f"instance.json",
                                             dialogue_pair_desc,
-                                            sub_dir=episode_dir)
+                                            sub_dir=episode_dir,
+                                            root_dir=results_root)
                     try:
                         game_master = self.create_game_master(experiment_config, dialogue_pair)
                         game_master.setup(**game_instance)
                         game_master.play()
-                        game_master.store_records(dialogue_pair_desc, game_id, episode_dir)
+                        game_master.store_records(results_root, dialogue_pair_desc, episode_dir)
                     except Exception:  # continue with other episodes if something goes wrong
                         self.logger.exception(f"{self.name}: Exception for episode {game_id} (but continue)")
                         error_count += 1
@@ -824,7 +835,8 @@ class GameBenchmark(GameResourceLocator):
                 self.store_results_file(experiment_config,
                                         f"experiment_{experiment_name}.json",
                                         dialogue_pair_desc,
-                                        sub_dir=experiment_record_dir)
+                                        sub_dir=experiment_record_dir,
+                                        root_dir=results_root)
 
     def is_single_player(self) -> bool:
         """
