@@ -1,9 +1,9 @@
 """
 Generate instances for the referencegame
-Version 2.0 (less biased instances)
+Version 1.6 (corrected regex parsing)
 
-Reads grids_v03.json from resources/
-Creates instances.json in in/
+Reads grids_v1.5.json from resources/ (grids don't change from previous version)
+Creates instances_v1.6_en.json in instances/
 """
 
 import random # to create random grids
@@ -16,6 +16,7 @@ random.seed(123)
 
 logger = clemgame.get_logger(__name__)
 GAME_NAME = "referencegame"
+GRIDS = "resources/grids_v1.5.json"
 
 
 def generate_samples(grids_name, grids):
@@ -127,7 +128,7 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
 
         player_a_prompt_header = self.load_template(f"resources/initial_prompts/player_a_prompt_header_zero_shot.template")
         player_b_prompt_header = self.load_template(f"resources/initial_prompts/player_b_prompt_header_zero_shot.template")
-        grids = self.load_json("resources/grids_v03.json")
+        grids = self.load_json(GRIDS)
 
         for grids_group in grids.keys():
             # get triplets
@@ -173,8 +174,8 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_2_second_grid'] = second_grid
                     game_instance['player_2_third_grid'] = third_grid
                     game_instance['target_grid_name'] = target_grid_name
-                    game_instance['player_1_response_pattern'] = '^expression:\s*(.+)\n*(.+)*$'
-                    game_instance['player_2_response_pattern'] = '^answer:\s*(first|second|third)'
+                    game_instance['player_1_response_pattern'] = '^expression:\s(.+)(\n+)?(.*)$'
+                    game_instance['player_2_response_pattern'] = '^answer:\s(first|second|third)(\n+)?(.*)$'
                     game_instance['player_1_response_tag'] = 'expression:'
                     game_instance['player_2_response_tag'] = 'answer:'
 
@@ -182,4 +183,4 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
 
 
 if __name__ == '__main__':
-    ReferenceGameInstanceGenerator().generate()
+    ReferenceGameInstanceGenerator().generate(filename="instances_v1.6_en.json")
