@@ -4,9 +4,9 @@ $INSTANCE$
 
 The recruiter does not know about it yet. 
 
-Questions from the recruiter will start with $QUESTIONER$. Please reply in the form: $ANSWER$<some text>
+Questions from the recruiter will start with $QUESTIONER$. Please reply in the form: $ANSWER$<one sentence>
 
-I will also ask you questions. These questions will start with $ME$. Please answer these questions with: $ASIDE$<some text>
+I will also ask you questions. These questions will start with $ME$. Please answer these questions with: $ASIDE$<one sentence>
 
 Important: Give short, direct answers!
 

@@ -27,7 +27,7 @@ def list_games():
 
 
 def run(game_name: str, model_specs: List[backends.ModelSpec], gen_args: Dict,
-        experiment_name: str = None, instances_name: str = None):
+        experiment_name: str = None, instances_name: str = None, results_dir: str = None):
     if experiment_name:
         logger.info("Only running experiment: %s", experiment_name)
     try:
@@ -42,7 +42,7 @@ def run(game_name: str, model_specs: List[backends.ModelSpec], gen_args: Dict,
         if experiment_name:
             benchmark.filter_experiment.append(experiment_name)
         time_start = datetime.now()
-        benchmark.run(player_models=player_models)
+        benchmark.run(player_models=player_models, results_dir=results_dir)
         time_end = datetime.now()
         logger.info(f"Run {benchmark.name} took {str(time_end - time_start)}")
     except Exception as e:
@@ -50,7 +50,7 @@ def run(game_name: str, model_specs: List[backends.ModelSpec], gen_args: Dict,
         logger.error(e, exc_info=True)
 
 
-def score(game_name: str, experiment_name: str = None):
+def score(game_name: str, experiment_name: str = None, results_dir: str = None):
     logger.info("Scoring benchmark for: %s", game_name)
     if experiment_name:
         logger.info("Only scoring experiment: %s", experiment_name)
@@ -65,7 +65,7 @@ def score(game_name: str, experiment_name: str = None):
                 benchmark.filter_experiment.append(experiment_name)
             stdout_logger.info(f"Score game {idx + 1} of {total_games}: {benchmark.name}")
             time_start = datetime.now()
-            benchmark.compute_scores()
+            benchmark.compute_scores(results_dir)
             time_end = datetime.now()
             logger.info(f"Score {benchmark.name} took {str(time_end - time_start)}")
         except Exception as e:
@@ -73,7 +73,7 @@ def score(game_name: str, experiment_name: str = None):
             logger.error(e, exc_info=True)
 
 
-def transcripts(game_name: str, experiment_name: str = None):
+def transcripts(game_name: str, experiment_name: str = None, results_dir: str = None):
     logger.info("Building benchmark transcripts for: %s", game_name)
     if experiment_name:
         logger.info("Only transcribe experiment: %s", experiment_name)
@@ -88,7 +88,7 @@ def transcripts(game_name: str, experiment_name: str = None):
                 benchmark.filter_experiment.append(experiment_name)
             stdout_logger.info(f"Transcribe game {idx + 1} of {total_games}: {benchmark.name}")
             time_start = datetime.now()
-            benchmark.build_transcripts()
+            benchmark.build_transcripts(results_dir)
             time_end = datetime.now()
             logger.info(f"Building transcripts {benchmark.name} took {str(time_end - time_start)}")
         except Exception as e:

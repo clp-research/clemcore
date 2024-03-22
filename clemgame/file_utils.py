@@ -12,12 +12,15 @@ def game_dir(game_name: str) -> str:
     return os.path.join(project_root(), "games", game_name)
 
 
-def results_root() -> str:
-    return os.path.join(project_root(), "results")
+def results_root(results_dir: str = None) -> str:
+    results_dir = "results" if results_dir is None else results_dir
+    if os.path.isabs(results_dir):
+        return results_dir
+    return os.path.join(project_root(), results_dir)
 
 
-def game_results_dir_for(dialogue_pair: str, game_name: str) -> str:
-    return os.path.join(results_root(), dialogue_pair, game_name)
+def game_results_dir_for(results_dir: str, dialogue_pair: str, game_name: str) -> str:
+    return os.path.join(results_root(results_dir), dialogue_pair, game_name)
 
 
 def load_json(file_name: str, game_name: str) -> Dict:
@@ -57,24 +60,28 @@ def load_file(file_name: str, game_name: str = None, file_ending: str = None) ->
     return data
 
 
-def load_results_json(file_name: str, dialogue_pair: str, game_name: str) -> Dict:
-    data = load_results_file(file_name, dialogue_pair, game_name, file_ending=".json")
+def load_results_json(file_name: str, results_dir: str, dialogue_pair: str, game_name: str) -> Dict:
+    data = __load_results_file(file_name, results_dir, dialogue_pair, game_name, file_ending=".json")
     data = json.loads(data)
     return data
 
 
-def load_results_file(file_name: str, dialogue_pair: str, game_name: str, file_ending: str = None) -> str:
+def __load_results_file(file_name: str, results_dir: str, dialogue_pair: str, game_name: str,
+                        file_ending: str = None) -> str:
     if file_ending and not file_name.endswith(file_ending):
         file_name = file_name + file_ending
-    fp = os.path.join(game_results_dir_for(dialogue_pair, game_name), file_name)
+    game_results_dir = game_results_dir_for(results_dir, dialogue_pair, game_name)
+    fp = os.path.join(game_results_dir, file_name)
     with open(fp, encoding='utf8') as f:
         data = f.read()
     return data
 
 
-def store_game_results_file(data, file_name: str, dialogue_pair: str, game_name: str, sub_dir: str = None,
+def store_game_results_file(data, file_name: str, dialogue_pair: str, game_name: str,
+                            sub_dir: str = None, root_dir: str = None,
                             do_overwrite: bool = True) -> str:
-    return store_file(data, file_name, game_results_dir_for(dialogue_pair, game_name), sub_dir, do_overwrite)
+    game_results_dir = game_results_dir_for(root_dir, dialogue_pair, game_name)
+    return store_file(data, file_name, game_results_dir, sub_dir, do_overwrite)
 
 
 def store_game_file(data, file_name: str, game_name: str, sub_dir: str = None, do_overwrite: bool = True) -> str:

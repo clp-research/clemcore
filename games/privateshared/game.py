@@ -31,9 +31,12 @@ class Answerer(Player):
             begin = f'{self.no}, '
         elif r < 0.66:
             begin = f'{self.yes}, '
-        # randomly select an initial tag.
+        # randomly select an initial tag
         tag = self.answer if random.random() < 0.5 else self.aside
-        return f'{tag}{begin}placeholder for turn {turn_idx}.'
+        # randomly add invalid continuation
+        if random.random() < 0.5:
+            return f'{tag}{begin}placeholder for turn {turn_idx}.'
+        return f'{tag}{begin}placeholder for turn {turn_idx} \n invalid stuff.'
 
 
 class Questioner(Player):

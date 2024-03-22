@@ -83,7 +83,6 @@ class ImageGameMaster(GameMaster):
         # check if it reached the end on 1 side
         match = re.compile(self.game.player_1_terminate_pattern, re.IGNORECASE).match(player_1_response_text)
         if match:
-            print('Parsed output: {} '.format(True))
             self.parsed_request_count += 1
             self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
             self.game.terminate = True

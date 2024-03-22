@@ -130,6 +130,7 @@ class HuggingfaceLocal(backends.Backend):
         :param model_spec: The ModelSpec for the model.
         :return: The Model class instance of the model.
         """
+        torch.set_num_threads(1)
         return HuggingfaceLocalModel(model_spec)
 
 
