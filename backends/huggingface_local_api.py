@@ -113,6 +113,7 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
 
     logger.info(f"Finished loading huggingface model: {model_spec.model_name}")
     logger.info(f"Model device map: {model.hf_device_map}")
+
     return model
 
 
@@ -143,6 +144,12 @@ class HuggingfaceLocalModel(backends.Model):
         # fail-fast
         self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
         self.model = load_model(model_spec)
+
+        # check if model's generation_config has pad_token_id set:
+        if not self.model.generation_config.pad_token_id:
+            # set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
+            self.model.generation_config.pad_token_id = self.tokenizer.eos_token_id
+
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
     def generate_response(self, messages: List[Dict],
