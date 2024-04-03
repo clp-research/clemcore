@@ -397,13 +397,6 @@
     "eos_to_cull": "<|im_end|>"
   },
   {
-    "model_name": "c4ai-command-r-v01",
-    "backend": "huggingface_local",
-    "huggingface_id": "CohereForAI/c4ai-command-r-v01",
-    "premade_chat_template": true,
-    "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
-  },
-  {
     "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface_local",
     "requires_api_key": true,
