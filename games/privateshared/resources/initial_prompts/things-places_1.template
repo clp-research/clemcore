@@ -2,9 +2,9 @@ Things are in different places, but the questioner does not know about it yet. H
 
 $INSTANCE$
 
-Questions from the questioner will start with $QUESTIONER$. Please reply in the form: $ANSWER$<some text>
+Questions from the questioner will start with $QUESTIONER$. Please reply in the form: $ANSWER$<one sentence>
 
-I will also ask you questions. These questions will start with $ME$. Please answer these questions with: $ASIDE$<some text>
+I will also ask you questions. These questions will start with $ME$. Please answer these questions with: $ASIDE$<one sentence>
 
 Important: Give short, direct answers!
 

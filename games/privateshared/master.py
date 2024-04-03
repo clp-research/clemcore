@@ -69,6 +69,7 @@ class PrivateShared(GameMaster):
         self.probe_text = words['PROBE']
         self.yes = words['YES']
         self.no = words['NO']
+        self.coda = words['CODA']
 
         self.questioner_tag = f"{tag}: "
         self.initial_prompt = initial_prompt
@@ -149,6 +150,8 @@ class PrivateShared(GameMaster):
         clean_request = request.replace(self.questioner_tag, '').strip()
         action = {'type': 'get message', 'content': clean_request}
         self.log_event(from_='Player 2', to='GM', action=action)
+        # append the instruction to be straight to the point
+        request = self.coda.format(request)
         action = {'type': 'send message', 'content': request}
         self.log_event(from_='GM', to='Player 1', action=action)
 
@@ -188,9 +191,21 @@ class PrivateShared(GameMaster):
 
         return True
 
+    def _has_continuation(self, response: str) -> bool:
+        """Return True if the response continues after what is needed."""
+        # if the answer contains a line break with some continuation after it,
+        # we consider it to be an invalid response
+        # we strip first to account for cases where it ends in one or many \n
+        # without producing anything after it, and then check if the remaining
+        # text still contains a line break
+        if '\n' in response.strip('\n'):
+            return True
+        return False
+
     def _parse_slot_response(self, response: str) -> str:
         """Extract parsed answer in slot filling turn."""
-        if not response.startswith(self.answer.strip()):
+        if (not response.startswith(self.answer.strip()) 
+            or self._has_continuation(response)):
             logger.warning(NOT_PARSED)
             return INVALID
         clean_response = self._filter_tag(response, self.answer.strip())
@@ -335,7 +350,8 @@ class PrivateShared(GameMaster):
 
     def _parse_probing_response(self, response: str) -> str:
         """Extract parsed answer in probing turn."""
-        if not response.startswith(self.aside.strip()):
+        if (not response.startswith(self.aside.strip())
+            or self._has_continuation(response)):
             return INVALID
         clean_response = self._filter_tag(response, self.aside.strip())
         if clean_response.lower().startswith(self.yes):
