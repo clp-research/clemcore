@@ -73,10 +73,10 @@ parameters (like temperature). Note: Non-standard sampling parameters must be ac
 ### Model chat functionality
 While most remote APIs apply chat formatting server-side, local clembench backends apply model-appropriate chat 
 templates for generation. This assures that the input follows the multi-turn format the model was trained on. The 
-first tuple element returned by `generate_response()` for the latter contains the applied formatting.
+first tuple element returned by `generate_response()` for local models contains the applied formatting.
 ### backends.get_model_for()
-The `backends.get_model_for()` takes either a model name, as defined in a model registry entry, a `dict` containing the 
-necessary model information or a `backends.ModelSpec` instance.  
+The `backends.get_model_for()` function takes either a model name, as defined in a model registry entry, a `dict` 
+containing the necessary model information or a `backends.ModelSpec` instance.  
 When only a model name is passed (as in the examples above), the first model entry matching the name is retrieved to 
 instantiate a `ModelSpec`, which is used to load the corresponding model.  
 Passing a `dict` allows to select a specific model version. This is useful for models that have multiple registry 
