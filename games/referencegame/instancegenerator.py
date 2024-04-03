@@ -1,9 +1,9 @@
 """
 Generate instances for the referencegame
-Version 1.6 (corrected regex parsing)
+Version 1.5 (corrected regex)
 
-Reads grids_v1.5.json from resources/ (grids don't change from previous version)
-Creates instances_v1.6_en.json in instances/
+Reads grids_v1.5.json from resources/
+Creates instances.json in instances/
 """
 
 import random # to create random grids
@@ -174,8 +174,8 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_2_second_grid'] = second_grid
                     game_instance['player_2_third_grid'] = third_grid
                     game_instance['target_grid_name'] = target_grid_name
-                    game_instance['player_1_response_pattern'] = '^expression:\s(.+)(\n+)?(.*)$'
-                    game_instance['player_2_response_pattern'] = '^answer:\s(first|second|third)(\n+)?(.*)$'
+                    game_instance['player_1_response_pattern'] = '^expression:\s(.+)\n*(.*)'
+                    game_instance['player_2_response_pattern'] = '^answer:\s(first|second|third)\n*(.*)'
                     game_instance['player_1_response_tag'] = 'expression:'
                     game_instance['player_2_response_tag'] = 'answer:'
 
@@ -183,4 +183,4 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
 
 
 if __name__ == '__main__':
-    ReferenceGameInstanceGenerator().generate(filename="instances_v1.6_en.json")
+    ReferenceGameInstanceGenerator().generate()
