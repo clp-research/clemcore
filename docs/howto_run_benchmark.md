@@ -31,23 +31,11 @@ Note: You can look up your api key for OpenAI at https://platform.openai.com/acc
 at https://console.anthropic.com/account/keys, AlephAlpha can be found
 here: https://docs.aleph-alpha.com/docs/introduction/luminous/
 
-### Available models
+### Supported models
 
-Currently available values are:
-
-- `"gpt-4"`
-- `"gpt-3.5-turbo"`
-- `"text-davinci-003"`
-- `"claude-v1.3"`
-- `"claude-v1.3-100k"`
-- `"luminous-supreme-control"`
-- `"luminous-supreme"`
-- `"luminous-extended"`
-- `"luminous-base"`
-- `"google/flan-t5-xxl"`
-
-Models can be added in `clemgame/api.py`.
-
+Supported models are listed in the [model registry](../backends/model_registry.json).  
+To use a supported model as shown below, use the model registry entry's `model_name`.  
+See the [model registry documentation](model_backend_registry_readme.md) for more information.
 
 ## Validating your installation
 
