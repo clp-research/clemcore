@@ -1,8 +1,8 @@
 """
 Generate instances for the referencegame
-Version 1.5 (corrected regex)
+Version 1.6 (strict regex parsing)
 
-Reads grids_v1.5.json from resources/
+Reads grids_v1.5.json from resources/ (grids don't change in this version)
 Creates instances.json in instances/
 """
 
@@ -174,13 +174,16 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_2_second_grid'] = second_grid
                     game_instance['player_2_third_grid'] = third_grid
                     game_instance['target_grid_name'] = target_grid_name
-                    game_instance['player_1_response_pattern'] = '^expression:\s(.+)\n*(.*)'
-                    game_instance['player_2_response_pattern'] = '^answer:\s(first|second|third)\n*(.*)'
-                    game_instance['player_1_response_tag'] = 'expression:'
-                    game_instance['player_2_response_tag'] = 'answer:'
+                    game_instance['player_1_response_pattern'] = '^expression:\s(?P<content>.+)\n*(?P<remainder>.*)'
+                    # named groups:
+                    # 'content' captures only the generated referring expression
+                    # 'remainder' should be empty (if models followed the instructions)
+                    game_instance['player_2_response_pattern'] = '^answer:\s(?P<content>first|second|third)\n*(?P<remainder>.*)'
+                    # 'content' can directly be compared to gold answer
+                    # 'remainder' should be empty (if models followed the instructions)
 
                     game_counter += 1
 
 
 if __name__ == '__main__':
-    ReferenceGameInstanceGenerator().generate()
+    ReferenceGameInstanceGenerator().generate(filename="instances_v1.6.json")
