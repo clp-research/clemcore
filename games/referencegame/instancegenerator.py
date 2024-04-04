@@ -182,8 +182,12 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     # 'content' can directly be compared to gold answer
                     # 'remainder' should be empty (if models followed the instructions)
 
+                    # the following two fields are no longer required, but kept for backwards compatibility with previous instance versions
+                    game_instance["player_1_response_tag"] = "expression:"
+                    game_instance["player_2_response_tag"] = "answer:"
+
                     game_counter += 1
 
 
 if __name__ == '__main__':
-    ReferenceGameInstanceGenerator().generate(filename="instances_v1.6.json")
+    ReferenceGameInstanceGenerator().generate(filename="instances.json")
