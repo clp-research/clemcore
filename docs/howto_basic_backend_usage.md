@@ -15,12 +15,9 @@ content. The method returns the full prompt, full output and generated text as a
 Load a supported model and generate a reply:
 ```python
 import backends
-import os
 
-# path to the model registry file, this assumes this script is in the clembench root directory:
-_model_registry_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backends", "model_registry.json")
 # load the model registry:
-backends.load_model_registry(_model_registry_path)
+backends.load_model_registry()
 
 # model name of the model to be loaded:
 model_name = "zephyr-7b-beta"
@@ -46,12 +43,9 @@ print(response_text)
 Loop over a list of supported model names and generate a reply to the same messages with each:
 ```python
 import backends
-import os
 
-# path to the model registry file, this assumes this script is in the clembench root directory:
-_model_registry_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "backends", "model_registry.json")
 # load the model registry:
-backends.load_model_registry(_model_registry_path)
+backends.load_model_registry()
 
 # model names of the models to be used:
 model_names = ["zephyr-7b-alpha", "zephyr-7b-beta", "openchat-3.5-0106", "gpt-3.5-turbo-0125"]
