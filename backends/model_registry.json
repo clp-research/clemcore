@@ -367,6 +367,36 @@
     "eos_to_cull": "<|im_end|>"
   },
   {
+    "model_name": "Smaug-72B-v0.1",
+    "backend": "huggingface_local",
+    "huggingface_id": "abacusai/Smaug-72B-v0.1",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}{% set system_message = messages[0]['content'] %}{% else %}{% set loop_messages = messages %}{% set system_message = false %}{% endif %}{% for message in loop_messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if loop.index0 == 0 and system_message != false %}{% set content = '<<SYS>>\n' + system_message + '\n<</SYS>>\n\n' + message['content'] %}{% else %}{% set content = message['content'] %}{% endif %}{% if message['role'] == 'user' %}{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}{% elif message['role'] == 'assistant' %}{{ ' '  + content.strip() + ' ' + eos_token }}{% endif %}{% endfor %}",
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "Smaug-34B-v0.1",
+    "backend": "huggingface_local",
+    "huggingface_id": "abacusai/Smaug-34B-v0.1",
+    "premade_chat_template": false,
+    "custom_chat_template": "{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}{% set system_message = messages[0]['content'] %}{% else %}{% set loop_messages = messages %}{% set system_message = false %}{% endif %}{% for message in loop_messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if loop.index0 == 0 and system_message != false %}{% set content = '<<SYS>>\n' + system_message + '\n<</SYS>>\n\n' + message['content'] %}{% else %}{% set content = message['content'] %}{% endif %}{% if message['role'] == 'user' %}{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}{% elif message['role'] == 'assistant' %}{{ ' '  + content.strip() + ' ' + eos_token }}{% endif %}{% endfor %}",
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "Qwen1.5-7B-Chat",
+    "backend": "huggingface_local",
+    "huggingface_id": "Qwen/Qwen1.5-7B-Chat",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "Qwen1.5-72B-Chat",
+    "backend": "huggingface_local",
+    "huggingface_id": "Qwen/Qwen1.5-72B-Chat",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
     "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface_local",
     "requires_api_key": true,
