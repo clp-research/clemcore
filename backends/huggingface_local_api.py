@@ -11,6 +11,8 @@ import copy
 
 from jinja2 import TemplateError
 
+from backends.utils import ensure_alternating_roles
+
 logger = backends.get_logger(__name__)
 
 FALLBACK_CONTEXT_SIZE = 256
@@ -121,6 +123,7 @@ class HuggingfaceLocal(backends.Backend):
     """
     Model/backend handler class for locally-run Huggingface models.
     """
+
     def __init__(self):
         super().__init__()
 
@@ -139,6 +142,7 @@ class HuggingfaceLocalModel(backends.Model):
     """
     Class for loaded models ready for generation.
     """
+
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
         # fail-fast
@@ -171,7 +175,7 @@ class HuggingfaceLocalModel(backends.Model):
         if log_messages:
             logger.info(f"Raw messages passed: {messages}")
 
-        current_messages = _clean_messages(messages)
+        current_messages = ensure_alternating_roles(messages)
 
         # log current flattened messages list:
         if log_messages:
@@ -254,41 +258,6 @@ def _check_context_limit(context_size, prompt_tokens, max_new_tokens: int = 100)
     tokens_left = context_size - tokens_used
     fits = tokens_used <= context_size
     return fits, tokens_used, tokens_left, context_size
-
-
-def _clean_messages(messages: List[Dict]) -> List[Dict]:
-    """
-    Remove message issues indiscriminately for compatibility with certain model's chat templates. Empty first system
-    message is removed (for Mistral models and others that do not use system messages). Messages are concatenated
-    to create consistent user-assistant pairs (for Llama-based chat formats).
-    :param messages: for example
-            [
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": "Who won the world series in 2020?"},
-                {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
-                {"role": "user", "content": "Where was it played?"}
-            ]
-    :return: Cleaned and flattened messages list.
-    """
-    # deepcopy messages to prevent reference issues:
-    current_messages = copy.deepcopy(messages)
-
-    # cull empty system message:
-    if current_messages[0]['role'] == "system":
-        if not current_messages[0]['content']:
-            del current_messages[0]
-
-    # flatten consecutive user messages:
-    for msg_idx, message in enumerate(current_messages):
-        if msg_idx > 0 and message['role'] == "user" and current_messages[msg_idx - 1]['role'] == "user":
-            current_messages[msg_idx - 1]['content'] += f" {message['content']}"
-            del current_messages[msg_idx]
-        elif msg_idx > 0 and message['role'] == "assistant" and current_messages[msg_idx - 1][
-            'role'] == "assistant":
-            current_messages[msg_idx - 1]['content'] += f" {message['content']}"
-            del current_messages[msg_idx]
-
-    return current_messages
 
 
 def check_messages(messages: List[Dict], model_spec: backends.ModelSpec) -> bool:
@@ -406,7 +375,7 @@ def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
 
     # optional messages processing:
     if clean_messages:
-        current_messages = _clean_messages(messages)
+        current_messages = ensure_alternating_roles(messages)
     else:
         current_messages = messages
     # the actual tokens, including chat format:
