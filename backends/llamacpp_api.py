@@ -175,7 +175,7 @@ class LlamaCPPLocalModel(backends.Model):
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
                   "temperature": self.get_temperature(), "return_full_text": return_full_text}
 
-        prompt_tokens = self.model.tokenize(prompt_text.encode())
+        prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)
 
         # check context limit:
         context_check = check_context_limit_generic(self.context_size, prompt_tokens,
@@ -190,6 +190,8 @@ class LlamaCPPLocalModel(backends.Model):
 
 
         # TODO: check sampling params and set them to neutral values
+
+        # NOTE: llama.cpp has a set sampling order, which differs from that of HF tokenizers
 
         model_output = self.model.create_chat_completion(
             messages,
