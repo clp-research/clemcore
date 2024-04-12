@@ -3,7 +3,9 @@
 """
 
 from typing import List, Dict, Tuple, Any, Union
+
 import backends
+from backends_util import check_context_limit_generic
 
 # import torch
 
@@ -67,7 +69,7 @@ class LlamaCPPLocal(backends.Backend):
 
 class LlamaCPPLocalModel(backends.Model):
     """
-    Class for loaded models ready for generation.
+    Class for loaded llama.cpp models ready for generation.
     """
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
@@ -75,11 +77,13 @@ class LlamaCPPLocalModel(backends.Model):
         # self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
         self.model = load_model(model_spec)
 
-        # get context size from model metadata:
+        # get maximum context size from model metadata:
         for key, value in self.model.metadata.items():
             # print(key, value)
             if "context_length" in key:
-                self.context_size = value
+                self.context_size = int(value)
+        # set model instance context size to maximum context size:
+        self.model._n_ctx = self.context_size
 
         # placeholders for BOS/EOS:
         self.bos_string = None
@@ -108,7 +112,7 @@ class LlamaCPPLocalModel(backends.Model):
                 if self.model.chat_format == "chatml":
                     # get BOS/EOS strings for chatml from llama.cpp:
                     self.bos_string = llama_cpp.llama_chat_format.CHATML_BOS_TOKEN
-                    self.eos_string = llama_cpp.llama_chat_format.CHATML_BOS_TOKEN
+                    self.eos_string = llama_cpp.llama_chat_format.CHATML_EOS_TOKEN
                 elif self.model.chat_format == "mistral-instruct":
                     # get BOS/EOS strings for mistral-instruct from llama.cpp:
                     self.bos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_BOS_TOKEN
@@ -116,11 +120,6 @@ class LlamaCPPLocalModel(backends.Model):
 
         # for key, value in self.model.__dict__.items():
         #    print(key, value)
-
-        # print(self.model.context_params.__dict__)
-        # print(self.model._ctx.__dict__)
-        # print(self.model._ctx.params.__dict__)
-        # print(self.model.model_params.__dict__)
 
         # TODO: check how to get eos/bos AS STR for templates that require them (set in registry for now...)
 
@@ -158,9 +157,7 @@ class LlamaCPPLocalModel(backends.Model):
             eos_token=self.eos_string
         )
 
-    def generate_response(self, messages: List[Dict],
-                          return_full_text: bool = False,
-                          log_messages: bool = False) -> Tuple[Any, Any, str]:
+    def generate_response(self, messages: List[Dict], return_full_text: bool = False) -> Tuple[Any, Any, str]:
         """
         :param messages: for example
                 [
@@ -170,32 +167,19 @@ class LlamaCPPLocalModel(backends.Model):
                     {"role": "user", "content": "Where was it played?"}
                 ]
         :param return_full_text: If True, whole input context is returned.
-        :param log_messages: If True, raw and cleaned messages passed will be logged.
         :return: the continuation
         """
-        # log current given messages list:
-        # if log_messages:
-        #    logger.info(f"Raw messages passed: {messages}")
-
-        # current_messages = _clean_messages(messages)
-        current_messages = messages
-
-        # log current flattened messages list:
-        if log_messages:
-            logger.info(f"Flattened messages: {current_messages}")
-
         # use llama.cpp jinja to apply chat template for prompt:
-        prompt_text = self.chat_formatter(messages=current_messages).prompt
+        prompt_text = self.chat_formatter(messages=messages).prompt
 
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
                   "temperature": self.get_temperature(), "return_full_text": return_full_text}
 
-        # TODO: context size checking/setting for generation
+        prompt_tokens = self.model.tokenize(prompt_text.encode())
 
-        """
         # check context limit:
-        context_check = _check_context_limit(self.context_size, prompt_tokens[0],
-                                             max_new_tokens=self.get_max_tokens())
+        context_check = check_context_limit_generic(self.context_size, prompt_tokens,
+                                                    max_new_tokens=self.get_max_tokens())
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
@@ -203,12 +187,12 @@ class LlamaCPPLocalModel(backends.Model):
             raise backends.ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
-        """
+
 
         # TODO: check sampling params and set them to neutral values
 
         model_output = self.model.create_chat_completion(
-            current_messages,
+            messages,
             temperature=self.get_temperature(),
             max_tokens=self.get_max_tokens()
         )
