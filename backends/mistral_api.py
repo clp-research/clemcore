@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple, Any
 from retry import retry
 import json
 import backends
+from backends.utils import ensure_messages_format
 
 logger = backends.get_logger(__name__)
 
@@ -33,6 +34,7 @@ class MistralModel(backends.Model):
         self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
+    @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """
         :param messages: for example
