@@ -20,6 +20,11 @@
     "backend": "openai_compatible"
   },
   {
+    "model_name": "gpt-4-turbo-2024-04-09",
+    "model_id": "gpt-4-turbo-2024-04-09",
+    "backend": "openai"
+  },
+  {
     "model_name": "gpt-4-1106-preview",
     "model_id": "gpt-4-1106-preview",
     "backend": "openai"
