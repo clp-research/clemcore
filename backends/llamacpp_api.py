@@ -28,7 +28,7 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     hf_repo_id = model_spec['huggingface_id']
     hf_model_file = model_spec['filename']
 
-    # TODO: GPU offload on multiple GPUs
+    # TODO: GPU offload on multiple GPUs; use pytorch to check for GPUs?
 
     if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
         # load HF API key:
