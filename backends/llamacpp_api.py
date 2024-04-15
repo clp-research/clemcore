@@ -187,9 +187,11 @@ class LlamaCPPLocalModel(backends.Model):
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
 
-        # TODO: check sampling params and set them to neutral values
+        # NOTE: HF transformers models come with their own generation configs, but llama.cpp doesn't seem to have a
+        # feature like that. There are default sampling parameters, and clembench only handles two of them so far, which
+        # are set accordingly. Other parameters use the llama-cpp-python default values for now.
 
-        # NOTE: llama.cpp has a set sampling order, which differs from that of HF tokenizers
+        # NOTE: llama.cpp has a set sampling order, which differs from that of HF transformers.
 
         model_output = self.model.create_chat_completion(
             messages,
