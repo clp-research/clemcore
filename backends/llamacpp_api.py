@@ -43,7 +43,6 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
         model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=-1)  # offloads all layers to GPU
 
     logger.info(f"Finished loading llama.cpp model: {model_spec.model_name}")
-    # logger.info(f"Model device map: {model.hf_device_map}")
 
     return model
 
@@ -118,19 +117,16 @@ class LlamaCPPLocalModel(backends.Model):
                     self.bos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_BOS_TOKEN
                     self.eos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_EOS_TOKEN
 
-        # for key, value in self.model.__dict__.items():
-        #    print(key, value)
-
+        # get BOS/EOS token string from model file:
+        # NOTE: These may not be the expected tokens, checking these when model is added is likely necessary!
         for key, value in self.model.metadata.items():
             # print(key, value)
             if "bos_token_id" in key:
-                # bos_token_id = int(value)
                 self.bos_string = self.model._model.token_get_text(int(value))
             if "eos_token_id" in key:
-                # eos_token_id = int(value)
                 self.eos_string = self.model._model.token_get_text(int(value))
 
-        # get BOS/EOS strings for template from registry:
+        # get BOS/EOS strings for template from registry if not available from model file:
         if not self.bos_string:
             self.bos_string = model_spec.bos_string
         if not self.eos_string:

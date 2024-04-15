@@ -442,5 +442,35 @@
     "bos_string": "<s>",
     "eos_string": "<|im_end|>",
     "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "CapybaraHermes-2.5-Mistral-7B-GGUF-q4",
+    "backend": "llamacpp",
+    "huggingface_id": "TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF",
+    "filename": "*q4_0.gguf",
+    "premade_chat_template": true,
+    "bos_string": "<s>",
+    "eos_string": "<|im_end|>",
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "CapybaraHermes-2.5-Mistral-7B-GGUF-q5",
+    "backend": "llamacpp",
+    "huggingface_id": "TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF",
+    "filename": "*q5_0.gguf",
+    "premade_chat_template": true,
+    "bos_string": "<s>",
+    "eos_string": "<|im_end|>",
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "CapybaraHermes-2.5-Mistral-7B-GGUF-q5-k-s",
+    "backend": "llamacpp",
+    "huggingface_id": "TheBloke/CapybaraHermes-2.5-Mistral-7B-GGUF",
+    "filename": "*q5_k_s.gguf",
+    "premade_chat_template": true,
+    "bos_string": "<s>",
+    "eos_string": "<|im_end|>",
+    "eos_to_cull": "<|im_end|>"
   }
 ]
