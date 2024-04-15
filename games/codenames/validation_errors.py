@@ -132,7 +132,7 @@ class CluegiverRamblingError(ValidationError):
 class InvalidTargetError(ValidationError):
     def __init__(self, utterance, target, board):
         message = f"Targeted word '{target}' was not listed, you can only target words provided in the lists."
-        super().__init__(CLUEGIVER, ValidationErrorTypes.INVALID_TARGET)
+        super().__init__(CLUEGIVER, ValidationErrorTypes.INVALID_TARGET, utterance, message)
         self.target = target
         self.board = board
 

@@ -37,14 +37,15 @@ class CodenamesScorer(GameScorer):
                     case Turn_logs.VALIDATION_ERROR:
                         player = action["content"]["player"]
                         turn_score[player][Turn_logs.VALIDATION_ERROR] += 1
+                    case Turn_logs.GUESSES:
+                        turn_score[Turn_logs.GUESSES] =  action["content"]
                     case Turn_logs.WORD_TARGETED:
                         # FIXME: this should not be needed when wrong targets and guesses are removed from the utterances!
                         if not action["content"]["assignment"]:
-                            break
+                            continue
                         turn_score[TARGETED][action["content"]["assignment"]] += 1
                         turn_score[TARGETED][TOTAL] += 1
-                    case Turn_logs.GUESSES:
-                        turn_score[Turn_logs.GUESSES] =  action["content"]
+                    
                     case Turn_logs.TEAM_REVEALED:
                         turn_score[REVEALED][action["content"]["assignment"]] += 1
                         turn_score[REVEALED][TOTAL] += 1
@@ -104,6 +105,9 @@ class CodenamesScorer(GameScorer):
             self.log_turn_score(turn_idx, Turn_Scores.GUESSER_TEAM_F1, guesser_team_f1) # probably not useful
 
     def score_game(self, episode_interactions):
+        # experiment name
+        super().log_episode_score(VARIABLE, self.experiment['variable'])
+        super().log_episode_score('experiment name', self.experiment[NAME])
         # game-specific scores
         for flag_name, value in self.experiment["flags"].items():
             if value:
