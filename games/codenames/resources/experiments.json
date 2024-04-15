@@ -16,20 +16,20 @@
     "variables": {
         "risk": {
             "experiments": {
-                "high risk boards" : {
-                    "assignments": {"team": 9, "opponent": 8, "innocent": 3, "assassin": 5}},
                 "low risk boards": {
-                    "assignments": {"team": 9, "opponent": 8, "innocent": 8, "assassin": 0}}
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 8, "assassin": 0}},
+                "high risk boards" : {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 3, "assassin": 5}}
             }
         },
         "board size": {
             "experiments": {
-                "large boards": {
-                    "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1}},
+                "small boards": {
+                    "assignments": {"team": 3, "opponent": 2, "innocent": 3, "assassin": 1}},
                 "medium boards": {
                     "assignments": {"team": 5, "opponent": 4, "innocent": 5, "assassin": 1}},
-                "small boards": {
-                    "assignments": {"team": 3, "opponent": 2, "innocent": 3, "assassin": 1}}
+                "large boards": {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1}}
             }
         },
         "word assignments": {
@@ -56,20 +56,20 @@
         },
         "word frequency": {
             "experiments": {
-                "high frequency words": {
-                    "wordlist": "high_frequency.json"},
+                "low frequency words": {
+                    "wordlist": "low_frequency.json"},
                 "medium frequency words": {
                     "wordlist": "medium_frequency.json"},
-                "low frequency words": {
-                    "wordlist": "low_frequency.json"}
+                "high frequency words": {
+                    "wordlist": "high_frequency.json"}
             }
         },
         "word ambiguity": {
             "experiments": {
-                "ambiguous words": {
-                    "wordlist": "ambiguous_words.json"},
                 "unambiguous words": {
-                    "wordlist": "unambiguous_words.json"}
+                    "wordlist": "unambiguous_words.json"},
+                "ambiguous words": {
+                    "wordlist": "ambiguous_words.json"}
             }
         },
         "word concreteness": {

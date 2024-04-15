@@ -8,11 +8,12 @@ import evaluation.evalutils as utils
 from clemgame.metrics import *
 from games.codenames.constants import *
 from collections import Counter
-import json
+import json, copy
 from evaluation.bencheval import PlayedScoreError
 
 REQUEST_METRICS = [METRIC_REQUEST_COUNT, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_SUCCESS]
-GAME_METRICS = [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, Episode_Scores.EFFICIENCY, Episode_Scores.RECALL, Episode_Scores.NEGATIVE_RECALL]
+GAME_METRICS = [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, 
+                Episode_Scores.EFFICIENCY, Episode_Scores.RECALL, Episode_Scores.NEGATIVE_RECALL]
 
 # from evaluation.evalutils:
 #   save_raw_turn_scores()
@@ -25,7 +26,7 @@ GAME_METRICS = [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, GAME
 
 def load_episode_scores(results_path):
     # Get all episode scores as a pandas dataframe
-    scores = utils.load_scores(path=args.results_path)
+    scores = utils.load_scores(path=results_path)
     df_episode_scores = utils.build_df_episode_scores(scores)
 
     # Create the PLAYED variable, inferring it from ABORTED
@@ -38,7 +39,13 @@ def load_episode_scores(results_path):
     df = df[df['game'] == GAME_NAME].drop(columns=['game'])
     df = df.set_index(['model', 'experiment', 'episode', 'metric'])
     df = df['value'].unstack()
-    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED]]] = np.nan
+    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED, VARIABLE]]] = np.nan
+
+    # resorting the experiments by their number
+    for index, row in df.iterrows():
+        df.loc[index, 'order_number'] = int(index[1][0 : index[1].index('_')])
+    df = df.reset_index().set_index(['model', 'order_number', 'experiment', 'episode'])
+    df.sort_index(level = 1, inplace = True)
     return df
 
 def score_models(args):
@@ -50,13 +57,21 @@ def score_models(args):
     save_table(df, args.results_path, "results")
 
     # create and save codenames tables
-    df_metrics, df_requests, df_flags = make_codenames_table(df_episode_scores)
+    df_metrics, df_requests, df_flags = make_codenames_tables(df_episode_scores)
     save_table(df_metrics, args.results_path, "codenames-specific results")
     save_table(df_requests, args.results_path, "codenames-requests")
     save_table(df_flags, args.results_path, "codenames-flags")
 
 def score_experiments(args):
     episode_df = load_episode_scores(args.results_path)
+    df_experiments = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False)
+                  .mean())
+
+    save_table(df_experiments, f"{args.results_path}/experiment-results", "all")
+    df_experiments = df_experiments.reset_index().set_index(['model', 'experiment name'])
+    for variable in df_experiments[VARIABLE].unique():
+        experiment_df = df_experiments[df_experiments[VARIABLE] == variable]
+        save_table(experiment_df, f"{args.results_path}/experiment-results", variable)
 
 def score_amount_played(df_episode_scores):
     if METRIC_PLAYED in df_episode_scores['metric'].unique():
@@ -72,7 +87,7 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     df_aux = df[columns]
 
     # compute mean benchscore and mean played (which is binary, so a proportion)
-    df_mean = (df_aux.groupby(['model'])
+    df_mean = (df_aux.groupby(['model'], sort=False)
                   .mean(numeric_only=True))
     df_mean[METRIC_PLAYED] *= 100
     df_mean = df_mean.round(2)
@@ -81,7 +96,7 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
 
     # compute the std of benchscore
     df_std_benchscore = df_aux[BENCH_SCORE]
-    df_std_benchscore = (df_std_benchscore.groupby(['model'])
+    df_std_benchscore = (df_std_benchscore.groupby(['model'], sort=False)
                     .std(numeric_only=True)
                     .round(2))
     df_mean.insert(len(df_mean.columns), f'{BENCH_SCORE} (std)', df_std_benchscore)
@@ -93,18 +108,21 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
 
     return df_mean
 
-def make_codenames_table(df: pd.DataFrame) -> pd.DataFrame:
-    df_aux = (df.groupby(['model'])
+def make_codenames_tables(df: pd.DataFrame) -> pd.DataFrame:
+    df_aux = (df.groupby(['model'], sort=False)
                   .mean(numeric_only=True)
                   .round(2))
 
     df_game_metrics = df_aux[GAME_METRICS]
     df_requests = df_aux[REQUEST_METRICS]
+
+    # FIXME: flags probably contain turn specific scores based on this filter now
     df_flags = df_aux.filter(regex='Cluegiver|Guesser')
     return df_game_metrics, df_requests, df_flags
     # also put main clem scoring into this table as well?
 
 def save_table(df, path, table_name):
+    Path(path).mkdir(parents=True, exist_ok=True)
     df.to_csv(Path(path) / f'{table_name}.csv')
     df.to_html(Path(path) / f'{table_name}.html')
     print(f'\n Saved results into {path}/{table_name}.csv and .html')
