@@ -5,7 +5,7 @@
 from typing import List, Dict, Tuple, Any, Union
 
 import backends
-from backends_util import check_context_limit_generic
+from backends.utils import check_context_limit_generic
 
 # import torch
 
@@ -40,7 +40,7 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
         model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False, n_gpu_layers=-1)  # offloads all layers to GPU)
     else:
         # model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False)
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, n_gpu_layers=-1)  # offloads all layers to GPU
+        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=-1)  # offloads all layers to GPU
 
     logger.info(f"Finished loading llama.cpp model: {model_spec.model_name}")
     # logger.info(f"Model device map: {model.hf_device_map}")
@@ -100,8 +100,9 @@ class LlamaCPPLocalModel(backends.Model):
                 # no custom chat handler
                 pass
             else:
-                print("custom chat handler:", self.model.chat_handler)
-                # TODO: check for custom chat handlers and how to get the template from them
+                # specific chat handlers may be needed for multimodal models
+                # see https://llama-cpp-python.readthedocs.io/en/latest/#multi-modal-models
+                pass
 
         if hasattr(self.model, 'chat_format'):
             if not self.model.chat_format:
@@ -120,28 +121,14 @@ class LlamaCPPLocalModel(backends.Model):
         # for key, value in self.model.__dict__.items():
         #    print(key, value)
 
-        # TODO: check how to get eos/bos AS STR for templates that require them (set in registry for now...)
-
-        # tokenized_chatml_bos = self.model.tokenize(b"<s>", add_bos=False)
-        tokenized_chatml_bos = self.model.tokenize(b' you', add_bos=False)
-        # print(tokenized_chatml_bos)
-        # print(self.model.detokenize(tokenized_chatml_bos))
-
-        # bos_id = int(self.model.metadata['tokenizer.ggml.bos_token_id'])
-        # print(bos_id)
-
-        # bos_str = self.model.detokenize([bos_id])
-        # bos_str = self.model.detokenize([151643])
-        # bos_str = self.model.detokenize([1])
-        bos_str = self.model.detokenize([498])
-        # bos_str = self.model.detokenize([151645])
-        # bos_str = self.model.detokenize([148848])
-        # bos_str = self.model.detokenize([148848]).decode("utf-8")
-        # bos_str = self.model.detokenize([151643]).decode("utf-8")
-        # bos_str = self.model.detokenize([151645]).decode("utf-8", errors='strict')
-        # print("bos str:", bos_str)
-        """"""
-        # print(llama_cpp.llama_token_bos(self.model))
+        for key, value in self.model.metadata.items():
+            # print(key, value)
+            if "bos_token_id" in key:
+                # bos_token_id = int(value)
+                self.bos_string = self.model._model.token_get_text(int(value))
+            if "eos_token_id" in key:
+                # eos_token_id = int(value)
+                self.eos_string = self.model._model.token_get_text(int(value))
 
         # get BOS/EOS strings for template from registry:
         if not self.bos_string:
