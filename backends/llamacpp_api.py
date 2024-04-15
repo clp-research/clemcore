@@ -28,20 +28,19 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     hf_repo_id = model_spec['huggingface_id']
     hf_model_file = model_spec['filename']
 
-    # TODO: GPU offload on multiple GPUs; use pytorch to check for GPUs?
+    # checking for GPU availability in python would require additional dependencies (pyTorch)
+    # so GPU offloading is hardcoded for now
 
     if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
         # load HF API key:
         creds = backends.load_credentials("huggingface")
         api_key = creds["huggingface"]["api_key"]
-        # load model using its default configuration:
-        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, device_map="auto", torch_dtype="auto")
-        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key)
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False)
+        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False)
+        # load model on GPU:
+        model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False, n_gpu_layers=-1)  # offloads all layers to GPU)
     else:
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False)
-        # model = Llama.from_pretrained(hf_repo_id, hf_model_file)
-        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, n_gpu_layers=-1)  # offloads all layers to GPU
+        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False)
+        model = Llama.from_pretrained(hf_repo_id, hf_model_file, n_gpu_layers=-1)  # offloads all layers to GPU
 
     logger.info(f"Finished loading llama.cpp model: {model_spec.model_name}")
     # logger.info(f"Model device map: {model.hf_device_map}")
@@ -187,7 +186,6 @@ class LlamaCPPLocalModel(backends.Model):
             raise backends.ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
-
 
         # TODO: check sampling params and set them to neutral values
 
