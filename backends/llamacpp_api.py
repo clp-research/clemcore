@@ -71,10 +71,10 @@ class LlamaCPPLocalModel(backends.Model):
     """
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
-        # fail-fast
-        # self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
         self.model = load_model(model_spec)
 
+        # fallback context size:
+        self.context_size = 512
         # get maximum context size from model metadata:
         for key, value in self.model.metadata.items():
             # print(key, value)
@@ -123,8 +123,10 @@ class LlamaCPPLocalModel(backends.Model):
             # print(key, value)
             if "bos_token_id" in key:
                 self.bos_string = self.model._model.token_get_text(int(value))
+                # print("BOS string from metadata:", self.bos_string)
             if "eos_token_id" in key:
                 self.eos_string = self.model._model.token_get_text(int(value))
+                # print("EOS string from metadata:", self.eos_string)
 
         # get BOS/EOS strings for template from registry if not available from model file:
         if not self.bos_string:
@@ -132,7 +134,7 @@ class LlamaCPPLocalModel(backends.Model):
         if not self.eos_string:
             self.eos_string = model_spec.eos_string
 
-        # init llama.cpp jinja chat formatter:
+        # init llama-cpp-python jinja chat formatter:
         self.chat_formatter = llama_cpp.llama_chat_format.Jinja2ChatFormatter(
             template=self.chat_template,
             bos_token=self.bos_string,
@@ -174,7 +176,8 @@ class LlamaCPPLocalModel(backends.Model):
         # feature like that. There are default sampling parameters, and clembench only handles two of them so far, which
         # are set accordingly. Other parameters use the llama-cpp-python default values for now.
 
-        # NOTE: llama.cpp has a set sampling order, which differs from that of HF transformers.
+        # NOTE: llama.cpp has a set sampling order, which differs from that of HF transformers. The latter allows
+        # individual sampling orders defined in the generation config that comes with HF models.
 
         model_output = self.model.create_chat_completion(
             messages,
