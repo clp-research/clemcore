@@ -117,7 +117,7 @@ class CodenamesScorer(GameScorer):
         # average turn scores
         for score_const in Turn_Scores:
             score = statistics.mean([self.scores["turn scores"][x][score_const.value] for x in self.scores["turn scores"]])
-            self.log_episode_score(f"average {score_const.value}", score)
+            self.log_episode_score(f"Average {score_const.value}", score)
 
         # plus all required game scores
         super().score_game(episode_interactions)

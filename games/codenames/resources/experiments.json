@@ -14,75 +14,75 @@
         }
     },  
     "variables": {
-        "risk": {
+        "Risk": {
             "experiments": {
-                "low risk boards": {
+                "low": {
                     "assignments": {"team": 9, "opponent": 8, "innocent": 8, "assassin": 0}},
-                "high risk boards" : {
+                "high" : {
                     "assignments": {"team": 9, "opponent": 8, "innocent": 3, "assassin": 5}}
             }
         },
-        "board size": {
+        "Board Size": {
             "experiments": {
-                "small boards": {
+                "small": {
                     "assignments": {"team": 3, "opponent": 2, "innocent": 3, "assassin": 1}},
-                "medium boards": {
+                "medium": {
                     "assignments": {"team": 5, "opponent": 4, "innocent": 5, "assassin": 1}},
-                "large boards": {
+                "large": {
                     "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1}}
             }
         },
-        "word assignments": {
+        "Word Assignments": {
             "experiments": {
-                "easy assignments": {
+                "easy": {
                     "generator": "easy word assignments",
                     "wordlist": "categories.json"},
-                "difficult assignments": {
+                "difficult": {
                     "generator": "difficult word assignments",
                     "wordlist": "categories.json"}
             }
         },
-        "opponent difficulty": {
+        "Opponent Difficulty": {
             "experiments": {
-                "no opponent": {
+                "none": {
                     "opponent difficulty": 0},
-                "easy opponent": {
+                "easy": {
                     "opponent difficulty": 1},
-                "medium opponent": {
+                "medium": {
                     "opponent difficulty": 2},
-                "difficult opponent": {
+                "difficult": {
                     "opponent difficulty": 3}
             }
         },
-        "word frequency": {
+        "Word Frequency": {
             "experiments": {
-                "low frequency words": {
+                "low": {
                     "wordlist": "low_frequency.json"},
-                "medium frequency words": {
+                "medium": {
                     "wordlist": "medium_frequency.json"},
-                "high frequency words": {
+                "high": {
                     "wordlist": "high_frequency.json"}
             }
         },
-        "word ambiguity": {
+        "Word Ambiguity": {
             "experiments": {
-                "unambiguous words": {
+                "unambiguous": {
                     "wordlist": "unambiguous_words.json"},
-                "ambiguous words": {
+                "ambiguous": {
                     "wordlist": "ambiguous_words.json"}
             }
         },
-        "word concreteness": {
+        "Word Concreteness": {
             "experiments": {
-                "concrete words": {
+                "concrete": {
                     "wordlist": "concrete_words.json"},
-                "abstract words": {
+                "abstract": {
                     "wordlist": "abstract_words.json"}
             }
         },
-        "wordlist": {
+        "Wordlist": {
             "experiments": {
-                "original words": {
+                "original": {
                     "wordlist": "original.json"}
             }
         }

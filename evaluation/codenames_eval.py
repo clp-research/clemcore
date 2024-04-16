@@ -39,7 +39,9 @@ def load_episode_scores(results_path):
     df = df[df['game'] == GAME_NAME].drop(columns=['game'])
     df = df.set_index(['model', 'experiment', 'episode', 'metric'])
     df = df['value'].unstack()
-    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED, VARIABLE]]] = np.nan
+
+    # setting values NaN or 0 if game was aborted
+    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, VARIABLE, EXPERIMENT_NAME, GAME_ENDED_THROUGH_ASSASSIN]]] = np.nan
 
     # resorting the experiments by their number
     for index, row in df.iterrows():
@@ -64,9 +66,11 @@ def score_models(args):
 
 def score_experiments(args):
     episode_df = load_episode_scores(args.results_path)
-    df_experiments = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False)
+    # TODO: request counts and flag counts should be summed instead of averaged!
+    # or summed and averaged, and averaged then without aborted games
+    df_experiments = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False, dropna=False)
                   .mean())
-
+    
     save_table(df_experiments, f"{args.results_path}/experiment-results", "all")
     df_experiments = df_experiments.reset_index().set_index(['model', 'experiment name'])
     for variable in df_experiments[VARIABLE].unique():

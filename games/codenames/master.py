@@ -89,10 +89,6 @@ class CodenamesGame(DialogueGameMaster):
             self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"word": word, "assignment": assignment})
     
     def _on_before_turn(self, current_turn):
-        # let mock opponent reveal their cards
-        if self.number_of_turns > 0:
-            self._opponent_turn()
-
         # print(self.board.get_current_board())
         self.log_to_self(Turn_logs.BOARD_STATUS, self.board.get_current_board())
 
@@ -203,6 +199,10 @@ class CodenamesGame(DialogueGameMaster):
 
         else:
             self.add_user_message(self.cluegiver, utterance)
+    
+    def _on_after_turn(self, current_turn):
+        # let mock opponent reveal their cards
+        self._opponent_turn()
 
     def _log_game_end(self):
         # log everything that is needed for score calculation and game evaluation
