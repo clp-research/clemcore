@@ -30,26 +30,25 @@ def ensure_alternating_roles(messages: List[Dict], cull_system_message: bool = T
     def join_content(msg1, msg2):
         return f"{msg1['content']}{delimiter}{msg2['content']}"
 
-    # combine consecutive user/assistant messages:
-    # check until all messages are merged if needed
+    if len(_messages) <= 1:
+        return _messages
 
-    while True:
-        messages_merged = False
-        for msg_idx, message in enumerate(_messages):
-            if msg_idx == 0:
-                continue
-            prev_message = _messages[msg_idx - 1]
-            if is_same_role(prev_message, message):
-                warn_msg = (f"Found consecutive role assignments. These will be merged into one:\n"
-                            f"{prev_message}\n"
-                            f"{message}")
-                logger.warning(warn_msg)
-                messages_merged = True
-                prev_message['content'] = join_content(prev_message, message)
-                del _messages[msg_idx]
+    def is_valid(idx):
+        return idx < len(_messages)
 
-        if not messages_merged:
-            break
+    msg_idx = 1
+    while is_valid(msg_idx):
+        prev_message = _messages[msg_idx - 1]
+        message = _messages[msg_idx]
+        if is_same_role(prev_message, message):
+            warn_msg = (f"Found consecutive role assignments. These will be merged into one:\n"
+                        f"{prev_message}\n"
+                        f"{message}")
+            logger.warning(warn_msg)
+            prev_message['content'] = join_content(prev_message, message)
+            del _messages[msg_idx]
+        else:
+            msg_idx += 1
 
     return _messages
 
