@@ -7,8 +7,6 @@ from typing import List, Dict, Tuple, Any, Union
 import backends
 from backends.utils import check_context_limit_generic
 
-# import torch
-
 import llama_cpp
 from llama_cpp import Llama
 
@@ -28,19 +26,26 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     hf_repo_id = model_spec['huggingface_id']
     hf_model_file = model_spec['filename']
 
-    # checking for GPU availability in python would require additional dependencies (pyTorch)
-    # so GPU offloading is hardcoded for now
+    # default to GPU offload:
+    gpu_layers_offloaded = -1  # -1 = offload all model layers to GPU
+    # check for optional execute_on flag:
+    if hasattr(model_spec, 'execute_on'):
+        if model_spec.execute_on == "gpu":
+            gpu_layers_offloaded = -1
+        elif model_spec.execute_on == "cpu":
+            gpu_layers_offloaded = 0
+    # check for optional gpu_layers_offloaded value:
+    elif hasattr(model_spec, 'gpu_layers_offloaded'):
+        gpu_layers_offloaded = model_spec.gpu_layers_offloaded
 
     if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
         # load HF API key:
         creds = backends.load_credentials("huggingface")
         api_key = creds["huggingface"]["api_key"]
-        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False)
-        # load model on GPU:
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False, n_gpu_layers=-1)  # offloads all layers to GPU)
+        model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False,
+                                      n_gpu_layers=gpu_layers_offloaded)
     else:
-        # model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False)
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=-1)  # offloads all layers to GPU
+        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=gpu_layers_offloaded)
 
     logger.info(f"Finished loading llama.cpp model: {model_spec.model_name}")
 
@@ -61,7 +66,6 @@ class LlamaCPPLocal(backends.Backend):
         :param model_spec: The ModelSpec for the model.
         :return: The Model class instance of the model.
         """
-        # torch.set_num_threads(1)
         return LlamaCPPLocalModel(model_spec)
 
 
@@ -72,16 +76,6 @@ class LlamaCPPLocalModel(backends.Model):
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
         self.model = load_model(model_spec)
-
-        # fallback context size:
-        self.context_size = 512
-        # get maximum context size from model metadata:
-        for key, value in self.model.metadata.items():
-            # print(key, value)
-            if "context_length" in key:
-                self.context_size = int(value)
-        # set model instance context size to maximum context size:
-        self.model._n_ctx = self.context_size
 
         # placeholders for BOS/EOS:
         self.bos_string = None
@@ -117,16 +111,25 @@ class LlamaCPPLocalModel(backends.Model):
                     self.bos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_BOS_TOKEN
                     self.eos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_EOS_TOKEN
 
-        # get BOS/EOS token string from model file:
-        # NOTE: These may not be the expected tokens, checking these when model is added is likely necessary!
+        # fallback context size:
+        self.context_size = 512
+
+        # get various model settings from metadata:
         for key, value in self.model.metadata.items():
-            # print(key, value)
+            # get BOS/EOS token string from model file:
+            # NOTE: These may not be the expected tokens, checking these when model is added is likely necessary!
             if "bos_token_id" in key:
                 self.bos_string = self.model._model.token_get_text(int(value))
                 # print("BOS string from metadata:", self.bos_string)
             if "eos_token_id" in key:
                 self.eos_string = self.model._model.token_get_text(int(value))
                 # print("EOS string from metadata:", self.eos_string)
+            # get maximum context size from model metadata:
+            if "context_length" in key:
+                self.context_size = int(value)
+
+        # set model instance context size to maximum context size:
+        self.model._n_ctx = self.context_size
 
         # get BOS/EOS strings for template from registry if not available from model file:
         if not self.bos_string:
