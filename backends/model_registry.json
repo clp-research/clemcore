@@ -494,5 +494,16 @@
     "bos_string": "<s>",
     "eos_string": "</s>",
     "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "openchat_3.5-GGUF-q5",
+    "backend": "llamacpp",
+    "huggingface_id": "TheBloke/openchat_3.5-GGUF",
+    "filename": "*q5_0.gguf",
+    "premade_chat_template": false,
+    "custom_chat_template": "{{ bos_token }}{% for message in messages %}{{ 'GPT4 Correct ' + message['role'].title() + ': ' + message['content'] + '<|end_of_turn|>'}}{% endfor %}{% if add_generation_prompt %}{{ 'GPT4 Correct Assistant:' }}{% endif %}",
+    "bos_string": "<s>",
+    "eos_string": "<|end_of_turn|>",
+    "eos_to_cull": "<|end_of_turn|>"
   }
 ]
