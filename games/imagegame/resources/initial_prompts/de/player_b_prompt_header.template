@@ -1,0 +1,19 @@
+Lass uns zusammen etwas malen. Es gibt ein leeres Gitter mit einer Größe 5x5, das so aussieht:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Ich werde dir Anweisungen geben, z.B. "Füge oben links ein X ein". Du veränderst das Gitter entsprechend und gibst es zurück. Z.B so:
+
+Anweisung: Füge oben links ein X ein
+
+X ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Erstelle jetzt ein leeres Gitter der Größe GRID_DIMENSIONxGRID_DIMENSION und führe die folgenden Anweisungen nacheinander aus. Wenn du eine Anweisung ausführst, antworte nur mit dem Gitter und verzichte auf jegliche weitere Ausführungen.
