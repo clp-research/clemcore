@@ -27,4 +27,4 @@ Instruction: Fill the last row with X
 What is your next instruction?
 Instruction: DONE
 
-Ok. Please do this for the following example, which is a GRID_DIMENSION grid.
+Ok. Please do this for the following example, which is a GRID_DIMENSION by GRID_DIMENSION grid.

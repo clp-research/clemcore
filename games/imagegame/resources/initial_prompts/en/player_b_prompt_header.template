@@ -16,4 +16,4 @@ X ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-Now create an empty grid with a size GRID_DIMENSION and execute the following commands at each step. Once you execute the command, return only the grid and exclude all other text from the output.
+Now create an empty grid with a size GRID_DIMENSION by GRID_DIMENSION and execute the following commands at each step. Once you execute the command, return only the grid and exclude all other text from the output.

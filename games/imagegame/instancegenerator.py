@@ -11,6 +11,8 @@ import random
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 
+from games.imagegame.resources.localization_utils import LANGUAGES, RESPONSE_PATTERNS
+
 random.seed(123)
 N_INSTANCES = 10
 
@@ -101,11 +103,11 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
     def __init__(self):
         super().__init__(GAME_NAME)
 
-    def on_generate(self):
+    def on_generate(self, lang):
 
-        player_a_prompt_header = self.load_template(f"resources/initial_prompts/player_a_prompt_header.template")
-        player_b_prompt_header = self.load_template(f"resources/initial_prompts/player_b_prompt_header.template")
-        prompt_question = self.load_template(f"resources/initial_prompts/prompt_question.template")
+        player_a_prompt_header = self.load_template(f"resources/initial_prompts/{lang}/player_a_prompt_header.template")
+        player_b_prompt_header = self.load_template(f"resources/initial_prompts/{lang}/player_b_prompt_header.template")
+        prompt_question = self.load_template(f"resources/initial_prompts/{lang}/prompt_question.template")
         initial_grids = self.load_json("resources/grids_v1_5.json")
 
         compact_grids = []
@@ -142,18 +144,21 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
 
                 game_instance = self.add_game_instance(experiment, grid_index)
 
-                game_instance["player_1_prompt_header"] = player_a_prompt_header.replace('GRID_DIMENSION', str(grid_dimension) + ' by ' + str(grid_dimension))
-                game_instance["player_2_prompt_header"] = player_b_prompt_header.replace('GRID_DIMENSION', str(grid_dimension) + ' by ' + str(grid_dimension))
+                game_instance["player_1_prompt_header"] = player_a_prompt_header.replace('GRID_DIMENSION', str(grid_dimension))
+                game_instance["player_2_prompt_header"] = player_b_prompt_header.replace('GRID_DIMENSION', str(grid_dimension))
                 game_instance["player_1_question"] = prompt_question
                 game_instance['grid_dimension'] = grid_dimension
                 game_instance['number_of_letters'] = grid.count('X')
-                game_instance['player_1_response_pattern'] = '^instruction: [^\n]+$'
-                game_instance['player_1_terminate_pattern'] = '^\s*instruction\s*:\s*done\s*$'
-                game_instance['player_2_response_pattern'] = '^\n*([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n*$'
+                game_instance['player_1_response_pattern'] = RESPONSE_PATTERNS[lang]["p1"]
+                game_instance['player_1_terminate_pattern'] = RESPONSE_PATTERNS[lang]["p1_terminate"]
+                game_instance['player_2_response_pattern'] = RESPONSE_PATTERNS[lang]["p2"]
                 game_instance['fill_row'] = False
                 game_instance['fill_column'] = False
                 game_instance['target_grid'] = grid
 
 
 if __name__ == '__main__':
-    ImageGameInstanceGenerator().generate()
+    # generate language versions
+    for language in LANGUAGES:
+        ImageGameInstanceGenerator().generate(
+            filename=f"instances_v1.5_{language}.json", lang=language)
