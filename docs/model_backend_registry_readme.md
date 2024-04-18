@@ -37,6 +37,12 @@ create the logged input prompt.
 `eos_string` (string): In case the model file does not contain a predefined EOS token, this string will be used to 
 create the logged input prompt.  
 `output_split_prefix`(string): The model's raw output will be rsplit using this string, and the remaining output following this string will be considered the model output. This is necessary for some models that decode tokens differently than they encode them, to assure that the prompt is properly removed from model responses. Example: `assistant\n`
+#### Advanced
+These key/values are recommended to only be used with a custom registry file:
+`execute_on` (string): Either `gpu`, to run the model with all layers loaded to GPU using VRAM, or `cpu` to run the model on CPU 
+only, using main RAM. `gpu` requires a llama.cpp installation with GPU support, `cpu` one with CPU support.  
+`gpu_layers_offloaded` (integer): The number of model layers to offload to GPU/VRAM. This requires a llama.cpp 
+installation with GPU support. This key is only used if there is no `execute_on` key in the model entry.
 # Backend Classes
 Model registry entries are mainly used for two classes: `backends.ModelSpec` and `backends.Model`.
 ## ModelSpec
