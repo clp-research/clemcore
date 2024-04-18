@@ -11,6 +11,8 @@ from clemgame.file_utils import file_path
 
 from games.codenames.constants import *
 
+# TODO: could out flags here and take command line argument whether strict instances should be generated or generous (but only as a perfectionist improvement ;) )
+
 def generate_random(wordlist, required):
     # sample words for the board
     total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
@@ -258,9 +260,10 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--keep", help="Optional flag to keep already generated instances and only replace new instances that will be generated for a specific variable and/or experiment. Otherwise overwrite all old instances.", action="store_true")
     parser.add_argument("-v", "--variable-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment suite aka variable.")
     parser.add_argument("-e", "--experiment-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment (variable name must also be set!).")
+    parser.add_argument("-f", "--filename", type=str, help="Optional filename where instances should be stored", default="instances.json")
     args = parser.parse_args()
     if args.experiment_name and not args.variable_name:
         print("Running a specific experiment requires both the experiment name (-e) and the variable name (-v)!")
     else:
         random.seed(SEED)
-        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name)
+        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name, filename = args.filename)
