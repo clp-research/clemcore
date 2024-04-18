@@ -907,11 +907,14 @@ class GameInstanceGenerator(GameResourceLocator):
         experiment["game_instances"].append(game_instance)
         return game_instance
 
-    def on_generate(self):
+    def on_generate(self, **kwargs):
+        """
+        Game-specific instance generation.
+        """
         raise NotImplementedError()
 
-    def generate(self, filename="instances.json"):
-        self.on_generate()
+    def generate(self, filename="instances.json", **kwargs):
+        self.on_generate(**kwargs)
         self.store_file(self.instances, filename, sub_dir="in")
 
 

@@ -67,6 +67,21 @@ class UtilsTestCase(unittest.TestCase):
         ]
                          )
 
+    def test_ensure_alternating_roles_with_triple_user(self):
+        messages = [
+            {"role": "user", "content": "Initial Prompt"},
+            {"role": "user", "content": "Turn 1a"},
+            {"role": "user", "content": "Turn 1b"},
+            {"role": "assistant", "content": "Response 1"}
+        ]
+        _messages = ensure_alternating_roles(messages)
+        self.assertEqual(messages, messages)
+        self.assertEqual(_messages, [
+            {"role": "user", "content": "Initial Prompt\n\nTurn 1a\n\nTurn 1b"},
+            {"role": "assistant", "content": "Response 1"}
+        ]
+                         )
+
     def test_ensure_alternating_roles_with_doubled_both(self):
         messages = [
             {"role": "user", "content": "Initial Prompt"},
