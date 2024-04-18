@@ -11,7 +11,9 @@ from clemgame.file_utils import file_path
 
 from games.codenames.constants import *
 
-# TODO: could out flags here and take command line argument whether strict instances should be generated or generous (but only as a perfectionist improvement ;) )
+FILENAME = "instances.json"
+STRICT_FILENAME = "strict_instances.json"
+FLAGS = ["IGNORE RAMBLING", "IGNORE FALSE TARGETS OR GUESSES", "REPROMPT ON ERROR", "STRIP WORDS", "IGNORE NUMBER OF TARGETS"]
 
 def generate_random(wordlist, required):
     # sample words for the board
@@ -128,16 +130,20 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
     def __init__(self):
         super().__init__(GAME_NAME)
 
-    def generate(self, keep=False, variable_name=None, experiment_name=None, filename="instances.json"):
+    def generate(self, keep=False, variable_name=None, experiment_name=None, strict=False):
         # @overwrite
-        if not self.on_generate(variable_name, experiment_name):
+        if strict:
+            filename = STRICT_FILENAME
+        else:
+            filename = FILENAME
+        if not self.on_generate(variable_name, experiment_name, strict):
             return
         if keep and (variable_name or experiment_name):
             print(f"Replacing instances for {variable_name}: {experiment_name}.")
             self.replace_instances(variable_name, experiment_name, filename)
         self.store_file(self.instances, filename, sub_dir="in")
         
-    def on_generate(self, variable_name = None, experiment_name = None):
+    def on_generate(self, variable_name = None, experiment_name = None, strict=False):
         # read experiment config file
         experiment_config = self.load_json("resources/experiments.json")
         defaults = experiment_config["default"]
@@ -188,6 +194,13 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                 for parameter in experiments[name]:
                     print("Setting experiment parameter: ", parameter)
                     experiment[parameter] = experiments[name][parameter]
+                # set flags
+                experiment["flags"] = {}
+                for flag in FLAGS:
+                    if strict:
+                        experiment["flags"][flag] = False
+                    else:
+                        experiment["flags"][flag] = True
 
                 # create game instances
                 for game_id in tqdm(range(experiment["number of instances"])):
@@ -260,10 +273,10 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--keep", help="Optional flag to keep already generated instances and only replace new instances that will be generated for a specific variable and/or experiment. Otherwise overwrite all old instances.", action="store_true")
     parser.add_argument("-v", "--variable-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment suite aka variable.")
     parser.add_argument("-e", "--experiment-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment (variable name must also be set!).")
-    parser.add_argument("-f", "--filename", type=str, help="Optional filename where instances should be stored", default="instances.json")
+    parser.add_argument("-s", "--strict", help="Optional flag to generate strict instances where all flags are set to False.", action="store_true")
     args = parser.parse_args()
     if args.experiment_name and not args.variable_name:
         print("Running a specific experiment requires both the experiment name (-e) and the variable name (-v)!")
     else:
         random.seed(SEED)
-        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name, filename = args.filename)
+        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name, strict = args.strict)

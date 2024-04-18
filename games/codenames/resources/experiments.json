@@ -4,14 +4,7 @@
         "generator": "random",
         "opponent difficulty": 1,
         "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
-        "wordlist": "default.json",
-        "flags": {
-            "IGNORE RAMBLING" : true,
-            "IGNORE FALSE TARGETS OR GUESSES" : true,
-            "REPROMPT ON ERROR" : true,
-            "STRIP WORDS" : true,
-            "IGNORE NUMBER OF TARGETS" : true
-        }
+        "wordlist": "default.json"
     },  
     "variables": {
         "Risk": {
@@ -58,8 +51,6 @@
             "experiments": {
                 "low": {
                     "wordlist": "low_frequency.json"},
-                "medium": {
-                    "wordlist": "medium_frequency.json"},
                 "high": {
                     "wordlist": "high_frequency.json"}
             }
