@@ -182,6 +182,11 @@ class Guesser(Player):
                     self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
                 else:
                     raise InvalidGuessError(utterance, guess, remaining_words)
+            if guesses.count(guess) > 1:
+                if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
+                    self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
+                else:
+                    raise InvalidGuessError(utterance, guess, remaining_words)
         if len(guesses) == incorrect_guesses:
             raise NoCorrectGuessError(utterance, guesses, remaining_words)
         
