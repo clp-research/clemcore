@@ -52,6 +52,58 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     return model
 
 
+def get_chat_formatter(model: Llama, model_spec: backends.ModelSpec) -> llama_cpp.llama_chat_format.Jinja2ChatFormatter:
+    # placeholders for BOS/EOS:
+    bos_string = None
+    eos_string = None
+
+    # check chat template:
+    if model_spec.premade_chat_template:
+        # jinja chat template available in metadata
+        chat_template = model.metadata['tokenizer.chat_template']
+    else:
+        chat_template = model_spec.custom_chat_template
+
+    if hasattr(model, 'chat_format'):
+        print("has chat format attr:", model.chat_format)
+        if not model.chat_format:
+            # no guessed chat format
+            print("has no guessed chat format")
+            print(llama_cpp.llama_chat_format.get_chat_completion_handler(None))
+            pass
+        else:
+            if model.chat_format == "chatml":
+                # get BOS/EOS strings for chatml from llama.cpp:
+                bos_string = llama_cpp.llama_chat_format.CHATML_BOS_TOKEN
+                eos_string = llama_cpp.llama_chat_format.CHATML_EOS_TOKEN
+            elif model.chat_format == "mistral-instruct":
+                # get BOS/EOS strings for mistral-instruct from llama.cpp:
+                bos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_BOS_TOKEN
+                eos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_EOS_TOKEN
+
+    # get BOS/EOS token string from model file:
+    # NOTE: These may not be the expected tokens, checking these when model is added is likely necessary!
+    if "tokenizer.ggml.bos_token_id" in model.metadata:
+        bos_string = model._model.token_get_text(int(model.metadata.get("tokenizer.ggml.bos_token_id")))
+    if "tokenizer.ggml.eos_token_id" in model.metadata:
+        eos_string = model._model.token_get_text(int(model.metadata.get("tokenizer.ggml.eos_token_id")))
+
+    # get BOS/EOS strings for template from registry if not available from model file:
+    if not bos_string:
+        bos_string = model_spec.bos_string
+    if not eos_string:
+        eos_string = model_spec.eos_string
+
+    # init llama-cpp-python jinja chat formatter:
+    chat_formatter = llama_cpp.llama_chat_format.Jinja2ChatFormatter(
+        template=chat_template,
+        bos_token=bos_string,
+        eos_token=eos_string
+    )
+
+    return chat_formatter
+
+
 class LlamaCPPLocal(backends.Backend):
     """
     Model/backend handler class for locally-run GGUF/GGML models.
@@ -77,9 +129,7 @@ class LlamaCPPLocalModel(backends.Model):
         super().__init__(model_spec)
         self.model = load_model(model_spec)
 
-        # placeholders for BOS/EOS:
-        self.bos_string = None
-        self.eos_string = None
+        self.chat_formatter = get_chat_formatter(self.model, model_spec)
 
         # check chat template:
         if model_spec.premade_chat_template:
@@ -97,52 +147,17 @@ class LlamaCPPLocalModel(backends.Model):
                 # see https://llama-cpp-python.readthedocs.io/en/latest/#multi-modal-models
                 pass
 
-        if hasattr(self.model, 'chat_format'):
-            if not self.model.chat_format:
-                # no guessed chat format
-                pass
-            else:
-                if self.model.chat_format == "chatml":
-                    # get BOS/EOS strings for chatml from llama.cpp:
-                    self.bos_string = llama_cpp.llama_chat_format.CHATML_BOS_TOKEN
-                    self.eos_string = llama_cpp.llama_chat_format.CHATML_EOS_TOKEN
-                elif self.model.chat_format == "mistral-instruct":
-                    # get BOS/EOS strings for mistral-instruct from llama.cpp:
-                    self.bos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_BOS_TOKEN
-                    self.eos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_EOS_TOKEN
-
-        # fallback context size:
-        self.context_size = 512
-
-        # get various model settings from metadata:
-        for key, value in self.model.metadata.items():
-            # get BOS/EOS token string from model file:
-            # NOTE: These may not be the expected tokens, checking these when model is added is likely necessary!
-            if "bos_token_id" in key:
-                self.bos_string = self.model._model.token_get_text(int(value))
-                # print("BOS string from metadata:", self.bos_string)
-            if "eos_token_id" in key:
-                self.eos_string = self.model._model.token_get_text(int(value))
-                # print("EOS string from metadata:", self.eos_string)
-            # get maximum context size from model metadata:
-            if "context_length" in key:
-                self.context_size = int(value)
-
+        # get context size from metadata:
+        # NOTE: this requires thorough testing with more models
+        model_architecture = self.model.metadata.get('general.architecture')
+        self.context_size = int(self.model.metadata.get(f"{model_architecture}.context_length", 512))
         # set model instance context size to maximum context size:
         self.model._n_ctx = self.context_size
 
-        # get BOS/EOS strings for template from registry if not available from model file:
-        if not self.bos_string:
-            self.bos_string = model_spec.bos_string
-        if not self.eos_string:
-            self.eos_string = model_spec.eos_string
-
-        # init llama-cpp-python jinja chat formatter:
-        self.chat_formatter = llama_cpp.llama_chat_format.Jinja2ChatFormatter(
-            template=self.chat_template,
-            bos_token=self.bos_string,
-            eos_token=self.eos_string
-        )
+        # get various model settings from metadata:
+        # for key, value in self.model.metadata.items():
+            # print(key, value)
+            # pass
 
     def generate_response(self, messages: List[Dict], return_full_text: bool = False) -> Tuple[Any, Any, str]:
         """
@@ -182,6 +197,10 @@ class LlamaCPPLocalModel(backends.Model):
         # NOTE: llama.cpp has a set sampling order, which differs from that of HF transformers. The latter allows
         # individual sampling orders defined in the generation config that comes with HF models.
 
+        # print("chat handler:", self.model.chat_handler)
+
+        # TODO: use create_completion instead of create_chat_completion to assure proper chat template application
+
         model_output = self.model.create_chat_completion(
             messages,
             temperature=self.get_temperature(),
@@ -189,7 +208,7 @@ class LlamaCPPLocalModel(backends.Model):
         )
 
         response = {'response': model_output}
-        
+
         # cull input context:
         if not return_full_text:
             response_text = model_output['choices'][0]['message']['content'].strip()
