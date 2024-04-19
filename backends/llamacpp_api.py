@@ -65,11 +65,11 @@ def get_chat_formatter(model: Llama, model_spec: backends.ModelSpec) -> llama_cp
         chat_template = model_spec.custom_chat_template
 
     if hasattr(model, 'chat_format'):
-        print("has chat format attr:", model.chat_format)
+        # print("has chat format attr:", model.chat_format)
         if not model.chat_format:
             # no guessed chat format
-            print("has no guessed chat format")
-            print(llama_cpp.llama_chat_format.get_chat_completion_handler(None))
+            # print("has no guessed chat format")
+            # print(llama_cpp.llama_chat_format.get_chat_completion_handler(None))
             pass
         else:
             if model.chat_format == "chatml":
@@ -201,17 +201,28 @@ class LlamaCPPLocalModel(backends.Model):
 
         # TODO: use create_completion instead of create_chat_completion to assure proper chat template application
 
+        """
         model_output = self.model.create_chat_completion(
             messages,
             temperature=self.get_temperature(),
             max_tokens=self.get_max_tokens()
         )
+        """
+
+        model_output = self.model(
+            prompt_text,
+            temperature=self.get_temperature(),
+            max_tokens=self.get_max_tokens()
+        )
+
+        # print(model_output)
 
         response = {'response': model_output}
 
         # cull input context:
         if not return_full_text:
-            response_text = model_output['choices'][0]['message']['content'].strip()
+            # response_text = model_output['choices'][0]['message']['content'].strip()
+            response_text = model_output['choices'][0]['text'].strip()
 
             if 'output_split_prefix' in self.model_spec:
                 response_text = response_text.rsplit(self.model_spec['output_split_prefix'], maxsplit=1)[1]
@@ -222,6 +233,6 @@ class LlamaCPPLocalModel(backends.Model):
                 response_text = response_text[:-eos_len]
 
         else:
-            response_text = prompt_text + model_output['choices'][0]['message']['content'].strip()
+            response_text = prompt_text + model_output['choices'][0]['text'].strip()
 
         return prompt, response, response_text
