@@ -11,6 +11,8 @@ from clemgame.clemgame import Player
 from .constants import *
 from .validation_errors import *
 
+MOCK_IS_RANDOM = False
+
 nltk.download('wordnet', quiet=True)
 EN_LEMMATIZER = nltk.stem.WordNetLemmatizer()
 
@@ -37,7 +39,7 @@ class ClueGiver(Player):
         except backends.ContextExceededError:
             prompt = history[-1]
             return prompt, "CONTEXT EXCEEDED" , "CONTEXT EXCEEDED!"
-
+        
     def _custom_response(self, history, turn) -> str:
         prompt = history[-1]["content"]
         match = re.search(r"team words are: (.*)\.", prompt)
@@ -45,10 +47,22 @@ class ClueGiver(Player):
             # Player was actually prompted (otherwise it was reprompted and the team_words stay the same)
             team_words = match.group(1)
             team_words = team_words.split(', ')
-            self.targets = random.sample(team_words, min(1, len(team_words)))
+            self.targets = random.sample(team_words, 1)
         self.number_of_targets = len(self.targets)
-        self.clue = "".join(random.sample(list(string.ascii_lowercase), 6))
+        if MOCK_IS_RANDOM:
+            self.clue = self.random_clue()
+        else:
+            self.clue = self.team_clue()
         return self.recover_utterance()
+
+    def team_clue(self) -> str:
+        clue = self.targets[0][::-1]
+        if clue == clue[::-1]:
+            clue = clue + clue
+        return clue
+
+    def random_clue(self) -> str:
+        return "".join(random.sample(list(string.ascii_lowercase), 6))
 
     def check_morphological_similarity(self, utterance, clue, remaining_words):
         clue_lemma = EN_LEMMATIZER.lemmatize(clue)
@@ -141,9 +155,22 @@ class Guesser(Player):
         prompt = history[-1]["content"]
         board = prompt.split('\n\n')[1].split(', ')
         number_of_allowed_guesses = int(re.search(r"up to ([0-9]+) words", prompt).group(1))
-        self.guesses = random.sample(board, number_of_allowed_guesses)
+        if MOCK_IS_RANDOM:
+            self.guesses = self.random_guesses(board, number_of_allowed_guesses)
+        else:
+            self.guesses = self.team_guess(prompt)
         self.guesses = [word.strip('. ') for word in self.guesses]
         return self.recover_utterance()
+    
+    def random_guesses(self, board, number_of_allowed_guesses):
+        return random.sample(board, number_of_allowed_guesses)
+    
+    def team_guess(self, prompt):
+        clue = prompt.split('associated with the word ')[1].split("'")[1]
+        if clue == clue[::-1]:
+            clue = clue[0:(len(clue)//2)]
+        return [clue[::-1]]
+
     
     def validate_response(self, utterance: str, remaining_words: List[str], number_of_allowed_guesses: int):
         # utterance should only contain one line
