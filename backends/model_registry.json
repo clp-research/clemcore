@@ -85,6 +85,16 @@
     "backend": "cohere"
   },
   {
+    "model_name": "command-r",
+    "model_id": "command-r",
+    "backend": "cohere"
+  },
+  {
+    "model_name": "command-r-plus",
+    "model_id": "command-r-plus",
+    "backend": "cohere"
+  },
+  {
     "model_name": "command-light",
     "model_id": "command-light",
     "backend": "cohere"
