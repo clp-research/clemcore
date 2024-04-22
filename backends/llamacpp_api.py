@@ -131,13 +131,6 @@ class LlamaCPPLocalModel(backends.Model):
 
         self.chat_formatter = get_chat_formatter(self.model, model_spec)
 
-        # check chat template:
-        if model_spec.premade_chat_template:
-            # jinja chat template available in metadata
-            self.chat_template = self.model.metadata['tokenizer.chat_template']
-        else:
-            self.chat_template = model_spec.custom_chat_template
-
         if hasattr(self.model, 'chat_handler'):
             if not self.model.chat_handler:
                 # no custom chat handler
@@ -153,11 +146,6 @@ class LlamaCPPLocalModel(backends.Model):
         self.context_size = int(self.model.metadata.get(f"{model_architecture}.context_length", 512))
         # set model instance context size to maximum context size:
         self.model._n_ctx = self.context_size
-
-        # get various model settings from metadata:
-        # for key, value in self.model.metadata.items():
-            # print(key, value)
-            # pass
 
     def generate_response(self, messages: List[Dict], return_full_text: bool = False) -> Tuple[Any, Any, str]:
         """
@@ -177,7 +165,7 @@ class LlamaCPPLocalModel(backends.Model):
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
                   "temperature": self.get_temperature(), "return_full_text": return_full_text}
 
-        prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)
+        prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)  # BOS expected in template
 
         # check context limit:
         context_check = check_context_limit_generic(self.context_size, prompt_tokens,
@@ -197,31 +185,16 @@ class LlamaCPPLocalModel(backends.Model):
         # NOTE: llama.cpp has a set sampling order, which differs from that of HF transformers. The latter allows
         # individual sampling orders defined in the generation config that comes with HF models.
 
-        # print("chat handler:", self.model.chat_handler)
-
-        # TODO: use create_completion instead of create_chat_completion to assure proper chat template application
-
-        """
-        model_output = self.model.create_chat_completion(
-            messages,
-            temperature=self.get_temperature(),
-            max_tokens=self.get_max_tokens()
-        )
-        """
-
         model_output = self.model(
             prompt_text,
             temperature=self.get_temperature(),
             max_tokens=self.get_max_tokens()
         )
 
-        # print(model_output)
-
         response = {'response': model_output}
 
         # cull input context:
         if not return_full_text:
-            # response_text = model_output['choices'][0]['message']['content'].strip()
             response_text = model_output['choices'][0]['text'].strip()
 
             if 'output_split_prefix' in self.model_spec:
