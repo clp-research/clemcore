@@ -15,6 +15,11 @@ class ValidationErrorTypes(str, Enum):
     CLUE_CONTAINS_NUMBER_OF_TARGETS = "clue line contains the number of targets"
     CLUE_ON_BOARD = "clue is word on board"
     INVALID_TARGET = "target is invalid"
+    DOUBLE_GUESS = "guess appears more than once in utterance"
+    GUESS_HALLUCINATION = "guess word is hallucination"
+    GUESS_IS_CLUE = "guess is clue word"
+    REPEATED_GUESS = "guess was already guessed"
+
 
 # general class
 class ValidationError(Exception):
@@ -103,6 +108,61 @@ class InvalidGuessError(ValidationError):
         result["guess"] = self.guess
         result["board"] = self.board
         return result
+    
+class GuessIsClueError(ValidationError):
+    def __init__(self, utterance, clue, guess):
+        message = f"Guessed word '{guess}' is the same word as the provided clue word, you should select words from the provided list that are related to the clue word."
+        super().__init__(GUESSER, ValidationErrorTypes.GUESS_IS_CLUE, utterance, message)
+        self.guess = guess
+        self.clue = clue
+
+    def get_dict(self):
+        result = super().get_dict()
+        result["guess"] = self.guess
+        result["clue"] = self.clue
+        return result
+
+class HallucinatedGuessError(ValidationError):
+    def __init__(self, utterance, guess, previous_guesses, remaining_words):
+        message = f"Guessed word '{guess}' was not listed, you can only guess words provided in the lists."
+        super().__init__(GUESSER, ValidationErrorTypes.GUESS_HALLUCINATION, utterance, message)
+        self.guess = guess
+        self.previous_guesses = previous_guesses
+        self.remaining_words = remaining_words
+
+    def get_dict(self):
+        result = super().get_dict()
+        result["guess"] = self.guess
+        result["previous guesses"] = self.previous_guesses
+        result["remaining words"] = self.remaining_words
+        return result
+
+class DoubleGuessError(ValidationError):
+    def __init__(self, utterance, guess, remaining_words):
+        message = f"Guessed word '{guess}' appears more than once in your answer, please select each guessed word only once."
+        super().__init__(GUESSER, ValidationErrorTypes.DOUBLE_GUESS, utterance, message)
+        self.guess = guess
+        self.remaining_words = remaining_words
+
+    def get_dict(self):
+        result = super().get_dict()
+        result["guess"] = self.guess
+        result["remaining words"] = self.remaining_words
+        return result
+    
+class RepeatedGuessError(ValidationError):
+    def __init__(self, utterance, guess, previous_guesses):
+        message = f"Guessed word '{guess}' was already guessed previously, pay attention to the newly provided list of remaining words."
+        super().__init__(GUESSER, ValidationErrorTypes.REPEATED_GUESS, utterance, message)
+        self.guess = guess
+        self.previous_guesses = previous_guesses
+
+    def get_dict(self):
+        result = super().get_dict()
+        result["guess"] = self.guess
+        result["previous guesses"] = self.previous_guesses
+        return result
+        
 
 # Cluegiver errors
 

@@ -34,6 +34,7 @@ class CodenamesGame(DialogueGameMaster):
                                                     game_instance[ASSIGNMENTS][OPPONENT], 
                                                     game_instance[ASSIGNMENTS][INNOCENT],
                                                     game_instance[ASSIGNMENTS][ASSASSIN],
+                                                    game_instance[BOARD],
                                                     self.experiment["flags"])
         
         self.aborted: bool = False
@@ -143,7 +144,7 @@ class CodenamesGame(DialogueGameMaster):
                 self.add_assistant_message(player, utterance)
         else:
             try:
-                player.validate_response(utterance, self.board.get_all_hidden_words(), self.cluegiver.number_of_targets)
+                player.validate_response(utterance, self.board.get_revealed_words(TEAM), self.board.get_all_hidden_words(), self.cluegiver.number_of_targets, self.cluegiver.clue)
             except ValidationError as error:
                 self.log_to_self(Turn_logs.VALIDATION_ERROR, error.get_dict())
                 self.invalid_response = True

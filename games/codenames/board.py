@@ -2,10 +2,11 @@ from typing import Dict, List
 from .constants import TEAM, INNOCENT, OPPONENT, ASSASSIN, HIDDEN, REVEALED
 
 class CodenamesBoard:
-    def __init__(self, team_words, opponent_words, innocent_words, assassin_words, flags):
+    def __init__(self, team_words, opponent_words, innocent_words, assassin_words, random_order, flags):
         self.hidden = {TEAM: team_words, INNOCENT: innocent_words, OPPONENT: opponent_words, ASSASSIN: assassin_words}
         self.revealed = {TEAM: {TEAM: [], INNOCENT: [], OPPONENT: [], ASSASSIN: []},
                          OPPONENT: {TEAM: [], INNOCENT: [], OPPONENT: [], ASSASSIN: []}}
+        self.random_order = random_order
         self.flags = flags
 
     def get_current_board(self) -> Dict:
@@ -26,10 +27,20 @@ class CodenamesBoard:
         hidden_words = []
         for assignment in self.hidden:
             hidden_words.extend(self.hidden[assignment])
-        return hidden_words
+        randomly_ordered_hidden_words = []
+        for word in self.random_order:
+            if word in hidden_words:
+                randomly_ordered_hidden_words.append(word)
+        return randomly_ordered_hidden_words
 
     def get_hidden_words(self, with_assignment: str) -> List:
         return self.hidden[with_assignment]
+
+    def get_revealed_words(self, by: str) -> List:
+        revealed_words = []
+        for assignment in self.revealed[by]:
+            revealed_words.extend(self.revealed[by][assignment])
+        return revealed_words
 
     def reveal_word(self, word: str, by: str = TEAM):
         for assignment in self.hidden:

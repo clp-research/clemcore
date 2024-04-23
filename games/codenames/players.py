@@ -170,9 +170,8 @@ class Guesser(Player):
         if clue == clue[::-1]:
             clue = clue[0:(len(clue)//2)]
         return [clue[::-1]]
-
     
-    def validate_response(self, utterance: str, remaining_words: List[str], number_of_allowed_guesses: int):
+    def validate_response(self, utterance: str, previous_guesses: List[str], remaining_words: List[str], number_of_allowed_guesses: int, clue: str, ):
         # utterance should only contain one line
         if '\n' in utterance:
             if self.flags["IGNORE RAMBLING"]:
@@ -203,17 +202,22 @@ class Guesser(Player):
         # guesses must be words on the board that are not revealed yet
         incorrect_guesses = 0
         for guess in guesses:
+            if guess == clue:
+                raise GuessIsClueError(utterance, clue, guess)
             if not guess in remaining_words:
                 incorrect_guesses += 1
                 if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
                     self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
                 else:
-                    raise InvalidGuessError(utterance, guess, remaining_words)
+                    if guess in previous_guesses:
+                        raise RepeatedGuessError(utterance, guess, previous_guesses)
+                    else:
+                        raise HallucinatedGuessError(utterance, guess, previous_guesses, remaining_words)
             if guesses.count(guess) > 1:
                 if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
                     self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
                 else:
-                    raise InvalidGuessError(utterance, guess, remaining_words)
+                    raise DoubleGuessError(utterance, guess, remaining_words)
         if len(guesses) == incorrect_guesses:
             raise NoCorrectGuessError(utterance, guesses, remaining_words)
         
