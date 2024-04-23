@@ -127,8 +127,6 @@ class CodenamesScorer(GameScorer):
         # plus game specific things
         # won or lost through assassin or through revealing all words of one team
 
-        # TODO: should ratios also be 0 or NaN when the game was aborted? yes they should...
-
         self.log_episode_score(GAME_ENDED_THROUGH_ASSASSIN, episode_interactions[GAME_ENDED_THROUGH_ASSASSIN])
         self.board_at_end = episode_interactions[BOARD_END_STATUS]
 
@@ -139,7 +137,13 @@ class CodenamesScorer(GameScorer):
         self.log_episode_score(Episode_Scores.NEGATIVE_RECALL, 1 - (len(self.board_at_end[REVEALED][TEAM][ASSASSIN]) + len(self.board_at_end[REVEALED][TEAM][OPPONENT]) + len(self.board_at_end[REVEALED][TEAM][INNOCENT])) / number_of_non_team_words)
         number_of_turns = episode_interactions[NUMBER_OF_TURNS]
         self.log_episode_score(NUMBER_OF_TURNS, number_of_turns)
-        efficiency = min(1/EXPECTED_WORDS_PER_TURN * number_of_revealed_words/number_of_turns, 1)
+
+        guesser_efficiency = 0
+        for turn_idx in self.scores["turn scores"]:
+            guesser_efficiency += self.scores["turn scores"][turn_idx][Turn_Scores.GUESSER_NUMBER_OF_GUESSES]
+        guesser_efficiency /= number_of_turns
+        
+        efficiency = min(1/EXPECTED_WORDS_PER_TURN * guesser_efficiency, 1)
         self.log_episode_score(Episode_Scores.EFFICIENCY, efficiency)
        
     def log_main_score(self, episode_interactions):
