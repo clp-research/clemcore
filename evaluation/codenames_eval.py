@@ -39,9 +39,11 @@ def load_episode_scores(results_path):
     df = df[df['game'] == GAME_NAME].drop(columns=['game'])
     df = df.set_index(['model', 'experiment', 'episode', 'metric'])
     df = df['value'].unstack()
+    print(df.columns)
 
     # setting values NaN or 0 if game was aborted
     df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, VARIABLE, EXPERIMENT_NAME, GAME_ENDED_THROUGH_ASSASSIN]]] = np.nan
+    (print(df.columns))
 
     # resorting the experiments by their number
     for index, row in df.iterrows():
@@ -57,6 +59,8 @@ def score_models(args):
     # create and save main benchmark table
     df = make_clem_table(df_episode_scores)
     save_table(df, args.results_path, "results")
+
+    print(df_episode_scores.columns)
 
     # create and save codenames tables
     df_metrics, df_requests, df_flags = make_codenames_tables(df_episode_scores)
@@ -92,7 +96,8 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
 
     # compute mean benchscore and mean played (which is binary, so a proportion)
     df_mean = (df_aux.groupby(['model'], sort=False)
-                  .mean(numeric_only=True))
+                  .mean(numeric_only=False))  #numeric_only=True
+    
     df_mean[METRIC_PLAYED] *= 100
     df_mean = df_mean.round(2)
     df_mean.rename(columns={METRIC_PLAYED : f'% {METRIC_PLAYED}'}, inplace=True)
@@ -101,21 +106,25 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     # compute the std of benchscore
     df_std_benchscore = df_aux[BENCH_SCORE]
     df_std_benchscore = (df_std_benchscore.groupby(['model'], sort=False)
-                    .std(numeric_only=True)
+                    .std(numeric_only=False)
                     .round(2))
     df_mean.insert(len(df_mean.columns), f'{BENCH_SCORE} (std)', df_std_benchscore)
 
     # compute clemscores and add to df
     clemscore = ((df_mean['% Played'] / 100)
                  * df_mean[BENCH_SCORE])
-    df_mean.insert(0, 'clemscore', clemscore.round(2))
+    print("Clemscore:", clemscore.values.astype(float))
+    df_mean.insert(0, 'clemscore', clemscore.values.astype(float).round(2))
 
     return df_mean
 
 def make_codenames_tables(df: pd.DataFrame) -> pd.DataFrame:
-    df_aux = (df.groupby(['model'], sort=False)
-                  .mean(numeric_only=True)
+    df_aux= df.drop(columns=['experiment variable', 'experiment name'])
+    df_aux = (df_aux.groupby(['model'], sort=False)
+                  .mean(numeric_only=False)
                   .round(2))
+    
+    print(df_aux.columns)
 
     df_game_metrics = df_aux[GAME_METRICS]
     df_requests = df_aux[REQUEST_METRICS]
