@@ -45,12 +45,10 @@ class CohereModel(backends.Model):
         for message in messages[:-1]:
 
             if message['role'] == 'assistant':
-                m = {"user_name": "Chatbot", "text": ""}
-                m["text"] = message["content"]
+                m = {"role": "CHATBOT", "message": message["content"]}
                 chat_history.append(m)
             elif message['role'] == 'user':
-                m = {"user_name": "User", "text": ""}
-                m["text"] = message["content"]
+                m = {"role": "USER", "message": message["content"]}
                 chat_history.append(m)
 
         message = messages[-1]["content"]
