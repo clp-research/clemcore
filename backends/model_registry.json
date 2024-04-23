@@ -10,6 +10,26 @@
     "backend": "openai_compatible"
   },
   {
+    "model_name": "Llama-3-70b-chat-hf",
+    "model_id": "meta-llama/Llama-3-70b-chat-hf",
+    "backend": "openai_compatible"
+  },
+  {
+    "model_name": "Llama-3-8b-chat-hf",
+    "model_id": "meta-llama/Llama-3-8b-chat-hf",
+    "backend": "openai_compatible"
+  },
+  {
+    "model_name": "Mixtral-8x22B-Instruct-v0.1",
+    "model_id": "mistralai/Mixtral-8x22B-Instruct-v0.1",
+    "backend": "openai_compatible"
+  },
+  {
+    "model_name": "Mixtral-8x7B-Instruct-v0.1",
+    "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
+    "backend": "openai_compatible"
+  },
+  {
     "model_name": "fsc-openchat-3.5-0106",
     "model_id": "openchat-3.5-0106",
     "backend": "openai_compatible"
