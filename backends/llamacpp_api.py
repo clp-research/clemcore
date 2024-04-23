@@ -43,9 +43,10 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
         creds = backends.load_credentials("huggingface")
         api_key = creds["huggingface"]["api_key"]
         model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False,
-                                      n_gpu_layers=gpu_layers_offloaded)
+                                      n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
     else:
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=gpu_layers_offloaded)
+        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=gpu_layers_offloaded,
+                                      n_ctx=0)
 
     logger.info(f"Finished loading llama.cpp model: {model_spec.model_name}")
 
@@ -140,12 +141,8 @@ class LlamaCPPLocalModel(backends.Model):
                 # see https://llama-cpp-python.readthedocs.io/en/latest/#multi-modal-models
                 pass
 
-        # get context size from metadata:
-        # NOTE: this requires thorough testing with more models
-        model_architecture = self.model.metadata.get('general.architecture')
-        self.context_size = int(self.model.metadata.get(f"{model_architecture}.context_length", 512))
-        # set model instance context size to maximum context size:
-        self.model._n_ctx = self.context_size
+        # get context size from model instance:
+        self.context_size = self.model._n_ctx
 
     def generate_response(self, messages: List[Dict], return_full_text: bool = False) -> Tuple[Any, Any, str]:
         """
@@ -168,18 +165,9 @@ class LlamaCPPLocalModel(backends.Model):
         prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)  # BOS expected in template
 
         # check context limit:
-        context_check = check_context_limit_generic(self.context_size, prompt_tokens, self.model_spec.model_name,
-                                                    max_new_tokens=self.get_max_tokens())
+        check_context_limit_generic(self.context_size, prompt_tokens, self.model_spec.model_name,
+                                    max_new_tokens=self.get_max_tokens())
 
-        """
-        if not context_check[0]:  # if context is exceeded, context_check[0] is False
-            logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
-                        f"{context_check[1]}/{context_check[3]}")
-            # fail gracefully:
-            raise backends.ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
-                                                tokens_used=context_check[1], tokens_left=context_check[2],
-                                                context_size=context_check[3])
-        """
         # NOTE: HF transformers models come with their own generation configs, but llama.cpp doesn't seem to have a
         # feature like that. There are default sampling parameters, and clembench only handles two of them so far, which
         # are set accordingly. Other parameters use the llama-cpp-python default values for now.
