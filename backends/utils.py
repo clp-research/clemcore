@@ -2,7 +2,7 @@ import copy
 from functools import wraps
 from typing import List, Dict, Tuple
 
-from backends import get_logger
+from backends import get_logger, ContextExceededError
 
 logger = get_logger(__name__)
 
@@ -62,10 +62,13 @@ def ensure_messages_format(generate_response_fn):
     return wrapped_fn
 
 
-def check_context_limit_generic(context_size, prompt_tokens, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
+def check_context_limit_generic(context_size: int, prompt_tokens: List, model_name: str, max_new_tokens: int = 100) \
+        -> Tuple[bool, int, int, int]:
     """
     Internal context limit check to run in generate_response.
+    :param context_size: The
     :param prompt_tokens: List of prompt token IDs.
+    :param model_name: Name of the model checked for.
     :param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
     :return: Tuple with
             Bool: True if context limit is not exceeded, False if too many tokens
@@ -77,4 +80,11 @@ def check_context_limit_generic(context_size, prompt_tokens, max_new_tokens: int
     tokens_used = prompt_size + max_new_tokens  # context includes tokens to be generated
     tokens_left = context_size - tokens_used
     fits = tokens_used <= context_size
+
+    if not fits:
+        logger.info(f"Context token limit for {model_name} exceeded: {tokens_used}/{tokens_left}")
+        # fail gracefully:
+        raise ContextExceededError(f"Context token limit for {model_name} exceeded",
+                                   tokens_used=tokens_used, tokens_left=tokens_left, context_size=context_size)
+
     return fits, tokens_used, tokens_left, context_size

@@ -168,8 +168,10 @@ class LlamaCPPLocalModel(backends.Model):
         prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)  # BOS expected in template
 
         # check context limit:
-        context_check = check_context_limit_generic(self.context_size, prompt_tokens,
+        context_check = check_context_limit_generic(self.context_size, prompt_tokens, self.model_spec.model_name,
                                                     max_new_tokens=self.get_max_tokens())
+
+        """
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
@@ -177,7 +179,7 @@ class LlamaCPPLocalModel(backends.Model):
             raise backends.ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
-
+        """
         # NOTE: HF transformers models come with their own generation configs, but llama.cpp doesn't seem to have a
         # feature like that. There are default sampling parameters, and clembench only handles two of them so far, which
         # are set accordingly. Other parameters use the llama-cpp-python default values for now.
