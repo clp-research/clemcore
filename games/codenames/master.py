@@ -158,7 +158,7 @@ class CodenamesGame(DialogueGameMaster):
     def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
         self.parsed_request_count += 1
         if player == self.cluegiver:
-            utterance = player.parse_response(utterance)
+            utterance = player.parse_response(utterance, self.board.get_all_hidden_words())
             self.log_to_self(Turn_logs.CLUE, player.clue)
             self.log_to_self(Turn_logs.TARGETS, player.targets)
             for target in player.targets:
@@ -166,7 +166,7 @@ class CodenamesGame(DialogueGameMaster):
                 self.log_to_self(Turn_logs.WORD_TARGETED, {"word": target, "assignment": assignment})
             return utterance, False
         else:
-            parsed_utterance = player.parse_response(utterance)
+            parsed_utterance = player.parse_response(utterance, self.board.get_all_hidden_words())
             self.log_to_self(Turn_logs.GUESSES, player.guesses)
             for guess in player.guesses:
                 assignment = self.board.reveal_word(guess)

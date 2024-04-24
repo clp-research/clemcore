@@ -202,6 +202,9 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                     else:
                         experiment["flags"][flag] = True
 
+                # FIXME: bad hack to always strip words
+                experiment["flags"]["STRIP WORDS"] = True 
+
                 # create game instances
                 for game_id in tqdm(range(experiment["number of instances"])):
                     # choose correct generator function

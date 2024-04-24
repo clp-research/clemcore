@@ -127,13 +127,15 @@ class ClueGiver(Player):
                 else:
                     raise InvalidTargetError(utterance, target, remaining_words)
             
-    def parse_response(self, utterance: str) -> str:
+    def parse_response(self, utterance: str, remaining_words: List[str]) -> str:
         parts = utterance.split('\n')
         clue = find_line_starting_with(self.clue_prefix, parts).removeprefix(self.clue_prefix)
         targets = find_line_starting_with(self.target_prefix, parts).removeprefix(self.target_prefix)
         self.clue = clue.lower().strip(CHARS_TO_STRIP).strip(NUMBERS_TO_STRIP)
         self.targets = targets.split(', ')
         self.targets = [target.strip(CHARS_TO_STRIP).lower() for target in self.targets]
+        if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
+            self.targets = [word for word in self.targets if word in remaining_words]
         self.number_of_targets = len(self.targets)
         return self.recover_utterance()
 
@@ -222,12 +224,14 @@ class Guesser(Player):
             raise NoCorrectGuessError(utterance, guesses, remaining_words)
         
             
-    def parse_response(self, utterance: str) -> str:
+    def parse_response(self, utterance: str, remaining_words: List[str]) -> str:
         if self.flags["IGNORE RAMBLING"]:
             utterance = find_line_starting_with(self.prefix, utterance.split('\n'))
         utterance = utterance.removeprefix(self.prefix)
         self.guesses = utterance.split(', ')
         self.guesses = [word.strip(CHARS_TO_STRIP).lower() for word in self.guesses]
+        if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
+            self.guesses = [word for word in self.guesses if word in remaining_words]
         return self.recover_utterance()
             
     def recover_utterance(self) -> str:
