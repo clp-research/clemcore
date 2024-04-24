@@ -21,8 +21,8 @@ The following key/values are **optional**, but should be defined for models that
 This backend requires these **mandatory** key/values:  
 `huggingface_id`(string): The full huggingface model ID; huggingface user name / model name. Example: `TheBloke/openchat_3.5-GGUF`  
 `filename`(string): This is a string used as a regular expression to download the specific model file for a specific 
-quantization/version of the model on the HuggingFace repository. It is not case-sensitive. Please check the repository 
-defined in `huggingface_id` for the proper file name. Example: `*q5_0.gguf` for the q5 version of `openchat_3.5-GGUF` on 
+quantization/version of the model on the HuggingFace repository. It is case-sensitive. Please check the repository 
+defined in `huggingface_id` for the proper file name. Example: `*Q5_0.gguf` for the q5 version of `openchat_3.5-GGUF` on 
 the `TheBloke/openchat_3.5-GGUF` repository.
 `premade_chat_template`(bool): If `true`, the chat template that is applied for generation is loaded from the model 
 repository on huggingface. If `false`, the value of `custom_chat_template` will be used if defined, otherwise a generic 
