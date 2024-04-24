@@ -2,7 +2,7 @@
     Backend using llama.cpp for GGUF/GGML models.
 """
 
-from typing import List, Dict, Tuple, Any, Union
+from typing import List, Dict, Tuple, Any
 
 import backends
 from backends.utils import check_context_limit_generic
@@ -66,11 +66,8 @@ def get_chat_formatter(model: Llama, model_spec: backends.ModelSpec) -> llama_cp
         chat_template = model_spec.custom_chat_template
 
     if hasattr(model, 'chat_format'):
-        # print("has chat format attr:", model.chat_format)
         if not model.chat_format:
             # no guessed chat format
-            # print("has no guessed chat format")
-            # print(llama_cpp.llama_chat_format.get_chat_completion_handler(None))
             pass
         else:
             if model.chat_format == "chatml":
