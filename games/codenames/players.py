@@ -1,8 +1,4 @@
 # TODO: reuse players for other codename variants, e.g. Duet?
-# TODO: check whether target is only a number -> validation error, not ignoring targets!
-# TODO: check whether clue is *only* a number
-# TODO: ignore wrong guesses/targets first, before inferring amount of words!
-# TODO: throw out ignored guesses, they are not made if ignored!
 
 from typing import Dict, List
 import re, random, string, nltk, backends
