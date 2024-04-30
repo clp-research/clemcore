@@ -5,7 +5,7 @@ Creates files in ./in
 """
 from tqdm import tqdm
 from clemgame.clemgame import GameInstanceGenerator
-import random, copy, argparse, os
+import random, copy, argparse, os, numpy
 from typing import Set
 from clemgame.file_utils import file_path
 
@@ -90,8 +90,9 @@ def generate_similar_across_teams(categories, required):
     
 def choose_instances_from_random_category(categories: Set, already_taken_words: Set, already_taken_categories: Set, maximum = 4):
     remaining_category_names = set(categories.keys()) - already_taken_categories
-    # TODO: sample category by size, bigger categories should be selected more often!
-    category_name = get_random_category(list(remaining_category_names))
+    total = sum([len(categories[category]) for category in categories if category in remaining_category_names])
+    category_probabilities = [len(categories[category])/total for category in categories if category in remaining_category_names]
+    category_name = get_random_category(list(remaining_category_names), category_probabilities)[0]
     already_taken_categories.add(category_name)
 
     category_words = set(categories[category_name])
@@ -119,8 +120,8 @@ def sample_words_from_category(category, number_of_words):
         
     return words
     
-def get_random_category(category_list):
-    return random.choice(category_list)
+def get_random_category(category_list, probabilities):
+    return numpy.random.choice(category_list, 1, p=probabilities)
 
 generators={'random': generate_random,
             'easy word assignments': generate_similar_within_teams,
@@ -138,8 +139,13 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
             filename = FILENAME
         if not self.on_generate(variable_name, experiment_name, strict):
             return
-        if keep and (variable_name or experiment_name):
-            print(f"Replacing instances for {variable_name}: {experiment_name}.")
+        if keep:
+            if variable_name and experiment_name:
+                print(f"Replacing instances for {variable_name}: {experiment_name}.")
+            elif variable_name:
+                print(f"Replacing instances for variable {variable_name}.")
+            else:
+                print(f"Replacing instances for experiment {experiment_name}.")
             self.replace_instances(variable_name, experiment_name, filename)
         self.store_file(self.instances, filename, sub_dir="in")
         
@@ -248,7 +254,7 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
     def replace_instances(self, variable_name, experiment_name = None, filename="instances.json", ):
         file = self.load_json(f"in/{filename}")
         if not file:
-            print("File does not exist, can be 'overwritten'...")
+            print("File does not exist, can't be 'overwritten'...")
             return
         old_experiments = file["experiments"]
         # adding all new experiment instances
@@ -257,13 +263,13 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
             if old_experiments[i]["variable"] == variable_name:
                 if experiment_name and not old_experiments[i]["name"] == experiment_name:
                     # experiment name was set, but these old instances belong to a different experiment, so should be kept
-                    print(f"Keep {old_experiments[i]['name']}.")
+                    print(f"Keep {variable_name}: {old_experiments[i]['name']}.")
                     new_experiments.append(old_experiments[i])
                 else:
-                    print(f"Replace {experiment_name}.")
+                    print(f"Replace {variable_name}: {old_experiments[i]['name']}.")
             else:
                 # if the variable name is not the same, then these instances should also be kept
-                print(f"Keep {old_experiments[i]['name']}.")
+                print(f"Keep {variable_name}: {old_experiments[i]['name']}.")
                 new_experiments.append(old_experiments[i])
 
         # sort experiments by variable, then by experiment name
