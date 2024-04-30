@@ -88,7 +88,11 @@ class CodenamesGame(DialogueGameMaster):
         for word in opponent_words:
             assignment = self.board.reveal_word(word, OPPONENT)
             self.log_to_self(Turn_logs.OPPONENT_REVEALED, {"word": word, "assignment": assignment})
-    
+
+    def _on_before_game(self):
+        # add initial cluegiver prompt
+        self.add_user_message(self.cluegiver, self._get_cluegiver_prompt(True))
+
     def _on_before_turn(self, current_turn):
         # print(self.board.get_current_board())
         self.log_to_self(Turn_logs.BOARD_STATUS, self.board.get_current_board())
@@ -96,9 +100,9 @@ class CodenamesGame(DialogueGameMaster):
         self.cluegiver.retries = 0
         self.guesser.retries = 0
         self.number_of_turns += 1
-        initial = True if self.number_of_turns == 1 else False
+        #initial = True if self.number_of_turns == 1 else False
         # add new cluegiver prompt
-        self.add_user_message(self.cluegiver, self._get_cluegiver_prompt(initial))
+        #self.add_user_message(self.cluegiver, self._get_cluegiver_prompt(initial))
 
     def _does_game_proceed(self) -> bool:
         continue_game = True
@@ -161,23 +165,10 @@ class CodenamesGame(DialogueGameMaster):
             utterance = player.parse_response(utterance, self.board.get_all_hidden_words())
             self.log_to_self(Turn_logs.CLUE, player.clue)
             self.log_to_self(Turn_logs.TARGETS, player.targets)
-            for target in player.targets:
-                assignment = self.board.get_word_assignment(target)
-                self.log_to_self(Turn_logs.WORD_TARGETED, {"word": target, "assignment": assignment})
             return utterance, False
         else:
             parsed_utterance = player.parse_response(utterance, self.board.get_all_hidden_words())
             self.log_to_self(Turn_logs.GUESSES, player.guesses)
-            for guess in player.guesses:
-                assignment = self.board.reveal_word(guess)
-                if not assignment:
-                    continue
-                self.log_to_self(Turn_logs.TEAM_REVEALED, {"word": guess, "assignment": assignment})
-                if self._was_target(guess):
-                    self.log_to_self(Turn_logs.TARGET_REVEALED, {"word": guess, "assignment": assignment})
-                if not self.board.should_continue_after_revealing(guess):
-                    self.log_to_self("turn end after", guess)
-                    break
                 
             return parsed_utterance, False
         
@@ -195,11 +186,62 @@ class CodenamesGame(DialogueGameMaster):
     
     def _after_add_player_response(self, player: Player, utterance: str):
         if player == self.cluegiver:
+            # score cluegiver precision
+            for target in player.targets:
+                assignment = self.board.get_word_assignment(target)
+                self.log_to_self(Turn_logs.WORD_TARGETED, {"word": target, "assignment": assignment})
+
+            # add response of cluegiver embedded in guesser prompt to guesser history
             initial = True if self.number_of_turns == 1 else False
-            self.add_user_message(self.guesser, self._get_guesser_prompt(initial))
+            if initial:
+                self.add_user_message(self.guesser, self._get_guesser_prompt(initial))
+            else:
+                history = self.messages_by_names[self.guesser.descriptor]
+                history[-1]["content"] += (f"\n{self._get_guesser_prompt(initial)}")
 
         else:
-            self.add_user_message(self.cluegiver, utterance)
+            evaluated_guesses = []
+            # reveal guesses in order
+            for guess in player.guesses:
+                assignment = self.board.reveal_word(guess)
+                if not assignment:
+                    continue
+                evaluated_guesses.append((guess, assignment))
+
+                # TODO: add player messages here, whether word was revealed and correct, or incorrect and all other guesses were ignored
+                self.log_to_self(Turn_logs.TEAM_REVEALED, {"word": guess, "assignment": assignment})
+                if self._was_target(guess):
+                    self.log_to_self(Turn_logs.TARGET_REVEALED, {"word": guess, "assignment": assignment})
+                if not self.board.should_continue_after_revealing(guess):
+                    self.log_to_self("turn end after", guess)
+                    break
+            
+            guess_feedback = ""
+            if evaluated_guesses[-1][1] == TEAM:
+                if len(evaluated_guesses) >= 2:
+                    guess_feedback = f"The words {', '.join([guess for guess, assignment in evaluated_guesses])} were guessed correctly. "
+                else:
+                    guess_feedback = f"The word {evaluated_guesses[0][0]} was guessed correctly. "
+            else:
+                correct_guesses = evaluated_guesses[0:-1]
+                incorrect_guess = evaluated_guesses[-1]
+                if len(correct_guesses) >= 2:
+                    guess_feedback += (f"The words {', '.join([guess for guess, assignment in correct_guesses])} were guessed correctly. ")
+                elif len(correct_guesses) == 1:
+                    guess_feedback += (f"The word {correct_guesses[0][0]} was guessed correctly. ")
+                guess_feedback += (f"The word {incorrect_guess[0]} was an {incorrect_guess[1]} word. ")
+
+            cluegiver_guess_feedback = copy.copy(guess_feedback)
+            cluegiver_guess_feedback += ("Your teammate's turn ended there.")
+
+            guesser_guess_feedback = copy.copy(guess_feedback)
+            guesser_guess_feedback += ("Your turn ended there.")
+
+            # add guess feedback to guesser history
+            self.add_user_message(self.guesser, guesser_guess_feedback)
+
+            # add guesser utterance to cluegiver history and new cluegiver prompt
+            self.add_user_message(self.cluegiver, f"{cluegiver_guess_feedback}\n{self._get_cluegiver_prompt(False)}")
     
     def _on_after_turn(self, current_turn):
         # let mock opponent reveal their cards
