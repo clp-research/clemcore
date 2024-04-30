@@ -140,4 +140,13 @@ The repository `clembench-leaderboard`(https://github.com/clembench/clembench-le
 }
 ```
 
+
+##### Check the scores.json files
+
+Run the following [script](https://github.com/clembench/clembench-runs/blob/main/check_scores_files.py) to check whether there are missing scores.json files. It should be pushed into the **clembench-run** repository only if all there aren't any missing files.
+```
+python3 check_scores_files.py
+```
+
+
 The leaderboard is currently deployed under [HuggingFace Space CLEM-Leaderboard](https://huggingface.co/spaces/colab-potsdam/clem-leaderboard). The leaderboard will be automatically updated once new versions of `results.csv` are available under `clembench-runs`.

@@ -1,9 +1,9 @@
 """
 Generate instances for the referencegame
-Version 2.0 (less biased instances)
+Version 1.6 (strict regex parsing)
 
-Reads grids_v03.json from resources/
-Creates instances.json in in/
+Reads grids_v1.5.json from resources/ (grids don't change in this version)
+Creates instances.json in instances/
 """
 
 import random # to create random grids
@@ -16,6 +16,7 @@ random.seed(123)
 
 logger = clemgame.get_logger(__name__)
 GAME_NAME = "referencegame"
+GRIDS = "resources/grids_v1.5.json"
 
 
 def generate_samples(grids_name, grids):
@@ -127,7 +128,7 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
 
         player_a_prompt_header = self.load_template(f"resources/initial_prompts/player_a_prompt_header_zero_shot.template")
         player_b_prompt_header = self.load_template(f"resources/initial_prompts/player_b_prompt_header_zero_shot.template")
-        grids = self.load_json("resources/grids_v03.json")
+        grids = self.load_json(GRIDS)
 
         for grids_group in grids.keys():
             # get triplets
@@ -173,13 +174,20 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_2_second_grid'] = second_grid
                     game_instance['player_2_third_grid'] = third_grid
                     game_instance['target_grid_name'] = target_grid_name
-                    game_instance['player_1_response_pattern'] = '^expression:\s*(.+)\n*(.+)*$'
-                    game_instance['player_2_response_pattern'] = '^answer:\s*(first|second|third)'
-                    game_instance['player_1_response_tag'] = 'expression:'
-                    game_instance['player_2_response_tag'] = 'answer:'
+                    game_instance['player_1_response_pattern'] = '^expression:\s(?P<content>.+)\n*(?P<remainder>.*)'
+                    # named groups:
+                    # 'content' captures only the generated referring expression
+                    # 'remainder' should be empty (if models followed the instructions)
+                    game_instance['player_2_response_pattern'] = '^answer:\s(?P<content>first|second|third)\n*(?P<remainder>.*)'
+                    # 'content' can directly be compared to gold answer
+                    # 'remainder' should be empty (if models followed the instructions)
+
+                    # the following two fields are no longer required, but kept for backwards compatibility with previous instance versions
+                    game_instance["player_1_response_tag"] = "expression:"
+                    game_instance["player_2_response_tag"] = "answer:"
 
                     game_counter += 1
 
 
 if __name__ == '__main__':
-    ReferenceGameInstanceGenerator().generate()
+    ReferenceGameInstanceGenerator().generate(filename="instances.json")

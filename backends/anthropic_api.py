@@ -4,6 +4,8 @@ import anthropic
 import backends
 import json
 
+from backends.utils import ensure_messages_format
+
 logger = backends.get_logger(__name__)
 
 NAME = "anthropic"
@@ -24,6 +26,7 @@ class AnthropicModel(backends.Model):
         self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
+    @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """
         :param messages: for example
@@ -35,22 +38,33 @@ class AnthropicModel(backends.Model):
                 ]
         :return: the continuation
         """
-        prompt = ''
+        prompt = []
+        system_message = ''
         for message in messages:
-            if message['role'] == 'assistant':
-                prompt += f'{anthropic.AI_PROMPT} {message["content"]}'
-            elif message['role'] == 'user':
-                prompt += f'{anthropic.HUMAN_PROMPT} {message["content"]}'
+            if message["role"] == "system":
+                system_message = message["content"]
+            else:
+                claude_message = {
+                    "role": message["role"],
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": message["content"]
+                        }
+                    ]
+                }
+                prompt.append(claude_message)
 
-        prompt += anthropic.AI_PROMPT
 
-        completion = self.client.completions.create(
-            prompt=prompt,
-            stop_sequences=[anthropic.HUMAN_PROMPT, '\n'],
+        completion = self.client.messages.create(
+            messages=prompt,
+            system=system_message,
             model=self.model_spec.model_id,
             temperature=self.get_temperature(),
-            max_tokens_to_sample=self.get_max_tokens()
+            max_tokens=self.get_max_tokens()
         )
 
-        response_text = completion.completion.strip()
-        return prompt, json.loads(completion.json()), response_text
+        json_output = completion.model_dump_json()
+        response_text = completion.content[0].text
+
+        return prompt, json.loads(json_output), response_text

@@ -17,7 +17,7 @@ loggers:
     handlers: [ console ]
   backends:
     level: DEBUG
-    handlers: [ console, file_handler ]
+    handlers: [ console ]
   benchmark:
     level: DEBUG
   games:
