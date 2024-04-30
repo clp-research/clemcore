@@ -6,6 +6,8 @@
 source venv_hf/bin/activate
 source prepare_path.sh
 
+rm -rf ./results/*
+
 echo
 echo "==================================================="
 echo "PIPELINE: Starting"
@@ -28,8 +30,8 @@ game_runs_gpu_server=(
 )
 
 game_runs=(
-  "codenames fsc-openchat-3.5-0106"
-  "codenames fsc-codellama-34b-instruct"
+  #"codenames fsc-openchat-3.5-0106"
+  #"codenames fsc-codellama-34b-instruct"
   "codenames mock"
 )
 
@@ -43,6 +45,15 @@ for run_args in "${game_runs[@]}"; do
   bash -c "./run.sh ${run_args}"
   ((current_runs++))
 done
+
+echo "Run scoring"
+python3 scripts/cli.py score -g codenames
+
+echo "Run evaluation"
+python3 evaluation/codenames_eval.py models
+python3 evaluation/codenames_eval.py errors
+python3 evaluation/codenames_eval.py experiments
+
 echo "==================================================="
 echo "PIPELINE: Finished"
 echo "==================================================="
