@@ -71,7 +71,7 @@ class ClueGiver(Player):
             similar_board_word = remaining_words[remaining_word_lemmas.index(clue_lemma)]
             raise RelatedClueError(utterance, clue, similar_board_word)
     
-    def validate_response(self, utterance: str, remaining_words: List[str]):
+    def validate_response(self, utterance: str, previous_targets: List[str], remaining_words: List[str]):
         # utterance should contain two lines, one with the clue, one with the targets
         parts = utterance.split('\n')
         if len(parts) < 1:
@@ -119,13 +119,25 @@ class ClueGiver(Player):
         self.check_morphological_similarity(utterance, clue, remaining_words)
         if clue in remaining_words:
             raise ClueOnBoardError(utterance, clue, remaining_words)
-        
+                
+        incorrect_targets = 0
         for target in targets:
             if not target in remaining_words:
+                incorrect_targets += 1
                 if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
                     self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
                 else:
-                    raise InvalidTargetError(utterance, target, remaining_words)
+                    if target in previous_targets:
+                        raise RepeatedTargetError(utterance, target, previous_targets)
+                    else:
+                        raise HallucinatedTargetError(utterance, target, previous_targets, remaining_words)
+            if targets.count(target) > 1:
+                if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
+                    self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
+                else:
+                    raise DoubleTargetError(utterance, target, remaining_words)
+        if len(targets) == incorrect_targets:
+            raise NoCorrectTargetError(utterance, targets, remaining_words)
             
     def parse_response(self, utterance: str, remaining_words: List[str]) -> str:
         parts = utterance.split('\n')
@@ -205,7 +217,10 @@ class Guesser(Player):
         incorrect_guesses = 0
         for guess in guesses:
             if guess == clue:
-                raise GuessIsClueError(utterance, clue, guess)
+                if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:
+                    self.flags_engaged["IGNORE FALSE TARGETS OR GUESSES"] += 1
+                else:
+                    raise GuessIsClueError(utterance, clue, guess)
             if not guess in remaining_words:
                 incorrect_guesses += 1
                 if self.flags["IGNORE FALSE TARGETS OR GUESSES"]:

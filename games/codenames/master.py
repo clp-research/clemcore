@@ -134,12 +134,12 @@ class CodenamesGame(DialogueGameMaster):
         self.invalid_response = False
         if player == self.cluegiver:
             try:
-                player.validate_response(utterance, self.board.get_all_hidden_words())
+                player.validate_response(utterance, self.board.get_revealed_words(TEAM), self.board.get_all_hidden_words())
             except ValidationError as error:
                 self.log_to_self(Turn_logs.VALIDATION_ERROR, error.get_dict())
                 self.invalid_response = True
                 self.violated_request_count += 1
-                self.last_error_message = error.message
+                self.last_error_message = error.attributes["message"]
                 # add response to history nonetheless... but without parsing it
                 self.add_assistant_message(player, utterance)
         else:
@@ -149,7 +149,7 @@ class CodenamesGame(DialogueGameMaster):
                 self.log_to_self(Turn_logs.VALIDATION_ERROR, error.get_dict())
                 self.invalid_response = True
                 self.violated_request_count += 1
-                self.last_error_message = error.message
+                self.last_error_message = error.attributes["message"]
                 # add response to history nonetheless... but without parsing it
                 self.add_assistant_message(player, utterance)
         
