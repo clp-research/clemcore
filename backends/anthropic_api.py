@@ -3,6 +3,9 @@ from retry import retry
 import anthropic
 import backends
 import json
+import base64
+import httpx
+import imghdr
 
 from backends.utils import ensure_messages_format
 
@@ -24,6 +27,19 @@ class AnthropicModel(backends.Model):
     def __init__(self, client: anthropic.Client, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
         self.client = client
+        self.supports_images = False
+        if model_spec.has_attr('supports_images'):
+            self.supports_images = model_spec.supports_images
+
+    def encode_image(self, image_path):
+        if image_path.startswith('http'):
+            image_bytes = httpx.get(image_path).content
+        else:
+            with open(image_path, "rb") as image_file:
+                image_bytes = image_file.read()
+        image_data = base64.b64encode(image_bytes).decode("utf-8")
+        image_type = imghdr.what(None, image_bytes)
+        return image_data, "image/"+str(image_type)
 
     @retry(tries=3, delay=0, logger=logger)
     @ensure_messages_format
@@ -44,14 +60,26 @@ class AnthropicModel(backends.Model):
             if message["role"] == "system":
                 system_message = message["content"]
             else:
+
+                content = list()
+                content.append({
+                    "type": "text",
+                    "text": message["content"]
+                })
+                if 'image' in message:
+                    encoded_image_data, image_type = self.encode_image(message['image'])
+                    content.append({
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": image_type,
+                                "data": encoded_image_data,
+                            }
+                        })
+
                 claude_message = {
                     "role": message["role"],
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": message["content"]
-                        }
-                    ]
+                    "content": content
                 }
                 prompt.append(claude_message)
 
