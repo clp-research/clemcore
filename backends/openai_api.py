@@ -62,15 +62,30 @@ class OpenAIModel(backends.Model):
                         }
                     ]}
             if "image" in message.keys():
-                is_url, loaded, image_type = self.encode_image(message["image"])
-                if is_url:
-                    this["content"].append(dict(type="image_url", image_url={
-                        "url": loaded
-                    }))
+
+                if type(message['image']) is list:
+                    # add each image
+                    for image in message['image']:
+                        is_url, loaded, image_type = self.encode_image(image)
+                        if is_url:
+                            this["content"].append(dict(type="image_url", image_url={
+                                "url": loaded
+                            }))
+                        else:
+                            this["content"].append(dict(type="image_url", image_url={
+                                "url": f"data:{image_type};base64,{loaded}"
+                            }))
                 else:
-                    this["content"].append(dict(type="image_url", image_url={
-                        "url": f"data:{image_type};base64,{loaded}"
-                    }))
+                    # add a single image
+                    is_url, loaded, image_type = self.encode_image(message["image"])
+                    if is_url:
+                        this["content"].append(dict(type="image_url", image_url={
+                            "url": loaded
+                        }))
+                    else:
+                        this["content"].append(dict(type="image_url", image_url={
+                            "url": f"data:{image_type};base64,{loaded}"
+                        }))
             vision_messages.append(this)
         return vision_messages
 

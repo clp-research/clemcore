@@ -67,15 +67,30 @@ class AnthropicModel(backends.Model):
                     "text": message["content"]
                 })
                 if 'image' in message:
-                    encoded_image_data, image_type = self.encode_image(message['image'])
-                    content.append({
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": image_type,
-                                "data": encoded_image_data,
-                            }
-                        })
+
+                    # append each image
+                    if type(message['image']) is list:
+                        for image in message['image']:
+                            encoded_image_data, image_type = self.encode_image(image)
+                            content.append({
+                                    "type": "image",
+                                    "source": {
+                                        "type": "base64",
+                                        "media_type": image_type,
+                                        "data": encoded_image_data,
+                                    }
+                                })
+                    else:
+                        # append a single image
+                        encoded_image_data, image_type = self.encode_image(message['image'])
+                        content.append({
+                                "type": "image",
+                                "source": {
+                                    "type": "base64",
+                                    "media_type": image_type,
+                                    "data": encoded_image_data,
+                                }
+                            })
 
                 claude_message = {
                     "role": message["role"],

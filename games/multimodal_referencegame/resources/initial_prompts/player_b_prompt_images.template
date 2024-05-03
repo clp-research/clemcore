@@ -1,0 +1,8 @@
+You are given three images.
+You are also given a referring expression that describes one of the given images.
+Your task is to select the image that matches the given referring expression.
+Generate only the number (in text) of the image that matches the given expression by selecting first, second, or third.
+
+TARGET_EXPRESSION
+Question: Which image does the expression refer to?
+Start with the tag "Answer: ", followed by your selection. Omit any other text.
