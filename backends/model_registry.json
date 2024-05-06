@@ -432,6 +432,27 @@
     "eos_to_cull": "<|im_end|>"
   },
   {
+    "model_name": "Swallow-70b-instruct-v0.1",
+    "backend": "huggingface_local",
+    "huggingface_id": "tokyotech-llm/Swallow-70b-instruct-v0.1",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
+    "model_name": "Phi-3-mini-128k-instruct",
+    "backend": "huggingface_local",
+    "huggingface_id": "microsoft/Phi-3-mini-128k-instruct",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|endoftext|>"
+  },
+  {
+    "model_name": "Starling-LM-7B-beta",
+    "backend": "huggingface_local",
+    "huggingface_id": "Nexusflow/Starling-LM-7B-beta",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|end_of_turn|>"
+  },
+  {
     "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface_local",
     "requires_api_key": true,
@@ -460,6 +481,38 @@
     "backend": "huggingface_local",
     "requires_api_key": true,
     "huggingface_id": "google/gemma-7b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>"
+  },
+  {
+    "model_name": "gemma-1.1-2b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-1.1-2b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>"
+  },
+  {
+    "model_name": "gemma-1.1-7b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-1.1-7b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>"
+  },
+  {
+    "model_name": "codegemma-7b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/codegemma-7b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>"
+  },
+  {
+    "model_name": "recurrentgemma-2b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/recurrentgemma-2b-it",
     "premade_chat_template": true,
     "eos_to_cull": "<eos>"
   },
