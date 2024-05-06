@@ -15,6 +15,11 @@
     "backend": "openai_compatible"
   },
   {
+    "model_name": "Llama-3-70B-Together.ai",
+    "model_id": "meta-llama/Llama-3-70b-chat-hf",
+    "backend": "openai_compatible"
+  },
+  {
     "model_name": "Llama-3-8B-Instruct",
     "model_id": "meta-llama/Meta-Llama-3-8B-Instruct",
     "backend": "openai_compatible"
