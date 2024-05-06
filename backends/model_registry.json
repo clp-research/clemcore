@@ -85,6 +85,12 @@
     "backend": "openai"
   },
   {
+    "model_name": "gpt-4-vision-preview",
+    "model_id": "gpt-4-vision-preview",
+    "backend": "openai",
+    "vision": true
+  },
+  {
     "model_name": "mistral-medium-2312",
     "model_id": "mistral-medium-2312",
     "backend": "mistral"
