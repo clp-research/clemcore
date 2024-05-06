@@ -57,21 +57,24 @@ class OpenAIModel(backends.Model):
                         }
                 ]}
             if "image" in message.keys():
-                url, loaded = self.encode_image(message["image"])
-                if url:
-                    this["content"].append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": loaded
-                        }
-                    })
-                else:
-                    this["content"].append({
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{loaded}"
-                        }
-                    })
+                if isinstance(message['image'], str):
+                    message['image'] = [message['image']]
+                for img in message['image']:
+                    url, loaded = self.encode_image(img)
+                    if url:
+                        this["content"].append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": loaded
+                            }
+                        })
+                    else:
+                        this["content"].append({
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:image/jpeg;base64,{loaded}"
+                            }
+                        })
             vision_messages.append(this)
         return vision_messages
 
