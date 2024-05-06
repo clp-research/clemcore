@@ -251,7 +251,7 @@ def load_model_registry(_model_registry_path: str = None, is_mandatory=True):
                                     f"Create model registry as a model_registry.json file and try again.")
         else:
             return  # do nothing
-    with open(_model_registry_path) as f:
+    with open(_model_registry_path, encoding='utf-8') as f:
         _model_listing = json.load(f)
         for _model_entry in _model_listing:
             _model_spec: ModelSpec = ModelSpec.from_dict(_model_entry)

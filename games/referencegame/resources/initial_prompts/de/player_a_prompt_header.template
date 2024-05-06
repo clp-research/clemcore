@@ -1,7 +1,7 @@
 Du siehst drei Gitter, die jeweils 5 x 5 Zellen haben.
 Die leeren Zellen sind mit "▢" markiert und die gefüllten Zellen sind mit "X" markiert.
-Deine Aufgabe ist es, eine Beschreibung zu finden, die das Zielgitter am besten beschreibt und gleichzeitig nicht zu den anderen beiden Ablenkern passt.
-Das erste Gitter ist das zu Beschreibende, die beiden folgenden sind die Ablenker.
+Deine Aufgabe ist es, eine möglichst kurze, natürlichsprachliche Beschreibung zu finden, die das Zielgitter beschreibt und gleichzeitig nicht zu den anderen beiden Ablenkern passt.
+Das erste Gitter ist das zu Beschreibende, die beiden folgenden sind die Ablenkungsgitter.
 
 Zielgitter:
 
@@ -15,4 +15,4 @@ Ablenkungsgitter 2:
 
 THIRD_GRID
 
-Anweisung: Beschreibe das Zielgitter, beginnend mit dem Präfix "Ausdruck": ". Verzichte auf jegliche weiteren Ausführungen.
+Anweisung: Beschreibe das Zielgitter, beginnend mit dem Präfix "Ausdruck: ". Verzichte auf jegliche weiteren Ausführungen.

@@ -2,6 +2,7 @@ from typing import List, Dict, Tuple, Any
 from retry import retry
 import cohere
 import backends
+from backends.utils import ensure_messages_format
 import json
 
 logger = backends.get_logger(__name__)
@@ -26,6 +27,7 @@ class CohereModel(backends.Model):
         self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
+    @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """
         :param messages: for example
@@ -43,12 +45,10 @@ class CohereModel(backends.Model):
         for message in messages[:-1]:
 
             if message['role'] == 'assistant':
-                m = {"user_name": "Chatbot", "text": ""}
-                m["text"] = message["content"]
+                m = {"role": "CHATBOT", "message": message["content"]}
                 chat_history.append(m)
             elif message['role'] == 'user':
-                m = {"user_name": "User", "text": ""}
-                m["text"] = message["content"]
+                m = {"role": "USER", "message": message["content"]}
                 chat_history.append(m)
 
         message = messages[-1]["content"]

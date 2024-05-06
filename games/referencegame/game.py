@@ -74,14 +74,12 @@ class ReferenceGame:
 
     def __init__(self, game_instance: Dict, player_backends: List[str]):
         self.player_backends = player_backends
+        self.lang = game_instance['lang']
         self.game_id = game_instance['game_id']
         self.player_1_prompt_header = game_instance['player_1_prompt_header']
         self.player_2_prompt_header = game_instance['player_2_prompt_header']
         self.target_grid_name = game_instance['target_grid_name']
         self.player_backends = player_backends
-
-        self.player_1_response_pattern = r'{}'.format(game_instance['player_1_response_pattern'])
-        self.player_2_response_pattern = r'{}'.format(game_instance['player_2_response_pattern'])
 
         self.player_1_target_grid = game_instance['player_1_target_grid']
         self.player_1_second_grid = game_instance['player_1_second_grid']
@@ -99,23 +97,5 @@ class ReferenceGame:
 
         self.turn_count = 0
 
-
     def proceeds(self) -> bool:
         return True
-
-    def turn(self):
-        # generate referring expression - A side
-
-        self.given_instruction.add_user_message(self.player_1_prompt_header)
-        player_1_prompt, player_1_response, player_1_response_text = self.instruction_giver(self.given_instruction, None)
-        # log the Player 1
-        self.given_instruction.add_system_message(player_1_response_text)
-
-
-        # guess the grid - B side
-        self.followed_instruction.add_user_message(self.player_2_prompt_header.replace('TARGET_EXPRESSION', player_1_response_text))
-        player_2_prompt, player_2_response, player_2_response_text = self.instruction_follower(self.followed_instruction, None)
-        self.followed_instruction.add_system_message(player_2_response_text)
-        # log the Player 2
-
-        self.turn_count += 1

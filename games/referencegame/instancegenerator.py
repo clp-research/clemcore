@@ -12,10 +12,11 @@ import Levenshtein # to calculate distance between grids
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 
-from games.referencegame.resources.localization_utils import LANGUAGES, RESPONSE_PATTERNS
+from games.referencegame.resources.localization_utils import MULTILINGUAL_PATTERNS
 
 logger = clemgame.get_logger(__name__)
 GAME_NAME = "referencegame"
+GRIDS = "resources/grids_v1.5.json"
 
 
 def generate_samples(grids):
@@ -89,30 +90,21 @@ def select_distractors(target_grid: int, distances: list):
     return id1, id2
 
 
-def load_prompt(lang, template):
-    """
-    Load language specific prompt
-    :param lang: language identifier string
-    :param template: filename of prompt template
-    :return: prompt string
-    """
-    with open(f"resources/initial_prompts/{lang}/{template}", encoding='utf8') as f:
-        prompt = f.read()
-    return prompt
-
-
 class ReferenceGameInstanceGenerator(GameInstanceGenerator):
 
     def __init__(self):
         super().__init__(GAME_NAME)
+        self.lang = ""
 
     def on_generate(self, lang):
         """
         Create instances into self.instances
         (Called by super().generate())
         """
+        self.lang = lang
+
         # load grids
-        with open("resources/grids_v1.5.json", 'r') as f:
+        with open(GRIDS, 'r') as f:
             grids = json.load(f)
 
         # generate sub experiments
@@ -120,8 +112,8 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
             # get triplets
             samples = generate_samples(grids[grids_group])
 
-            player_a_prompt_header = load_prompt(lang, "player_a_prompt_header.template")
-            player_b_prompt_header = load_prompt(lang, "player_b_prompt_header.template")
+            player_a_prompt_header = self._load_prompt("player_a_prompt_header.template")
+            player_b_prompt_header = self._load_prompt("player_b_prompt_header.template")
 
             experiment = self.add_experiment(f"{grids_group}")
 
@@ -141,22 +133,26 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_1_third_grid'] = third_grid
 
                     # create order of grids for player 2
+                    # extract target grid names from localization_utils
+                    targets = MULTILINGUAL_PATTERNS[self.lang]["p2_options"].split("|")
+                    assert len(targets) == 3
+
                     first_grid = ""
                     target_grid_name = ""
                     if i == 1:
                         first_grid = target_grid
                         # keep order from player 1 for second and third grid
-                        target_grid_name = "first"
+                        target_grid_name = targets[0] # corresponds to "first"
                     elif i == 2:
                         first_grid = second_grid
                         second_grid = target_grid
                         # third grid stays third grid
-                        target_grid_name = "second"
+                        target_grid_name = targets[1] # corresponds to "second"
                     elif i == 3:
                         first_grid = third_grid
                         # second grid stays second grid
                         third_grid = target_grid
-                        target_grid_name = "third"
+                        target_grid_name = targets[2] # corresponds to "third"
 
                     game_instance["player_2_prompt_header"] = player_b_prompt_header.replace('FIRST_GRID', first_grid) \
                                                                                     .replace('SECOND_GRID', second_grid) \
@@ -165,16 +161,24 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_2_second_grid'] = second_grid
                     game_instance['player_2_third_grid'] = third_grid
                     game_instance['target_grid_name'] = target_grid_name
-                    game_instance['player_1_response_pattern'] = RESPONSE_PATTERNS[lang]["p1"]
-                    game_instance['player_2_response_pattern'] = RESPONSE_PATTERNS[lang]["p2"]
-                    game_instance['player_1_response_tag'] = RESPONSE_PATTERNS[lang]["p1_tag"]
-                    game_instance['player_2_response_tag'] = RESPONSE_PATTERNS[lang]["p2_tag"]
+                    game_instance['lang'] = self.lang
 
                     game_counter += 1
+
+    def _load_prompt(self, template):
+        """
+        Load language specific prompt
+        :param lang: language identifier string
+        :param template: filename of prompt template
+        :return: prompt string
+        """
+        with open(f"resources/initial_prompts/{self.lang}/{template}", encoding='utf8') as f:
+            prompt = f.read()
+        return prompt
 
 
 if __name__ == '__main__':
     # generate language versions
-    for language in LANGUAGES:
+    for language in MULTILINGUAL_PATTERNS.keys():
         ReferenceGameInstanceGenerator().generate(
             filename=f"instances_v1.5_{language}.json", lang=language)

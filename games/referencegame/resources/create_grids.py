@@ -8,9 +8,10 @@ letter_grids
 shape_grids
 random_grids
 """
-
 import json
 import random
+
+GRID_FILE = "grids_v1.5.json"
 
 
 def create_line_grids_rows():
@@ -111,6 +112,7 @@ def create_letter_grids():
         "X X X X X\n\u25a2 \u25a2 \u25a2 X \u25a2\n\u25a2 \u25a2 X \u25a2 \u25a2\n\u25a2 X \u25a2 \u25a2 \u25a2\nX X X X X")  # Z
     return letter_grids
 
+
 def create_shape_grids():
 
     shape_grids = []
@@ -131,6 +133,7 @@ def create_shape_grids():
             if grid_dict[grid_collection][i] not in shape_grids:
                 shape_grids.append(grid_dict[grid_collection][i])
     return shape_grids
+
 
 def create_random_grids(seed=123, fills=10, num_grids=10):
     """
@@ -196,5 +199,5 @@ def pretty_print(grid_file):
             print(f"{grid}\n")
 
 
-create_grids("grids_v1.5.json")
-pretty_print("grids_v1.5.json")
+create_grids(GRID_FILE)
+pretty_print(GRID_FILE)
