@@ -43,7 +43,7 @@ class MultimodalReferenceGameMaster(GameMaster):
 
         self.log_next_turn()
         # generate referring expression - Player 1 side
-        self.game.given_instruction.add_user_message(self.game.player_1_prompt_header, images = [self.game.player_1_target_image, self.game.player_1_second_image, self.game.player_1_third_image])
+        self.game.given_instruction.add_user_message(self.game.player_1_prompt_header, images = [self.game.player_1_first_image, self.game.player_1_second_image, self.game.player_1_third_image])
 
         # log the game master to player 1
         action = {'type': 'send message', 'content': self.game.given_instruction.user_messages[-1]}
@@ -99,6 +99,9 @@ class MultimodalReferenceGameMaster(GameMaster):
 
             action = {'type': 'parse', 'content': player_2_response_text,
                       'answer': p2_match.group('content')}
+            self.log_event(from_="GM", to="GM", action=action)
+
+            action = {'type': 'expected answer', 'content': self.game.target_image_name}
             self.log_event(from_="GM", to="GM", action=action)
 
         else:

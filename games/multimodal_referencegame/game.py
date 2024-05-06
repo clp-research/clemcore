@@ -83,7 +83,7 @@ class MultimodalReferenceGame:
         self.player_1_response_pattern = r'{}'.format(game_instance['player_1_response_pattern'])
         self.player_2_response_pattern = r'{}'.format(game_instance['player_2_response_pattern'])
 
-        self.player_1_target_image = game_instance['player_1_target_image']
+        self.player_1_first_image = game_instance['player_1_first_image']
         self.player_1_second_image = game_instance['player_1_second_image']
         self.player_1_third_image = game_instance['player_1_third_image']
 
