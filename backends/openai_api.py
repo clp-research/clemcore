@@ -36,9 +36,6 @@ class OpenAIModel(backends.Model):
     def __init__(self, client: openai.OpenAI, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
         self.client = client
-        self.is_vision = False
-        if model_spec.has_attr("vision"):
-            self.is_vision = self.model_spec["vision"]
         
     def encode_image(self, image_path):
         if image_path.startswith('http'):
@@ -49,33 +46,25 @@ class OpenAIModel(backends.Model):
     def apply_vision_format(self, messages):
         vision_messages = []
         for message in messages:
-            this = {"role": message["role"], 
+            vision_message = {"role": message["role"], 
                     "content": [
                         {
                             "type": "text",
                             "text": message["content"]
                         }
                 ]}
-            if "image" in message.keys():
+            if "image" in message:
                 if isinstance(message['image'], str):
                     message['image'] = [message['image']]
                 for img in message['image']:
                     url, loaded = self.encode_image(img)
-                    if url:
-                        this["content"].append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": loaded
-                            }
-                        })
-                    else:
-                        this["content"].append({
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:image/jpeg;base64,{loaded}"
-                            }
-                        })
-            vision_messages.append(this)
+                    vision_message["content"].append({
+                        "type": "image_url",
+                        "image_url": {
+                            "url": loaded if url else f"data:image/jpeg;base64,{loaded}"
+                        }
+                    })
+            vision_messages.append(vision_message)
         return vision_messages
 
     @retry(tries=3, delay=0, logger=logger)
@@ -91,8 +80,9 @@ class OpenAIModel(backends.Model):
                 ]
         :return: the continuation
         """
-        if self.is_vision:
-            messages = self.apply_vision_format(messages)
+        if self.model_spec.has_attr("vision"):
+            if self.model_spec["vision"]:
+                messages = self.apply_vision_format(messages)
         prompt = messages
         api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
                                                            messages=prompt,
