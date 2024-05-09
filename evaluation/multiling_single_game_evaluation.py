@@ -56,7 +56,7 @@ def save_table(df, path: str, file: str):
 
 if __name__ == '__main__':
     # TODO: make options command line argument
-    compare = True # if true, same language results must be in '../results/v1.5_multiling_liberal'
+    compare = False # if true, same language results must be in '../results/v1.5_multiling_liberal'
     detailed = False
     result_path = '../results/v1.5_multiling'
 
@@ -84,29 +84,36 @@ if __name__ == '__main__':
 
     if detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] #detailed by experiment
+        overview = create_overview_table(df_strict, categories)
+        save_table(overview.set_index(['lang', 'model', 'experiment']), result_path, 'results_multiling_by_experiment')
+
     else:
         categories = ['lang', 'model', 'metric']
-
-    overview_strict = create_overview_table(df_strict, categories)
-    # sort models within language by clemscore
-    sorted_df = overview_strict.sort_values(['lang','clemscore (Played * Success)'],ascending=[True,False])
-    # extract model order by language for rank correaltion analysis
-    model_orders = {}
-    languages = sorted_df['lang'].unique()
-    for lang in languages:
-        models = sorted_df.loc[sorted_df.lang == lang, 'model']
-        scores = sorted_df.loc[sorted_df.lang == lang, 'clemscore (Played * Success)']
-        model_orders[lang] = zip(models.tolist(), scores.tolist())
-    with open('data.json', 'w', encoding='utf-8') as f:
-        json.dump(model_orders, f, ensure_ascii=False)
-    save_table(sorted_df.set_index(['lang', 'model']), result_path, 'results_multiling')
+        overview_strict = create_overview_table(df_strict, categories)
+        # sort models within language by clemscore
+        sorted_df = overview_strict.sort_values(['lang','clemscore (Played * Success)'],ascending=[True,False])
+        # extract model order by language for rank correaltion analysis
+        model_orders = {}
+        languages = sorted_df['lang'].unique()
+        for lang in languages:
+            models = sorted_df.loc[sorted_df.lang == lang, 'model']
+            scores = sorted_df.loc[sorted_df.lang == lang, 'clemscore (Played * Success)']
+            models_and_scores = list(zip(models.tolist(), scores.tolist()))
+            model_orders[lang] = models_and_scores
+        with open(f'{result_path}/model_rankings_by_language.json', 'w', encoding='utf-8') as f:
+            json.dump(model_orders, f, ensure_ascii=False)
+        save_table(sorted_df.set_index(['lang', 'model']), result_path, 'results_multiling')
 
     if compare:
         overview_liberal = create_overview_table(df_liberal, categories)
+        # get intersection of models
         models = ["command-r-plus", "Llama-3-8b-chat-hf",
                   "Llama-3-70b-chat-hf"]
-        selected_liberal = overview_liberal[(overview_liberal["model"].isin(models))].set_index(['lang', 'model'])
-        selected_strict = overview_strict[(overview_strict["model"].isin(models))].set_index(['lang', 'model'])
-
+        # compare % Played between strict and liberal
+        selected_strict = overview_strict.loc[overview_strict["model"].isin(models), ['lang', 'model', '% Played']].set_index(['lang', 'model'])
+        selected_liberal = overview_liberal.loc[overview_liberal["model"].isin(models), ['lang', 'model', '% Played']].set_index(['lang', 'model'])
         comparison = selected_strict.compare(selected_liberal, keep_shape=True, keep_equal=True, result_names=("strict", "liberal"))
-        save_table(comparison, result_path, 'results_multiling_strict_liberal')
+        # compute delta and replace on df
+        delta = comparison['% Played']['liberal'] - comparison['% Played']['strict']
+        delta = delta.round(2).to_frame(name=('improvement of % Played in liberal mode'))
+        save_table(delta, result_path, 'results_delta_strict_liberal')
