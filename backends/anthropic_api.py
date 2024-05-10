@@ -69,20 +69,8 @@ class AnthropicModel(backends.Model):
                 if 'image' in message:
 
                     # append each image
-                    if type(message['image']) is list:
-                        for image in message['image']:
-                            encoded_image_data, image_type = self.encode_image(image)
-                            content.append({
-                                    "type": "image",
-                                    "source": {
-                                        "type": "base64",
-                                        "media_type": image_type,
-                                        "data": encoded_image_data,
-                                    }
-                                })
-                    else:
-                        # append a single image
-                        encoded_image_data, image_type = self.encode_image(message['image'])
+                    for image in message['image']:
+                        encoded_image_data, image_type = self.encode_image(image)
                         content.append({
                                 "type": "image",
                                 "source": {

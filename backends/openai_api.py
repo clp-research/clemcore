@@ -63,21 +63,9 @@ class OpenAIModel(backends.Model):
                     ]}
             if "image" in message.keys():
 
-                if type(message['image']) is list:
-                    # add each image
-                    for image in message['image']:
-                        is_url, loaded, image_type = self.encode_image(image)
-                        if is_url:
-                            this["content"].append(dict(type="image_url", image_url={
-                                "url": loaded
-                            }))
-                        else:
-                            this["content"].append(dict(type="image_url", image_url={
-                                "url": f"data:{image_type};base64,{loaded}"
-                            }))
-                else:
-                    # add a single image
-                    is_url, loaded, image_type = self.encode_image(message["image"])
+                # add each image
+                for image in message['image']:
+                    is_url, loaded, image_type = self.encode_image(image)
                     if is_url:
                         this["content"].append(dict(type="image_url", image_url={
                             "url": loaded

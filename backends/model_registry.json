@@ -40,10 +40,11 @@
     "backend": "openai_compatible"
   },
   {
-    "model_name": "gpt-4-vision-preview",
-    "model_id": "gpt-4-vision-preview",
+    "model_name": "gpt-4-1106-vision-preview",
+    "model_id": "gpt-4-1106-vision-preview",
     "backend": "openai",
-    "supports_images": true
+    "supports_images": true,
+    "support_multiple_images": true
   },
   {
     "model_name": "gpt-4-turbo-2024-04-09",
@@ -154,19 +155,22 @@
     "model_name": "claude-3-opus-20240229",
     "model_id": "claude-3-opus-20240229",
     "backend": "anthropic",
-    "supports_images": true
+    "supports_images": true,
+    "support_multiple_images": true
   },
   {
     "model_name": "claude-3-sonnet-20240229",
     "model_id": "claude-3-sonnet-20240229",
     "backend": "anthropic",
-    "supports_images": true
+    "supports_images": true,
+    "support_multiple_images": true
   },
   {
     "model_name": "claude-3-haiku-20240307",
     "model_id": "claude-3-haiku-20240307",
     "backend": "anthropic",
-    "supports_images": true
+    "supports_images": true,
+    "support_multiple_images": true
   },
   {
     "model_name": "luminous-supreme-control",
