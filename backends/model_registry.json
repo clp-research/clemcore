@@ -593,5 +593,25 @@
     "bos_string": "<s>",
     "eos_string": "<|end_of_turn|>",
     "eos_to_cull": "<|end_of_turn|>"
+  },
+  {
+    "model_name": "Meta-Llama-3-70B-Instruct-GGUF-q4",
+    "backend": "llamacpp",
+    "huggingface_id": "MaziyarPanahi/Meta-Llama-3-70B-Instruct-GGUF",
+    "filename": "*Q4_K_M.gguf",
+    "premade_chat_template": true,
+    "bos_string": "<|begin_of_text|>",
+    "eos_string": "<|eot_id|>",
+    "eos_to_cull": "<|eot_id|>"
+  },
+  {
+    "model_name": "Meta-Llama-3-70B-Instruct-GGUF-q8",
+    "backend": "llamacpp",
+    "huggingface_id": "MaziyarPanahi/Meta-Llama-3-70B-Instruct-GGUF",
+    "filename": "*Q8_0.gguf",
+    "premade_chat_template": true,
+    "bos_string": "<|begin_of_text|>",
+    "eos_string": "<|eot_id|>",
+    "eos_to_cull": "<|eot_id|>"
   }
 ]
