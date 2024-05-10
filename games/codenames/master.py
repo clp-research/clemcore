@@ -229,7 +229,7 @@ class CodenamesGame(DialogueGameMaster):
                     guess_feedback += (f"The words {', '.join([guess for guess, assignment in correct_guesses])} were guessed correctly. ")
                 elif len(correct_guesses) == 1:
                     guess_feedback += (f"The word {correct_guesses[0][0]} was guessed correctly. ")
-                guess_feedback += (f"The word {incorrect_guess[0]} was an {incorrect_guess[1]} word. ")
+                guess_feedback += (f"The word {incorrect_guess[0]} was guessed but is an {incorrect_guess[1]} word. ")
 
             cluegiver_guess_feedback = copy.copy(guess_feedback)
             cluegiver_guess_feedback += ("Your teammate's turn ended there.")
@@ -245,7 +245,8 @@ class CodenamesGame(DialogueGameMaster):
     
     def _on_after_turn(self, current_turn):
         # let mock opponent reveal their cards
-        self._opponent_turn()
+        if self._does_game_proceed():
+            self._opponent_turn()
 
     def _log_game_end(self):
         # log everything that is needed for score calculation and game evaluation
