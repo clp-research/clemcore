@@ -153,10 +153,10 @@ def load_scores(game_name: str = None, path: str = RESULTS_DIR) -> dict:
     return scores
 
 
-def load_interactions(game_name: str = None) -> dict:
+def load_interactions(game_name: str = None, path: str = RESULTS_DIR) -> dict:
     """Get all interaction records and return them in a dictionary."""
     # https://stackoverflow.com/a/18394205
-    interaction_files = list(Path(RESULTS_DIR).rglob("*interactions.json"))
+    interaction_files = list(Path(path).rglob("*interactions.json"))
     print(f'Loading {len(interaction_files)} JSON files.')
     interactions = {}
     for path in tqdm(interaction_files, desc="Loading interactions"):

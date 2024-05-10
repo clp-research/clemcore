@@ -68,6 +68,7 @@ def score_experiments(args):
     episode_df = load_episode_scores(args.results_path)
     # TODO: request counts and flag counts should be summed instead of averaged!
     # or summed and averaged, and averaged then without aborted games
+    # can I use the make-codenames-table function for this simply as well?
     df_experiments = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False, dropna=False)
                   .mean())
     
@@ -115,17 +116,16 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
 
 def make_codenames_tables(df: pd.DataFrame) -> pd.DataFrame:
     df_aux= df.drop(columns=['experiment variable', 'experiment name'])
-    df_aux = (df_aux.groupby(['model'], sort=False)
-                  .mean(numeric_only=False)
-                  .round(2))
     
-    df_game_metrics = df_aux[GAME_METRICS]
-    df_requests = df_aux[REQUEST_METRICS]
+    df_game_metrics = df_aux[GAME_METRICS].groupby(['model'], sort=False).mean(numeric_only=False).round(2)
+    print(df_game_metrics)
+    df_requests = df_aux[REQUEST_METRICS].groupby(['model'], sort=False).sum(numeric_only=False)
+    df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_COUNT_PARSED] / df_requests[METRIC_REQUEST_COUNT]
+    print(df_requests)
 
-    # FIXME: flags probably contain turn specific scores based on this filter now
-    df_flags = df_aux.filter(regex='Cluegiver|Guesser')
+    df_flags = df_aux.filter(regex='^(?!Average)').filter(regex='Cluegiver|Guesser').groupby(['model'], sort=False).sum(numeric_only=False)
+    print(df_flags)
     return df_game_metrics, df_requests, df_flags
-    # also put main clem scoring into this table as well?
 
 def save_table(df, path, table_name):
     Path(path).mkdir(parents=True, exist_ok=True)
@@ -137,7 +137,7 @@ def error_evaluation(results_path):
     # load interaction files
     errors = {}
     error_causes = {}
-    interactions = utils.load_interactions(GAME_NAME)
+    interactions = utils.load_interactions(GAME_NAME, results_path)
     # loop through interactions
     for key, interaction in interactions.items():
         game, experiment = interaction
@@ -181,22 +181,22 @@ def main(args):
     elif args.command_name == "errors":
         error_evaluation(args.results_path)
     else:
-        print("Usage: $: python3 evaluation/codenames_eval.py [models|experiments|errors]")
+        print("Usage: $: python3 evaluation/codenames_eval.py [models|experiments|errors|all]")
 
 if __name__ == '__main__':
     parser = ArgumentParser()
     sub_parsers = parser.add_subparsers(dest="command_name")
 
     model_parser = sub_parsers.add_parser("models")
-    model_parser.add_argument("-p", "--results_path", type=str, default='./results',
+    model_parser.add_argument("-r", "--results_path", type=str, default='./results',
                               help="Path to the results folder containing model scores.")
     
     experiment_parser = sub_parsers.add_parser("experiments")
-    experiment_parser.add_argument("-p", "--results_path", type=str, default='./results',
+    experiment_parser.add_argument("-r", "--results_path", type=str, default='./results',
                               help="Path to the results folder containing experiment scores.")
 
     error_parser = sub_parsers.add_parser("errors")
-    error_parser.add_argument("-p", "--results_path", type=str, default='./results',
+    error_parser.add_argument("-r", "--results_path", type=str, default='./results',
                               help="Path to the results folder containing collected interaction errors.")
 
     args = parser.parse_args()
