@@ -58,7 +58,7 @@ class MultimodalReferenceGameMaster(GameMaster):
         self.game.given_instruction.add_system_message(player_1_response_text)
 
         player_1_pattern = re.compile(self.game.player_1_response_pattern, re.IGNORECASE)
-        p1_match = re.match(player_1_pattern, player_1_response_text)
+        p1_match = re.match(player_1_pattern, player_1_response_text.strip())
         if p1_match and p1_match.group('remainder') == "":
 
             action = {'type': 'parse', 'content': player_1_response_text,
@@ -94,7 +94,7 @@ class MultimodalReferenceGameMaster(GameMaster):
 
         # check if the Player 2 message matches the rule => start with "Answer: " and generate only the label
         player_2_pattern = re.compile(self.game.player_2_response_pattern, re.IGNORECASE)
-        p2_match = re.match(player_2_pattern, player_2_response_text)
+        p2_match = re.match(player_2_pattern, player_2_response_text.strip())
         if p2_match and p2_match.group('remainder') == "":
 
             action = {'type': 'parse', 'content': player_2_response_text,
