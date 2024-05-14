@@ -11,9 +11,9 @@ import random
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 
-from games.imagegame.resources.localization_utils import LANGUAGES, RESPONSE_PATTERNS
+from games.imagegame.resources.localization_utils import RESPONSE_PATTERNS
 
-random.seed(123)
+SEED = 123
 N_INSTANCES = 10
 
 logger = clemgame.get_logger(__name__)
@@ -114,6 +114,7 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
         random_grids = []
         alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
 
+        random.seed(SEED)
         for grid in initial_grids:
             random_letter_index = randint(0, len(alphabet) - 1)
             random_letter = alphabet[random_letter_index]
@@ -159,6 +160,6 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
 
 if __name__ == '__main__':
     # generate language versions
-    for language in LANGUAGES:
+    for language in RESPONSE_PATTERNS.keys():
         ImageGameInstanceGenerator().generate(
             filename=f"instances_v1.5_{language}.json", lang=language)
