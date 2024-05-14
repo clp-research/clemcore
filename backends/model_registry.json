@@ -52,6 +52,13 @@
     "support_multiple_images": true
   },
   {
+    "model_name": "gpt-4o-2024-05-13",
+    "model_id": "gpt-4o-2024-05-13",
+    "backend": "openai",
+    "supports_images": true,
+    "support_multiple_images": true
+  },
+  {
     "model_name": "gpt-4-turbo-2024-04-09",
     "model_id": "gpt-4-turbo-2024-04-09",
     "backend": "openai"

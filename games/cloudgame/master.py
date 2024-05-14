@@ -147,7 +147,7 @@ class Cloudgame(DialogueGameMaster):
         if image is None:
             message = {"role": role, "content": utterance}
         else:
-            message = {"role": role, "content": utterance, "image": image}
+            message = {"role": role, "content": utterance, "image": [image]}
         history = self.messages_by_names[player.descriptor]
         history.append(message)
 
