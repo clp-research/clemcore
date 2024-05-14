@@ -614,5 +614,27 @@
     "bos_string": "<|begin_of_text|>",
     "eos_string": "<|eot_id|>",
     "eos_to_cull": "<|eot_id|>"
+  },
+  {
+    "model_name": "c4ai-command-r-plus-GGUF-q4",
+    "backend": "llamacpp",
+    "huggingface_id": "pmysl/c4ai-command-r-plus-GGUF",
+    "filename": "*Q4_K_M-00001-of-00002.gguf",
+    "additional_files": ["*Q4_K_M-00002-of-00002.gguf"],
+    "premade_chat_template": true,
+    "bos_string": "<BOS_TOKEN>",
+    "eos_string": "<|END_OF_TURN_TOKEN|>",
+    "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
+  },
+  {
+    "model_name": "c4ai-command-r-plus-GGUF-q8",
+    "backend": "llamacpp",
+    "huggingface_id": "pmysl/c4ai-command-r-plus-GGUF",
+    "filename": "*Q8_0-00001-of-00003.gguf",
+    "additional_files": ["*Q8_0-00002-of-00003.gguf", "*Q8_0-00003-of-00003.gguf"],
+    "premade_chat_template": true,
+    "bos_string": "<BOS_TOKEN>",
+    "eos_string": "<|END_OF_TURN_TOKEN|>",
+    "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
   }
 ]
