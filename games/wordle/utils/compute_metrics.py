@@ -45,7 +45,7 @@ class ComputeMetrics:
                 return 0
         return 1
 
-    def speed(self, records):
+    def speed(self, records, game_name):
         """
         Assuming records contain turns_data in the below format
         [['creek', 'c<red> r<red> e<red> e<red> k<green>'], ['sneak', 's<green> n<yellow> e<red> a<red> k<green>']
@@ -54,7 +54,18 @@ class ComputeMetrics:
         The lesser the number of turns, the higher the speed
         If the game is won in the first turn, speed is 100, if the game is won in the second turn, speed is 100/2, 3rd turn is 100/3 and so on
         """
-        speed = 100 / len(records)
+        if game_name != "wordle":
+            speed = 100 / len(records)
+        else:
+            if len(records) <= 3:
+                speed = 100
+            elif len(records) == 4:
+                speed = 50
+            elif len(records) == 5:
+                speed = 30
+            elif len(records) == 6:
+                speed = 20
+            
         return round(speed, 2)
 
     def change_of_opinion(self, records):
