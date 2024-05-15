@@ -185,6 +185,25 @@
     "support_multiple_images": true
   },
   {
+    "model_name": "gemini-1.0-pro",
+    "model_id": "gemini-1.0-pro",
+    "backend": "google"
+  },
+  {
+    "model_name": "gemini-1.5-flash-latest",
+    "model_id": "gemini-1.5-flash-latest",
+    "backend": "google",
+    "supports_images": true,
+    "support_multiple_images": true
+  },
+  {
+    "model_name": "gemini-1.5-pro-latest",
+    "model_id": "gemini-1.5-pro-latest",
+    "backend": "google",
+    "supports_images": true,
+    "support_multiple_images": true
+  },
+  {
     "model_name": "luminous-supreme-control",
     "model_id": "luminous-supreme-control",
     "backend": "alephalpha"
