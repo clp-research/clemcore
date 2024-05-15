@@ -5,7 +5,7 @@
 from typing import List, Dict, Tuple, Any
 
 import backends
-from backends.utils import check_context_limit_generic
+from backends.utils import check_context_limit_generic, ensure_alternating_roles
 
 import llama_cpp
 from llama_cpp import Llama
@@ -166,8 +166,10 @@ class LlamaCPPLocalModel(backends.Model):
         :param return_full_text: If True, whole input context is returned.
         :return: the continuation
         """
+        current_messages = ensure_alternating_roles(messages)
+
         # use llama.cpp jinja to apply chat template for prompt:
-        prompt_text = self.chat_formatter(messages=messages).prompt
+        prompt_text = self.chat_formatter(messages=current_messages).prompt
 
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
                   "temperature": self.get_temperature(), "return_full_text": return_full_text}
