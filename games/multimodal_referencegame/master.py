@@ -103,6 +103,9 @@ class MultimodalReferenceGameMaster(GameMaster):
                       'answer': p2_match.group('content')}
             self.log_event(from_="GM", to="GM", action=action)
 
+            action = {'type': 'expected answer', 'content': self.game.target_image_name, 'answer': self.game.target_image_name}
+            self.log_event(from_="GM", to="GM", action=action)
+
         else:
             # abort the game if the output doesn't match the rule
             action = {'type': 'invalid format', 'content': 'Invalid generated choice',
