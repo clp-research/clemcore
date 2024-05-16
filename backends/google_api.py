@@ -133,6 +133,12 @@ class GoogleModel(backends.Model):
         response_text = ''
         if response.parts:
             response_text = response.text
+
+        if response_text == '':
+            logger.error(
+                f"The backend {self.model_spec.__getattribute__('model_id')} returned empty string!")
+            raise Exception(
+                f"The backend {self.model_spec.__getattribute__('model_id')} returned empty string")
         response = {"text": response_text}
 
         return encoded_messages_for_logging, response, response_text
