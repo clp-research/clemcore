@@ -79,7 +79,7 @@ class GoogleModel(backends.Model):
             encoded_messages_for_logging.append(m_for_logging)
         return encoded_messages, encoded_messages_for_logging
 
-    @retry(tries=3, delay=5, logger=logger)
+    @retry(tries=5, delay=30, logger=logger)
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """
@@ -130,7 +130,9 @@ class GoogleModel(backends.Model):
             contents=encoded_messages,
             generation_config=generation_config)
 
-        response_text = response.text
+        response_text = ''
+        if response.parts:
+            response_text = response.text
         response = {"text": response_text}
 
         return encoded_messages_for_logging, response, response_text
