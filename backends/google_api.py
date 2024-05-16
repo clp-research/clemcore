@@ -25,9 +25,6 @@ class GoogleModel(backends.Model):
 
     def __init__(self, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
-        self.supports_images = False
-        if model_spec.has_attr('supports_images'):
-            self.supports_images = model_spec.supports_images
 
     def upload_file(self, file_path, mime_type):
         """Uploads the given file to Gemini.
@@ -50,7 +47,39 @@ class GoogleModel(backends.Model):
                 image_parts.append(file_url)
         return image_parts
 
-    @retry(tries=3, delay=1, logger=logger)
+    def encode_messages(self, messages):
+        encoded_messages = []
+        encoded_messages_for_logging = []
+
+        for message in messages:
+            if message['role'] == 'assistant':
+                m = {"role": "model", "parts": [message["content"]]}
+                m_for_logging = {"role": "model", "parts": [message["content"]]}
+            elif message['role'] == 'user':
+                m = {"role": "user", "parts": [message["content"]]}
+                m_for_logging = {"role": "model", "parts": [message["content"]]}
+
+                if self.model_spec.has_attr('supports_images'):
+                    if "image" in message.keys():
+
+                        if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
+                            logger.info(
+                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                            raise Exception(
+                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                        else:
+                            image_parts = self.encode_images(message['image'])
+                            for i in image_parts:
+                                m["parts"].append(i)
+
+                            # for logging purposes
+                            m_for_logging["parts"].append(message["image"])
+
+            encoded_messages.append(m)
+            encoded_messages_for_logging.append(m_for_logging)
+        return encoded_messages, encoded_messages_for_logging
+
+    @retry(tries=3, delay=5, logger=logger)
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """
@@ -64,22 +93,7 @@ class GoogleModel(backends.Model):
         :return: the continuation
         """
 
-        chat_history = []
-        prompt_for_logging = []
-        for message in messages:
-            if message['role'] == 'assistant':
-                m = {"role": "model", "parts": [message["content"]]}
-                m_for_logging = {"role": "model", "parts": [message["content"]]}
-            elif message['role'] == 'user':
-                m = {"role": "user", "parts": [message["content"]]}
-                m_for_logging = {"role": "model", "parts": [message["content"], message["image"]]}
-                if self.supports_images:
-                    if 'image' in message.keys():
-                        image_parts = self.encode_images(message['image'])
-                        for i in image_parts:
-                            m["parts"].append(i)
-            chat_history.append(m)
-            prompt_for_logging.append(m_for_logging)
+        encoded_messages, encoded_messages_for_logging = self.encode_messages(messages)
 
         generation_config = {
             "temperature": self.get_temperature(),
@@ -113,8 +127,10 @@ class GoogleModel(backends.Model):
         )
 
         response = model.generate_content(
-            contents=chat_history,
+            contents=encoded_messages,
             generation_config=generation_config)
 
         response_text = response.text
-        return prompt_for_logging, {"text": response_text}, response_text
+        response = {"text": response_text}
+
+        return encoded_messages_for_logging, response, response_text

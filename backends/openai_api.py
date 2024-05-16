@@ -38,9 +38,6 @@ class OpenAIModel(backends.Model):
     def __init__(self, client: openai.OpenAI, model_spec: backends.ModelSpec):
         super().__init__(model_spec)
         self.client = client
-        self.supports_images = False
-        if model_spec.has_attr('supports_images'):
-            self.supports_images = model_spec.supports_images
 
     def encode_image(self, image_path):
         if image_path.startswith('http'):
@@ -51,8 +48,9 @@ class OpenAIModel(backends.Model):
             image_type = imghdr.what(image_path)
             return False, base64.b64encode(image_file.read()).decode('utf-8'), 'image/'+str(image_type)
 
-    def apply_image_format(self, messages):
-        vision_messages = []
+    def encode_messages(self, messages):
+        encoded_messages = []
+
         for message in messages:
             this = {"role": message["role"],
                     "content": [
@@ -61,21 +59,27 @@ class OpenAIModel(backends.Model):
                             "text": message["content"].replace(" <image> ", " ")
                         }
                     ]}
-            if "image" in message.keys():
 
-                # add each image
-                for image in message['image']:
-                    is_url, loaded, image_type = self.encode_image(image)
-                    if is_url:
-                        this["content"].append(dict(type="image_url", image_url={
-                            "url": loaded
-                        }))
+            if self.model_spec.has_attr('supports_images'):
+                if "image" in message.keys():
+
+                    if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
+                        logger.info(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                        raise Exception(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
                     else:
-                        this["content"].append(dict(type="image_url", image_url={
-                            "url": f"data:{image_type};base64,{loaded}"
-                        }))
-            vision_messages.append(this)
-        return vision_messages
+                        # encode each image
+                        for image in message['image']:
+                            is_url, loaded, image_type = self.encode_image(image)
+                            if is_url:
+                                this["content"].append(dict(type="image_url", image_url={
+                                    "url": loaded
+                                }))
+                            else:
+                                this["content"].append(dict(type="image_url", image_url={
+                                    "url": f"data:{image_type};base64,{loaded}"
+                                }))
+            encoded_messages.append(this)
+        return encoded_messages
 
     @retry(tries=3, delay=0, logger=logger)
     @ensure_messages_format
@@ -90,11 +94,8 @@ class OpenAIModel(backends.Model):
                 ]
         :return: the continuation
         """
+        prompt = self.encode_messages(messages)
 
-        if self.supports_images:
-            messages = self.apply_image_format(messages)
-
-        prompt = messages
         api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
                                                            messages=prompt,
                                                            temperature=self.get_temperature(),
