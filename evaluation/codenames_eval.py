@@ -41,9 +41,12 @@ def load_episode_scores(results_path):
     df = df['value'].unstack()
 
     # setting values NaN or 0 if game was aborted
-    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, VARIABLE, EXPERIMENT_NAME, GAME_ENDED_THROUGH_ASSASSIN]]] = np.nan
+    keep_metrics = [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, VARIABLE, EXPERIMENT_NAME, GAME_ENDED_THROUGH_ASSASSIN, METRIC_REQUEST_COUNT, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_SUCCESS]
+    flag_columns = [column for column in df.columns if (column.startswith('Cluegiver') or column.startswith('Guesser'))]
+    keep_metrics.extend(flag_columns)
+    df.loc[df[METRIC_ABORTED] == True, [column for column in df.columns if column not in keep_metrics]] = np.nan
 
-    # resorting the experiments by their number
+    # re-sorting the experiments by their number
     for index, row in df.iterrows():
         df.loc[index, 'order_number'] = int(index[1][0 : index[1].index('_')])
     df = df.reset_index().set_index(['model', 'order_number', 'experiment', 'episode'])
@@ -59,24 +62,28 @@ def score_models(args):
     save_table(df, args.results_path, "results")
 
     # create and save codenames tables
-    df_metrics, df_requests, df_flags = make_codenames_tables(df_episode_scores)
+    df_metrics, df_requests, df_flags, df_average_turn_scores = make_codenames_tables(df_episode_scores)
     save_table(df_metrics, args.results_path, "codenames-specific results")
     save_table(df_requests, args.results_path, "codenames-requests")
     save_table(df_flags, args.results_path, "codenames-flags")
+    save_table(df_average_turn_scores, args.results_path, "codenames-turn scores")
 
 def score_experiments(args):
     episode_df = load_episode_scores(args.results_path)
-    # TODO: request counts and flag counts should be summed instead of averaged!
-    # or summed and averaged, and averaged then without aborted games
-    # can I use the make-codenames-table function for this simply as well?
-    df_experiments = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False, dropna=False)
+    df_experiments_avg = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False, dropna=False)
                   .mean())
     
-    save_table(df_experiments, f"{args.results_path}/experiment-results", "all")
-    df_experiments = df_experiments.reset_index().set_index(['model', 'experiment name'])
+    save_table(df_experiments_avg, f"{args.results_path}/experiment-results", "all")
+    df_experiments = episode_df.reset_index().set_index(['model', 'experiment name'])
     for variable in df_experiments[VARIABLE].unique():
-        experiment_df = df_experiments[df_experiments[VARIABLE] == variable]
+        experiment_df = df_experiments[df_experiments[VARIABLE] == variable].drop(columns=['order_number', 'experiment', 'experiment variable'])
         save_table(experiment_df, f"{args.results_path}/experiment-results", variable)
+
+        df_metrics, df_requests, df_flags, df_average_turn_scores = make_codenames_tables(experiment_df)
+        save_table(df_metrics, f"{args.results_path}/experiment-results", f"{variable}-results")
+        save_table(df_requests, f"{args.results_path}/experiment-results", f"{variable}-requests")
+        save_table(df_flags, f"{args.results_path}/experiment-results", f"{variable}-flags")
+        save_table(df_average_turn_scores, f"{args.results_path}/experiment-results", f"{variable}-turn scores")
 
 def score_amount_played(df_episode_scores):
     if METRIC_PLAYED in df_episode_scores['metric'].unique():
@@ -94,6 +101,7 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     # compute mean benchscore and mean played (which is binary, so a proportion)
     df_mean = (df_aux.groupby(['model'], sort=False)
                   .mean(numeric_only=False))  #numeric_only=True
+    df_mean = df_mean.apply(pd.to_numeric)
     
     df_mean[METRIC_PLAYED] *= 100
     df_mean = df_mean.round(2)
@@ -115,23 +123,26 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     return df_mean
 
 def make_codenames_tables(df: pd.DataFrame) -> pd.DataFrame:
-    df_aux= df.drop(columns=['experiment variable', 'experiment name'])
+    df_aux= df.drop(columns=['experiment variable', 'experiment name'], errors='ignore')
     
-    df_game_metrics = df_aux[GAME_METRICS].groupby(['model'], sort=False).mean(numeric_only=False).round(2)
-    print(df_game_metrics)
+    df_game_metrics = df_aux[GAME_METRICS].groupby(['model'], sort=False).mean(numeric_only=False)
+    df_game_metrics = df_game_metrics.apply(pd.to_numeric).round(2)
+    
     df_requests = df_aux[REQUEST_METRICS].groupby(['model'], sort=False).sum(numeric_only=False)
     df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_COUNT_PARSED] / df_requests[METRIC_REQUEST_COUNT]
-    print(df_requests)
+    df_requests = df_requests.apply(pd.to_numeric)
+    df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_SUCCESS].round(2)
 
     df_flags = df_aux.filter(regex='^(?!Average)').filter(regex='Cluegiver|Guesser').groupby(['model'], sort=False).sum(numeric_only=False)
-    print(df_flags)
-    return df_game_metrics, df_requests, df_flags
+    df_average_turn_scores = df_aux.filter(regex='Average').groupby(['model'], sort=False).mean(numeric_only=False)
+    df_average_turn_scores = df_average_turn_scores.apply(pd.to_numeric).round(2)
+    return df_game_metrics, df_requests, df_flags, df_average_turn_scores
 
 def save_table(df, path, table_name):
     Path(path).mkdir(parents=True, exist_ok=True)
     df.to_csv(Path(path) / f'{table_name}.csv')
-    df.to_html(Path(path) / f'{table_name}.html')
-    print(f'\n Saved results into {path}/{table_name}.csv and .html')
+    # df.to_html(Path(path) / f'{table_name}.html')
+    print(f'\n Saved results into {path}/{table_name}.csv')
 
 def error_evaluation(results_path):
     # load interaction files
@@ -165,39 +176,34 @@ def error_evaluation(results_path):
     # save errors aggregated over models as a table
     error_df = pd.DataFrame.from_dict(errors)
     error_df = error_df.transpose().fillna(0)
+    error_df = error_df.apply(pd.to_numeric, downcast = 'integer')
     print(error_df)
     save_table(error_df, results_path, "errors")
-    # error_df.to_csv(f"{results_path}/errors.csv")
 
     # save errors with double index player-episode, put utterances in there as well?
     with open(f"{results_path}/error_causes.json", 'w') as file:
         json.dump(error_causes, file)
 
 def main(args):
-    if args.command_name == "models":
+    if args.mode == "models":
         score_models(args)
-    elif args.command_name == "experiments":
+    elif args.mode == "experiments":
         score_experiments(args)
-    elif args.command_name == "errors":
+    elif args.mode == "errors":
+        error_evaluation(args.results_path)
+    elif args.mode == "all":
+        score_models(args)
+        score_experiments(args)
         error_evaluation(args.results_path)
     else:
-        print("Usage: $: python3 evaluation/codenames_eval.py [models|experiments|errors|all]")
+        print("Usage: $: python3 evaluation/codenames_eval.py [-m <models|experiments|errors|all>] [-r <results_path>]")
 
 if __name__ == '__main__':
     parser = ArgumentParser()
-    sub_parsers = parser.add_subparsers(dest="command_name")
 
-    model_parser = sub_parsers.add_parser("models")
-    model_parser.add_argument("-r", "--results_path", type=str, default='./results',
-                              help="Path to the results folder containing model scores.")
-    
-    experiment_parser = sub_parsers.add_parser("experiments")
-    experiment_parser.add_argument("-r", "--results_path", type=str, default='./results',
-                              help="Path to the results folder containing experiment scores.")
-
-    error_parser = sub_parsers.add_parser("errors")
-    error_parser.add_argument("-r", "--results_path", type=str, default='./results',
-                              help="Path to the results folder containing collected interaction errors.")
+    parser.add_argument("-m", '--mode', type=str, default="all", help="Mode, either one of models, experiments, errors, or all.")
+    parser.add_argument("-r", "--results_path", type=str, default='./results',
+                        help="Path to the results folder containing scores and interactions.")
 
     args = parser.parse_args()
     main(args)
