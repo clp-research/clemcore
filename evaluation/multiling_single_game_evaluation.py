@@ -6,11 +6,14 @@ sys.path.append('..')
 import glob
 from pathlib import Path
 import pandas as pd
+from clemgame import metrics
 
 
 def create_overview_table(df: pd.DataFrame, categories: list) -> pd.DataFrame:
     """Create multilingual results as a table."""
-    scored_df = df[(df.game == 'referencegame') & (df["metric"].isin(["Played", "Success", "Aborted at Player 1"]))]
+    relevant_metrics = [metrics.METRIC_PLAYED, metrics.BENCH_SCORE, "Aborted at Player 1"]
+    # BENCH_SCORE for referencegame = success * 100
+    scored_df = df[(df.game == 'referencegame') & (df["metric"].isin(relevant_metrics))]
 
     # refactor model names for readability
     scored_df = scored_df.replace(to_replace=r'(.+)-t0.0--.+', value=r'\1', regex=True)
@@ -21,15 +24,14 @@ def create_overview_table(df: pd.DataFrame, categories: list) -> pd.DataFrame:
                 .reset_index())
     # convert to percentages
     aux_ab_p1 = df_means.loc[df_means.metric == "Aborted at Player 1", 'value']
-    aux_played = df_means.loc[df_means.metric == "Played", 'value']
+    aux_played = df_means.loc[df_means.metric == metrics.METRIC_PLAYED, 'value']
     aux_aborted = (1-aux_played).to_list()
     df_means.loc[df_means.metric == "Aborted at Player 1", 'value'] = (aux_ab_p1/aux_aborted) * 100
-    df_means.loc[df_means.metric == "Played", 'value'] *= 100
-    df_means.loc[df_means.metric == "Success", 'value'] *= 100
+    df_means.loc[df_means.metric == metrics.METRIC_PLAYED, 'value'] *= 100
 
     df_means = df_means.round(2)
     df_means['metric'].replace(
-        {"Played": '% Played', "Success": '% Success (of Played)', "Aborted at Player 1": 'Aborted at Player 1 (of Aborted)'},
+        {metrics.METRIC_PLAYED: '% Played', metrics.BENCH_SCORE: '% Success (of Played)', "Aborted at Player 1": 'Aborted at Player 1 (of Aborted)'},
         inplace=True)
 
     # make metrics separate columns
@@ -44,7 +46,19 @@ def create_overview_table(df: pd.DataFrame, categories: list) -> pd.DataFrame:
 
     return df_results
 
+def save_overview_tables_by_scores(df, categories, path, prefix):
+     df_played = df[categories + ['% Played']]
+     df_played = df_played.pivot(columns='lang', index="model")
+     save_table(df_played, path, f"{prefix}_by_played")
 
+     df_success = df[categories + ['% Success (of Played)']]
+     df_success = df_success.pivot(columns='lang', index="model")
+     save_table(df_success, path, f"{prefix}_by_success")
+
+     df_clemscore = df[categories + ['clemscore (Played * Success)']]
+     df_clemscore = df_clemscore.pivot(columns='lang', index="model")
+     save_table(df_clemscore, path, f"{prefix}_by_clemscore")
+#
 def save_table(df, path: str, file: str):
     # save table
     # for adapting for a paper
@@ -56,9 +70,9 @@ def save_table(df, path: str, file: str):
 
 if __name__ == '__main__':
     # TODO: make options command line argument
-    compare = False # if true, same language results must be in '../results/v1.5_multiling_liberal'
     detailed = False
     result_path = '../results/v1.5_multiling'
+    compare = '../results/v1.5_multiling_liberal_p2' # False
 
     # collect all language specific results in one dataframe
     df_strict = None
@@ -76,7 +90,7 @@ if __name__ == '__main__':
         df_strict = pd.concat([df_strict, lang_result], ignore_index=True)
 
         if compare:
-            raw_file = raw_file.replace("v1.5_multiling", "v1.5_multiling_liberal")
+            raw_file = raw_file.replace(result_path.split("/")[-1], compare.split("/")[-1])
             assert Path(raw_file).is_file()
             lang_result = pd.read_csv(raw_file, index_col=0)
             lang_result.insert(0, 'lang', lang)
@@ -84,12 +98,14 @@ if __name__ == '__main__':
 
     if detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] #detailed by experiment
-        overview = create_overview_table(df_strict, categories)
-        save_table(overview.set_index(['lang', 'model', 'experiment']), result_path, 'results_multiling_by_experiment')
+        overview_detailed = create_overview_table(df_strict, categories)
+        save_overview_tables_by_scores(overview_detailed, categories[:-1], result_path, 'results_multiling_by_experiment')
 
     else:
         categories = ['lang', 'model', 'metric']
         overview_strict = create_overview_table(df_strict, categories)
+        save_overview_tables_by_scores(overview_strict, categories[:-1], result_path, 'results_multiling')
+
         # sort models within language by clemscore
         sorted_df = overview_strict.sort_values(['lang','clemscore (Played * Success)'],ascending=[True,False])
         # extract model order by language for rank correaltion analysis
@@ -106,14 +122,15 @@ if __name__ == '__main__':
 
     if compare:
         overview_liberal = create_overview_table(df_liberal, categories)
+        # TODO: adapt comparison to new table format (model x score/lang)
         # get intersection of models
-        models = ["command-r-plus", "Llama-3-8b-chat-hf",
-                  "Llama-3-70b-chat-hf"]
+        #models = ["fsc-openchat-3.5-0106"] # "command-r-plus", "Llama-3-8b-chat-hf",
+        #          "Llama-3-70b-chat-hf"]
         # compare % Played between strict and liberal
-        selected_strict = overview_strict.loc[overview_strict["model"].isin(models), ['lang', 'model', '% Played']].set_index(['lang', 'model'])
-        selected_liberal = overview_liberal.loc[overview_liberal["model"].isin(models), ['lang', 'model', '% Played']].set_index(['lang', 'model'])
-        comparison = selected_strict.compare(selected_liberal, keep_shape=True, keep_equal=True, result_names=("strict", "liberal"))
+        #selected_strict = overview_strict.loc[categories + ['% Played']].pivot(columns='lang', index="model")
+        #selected_liberal = overview_liberal.loc[categories + ['% Played']].pivot(columns='lang', index="model")
+        #comparison = selected_strict.compare(selected_liberal, keep_shape=True, keep_equal=True, result_names=("strict", "liberal"))
         # compute delta and replace on df
-        delta = comparison['% Played']['liberal'] - comparison['% Played']['strict']
-        delta = delta.round(2).to_frame(name=('improvement of % Played in liberal mode'))
-        save_table(delta, result_path, 'results_delta_strict_liberal')
+        #delta = comparison['% Played']['liberal'] - comparison['% Played']['strict']
+        #delta = delta.round(2).to_frame(name=('improvement of % Played in liberal mode'))
+        #save_table(delta, result_path, 'results_delta_strict_liberal')
