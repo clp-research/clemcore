@@ -87,14 +87,14 @@ if __name__ == '__main__':
 
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("-p", "--results_path", type=str, default="../results/v1.5_multiling",
-                            help="A relative or absolute path to the results root directory. Default: ../results/v1.5_multiling")
+                            help="A relative or absolute path to the results directory. Default: ../results/v1.5_multiling")
     arg_parser.add_argument("-d", "--detailed", type=bool, default=False,
                             help="Whether to create a detailed overview table by experiment. Default: False")
     arg_parser.add_argument("-c", "--compare", type=str, default="",
-                            help="An optional relative or absolute path to another results root directory to which the results should be compared.")
+                            help="An optional relative or absolute path to another results directory to which the results should be compared.")
     parser = arg_parser.parse_args()
 
-    output_prefix = parser.results_path.split("/")[-1]
+    output_prefix = f"{parser.results_path.split('/')[-1]}_results"
 
     # collect all language specific results in one dataframe
     df_lang = None
