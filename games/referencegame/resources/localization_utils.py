@@ -1,4 +1,9 @@
-MULTILINGUAL_PATTERNS = {"de":
+MULTILINGUAL_PATTERNS = {"ar":
+                             {"p2_options": 'أول|ثاني|ثالث',
+                              "p1_tag": 'التعبير:',
+                              "p2_tag": 'الإجابة:'
+                              },
+                         "de":
                              {"p2_options": 'erstes|zweites|drittes',
                               "p1_tag": 'ausdruck:',
                               "p2_tag": 'antwort:'
@@ -19,6 +24,10 @@ MULTILINGUAL_PATTERNS = {"de":
                              {"p2_options": 'primeiro|segundo|terceiro',
                               "p1_tag": 'expressão:',
                               "p2_tag": 'resposta:'},
+                        "ru":
+                             {"p2_options": 'первая|вторая|третья',
+                              "p1_tag": 'выражение:',
+                              "p2_tag": 'ответ:'},
                          "te":
                              {"p2_options": 'మొదటిది|రెండవది|మూడవది',
                               "p1_tag": 'వివరణ:',
