@@ -138,21 +138,21 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     assert len(targets) == 3
 
                     first_grid = ""
-                    target_grid_name = ""
+                    target_grid_name = []
                     if i == 1:
                         first_grid = target_grid
                         # keep order from player 1 for second and third grid
-                        target_grid_name = targets[0] # corresponds to "first"
+                        target_grid_name = [targets[0], "1"] # corresponds to "first"
                     elif i == 2:
                         first_grid = second_grid
                         second_grid = target_grid
                         # third grid stays third grid
-                        target_grid_name = targets[1] # corresponds to "second"
+                        target_grid_name = [targets[1], "2"] # corresponds to "second"
                     elif i == 3:
                         first_grid = third_grid
                         # second grid stays second grid
                         third_grid = target_grid
-                        target_grid_name = targets[2] # corresponds to "third"
+                        target_grid_name = [targets[2], "3"] # corresponds to "third"
 
                     game_instance["player_2_prompt_header"] = player_b_prompt_header.replace('FIRST_GRID', first_grid) \
                                                                                     .replace('SECOND_GRID', second_grid) \

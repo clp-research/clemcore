@@ -8,11 +8,16 @@ source prepare_path.sh
 game="referencegame"
 
 models=(
-"fsc-openchat-3.5-0106"
-"fsc-codellama-34b-instruct"
+#"claude-3-opus-20240229"
+#"gpt-4-turbo-2024-04-09"
+#"command-r-plus"
+#"Llama-3-8b-chat-hf"
+#"Llama-3-70b-chat-hf"
+#"fsc-openchat-3.5-0106"
+#"fsc-codellama-34b-instruct"
 )
 
-languages=("de" "en" "it" "ja" "pt" "tk" "tr" "zh")
+languages=("de" "en" "it" "ja" "pt" "te" "tk" "tr" "zh") #
 
 results="results/v1.5_multiling"
 

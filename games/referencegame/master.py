@@ -25,7 +25,7 @@ class ReferenceGameMaster(GameMaster):
         self.player_1_response_pattern = ""
         self.player_2_response_pattern = ""
         #TODO make mode a command line parameter
-        self.mode = "strict" # "liberal"
+        self.mode = "strict" # "liberal" #
 
 
     def setup(self, **game_instance):
@@ -46,7 +46,8 @@ class ReferenceGameMaster(GameMaster):
         """
         Combine language specific content with regex pattern
         The regex uses 4 named groups: tag, response, content and remainder
-        - model is instructed to start answer with "tag"
+        - model is instructed to start its answer with "tag"
+        - the following \s is optional (as asian languages don't use spaces)
         - "response" combines "content" and "remainder" (in case everything should be passed on to the next player)
         - "content" is defined a the first produced paragraph (up to a newline)
         - "remainder" collects all following content
@@ -55,7 +56,6 @@ class ReferenceGameMaster(GameMaster):
         - "remainder" should be "" (has to be implemented in response checking)
         Liberal parsing mode:
         - "tag" doesn't have to be at the beginning but only somewhere in the reply
-        - "tag" is optional
         - "remainder" doesn't have to be empty (has to be implemented in response checking)
 
         :param player: string identifier of player ("p1" or "p2")
@@ -67,11 +67,12 @@ class ReferenceGameMaster(GameMaster):
             content = ".+"
         elif player == "p2":
             tag = MULTILINGUAL_PATTERNS[self.game.lang]["p2_tag"]
-            content = MULTILINGUAL_PATTERNS[self.game.lang]["p2_options"]
+            # collect answer options and also allow models to output numbers, as we don't do prompt engineering in all languages
+            content = MULTILINGUAL_PATTERNS[self.game.lang]["p2_options"] + "|1|2|3"
         if self.mode == "strict":
             return f'^(?P<tag>{tag})\s*(?P<response>(?P<content>{content})\n*(?P<remainder>(.|\n)*))'
         else:
-            return f'(?P<tag>{tag})?\s*(?P<response>(?P<content>{content})\n*(?P<remainder>(.|\n)*))'
+            return f'(?P<tag>{tag})\s*(?P<response>(?P<content>{content})\n*(?P<remainder>(.|\n)*))'
 
 
     @classmethod
@@ -155,6 +156,9 @@ class ReferenceGameMaster(GameMaster):
         player_2_pattern = re.compile(self.player_2_response_pattern, re.IGNORECASE)
         p2_match = re.match(player_2_pattern, player_2_response_text)
         match = False
+        # set liberal parsinf mode (i.e., ignore the rest if the model produced more than the answer option
+        # (like punctuation or "grid" in the multilingual version)
+        self.mode == "liberal"
         if p2_match:
             if self.mode == "liberal":
                 # we don't care how much more the model generates,
@@ -164,7 +168,7 @@ class ReferenceGameMaster(GameMaster):
                 self.log_event(from_="GM", to="GM", action=action)
                 match = True
             elif self.mode == "strict":
-                # the model should not produce more than one paragraph
+                # the model should not produce more than the answer
                 if p2_match.group('remainder') == "":
                     action = {'type': 'parse', 'content': player_2_response_text,
                               'answer': p2_match.group('content')}
@@ -182,7 +186,21 @@ class ReferenceGameScorer(GameScorer):
 
     def __init__(self, experiment: Dict, game_instance: Dict):
         super().__init__(GAME_NAME, experiment, game_instance)
-        self.target_grid_name = game_instance["target_grid_name"]
+        self.target_grid_name = self.extend_target(game_instance["target_grid_name"], game_instance["lang"])
+
+    def extend_target(self, target, lang):
+        """
+        Extend the target to contain numerals as well as strings (if not already done by the instancegenerator)
+        :param target: the string representation of the target position or a list of options
+        :return: extended list of text and numeral version of target
+        """
+        if isinstance(target, list):
+            # the extension was already done in the instancegenerator
+            return target
+        options = MULTILINGUAL_PATTERNS[lang]["p2_options"].split("|")
+        assert target in options
+        target_index = options.index(target)
+        return [target, str(target_index + 1)]
 
     def compute_scores(self, episode_interactions: Dict) -> None:
         '''
@@ -230,12 +248,30 @@ class ReferenceGameScorer(GameScorer):
             episode_request_count += 1
             # check if the Player 2 message matched the rule
             # (true if sixth interaction (GM to GM) has type "parse")
-            if turn[5]['action']['type'] == "parse":
+
+            # HOTFIX to allow for backward compatible, more liberal player 2 parsing for existing game runs
+            # (in the future already handled by ReferenceGameMaster above)
+            p2_match = False
+            if turn[5]['action']['type'] == "invalid format":
+                # parse again with additionally allowing numbers as answers (and ignore anything that follows (like "grid" or punctuation))
+                tag = MULTILINGUAL_PATTERNS[self.lang]["p2_tag"]
+                content = MULTILINGUAL_PATTERNS[self.lang]["p2_options"] + "|1|2|3"
+                p2_pattern_extended = f'^(?P<tag>{tag})\s*(?P<content>{content})'
+                player_2_pattern = re.compile(p2_pattern_extended, re.IGNORECASE)
+                p2_match = re.match(player_2_pattern, turn[5]['action']['original_content'])
+
+            if turn[5]['action']['type'] == "parse" or p2_match:
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
+
                 # check if the target grid number matches the output from Player 2
-                player_2_answer = turn[5]['action']['answer']
-                if player_2_answer.lower() == self.target_grid_name.lower():
+                player_2_answer = ""
+                if p2_match:
+                    player_2_answer = p2_match.group('content')
+                elif turn[5]['action']['type'] == "parse":
+                    player_2_answer = turn[5]['action']['answer']
+
+                if player_2_answer.lower() in self.target_grid_name:
                     success = 1
 
                 self.log_episode_score('Aborted at Player 1', 0)
@@ -300,7 +336,7 @@ def main():
     # select one instance
     experiments = file_utils.load_json("in/instances_v1.5_en.json", "referencegame")
     instance = experiments["experiments"][0]["game_instances"][0]
-    master = ReferenceGameMaster(instance, ["fsc-openchat-3.5-0106", "fsc-openchat-3.5-0106git a"])
+    master = ReferenceGameMaster(instance, ["fsc-openchat-3.5-0106", "fsc-openchat-3.5-0106"])
     master.setup(**instance)
     master.play()
 
