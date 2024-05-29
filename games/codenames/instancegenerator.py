@@ -5,7 +5,7 @@ Creates files in ./in
 """
 from tqdm import tqdm
 from clemgame.clemgame import GameInstanceGenerator
-import random, copy, argparse, os, numpy
+import random, copy, argparse, os
 from typing import Set
 from clemgame.file_utils import file_path
 
@@ -50,25 +50,25 @@ def shuffle_words_within_assignments(assignments):
 
 def generate_similar_within_teams(categories, required):
     board = []
-    already_taken_words = set()
-    already_taken_categories = set()
+    already_taken_words = []
+    already_taken_categories = []
     assignments = {"team": [], "opponent": [], "innocent": [], "assassin": []}
     for alignment in assignments:
         while len(assignments[alignment]) < required[alignment]:
             remaining = required[alignment] - len(assignments[alignment])
             words = choose_instances_from_random_category(categories, already_taken_words, already_taken_categories, maximum = remaining)
-            assignments[alignment].extend(list(words))
-            board.extend(list(words))
+            assignments[alignment].extend(words)
+            board.extend(words)
     
     shuffle_board(board)
     shuffle_words_within_assignments(assignments)
-    return {"board": board, "assignments": assignments, "private": {"categories": list(already_taken_categories)}}
+    return {"board": board, "assignments": assignments, "private": {"categories": already_taken_categories}}
 
 def generate_similar_across_teams(categories, required):
     total = required[TEAM] + required[OPPONENT] + required[INNOCENT] + required[ASSASSIN]
     board = []
-    already_taken_words = set()
-    already_taken_categories = set()
+    already_taken_words = []
+    already_taken_categories = []
     assignments = {"team": [], "opponent": [], "innocent": [], "assassin": []}
     while len(board) < total:
         remaining = total - len(board)
@@ -83,20 +83,19 @@ def generate_similar_across_teams(categories, required):
                 i += 1
                 if i == len(words):
                     break     
-        board.extend(list(words))
+        board.extend(words)
     shuffle_board(board)
     shuffle_words_within_assignments(assignments)
-    return {"board": board, "assignments": assignments, "private": {"categories": list(already_taken_categories)}}
+    return {"board": board, "assignments": assignments, "private": {"categories": already_taken_categories}}
     
 def choose_instances_from_random_category(categories: Set, already_taken_words: Set, already_taken_categories: Set, maximum = 4):
-    remaining_category_names = set(categories.keys()) - already_taken_categories
-    total = sum([len(categories[category]) for category in categories if category in remaining_category_names])
-    category_probabilities = [len(categories[category])/total for category in categories if category in remaining_category_names]
-    category_name = get_random_category(list(remaining_category_names), category_probabilities)[0]
-    already_taken_categories.add(category_name)
+    #total = sum([len(categories[category]) for category in categories if category in remaining_category_names])
+    #category_probabilities = [len(categories[category])/total for category in categories if category in remaining_category_names]
+    category_name = get_random_category(categories, already_taken_categories, already_taken_words)
+    already_taken_categories.append(category_name)
 
-    category_words = set(categories[category_name])
-    remaining_words = category_words - already_taken_words
+    category_words = categories[category_name]
+    remaining_words = [word for word in category_words if word not in already_taken_words]
     
     # randomly choose 2-4 words from a category, so that not only one word slot remains
     choices = [2, 3, 4]
@@ -106,7 +105,7 @@ def choose_instances_from_random_category(categories: Set, already_taken_words: 
             break
     amount = random.choice(choices)
     words = sample_words_from_category(list(remaining_words), min(amount, maximum))
-    already_taken_words.update(words)
+    already_taken_words.extend(words)
     return words
     
 def sample_words_from_category(category, number_of_words):
@@ -120,8 +119,18 @@ def sample_words_from_category(category, number_of_words):
         
     return words
     
-def get_random_category(category_list, probabilities):
-    return numpy.random.choice(category_list, 1, p=probabilities)
+def get_random_category(categories, already_taken_categories, already_taken_words):
+    # remaining_category_names = list(categories.keys() - already_taken_categories)
+    remaining_category_names = []
+    for category in categories:
+        if category in already_taken_categories:
+            continue
+        remaining_category_size = len([category_name for category_name in categories[category] if category_name not in already_taken_words])
+        remaining_category_names.extend([category for i in range(remaining_category_size)])
+
+    return random.choice(remaining_category_names)
+
+    # return np_random_generator.choice(category_list, 1, p=probabilities)
 
 generators={'random': generate_random,
             'easy word assignments': generate_similar_within_teams,
@@ -209,7 +218,7 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                         experiment["flags"][flag] = True
 
                 # FIXME: bad hack to always strip words
-                experiment["flags"]["STRIP WORDS"] = True 
+                experiment["flags"]["STRIP WORDS"] = True
 
                 # create game instances
                 for game_id in tqdm(range(experiment["number of instances"])):
