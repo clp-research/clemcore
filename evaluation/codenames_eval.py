@@ -11,9 +11,21 @@ from collections import Counter
 import json, copy
 from evaluation.bencheval import PlayedScoreError
 
+QUALITY_SCORE = "Quality Score"
 REQUEST_METRICS = [METRIC_REQUEST_COUNT, METRIC_REQUEST_COUNT_PARSED, METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_SUCCESS]
-GAME_METRICS = [METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, 
+GAME_METRICS = [QUALITY_SCORE, METRIC_ABORTED, METRIC_PLAYED, METRIC_SUCCESS, METRIC_LOSE, GAME_ENDED_THROUGH_ASSASSIN, NUMBER_OF_TURNS, 
                 Episode_Scores.EFFICIENCY, Episode_Scores.RECALL, Episode_Scores.NEGATIVE_RECALL]
+
+display_names = {
+    "mock-t0.0" : "mock",
+    "ideal-mock-t0.0" : "ideal mock",
+    "random-mock-t0.0" : "random mock",
+    "Llama-3-8B-Instruct-t0.0" : "Llama3 8B",
+    "Llama-3-70B-Instruct-t0.0" : "Llama3 70B",
+    "Mixtral-8x7B-Instruct-v0.1-t0.0": "Mixtral 8x7B",
+    "Mixtral-8x22B-Instruct-v0.1-t0.0": "Mixtral 8x22B",
+    "fsc-openchat-3.5-0106-t0.0" : "openchat 3.5"
+}
 
 # from evaluation.evalutils:
 #   save_raw_turn_scores()
@@ -49,8 +61,12 @@ def load_episode_scores(results_path):
     # re-sorting the experiments by their number
     for index, row in df.iterrows():
         df.loc[index, 'order_number'] = int(index[1][0 : index[1].index('_')])
-    df = df.reset_index().set_index(['model', 'order_number', 'experiment', 'episode'])
+    df = df.reset_index()
+    df['model'] = df['model'].apply(lambda x: display_names[x.split("--")[0]])
+    df = df.rename(columns={'model': 'Model', BENCH_SCORE: QUALITY_SCORE})
+    df = df.set_index(['Model', 'order_number', 'experiment', 'episode'])
     df.sort_index(level = 1, inplace = True)
+    df = df.loc[['openchat 3.5', 'ideal mock', 'random mock'], :,:,:] # FIXME: add these: 'Llama3 8B', 'Llama3 70B', 'Mixtral 8x7B', 'Mixtral 8x22B'
     return df
 
 def score_models(args):
@@ -70,16 +86,16 @@ def score_models(args):
 
 def score_experiments(args):
     episode_df = load_episode_scores(args.results_path)
-    df_experiments_avg = (episode_df.groupby([VARIABLE, 'model', 'experiment name'], sort=False, dropna=False)
+    df_experiments_avg = (episode_df.groupby([VARIABLE, 'Model', 'experiment name'], sort=False, dropna=False)
                   .mean())
     
     save_table(df_experiments_avg, f"{args.results_path}/experiment-results", "all")
-    df_experiments = episode_df.reset_index().set_index(['model', 'experiment name'])
+    df_experiments = episode_df.reset_index().set_index(['Model', 'experiment name'])
     for variable in df_experiments[VARIABLE].unique():
         experiment_df = df_experiments[df_experiments[VARIABLE] == variable].drop(columns=['order_number', 'experiment', 'experiment variable'])
         save_table(experiment_df, f"{args.results_path}/experiment-results", variable)
 
-        df_metrics, df_requests, df_flags, df_average_turn_scores = make_codenames_tables(experiment_df)
+        df_metrics, df_requests, df_flags, df_average_turn_scores = make_experiment_tables(experiment_df)
         save_table(df_metrics, f"{args.results_path}/experiment-results", f"{variable}-results")
         save_table(df_requests, f"{args.results_path}/experiment-results", f"{variable}-requests")
         save_table(df_flags, f"{args.results_path}/experiment-results", f"{variable}-flags")
@@ -96,10 +112,11 @@ def score_amount_played(df_episode_scores):
 def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     """Create benchmark results as a table."""
     columns = [column for column in df.columns if column in utils.MAIN_METRICS]
+    columns.append(QUALITY_SCORE)
     df_aux = df[columns]
 
     # compute mean benchscore and mean played (which is binary, so a proportion)
-    df_mean = (df_aux.groupby(['model'], sort=False)
+    df_mean = (df_aux.groupby(['Model'], sort=False)
                   .mean(numeric_only=False))  #numeric_only=True
     df_mean = df_mean.apply(pd.to_numeric)
     
@@ -109,15 +126,15 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
     df_mean = df_mean[sorted(df_mean.columns)]
 
     # compute the std of benchscore
-    df_std_benchscore = df_aux[BENCH_SCORE]
-    df_std_benchscore = (df_std_benchscore.groupby(['model'], sort=False)
+    df_std_benchscore = df_aux[QUALITY_SCORE]
+    df_std_benchscore = (df_std_benchscore.groupby(['Model'], sort=False)
                     .std(numeric_only=False)
                     .round(2))
-    df_mean.insert(len(df_mean.columns), f'{BENCH_SCORE} (std)', df_std_benchscore)
+    df_mean.insert(len(df_mean.columns), f'{QUALITY_SCORE} (std)', df_std_benchscore)
 
     # compute clemscores and add to df
     clemscore = ((df_mean['% Played'] / 100)
-                 * df_mean[BENCH_SCORE])
+                 * df_mean[QUALITY_SCORE])
     df_mean.insert(0, 'clemscore', clemscore.values.astype(float).round(2))
 
     return df_mean
@@ -125,24 +142,46 @@ def make_clem_table(df: pd.DataFrame) -> pd.DataFrame:
 def make_codenames_tables(df: pd.DataFrame) -> pd.DataFrame:
     df_aux= df.drop(columns=['experiment variable', 'experiment name'], errors='ignore')
     
-    df_game_metrics = df_aux[GAME_METRICS].groupby(['model'], sort=False).mean(numeric_only=False)
+    df_game_metrics = df_aux[GAME_METRICS].groupby(['Model'], sort=False).mean(numeric_only=False)
     df_game_metrics = df_game_metrics.apply(pd.to_numeric).round(2)
     
-    df_requests = df_aux[REQUEST_METRICS].groupby(['model'], sort=False).sum(numeric_only=False)
+    df_requests = df_aux[REQUEST_METRICS].groupby(['Model'], sort=False).sum(numeric_only=False)
     df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_COUNT_PARSED] / df_requests[METRIC_REQUEST_COUNT]
     df_requests = df_requests.apply(pd.to_numeric)
     df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_SUCCESS].round(2)
 
-    df_flags = df_aux.filter(regex='^(?!Average)').filter(regex='Cluegiver|Guesser').groupby(['model'], sort=False).sum(numeric_only=False)
-    df_average_turn_scores = df_aux.filter(regex='Average').groupby(['model'], sort=False).mean(numeric_only=False)
+    df_flags = df_aux.filter(regex='^(?!Average)').filter(regex='Cluegiver|Guesser').groupby(['Model'], sort=False).sum(numeric_only=False)
+    df_average_turn_scores = df_aux.filter(regex='Average').groupby(['Model'], sort=False).mean(numeric_only=False)
+    df_average_turn_scores = df_average_turn_scores.apply(pd.to_numeric).round(2)
+    return df_game_metrics, df_requests, df_flags, df_average_turn_scores
+
+def make_experiment_tables(df: pd.DataFrame) -> pd.DataFrame:
+    df_aux= df.drop(columns=['experiment variable'], errors='ignore')
+    
+    df_game_metrics = df_aux[GAME_METRICS].groupby(['Model', 'experiment name'], sort=False).mean(numeric_only=False)
+    df_game_metrics = df_game_metrics.apply(pd.to_numeric).round(2)
+    
+    df_requests = df_aux[REQUEST_METRICS].groupby(['Model', 'experiment name'], sort=False).sum(numeric_only=False)
+    df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_COUNT_PARSED] / df_requests[METRIC_REQUEST_COUNT]
+    df_requests = df_requests.apply(pd.to_numeric)
+    df_requests[METRIC_REQUEST_SUCCESS] = df_requests[METRIC_REQUEST_SUCCESS].round(2)
+
+    df_flags = df_aux.filter(regex='^(?!Average)').filter(regex='Cluegiver|Guesser').groupby(['Model', 'experiment name'], sort=False).sum(numeric_only=False)
+    df_average_turn_scores = df_aux.filter(regex='Average').groupby(['Model', 'experiment name'], sort=False).mean(numeric_only=False)
     df_average_turn_scores = df_average_turn_scores.apply(pd.to_numeric).round(2)
     return df_game_metrics, df_requests, df_flags, df_average_turn_scores
 
 def save_table(df, path, table_name):
+    old_columns = df.columns
+    df.columns = [column.title() for column in df.columns]
+    df = df.rename_axis('Model')
     Path(path).mkdir(parents=True, exist_ok=True)
     df.to_csv(Path(path) / f'{table_name}.csv')
     # df.to_html(Path(path) / f'{table_name}.html')
     print(f'\n Saved results into {path}/{table_name}.csv')
+
+    print(df)
+    df.columns = old_columns
 
 def error_evaluation(results_path):
     # load interaction files
@@ -153,7 +192,12 @@ def error_evaluation(results_path):
     for key, interaction in interactions.items():
         game, experiment = interaction
         players = game["players"]
-        players = f"{players['Player 1']}:{players['Player 2']}"
+        if players['Player 1'].split(', ')[1] == players['Player 2'].split(', ')[1]:
+            players = display_names[players['Player 1'].split(', ')[1]+'-t0.0']
+        else:
+            player1 = display_names[players['Player 1'].split(', ')[1]+'-t0.0']
+            player2 = display_names[players['Player 2'].split(', ')[1]+'-t0.0']
+            players = f"{player1} : {player2}"
         if not players in errors:
             errors[players] = Counter()
         if not players in error_causes:
@@ -177,6 +221,9 @@ def error_evaluation(results_path):
     error_df = pd.DataFrame.from_dict(errors)
     error_df = error_df.transpose().fillna(0)
     error_df = error_df.apply(pd.to_numeric, downcast = 'integer')
+    error_df.loc['random mock'] = error_df.loc['mock']
+    error_df = error_df.rename({'mock': 'ideal mock'})
+    # error_df
     print(error_df)
     save_table(error_df, results_path, "errors")
 
