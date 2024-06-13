@@ -1,0 +1,30 @@
+Hagamos la siguiente tarea. El objetivo es llenar una cuadrícula vacía que se ve así:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+La siguiente cuadrícula llena es de 5 por 5 y puede verse así:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ E ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+X X X X X
+
+Quiero que me describas esta cuadrícula, paso a paso. No es necesario describir los cuadrados vacíos, que se indican con "▢". Describe únicamente la ubicación de las letras en la cuadrícula. Luego esperas a que te diga "¿Cuál es tu próxima instrucción?", y luego continúas con el siguiente paso. Tenga en cuenta el tamaño de la cuadrícula al dar instrucciones. Cuando hayas descrito todo, dices "HECHO".
+
+Para la cuadrícula completa de arriba, estos son los pasos de ejemplo.
+
+¿Cuál es tu próxima instrucción?
+Instrucción: Ponga una E en la tercera columna de la segunda fila.
+
+¿Cuál es tu próxima instrucción?
+Instrucción: Llene la última fila con X
+
+¿Cuál es tu próxima instrucción?
+Instrucción: HECHO
+
+De acuerdo. Haga esto para el siguiente ejemplo, que es una cuadrícula de GRID_DIMENSION por GRID_DIMENSION.

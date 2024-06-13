@@ -1,0 +1,19 @@
+Lasst uns gemeinsam etwas zeichnen. Es gibt ein leeres Raster mit einer Größe von 5 x 5, wie folgt:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Ich gebe Ihnen Anweisungen wie „Setzen Sie oben links ein X“, und Sie geben das Raster zurück, indem Sie die gegebene Anweisung anwenden, wie folgt:
+
+Anweisung: Setzen Sie oben links ein X
+
+X ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Erstellen Sie nun ein leeres Raster mit einer Größe von GRID_DIMENSION x GRID_DIMENSION und führen Sie bei jedem Schritt die folgenden Befehle aus. Sobald Sie den Befehl ausgeführt haben, geben Sie nur das Raster zurück und schließen Sie allen anderen Text aus der Ausgabe aus.

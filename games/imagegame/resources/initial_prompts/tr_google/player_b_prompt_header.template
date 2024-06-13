@@ -1,0 +1,19 @@
+Birlikte bir şeyler çizelim. 5'e 5 boyutunda boş bir ızgara var, şöyle:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Size "sol üste bir X koyun" gibi talimatlar vereceğim ve siz de verilen talimatı şu şekilde uygulayarak ızgarayı döndüreceksiniz:
+
+Talimat: sol üst köşeye bir X koyun
+
+X ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Şimdi GRID_DIMENSION'e GRID_DIMENSION boyutunda boş bir ızgara oluşturun ve her adımda aşağıdaki komutları uygulayın. Komutu çalıştırdığınızda yalnızca ızgarayı döndürün ve diğer tüm metni çıktının dışında bırakın.
