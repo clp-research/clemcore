@@ -6,6 +6,7 @@ from clemgame.clemgame import GameMaster, GameBenchmark, GameScorer
 from games.imagegame.game import ImageGame
 from games.imagegame.evaluator import evaluate, calculate_flipped_pixels
 from clemgame import get_logger
+from games.imagegame.resources.localization_utils import MULTILINGUAL_PATTERNS
 import re
 import math
 
@@ -24,12 +25,16 @@ class ImageGameMaster(GameMaster):
         self.parsed_request_count = 0
         self.violated_request_count = 0
         self.aborted_ratio = 0
+        self.player_1_response_pattern = ""
+        self.player_1_terminate_pattern = ""
+        self.player_2_response_pattern = ""
+        # TODO make mode a command line parameter
+        self.mode = "liberal"  # "strict"
 
         self.turn_request_stats = {}
 
     def get_description(self) -> str:
         return "Image Game simulation"
-
 
     def _on_setup(self, **game_instance):
         self.game_instance = game_instance
@@ -42,8 +47,66 @@ class ImageGameMaster(GameMaster):
             "Player_2": self.player_models[1].get_name()}
         )
 
+        self.player_1_response_pattern = self.generate_regex("p1_response")
+        self.player_1_terminate_pattern = self.generate_regex("p1_terminate")
+        self.player_2_response_pattern = self.generate_regex("p2_response")
+
     def setup(self, **kwargs):
         self._on_setup(**kwargs)
+
+    def generate_regex(self, kind: str):
+        """
+        Combine language specific content with regex pattern
+        The player 1 regex uses 5 named groups: head, body, tag, instruction and tail
+        - model is instructed to start answer with "tag"
+        - "head" is everything before the first occurrence of "tag"
+        - "body" combines "tag" and "instruction"
+        - "instruction" is everything after the first occurrence of "tag" up to a newline character
+        - "tail" collects all following content
+        - "head" and "tail" might consist of only whitespaces
+        Strict parsing mode:
+        - Model response has to start with "tag" (not optional)
+        - "head" and "tail" should be ""
+        Liberal parsing mode:
+        - "tag" doesn't have to be at the beginning but only somewhere in the reply
+        - "head" and "tail" don't have to be empty
+
+        The player 2 regex matches with a 5 by 5 grid.
+        It has 3 named groups: head, grid and tail.
+        "head": is everything before the grid.
+        "grid": the grid. Must start at line beginning.
+        "tail": is everything after the grid.
+        Strict parsing mode:
+        - "head" can consist of whitespaces but must end with a newline character (so the grid starts at line beginning)
+        - "tail" can consist of whitespaces
+        Liberal parsing mode:
+        - "head": everything is allowed but the line before the grid must be empty or whitespaces
+        - "tail": everything is allowed but the line after the grid must be empty or whitespaces
+
+        :param kind: string identifier for the type of regex ("p1_response", "p1_terminate", "p2_response")
+        :return: regex pattern of given kind in the current language and the current parsing mode
+        """
+        tag = MULTILINGUAL_PATTERNS[self.game.lang]["tag"]
+
+        assert self.mode in {"strict", "liberal"}, f"The mode '{self.mode}' is unknown"
+        assert kind in {"p1_response", "p1_terminate", "p2_response"}, f"'{kind}' is invalid value for param kind"
+
+        if kind == "p2_response":
+            grid = "([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]\n([A-Z▢]\s){4}[A-Z▢]"
+            if self.mode == "liberal":
+                return f"^(?P<head>([\S\s]*\n\s*\n)?(\s*\n+)?)(?P<grid>{grid})(?P<tail>\s*(\n\s*\n[\S\s]*)?)$"
+            elif self.mode == "strict":
+                return f"^(?P<head>(\s*\n+)?)(?P<grid>{grid})(?P<tail>\s*)$"
+
+        elif kind == "p1_response":
+            instruction = ".+"
+        elif kind == "p1_terminate":
+            instruction = MULTILINGUAL_PATTERNS[self.game.lang]["terminate_token"]
+
+        if self.mode == "liberal":
+            return f"^(?P<head>[\S\s]*?)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>[\S\s]*)$"
+        elif self.mode == "strict":
+            return f"^(?P<head>)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>)$"
 
     @classmethod
     def applies_to(cls, game_name: str) -> bool:
@@ -81,88 +144,87 @@ class ImageGameMaster(GameMaster):
         self.game.given_instruction.add_system_message(player_1_response_text)
 
         # check if it reached the end on 1 side
-        match = re.compile(self.game.player_1_terminate_pattern, re.IGNORECASE).match(player_1_response_text)
+        # Note: Unfortunately, some models (mixtral) generate multiple instructions in one answer: <tag>: <instruction1>\n\n<tag>: <instruction2>...
+        #   In liberal parsing mode, this is currently handled by extracting the first instruction and ignoring the others.
+        #   In case the model generates the terminate pattern somewhere in the answer, the game is ended.
+        #   TODO: overthink this
+        match = re.compile(self.player_1_terminate_pattern, re.IGNORECASE).match(player_1_response_text)
         if match:
+            # Player 1 message matched with the terminate pattern in the given mode
             self.parsed_request_count += 1
             self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
             self.game.terminate = True
             return
+
+        # continue if the Player didn't say -> Instruction: DONE
+        # check if Player 1 message follows the rule => start with "Instruction:"
+        match = re.compile(self.player_1_response_pattern, re.IGNORECASE).match(player_1_response_text)
+        if match:
+            self.parsed_request_count += 1
+            self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
+            action = {'type': 'parse', 'content': match.group('body').strip(),
+                      'instruction': match.group('instruction').strip(),
+                      'original_content': player_1_response_text}
+            self.log_event(from_="GM", to="GM", action=action)
         else:
-            # continue if the Player didn't say -> Instruction: DONE
-            # check if Player 1 message follows the rule => start with "Instruction:"
-            player_1_message_matched = re.compile(self.game.player_1_response_pattern, re.IGNORECASE).match(player_1_response_text)
-            if player_1_message_matched:
-                parsed_instruction = ''
-                if '\n' in player_1_response_text:
-                    parsed_instruction = player_1_response_text.split('\n')[0]
-                else:
-                    parsed_instruction = player_1_response_text
+            # log invalid format for the Player 1
+            action = {'type': 'invalid format', 'content': 'Invalid instruction format',
+                      'original_content': player_1_response_text}
+            self.log_event(from_="GM", to="GM", action=action)
+            self.turn_request_stats[self.game.current_turn]['violated_count'] += 1
 
-                self.parsed_request_count += 1
-                self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
-                action = {'type': 'parse', 'content': parsed_instruction,
-                          'original_content': player_1_response_text}
-                self.log_event(from_="GM", to="GM", action=action)
-                player_1_response_text = parsed_instruction
-            else:
-                # log invalid format for the Player 1
-                action = {'type': 'invalid format', 'content': 'Invalid instruction format',
-                          'original_content': player_1_response_text}
-                self.log_event(from_="GM", to="GM", action=action)
-                self.turn_request_stats[self.game.current_turn]['violated_count'] += 1
-
-                self.violated_request_count += 1
-                self.aborted_ratio += 1
-                # terminate the game play when the message doesn't follow the rule
-                self.game.terminate = True
-                return
+            self.violated_request_count += 1
+            self.aborted_ratio += 1
+            # terminate the game play when the message doesn't follow the rule
+            self.game.terminate = True
+            return
 
 
-            # instruction following - 2 side
-            if self.game.current_turn == 0:
-                self.game.followed_instruction.add_user_message(
-                    self.game.player_2_prompt_header + '\n' + player_1_response_text)
-            else:
-                self.game.followed_instruction.add_user_message(player_1_response_text)
+        # instruction following - 2 side
+        if self.game.current_turn == 0:
+            self.game.followed_instruction.add_user_message(
+                self.game.player_2_prompt_header + '\n' + player_1_response_text)
+        else:
+            self.game.followed_instruction.add_user_message(player_1_response_text)
 
 
-            # log the game master to player 2
-            action = {'type': 'send message', 'content': self.game.followed_instruction.user_messages[-1]}
-            self.log_event(from_="GM", to="Player 2", action=action)
+        # log the game master to player 2
+        action = {'type': 'send message', 'content': self.game.followed_instruction.user_messages[-1]}
+        self.log_event(from_="GM", to="Player 2", action=action)
 
-            player_2_prompt, player_2_response, player_2_response_text = self.game.instruction_follower(
-                self.game.followed_instruction, self.game.current_turn)
+        player_2_prompt, player_2_response, player_2_response_text = self.game.instruction_follower(
+            self.game.followed_instruction, self.game.current_turn)
 
-            # log the retrieved utterance
-            action = {'type': 'get message', 'content': player_2_response_text}
-            self.log_event(from_="Player 2", to="GM", action=action, call=(player_2_prompt, player_2_response))
-            self.game.followed_instruction.add_system_message(player_2_response_text)
+        # log the retrieved utterance
+        action = {'type': 'get message', 'content': player_2_response_text}
+        self.log_event(from_="Player 2", to="GM", action=action, call=(player_2_prompt, player_2_response))
+        self.game.followed_instruction.add_system_message(player_2_response_text)
 
-            # increase the request count
-            self.turn_request_stats[self.game.current_turn]['request_count'] += 1
-            self.request_count += 1
+        # increase the request count
+        self.turn_request_stats[self.game.current_turn]['request_count'] += 1
+        self.request_count += 1
 
-            # check if Player 2 message has the required format: grid
-            match = re.compile(self.game.player_2_response_pattern).match(player_2_response_text)
-            if match:
-                self.parsed_request_count += 1
-                self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
+        # check if Player 2 message has the required format: grid
+        match = re.compile(self.player_2_response_pattern).match(player_2_response_text)
+        if match:
+            self.parsed_request_count += 1
+            self.turn_request_stats[self.game.current_turn]['parsed_count'] += 1
 
-                action = {'type': 'parse', 'content': player_2_response_text,
-                          'original_content': player_2_response_text}
-                self.log_event(from_="GM", to="GM", action=action)
+            action = {'type': 'parse', 'content': match.group('grid'),
+                      'original_content': player_2_response_text}
+            self.log_event(from_="GM", to="GM", action=action)
 
-            else:
-                # log the invalid format
-                action = {'type': 'invalid format', 'content': 'Invalid grid format',
-                          'original_content': player_2_response_text}
-                self.log_event(from_="GM", to="GM", action=action)
-                self.turn_request_stats[self.game.current_turn]['violated_count'] += 1
-                self.violated_request_count += 1
-                self.aborted_ratio += 1
-                # terminate the game play when the message doesn't follow the rule
-                self.game.terminate = True
-                return
+        else:
+            # log the invalid format
+            action = {'type': 'invalid format', 'content': 'Invalid grid format',
+                      'original_content': player_2_response_text}
+            self.log_event(from_="GM", to="GM", action=action)
+            self.turn_request_stats[self.game.current_turn]['violated_count'] += 1
+            self.violated_request_count += 1
+            self.aborted_ratio += 1
+            # terminate the game play when the message doesn't follow the rule
+            self.game.terminate = True
+            return
 
         self.game.current_turn += 1
 
@@ -172,9 +234,6 @@ class ImageGameScorer(GameScorer):
     def __init__(self, experiment: Dict, game_instance: Dict):
         super().__init__(GAME_NAME, experiment, game_instance)
         self.target_grid = game_instance["target_grid"]
-        self.player1_response_pattern = r'{}'.format(game_instance["player_1_response_pattern"])
-        self.player2_response_pattern = r'{}'.format(game_instance["player_2_response_pattern"])
-        self.player1_terminate_pattern = r'{}'.format(game_instance["player_1_terminate_pattern"])
 
     def compute_scores(self, episode_interactions: Dict) -> None:
 
@@ -201,24 +260,17 @@ class ImageGameScorer(GameScorer):
             turn_parsed_request_count = 0
             turn_violated_request_count = 0
 
-            # Player 1 message
-            player_1_message = turn[1]['action']['content']
-
             # Player generates "DONE"
-            match = re.compile(self.player1_terminate_pattern, re.IGNORECASE).match(player_1_message)
-            if match:
+            # (true if turn has length 2)
+            if len(turn) == 2:
                 break
 
             turn_request_count += 1
             episode_request_count += 1
 
             # check the Player 1 message if it matches the rule
-            player_1_message_matched = re.compile(self.player1_response_pattern, re.IGNORECASE).match(player_1_message)
-            if player_1_message_matched:
-                if '\n' in player_1_message:
-                    parsed_instruction = player_1_message.split('\n')[0]
-                    player_1_message = parsed_instruction
-
+            # (true if third interaction (GM to GM) has type "parse")
+            if turn[2]['action']['type'] == 'parse':
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
             else:
@@ -228,20 +280,14 @@ class ImageGameScorer(GameScorer):
                 # do not continue processing the rest of the turn when the game is aborted
                 break
 
-            # check if the turn includes the Player 2 message
-            # in case the turn doesn't include an item and index position 4, it means the game has been aborted
-            if len(turn) < 4:
-                aborted = True
-                break
+            # Player 2's turn
 
-            # Player 2 message
-            player_2_message = turn[4]['action']['content']
             turn_request_count += 1
             episode_request_count += 1
 
             # check Player 2 message if it matches the instruction => grid
-            match = re.compile(self.player2_response_pattern).match(player_2_message)
-            if match:
+            # (true if sixth interaction (GM to GM) has type "parse")
+            if turn[5]['action']['type'] == 'parse':
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
             else:
@@ -252,6 +298,9 @@ class ImageGameScorer(GameScorer):
 
             # calculate player-specific and turn-specific metrics
 
+            # Player 2 message
+            player_2_message = turn[4]['action']['content']
+
             try:
                 precision, recall, f1 = evaluate(self.target_grid, player_2_message)
             except:
@@ -260,13 +309,16 @@ class ImageGameScorer(GameScorer):
             # number of turns other
             number_of_turns += 1
 
+            # Player 1 message
+            player_1_message = turn[2]['action']['instruction']
+
             # Player 1 - message length
-            expression_length = len(player_1_message.replace('Instruction:', '').strip())
+            expression_length = len(player_1_message)
             self.log_turn_score(t_index, 'Generated Expression Length', expression_length)
             expression_length_sum += expression_length
 
             # Player 1 - number of tokens in the generated expression
-            number_of_tokens = len(player_1_message.replace('Instruction:', '').strip().split(' '))
+            number_of_tokens = len(player_1_message.split(' '))
             self.log_turn_score(t_index, 'Generated Expression Number of Tokens', number_of_tokens)
             expression_number_of_tokens += number_of_tokens
 

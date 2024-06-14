@@ -11,7 +11,7 @@ import random
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 
-from games.imagegame.resources.localization_utils import RESPONSE_PATTERNS
+from games.imagegame.resources.localization_utils import MULTILINGUAL_PATTERNS
 
 SEED = 123
 N_INSTANCES = 10
@@ -98,6 +98,7 @@ def generate_random_grid(number_of_letters, grid_dimension, letter):
         grid_as_string += row.strip() + '\n'
     return grid_as_string.strip()
 
+
 class ImageGameInstanceGenerator(GameInstanceGenerator):
 
     def __init__(self):
@@ -150,16 +151,14 @@ class ImageGameInstanceGenerator(GameInstanceGenerator):
                 game_instance["player_1_question"] = prompt_question
                 game_instance['grid_dimension'] = grid_dimension
                 game_instance['number_of_letters'] = grid.count('X')
-                game_instance['player_1_response_pattern'] = RESPONSE_PATTERNS[lang]["p1"]
-                game_instance['player_1_terminate_pattern'] = RESPONSE_PATTERNS[lang]["p1_terminate"]
-                game_instance['player_2_response_pattern'] = RESPONSE_PATTERNS[lang]["p2"]
                 game_instance['fill_row'] = False
                 game_instance['fill_column'] = False
                 game_instance['target_grid'] = grid
+                game_instance['lang'] = lang
 
 
 if __name__ == '__main__':
     # generate language versions
-    for language in RESPONSE_PATTERNS.keys():
+    for language in MULTILINGUAL_PATTERNS.keys():
         ImageGameInstanceGenerator().generate(
             filename=f"instances_v1.5_{language}.json", lang=language)
