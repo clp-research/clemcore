@@ -250,6 +250,7 @@ class ImageGameScorer(GameScorer):
         episode_violated_request_count = 0
 
         aborted = False
+        aborted_at = None
         number_of_turns = 0
 
         # loop over each turn and calculate the metrics for both Player 1 and 2.
@@ -277,6 +278,7 @@ class ImageGameScorer(GameScorer):
                 turn_violated_request_count += 1
                 episode_violated_request_count += 1
                 aborted = True
+                aborted_at = 1
                 # do not continue processing the rest of the turn when the game is aborted
                 break
 
@@ -294,6 +296,7 @@ class ImageGameScorer(GameScorer):
                 turn_violated_request_count += 1
                 episode_violated_request_count += 1
                 aborted = True
+                aborted_at = 2
                 break
 
             # calculate player-specific and turn-specific metrics
@@ -399,6 +402,10 @@ class ImageGameScorer(GameScorer):
 
             # aborted ratio
             self.log_episode_score(metrics.METRIC_ABORTED, 0)
+
+        # aborted at player x
+        self.log_episode_score("Aborted at Player 1", 1 if aborted_at == 1 else 0)
+        self.log_episode_score("Aborted at Player 2", 1 if aborted_at == 2 else 0)
 
         # request count, parsed & violated request counts
         self.log_episode_score(metrics.METRIC_REQUEST_COUNT, episode_request_count)
