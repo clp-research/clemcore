@@ -183,9 +183,9 @@ class ImageGameMaster(GameMaster):
         # instruction following - 2 side
         if self.game.current_turn == 0:
             self.game.followed_instruction.add_user_message(
-                self.game.player_2_prompt_header + '\n' + player_1_response_text)
+                self.game.player_2_prompt_header + '\n' + match.group('body').strip())
         else:
-            self.game.followed_instruction.add_user_message(player_1_response_text)
+            self.game.followed_instruction.add_user_message(match.group('body').strip())
 
 
         # log the game master to player 2
