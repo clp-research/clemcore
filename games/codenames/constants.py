@@ -19,7 +19,7 @@ HIDDEN = "hidden"
 TARGET = "target"
 TOTAL = "total"
 BOARD = "board"
-CLUEGIVER = "Gluegiver"
+CLUEGIVER = "Cluegiver"
 GUESSER = "Guesser"
 
 class Turn_logs(str, Enum):

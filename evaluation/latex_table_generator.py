@@ -2,7 +2,7 @@ import pandas, latextable, os
 from texttable import Texttable
 
 # split flag table for generous results into cluegiver and guesser?
-# some title cases are now reverted, keep or change?
+# make largest or smallest bold?
 
 STRICT_MODE = "in the Strict Mode"
 GENEROUS_MODE = "in the Generous Mode"

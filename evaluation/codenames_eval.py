@@ -62,11 +62,16 @@ def load_episode_scores(results_path):
     for index, row in df.iterrows():
         df.loc[index, 'order_number'] = int(index[1][0 : index[1].index('_')])
     df = df.reset_index()
-    df['model'] = df['model'].apply(lambda x: display_names[x.split("--")[0]])
+    if 'mixed' in results_path:
+        df['model'] = df['model'].apply(lambda x: f"{display_names[x.split('--')[0]]} : {display_names[x.split('--')[1]]}")
+    else:
+        df['model'] = df['model'].apply(lambda x: display_names[x.split("--")[0]])
     df = df.rename(columns={'model': 'Model', BENCH_SCORE: QUALITY_SCORE})
     df = df.set_index(['Model', 'order_number', 'experiment', 'episode'])
     df.sort_index(level = 1, inplace = True)
-    df = df.loc[['openchat 3.5', 'ideal mock', 'random mock'], :,:,:] # FIXME: add these: 'Llama3 8B', 'Llama3 70B', 'Mixtral 8x7B', 'Mixtral 8x22B'
+    keys = ['Llama3 8B', 'Llama3 70B', 'Mixtral 8x7B', 'Mixtral 8x22B', 'openchat 3.5', 'ideal mock', 'random mock', 'Llama3 70B : Mixtral 8x22B', 'Mixtral 8x22B : Llama3 70B']
+    working_keys = [key for key in keys if key in df.index]
+    df = df.loc[working_keys, :,:,:]
     return df
 
 def score_models(args):
@@ -174,13 +179,12 @@ def make_experiment_tables(df: pd.DataFrame) -> pd.DataFrame:
 def save_table(df, path, table_name):
     old_columns = df.columns
     df.columns = [column.title() for column in df.columns]
-    df = df.rename_axis('Model')
+    if table_name == 'errors':
+        df = df.rename_axis('Model')
     Path(path).mkdir(parents=True, exist_ok=True)
     df.to_csv(Path(path) / f'{table_name}.csv')
     # df.to_html(Path(path) / f'{table_name}.html')
     print(f'\n Saved results into {path}/{table_name}.csv')
-
-    print(df)
     df.columns = old_columns
 
 def error_evaluation(results_path):
@@ -209,20 +213,22 @@ def error_evaluation(results_path):
                 action = event["action"]
                 match action["type"]:
                     case Turn_logs.VALIDATION_ERROR:
+                        role = action["content"]["player"]
                         error_type = action["content"]["type"]
-                        errors[players][error_type] += 1
+                        errors[players][f"{role} {error_type}"] += 1
 
                         error_cause = action["content"]["utterance"]
-                        if error_type not in error_causes[players][-1]:
-                            error_causes[players][-1][error_type] = []
-                        error_causes[players][-1][error_type].append(error_cause)
+                        if f"{role} {error_type}" not in error_causes[players][-1]:
+                            error_causes[players][-1][f"{role} {error_type}"] = []
+                        error_causes[players][-1][f"{role} {error_type}"].append(error_cause)
 
     # save errors aggregated over models as a table
     error_df = pd.DataFrame.from_dict(errors)
     error_df = error_df.transpose().fillna(0)
     error_df = error_df.apply(pd.to_numeric, downcast = 'integer')
-    error_df.loc['random mock'] = error_df.loc['mock']
-    error_df = error_df.rename({'mock': 'ideal mock'})
+    if 'mock' in error_df:
+        error_df.loc['random mock'] = error_df.loc['mock']
+        error_df = error_df.rename({'mock': 'ideal mock'})
     # error_df
     print(error_df)
     save_table(error_df, results_path, "errors")
