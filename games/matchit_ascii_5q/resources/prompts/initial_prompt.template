@@ -1,0 +1,4 @@
+You are participating in a collaborative guessing game.
+The goal is to find out whether this grid and another picture only I can see, are the same.
+Please describe your grid first. Then, I will provide my description and we can ask each other questions about the grids to figure out whether they are the same. $NUM_QUESTIONS$Now start your short grid description with "$FLAG$" followed by the description. Do not add anything else. This is your grid:
+$GRID$

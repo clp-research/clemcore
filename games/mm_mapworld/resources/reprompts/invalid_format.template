@@ -1,0 +1,2 @@
+Please only give your answer in the provided format so I can understand it. The format is: {"description": "<room description>", "action": "<action>"}. 
+Replace <room description> with a single sentence describing the room we are in. To move to a neighboring room, replace <action> with "GO: DIRECTION" where DIRECTION can be one of [north, south, east, west]. To stop the exploration replace <action> with "DONE". What should we do? 

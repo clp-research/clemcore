@@ -1,0 +1,11 @@
+We are currently in this room. Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. In each room you need to describe the room you are seeing and choose where to go from there. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: "{"description": "<room description>", "action": "<action>"}". Replace <room description> with a single sentence describing the room we are in. To move to a neighboring room, replace <action> with "GO: DIRECTION" where DIRECTION can be one of [north, south, east, west]. To stop the exploration, replace <action> with "DONE". Omit any other text.
+Here is an example:
+We are in this room. From here we can go: north, west. What is your next instruction?
+{"description": "We are in a kitchen with a red fridge.", "action": "GO: north"}
+We have made a step and are now in this room. From here we can go: south, east. What is your next instruction?
+{"description": "We are in a living room with a couch and a tv.", "action": "GO: east"}
+...
+We have made a step and are now in this room. From here we can go: south, east. What is your next instruction?
+{"description": "We are in a bathroom", "action": "DONE"}
+Let us start. 
+We have made a step and are now in this room. From here we can go: $INITIAL_DIRECTIONS$. What is your next instruction?

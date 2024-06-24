@@ -1,0 +1,21 @@
+We are currently in this room. Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible.  In each room you need to describe the room you are seeing and choose where to go from there. Additionally, you need to provide a graph representing the map you have uncovered. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: 
+'{"action":"<action>", "description": "<room description>", "graph": <graph>}'.
+<action> needs to be in the format "GO: <direction>" where <direction> is one of [north, east, south, west]. Alternatively, choose "DONE" as your action once you have explored the entire map.
+<room description> should be a single sentence describing the room shown to you.
+<graph> represents the map in this format: {"nodes":[], "edges":{"north": [], "south": [], "east": [], "west": []}}
+Omit any other text and answer only following the format, not adding anything except the dictionary!
+
+Here is an example: 
+We are in this room. From here we can go: south, west. What is your next instruction?
+{"action":"GO: north", "description": "We are in a kitchen with a red fridge.", "graph":{"nodes":["Kitchen"], "edges":{"north": [], "south": [], "east": [], "west": []}}}
+We have made a step and are now in this room. From here we can go: east. What is your next instruction?
+{"action":"GO: east", "description": "We are in a living room with a couch and a tv.", "graph":{"nodes":["Kitchen", "Living Room"], "edges":{"north": [["Kitchen", "Living Room"]], "south": [], "east": [], "west": []}}}
+You have made a step and are now in this room. From here we can go: west, south. What is your next instruction?
+{"action":"GO: south", "description": "We are in a bedroom with two beds and a nightstand.",  "graph":{"nodes":["Kitchen", "Living Room", "Bedroom"], "edges":{"north": [["Kitchen", "Living Room"]], "south": [], "east": [["Living Room", "Bedroom"]], "west": []}}}
+...
+You have made a step and are now in this room. From here we can go: north. What is your next instruction?
+Example answer:
+{"action":"DONE", "description": "We are in a stairwell, the stair is curved.", "graph":"{...}"}
+
+Let us start.
+Currently available directions: $INITIAL_DIRECTIONS$. What is your next instruction?
