@@ -537,6 +537,7 @@
   {
     "model_name": "aya-23-8B",
     "backend": "huggingface_local",
+    "requires_api_key": true,
     "huggingface_id": "CohereForAI/aya-23-8B",
     "premade_chat_template": true,
     "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
@@ -544,6 +545,7 @@
   {
     "model_name": "aya-23-35B",
     "backend": "huggingface_local",
+    "requires_api_key": true,
     "huggingface_id": "CohereForAI/aya-23-35B",
     "premade_chat_template": true,
     "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
