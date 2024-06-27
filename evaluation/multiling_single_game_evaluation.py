@@ -60,16 +60,18 @@ def create_overview_table(df: pd.DataFrame, categories: list) -> pd.DataFrame:
 
 
 def save_overview_tables_by_scores(df, categories, path, prefix):
+     pivot_cols = ['lang', 'experiment'] if 'experiment' in categories else 'lang'
+
      df_played = df[categories + ['% Played']]
-     df_played = df_played.pivot(columns='lang', index="model")
+     df_played = df_played.pivot(columns=pivot_cols, index="model")
      save_table(df_played, path, f"{prefix}_by_played")
 
      df_success = df[categories + ['% Success (of Played)']]
-     df_success = df_success.pivot(columns='lang', index="model")
+     df_success = df_success.pivot(columns=pivot_cols, index="model")
      save_table(df_success, path, f"{prefix}_by_success")
 
      df_clemscore = df[categories + ['clemscore (Played * Success)']]
-     df_clemscore = df_clemscore.pivot(columns='lang', index="model")
+     df_clemscore = df_clemscore.pivot(columns=pivot_cols, index="model")
      save_table(df_clemscore, path, f"{prefix}_by_clemscore")
 
 
@@ -94,7 +96,7 @@ if __name__ == '__main__':
                             help="An optional relative or absolute path to another results root directory to which the results should be compared.")
     parser = arg_parser.parse_args()
 
-    output_prefix = parser.results_path.split("/")[-1]
+    output_prefix = parser.results_path.rstrip("/").split("/")[-1]
 
     # collect all language specific results in one dataframe
     df_lang = None
@@ -104,7 +106,7 @@ if __name__ == '__main__':
     lang_dirs = glob.glob(f"{result_dir}/*/") # the trailing / ensures that only directories are found
     for lang_dir in lang_dirs:
         lang = lang_dir.split("/")[-2]
-        assert len(lang) == 2
+        if len(lang) != 2: continue
         raw_file = os.path.join(lang_dir, 'raw.csv')
         assert Path(raw_file).is_file()
         lang_result = pd.read_csv(raw_file, index_col=0)
@@ -112,7 +114,7 @@ if __name__ == '__main__':
         df_lang = pd.concat([df_lang, lang_result], ignore_index=True)
 
         if parser.compare:
-            raw_file = raw_file.replace(parser.results_path.split("/")[-1], parser.compare.split("/")[-1])
+            raw_file = raw_file.replace(output_prefix, parser.compare.rstrip("/").split("/")[-1])
             assert Path(raw_file).is_file()
             lang_result = pd.read_csv(raw_file, index_col=0)
             lang_result.insert(0, 'lang', lang)
