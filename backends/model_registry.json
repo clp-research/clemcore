@@ -551,6 +551,22 @@
     "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
   },
   {
+    "model_name": "gemma-2-9b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-2-9b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>"
+  },
+  {
+    "model_name": "gemma-2-27b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-2-27b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>"
+  },
+  {
     "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface_local",
     "requires_api_key": true,
