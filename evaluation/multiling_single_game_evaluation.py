@@ -10,7 +10,7 @@ import pandas as pd
 from clemgame import metrics
 
 
-def create_overview_table(df: pd.DataFrame, categories: list) -> pd.DataFrame:
+def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.DataFrame:
     """
     Create multilingual results dataframe.
     :param df: the initial dataframe with all episode scores
@@ -19,8 +19,8 @@ def create_overview_table(df: pd.DataFrame, categories: list) -> pd.DataFrame:
     """
 
     relevant_metrics = [metrics.METRIC_PLAYED, metrics.BENCH_SCORE, "Aborted at Player 1"]
-    # BENCH_SCORE for referencegame = success * 100
-    scored_df = df[(df.game == 'referencegame') & (df["metric"].isin(relevant_metrics))]
+    # BENCH_SCORE for specified game = success * 100
+    scored_df = df[(df.game == game) & (df["metric"].isin(relevant_metrics))]
 
     # refactor model names for readability
     scored_df = scored_df.replace(to_replace=r'(.+)-t0.0--.+', value=r'\1', regex=True)
@@ -88,6 +88,7 @@ def save_table(df, path: str, file: str):
 if __name__ == '__main__':
 
     arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-g", "--game", type=str, help="The game that should be evaluated.")
     arg_parser.add_argument("-p", "--results_path", type=str, default="../results/v1.5_multiling",
                             help="A relative or absolute path to the results root directory. Default: ../results/v1.5_multiling")
     arg_parser.add_argument("-d", "--detailed", type=bool, default=False,
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     lang_dirs = glob.glob(f"{result_dir}/*/") # the trailing / ensures that only directories are found
     for lang_dir in lang_dirs:
         lang = lang_dir.split("/")[-2]
-        if len(lang) != 2: continue
+        assert (len(lang) == 2) or (len(lang.split('_')[0]) == 2)  # machine translations have identifiers such as 'de_google'
         raw_file = os.path.join(lang_dir, 'raw.csv')
         assert Path(raw_file).is_file()
         lang_result = pd.read_csv(raw_file, index_col=0)
@@ -122,13 +123,13 @@ if __name__ == '__main__':
 
     if parser.detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] # detailed by experiment
-        overview_detailed = create_overview_table(df_lang, categories)
-        save_overview_tables_by_scores(overview_detailed, categories[:-1], parser.results_path, f'{output_prefix}_by_experiment')
+        overview_detailed = create_overview_table(df_lang, parser.game, categories)
+        save_overview_tables_by_scores(overview_detailed, categories[:-1], parser.results_path, f'{output_prefix}_{parser.game}_by_experiment')
 
     else:
         categories = ['lang', 'model', 'metric']
-        overview_strict = create_overview_table(df_lang, categories)
-        save_overview_tables_by_scores(overview_strict, categories[:-1], parser.results_path, output_prefix)
+        overview_strict = create_overview_table(df_lang, parser.game, categories)
+        save_overview_tables_by_scores(overview_strict, categories[:-1], parser.results_path, f'{output_prefix}_{parser.game}')
 
         # sort models within language by clemscore
         sorted_df = overview_strict.sort_values(['lang','clemscore (Played * Success)'],ascending=[True,False])
@@ -140,12 +141,12 @@ if __name__ == '__main__':
             scores = sorted_df.loc[sorted_df.lang == lang, 'clemscore (Played * Success)']
             models_and_scores = list(zip(models.tolist(), scores.tolist()))
             model_orders[lang] = models_and_scores
-        with open(f'{parser.results_path}/model_rankings_by_language.json', 'w', encoding='utf-8') as f:
+        with open(f'{parser.results_path}/model_rankings_by_language_{parser.game}.json', 'w', encoding='utf-8') as f:
             json.dump(model_orders, f, ensure_ascii=False)
-        save_table(sorted_df.set_index(['lang', 'model']), parser.results_path, output_prefix)
+        save_table(sorted_df.set_index(['lang', 'model']), parser.results_path, f'{output_prefix}_{parser.game}')
 
     if parser.compare:
-        overview_liberal = create_overview_table(df_compare, categories)
+        overview_liberal = create_overview_table(df_compare, parser.game, categories)
         # TODO: adapt comparison to new table format (model x score/lang)
         # get intersection of models
         #models = ["fsc-openchat-3.5-0106"] # "command-r-plus", "Llama-3-8b-chat-hf",
