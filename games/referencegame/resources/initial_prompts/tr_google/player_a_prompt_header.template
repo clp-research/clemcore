@@ -1,0 +1,19 @@
+Size her biri 5'e 5 boyutunda olan üç ızgara veriliyor.
+Izgaralarda "▢" ile işaretlenmiş boş hücreler ve "X" ile işaretlenmiş dolu hücreler bulunur.
+Göreviniz, hedef ızgarayı en iyi şekilde tanımlayan ve onu diğer iki çeldirici ızgaradan ayıran, atıfta bulunan bir ifade oluşturmaktır.
+İlk ızgara hedef ızgaradır ve sonraki iki ızgara çeldiricilerdir.
+
+Hedef ızgarası:
+
+TARGET_GRID
+
+Distraktör ızgarası 1:
+
+SECOND_GRID
+
+Distraktör ızgarası 2:
+
+THIRD_GRID
+
+Talimat: Hedef ızgarayı tanımlayın.
+Verilen hedef ızgara için "İfade: " etiketiyle başlayan başvuran ifadeyi oluşturun. Başka herhangi bir metni atlayın.

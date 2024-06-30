@@ -1,0 +1,21 @@
+Ihnen werden drei Gitter gegeben, von denen jedes 5 x 5 groß ist.
+Gitter haben leere Zellen, die mit „▢“ markiert sind, und gefüllte Zellen, die mit „X“ markiert sind.
+Sie erhalten außerdem einen Verweisausdruck, der eines der gegebenen Gitter beschreibt.
+Ihre Aufgabe ist es, das Gitter auszuwählen, das dem gegebenen Verweisausdruck entspricht.
+Generieren Sie nur die Nummer (im Text) des Gitters, das dem gegebenen Ausdruck entspricht, indem Sie „Erstes“, „Zweites“ oder „Drittes“ auswählen.
+
+Erstes:
+
+FIRST_GRID
+
+Zweites:
+
+SECOND_GRID
+
+Drittes:
+
+THIRD_GRID
+
+TARGET_EXPRESSION
+Frage: Auf welches Gitter bezieht sich der Ausdruck?
+Beginnen Sie mit dem Tag „Antwort:“, gefolgt von Ihrer Auswahl. Lassen Sie jeden anderen Text weg.

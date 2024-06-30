@@ -1,0 +1,21 @@
+Se le proporcionan tres cuadrículas, cada una de las cuales tiene un tamaño de 5 por 5.
+Las cuadrículas tienen celdas vacías marcadas con "▢" y celdas llenas marcadas con "X".
+También se le proporciona una expresión de referencia que describe una de las cuadrículas dadas.
+Su tarea es seleccionar la cuadrícula que coincida con la expresión de referencia dada.
+Genere solo el número (en texto) de la cuadrícula que coincida con la expresión dada seleccionando primero, segundo o tercero.
+
+Primero:
+
+FIRST_GRID
+
+Segundo:
+
+SECOND_GRID
+
+Tercero:
+
+THIRD_GRID
+
+TARGET_EXPRESSION
+Pregunta: ¿A qué cuadrícula se refiere la expresión?
+Comience con la etiqueta "Respuesta:", seguida de su selección. Omita cualquier otro texto.

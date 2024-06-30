@@ -34,5 +34,29 @@ MULTILINGUAL_PATTERNS = {"de":
                          "zh":
                              {"p2_options": '第一|第二|第三',
                               "p1_tag": '^表达式：',
-                              "p2_tag": '回答：'}
+                              "p2_tag": '回答：'},
+                         "de_google":
+                             {"p2_options": 'erstes|zweites|drittes',
+                              "p1_tag": 'ausdruck:',
+                              "p2_tag": 'antwort:'},
+                         "es_google":
+                             {"p2_options": 'primero|segundo|tercero',
+                              "p1_tag": 'expresión:',
+                              "p2_tag": 'respuesta:'},
+                         "ru_google":
+                             {"p2_options": 'первый|второй|третий',
+                              "p1_tag": 'выражение:',
+                              "p2_tag": 'ответ:'},
+                         "te_google":
+                             {"p2_options": '(ప్రధమ|రెండవ|మూడవది',
+                              "p1_tag": 'వ్యక్తీకరణ:',
+                              "p2_tag": 'సమాధానం:'},
+                         "tk_google":
+                             {"p2_options": 'birinjisi|ikinjisi|üçünjisi',
+                              "p1_tag": 'aňlatmasyny:',
+                              "p2_tag": 'jogap:'},
+                         "tr_google":
+                             {"p2_options": 'birinci|ikinci|üçüncü',
+                              "p1_tag": 'i̇fade:',
+                              "p2_tag": 'cevap:'}
                          }

@@ -1,0 +1,21 @@
+Size her biri 5'e 5 boyutunda olan üç ızgara veriliyor.
+Izgaralarda "▢" ile işaretlenmiş boş hücreler ve "X" ile işaretlenmiş dolu hücreler bulunur.
+Ayrıca size verilen ızgaralardan birini tanımlayan bir referans ifadesi de verilir.
+Göreviniz verilen atıfta bulunan ifadeyle eşleşen ızgarayı seçmektir.
+Birinci, ikinci veya üçüncü seçerek yalnızca verilen ifadeyle eşleşen ızgara sayısını (metin olarak) oluşturun.
+
+Birinci:
+
+FIRST_GRID
+
+Ikinci:
+
+SECOND_GRID
+
+Üçüncü:
+
+THIRD_GRID
+
+TARGET_EXPRESSION
+Soru: İfade hangi ızgaraya atıfta bulunuyor?
+"Cevap: " etiketiyle başlayın ve ardından seçiminizi yapın. Başka herhangi bir metni atlayın.

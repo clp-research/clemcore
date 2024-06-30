@@ -1,0 +1,19 @@
+Se le proporcionan tres cuadrículas, cada una de las cuales tiene un tamaño de 5 por 5.
+Las cuadrículas tienen celdas vacías marcadas con "▢" y celdas llenas marcadas con "X".
+Su tarea es generar una expresión de referencia que describa mejor la cuadrícula objetivo y al mismo tiempo la distinga de las otras dos cuadrículas distractoras.
+La primera cuadrícula es la cuadrícula objetivo y las dos cuadrículas siguientes son los distractores.
+
+Cuadrícula objetivo:
+
+TARGET_GRID
+
+Cuadrícula de distractores 1:
+
+SECOND_GRID
+
+Cuadrícula distractora 2:
+
+THIRD_GRID
+
+Instrucción: Describe la cuadrícula objetivo.
+Genere la expresión de referencia que comience con la etiqueta "Expresión: " para la cuadrícula de destino determinada. Omita cualquier otro texto.

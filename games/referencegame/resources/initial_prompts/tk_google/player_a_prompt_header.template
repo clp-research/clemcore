@@ -1,0 +1,19 @@
+Size üç sany gözenek berilýär, olaryň hersiniň ululygy 5-den 5-e çenli.
+Torlarda "▢" bilen bellenen boş öýjükler we "X" bilen bellenen öýjükler bar.
+Siziň wezipäňiz, beýleki iki daşlaşdyryjy gözenekden tapawutlandyryp, maksat toruny has gowy suratlandyrýan salgylanma aňlatmasyny döretmekdir.
+Birinji gözenek maksatly gözenekdir we aşakdaky iki gözenek ünsüni bölýär.
+
+Maksatlaýyn set:
+
+TARGET_GRID
+
+Distraktor paneli 1:
+
+SECOND_GRID
+
+Distraktor paneli 2:
+
+THIRD_GRID
+
+Görkezme: Maksatlaýyn seti suratlandyryň.
+Berlen maksat paneli üçin "Aňlatmasyny:" belliginden başlap, salgylanma aňlatmasyny dörediň. Başga teksti goýuň.

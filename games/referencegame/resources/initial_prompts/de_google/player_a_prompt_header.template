@@ -1,0 +1,19 @@
+Ihnen werden drei Gitter gegeben, von denen jedes 5 x 5 groß ist.
+Gitter haben leere Zellen, die mit „▢“ markiert sind, und gefüllte Zellen, die mit „X“ markiert sind.
+Ihre Aufgabe ist es, einen referenzierenden Ausdruck zu generieren, der das Zielgitter am besten beschreibt und es gleichzeitig von den beiden anderen Ablenkergittern unterscheidet.
+Das erste Gitter ist das Zielgitter und die folgenden beiden Gitter sind die Ablenker.
+
+Zielgitter:
+
+TARGET_GRID
+
+Ablenkergitter 1:
+
+SECOND_GRID
+
+Ablenkergitter 2:
+
+THIRD_GRID
+
+Anweisung: Beschreiben Sie das Zielgitter.
+Generieren Sie den referenzierenden Ausdruck, beginnend mit dem Tag „Ausdruck:“ ​​für das gegebene Zielgitter. Lassen Sie jeden anderen Text weg.
