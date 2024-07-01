@@ -556,7 +556,7 @@
     "requires_api_key": true,
     "huggingface_id": "google/gemma-2-9b-it",
     "premade_chat_template": true,
-    "eos_to_cull": "<eos>"
+    "eos_to_cull": "<end_of_turn>\n<eos>"
   },
   {
     "model_name": "gemma-2-27b-it",
@@ -564,7 +564,7 @@
     "requires_api_key": true,
     "huggingface_id": "google/gemma-2-27b-it",
     "premade_chat_template": true,
-    "eos_to_cull": "<eos>"
+    "eos_to_cull": "<end_of_turn>\n<eos>"
   },
   {
     "model_name": "llama-2-7b-chat-hf",
