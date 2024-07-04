@@ -1,0 +1,10 @@
+Please help me with the following task. The goal is to explore rooms and find the target room. In each room, you need to decide the direction to go in. Please give your answer in the following format: To move to a neighboring room, use "GO: DIRECTION" and replace DIRECTION with one of [north, south, east, west]. Most importantly, once we have found the target room, answer with "DONE" instead. Omit any other text.
+Here is an example:
+The target room is a Bedroom. You are in the Kitchen. Currently available directions: south, west. What is your next instruction?
+GO: west
+You have made a step and entered a Lobby. Currently available directions: east, north. What is your next instruction?
+GO: north
+...
+You have made a step and entered a Bedroom. Currently available directions: south. What is your next instruction?
+DONE
+Let us start. The target room is $GOAL$. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next instruction?

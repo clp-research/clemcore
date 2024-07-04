@@ -1,0 +1,13 @@
+Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. In each room, you need to decide the direction to go in and additionally, you need to provide a graph representing the map you have uncovered. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use {"action":"GO: DIRECTION","graph":"{"nodes":[], "edges":{"north": [], "south": [], "east": [], "west": []}"}} and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with "DONE" instead. Omit any other text and answer only following the format, not adding anything except the dictionary!
+Here is an example: 
+You are in the Living Room. Currently available directions: south, west. What is your next instruction?
+{"action":"GO: west", "graph": {"nodes":["Living Room"],"edges":{"north":[],"south":[],"east":[],"west":[]}}}
+You have made a step and entered a Library. Currently available directions: east, north. What is your next instruction?
+{"action":"GO: north", "graph":{"nodes":["Living Room", "Library"],"edges":{"north":[],"south":[],"east":[],"west":[("Living Room", "Library")]}}}
+You have made a step and entered a Kitchen. Currently available directions: south, east. What is your next instruction?
+{"action":"GO: east", "graph":{"nodes": ["Living Room", "Library", "Kitchen"], "edges":{"north": [("Library", "Kitchen")],"south": [],"east": [],"west": [("Living Room", "Library")]}}}
+...
+You have made a step and entered a Bedroom. Currently available directions: south, west. What is your next instruction?
+{"action": "DONE", "graph": {...}}
+Let us start.
+You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next instruction?

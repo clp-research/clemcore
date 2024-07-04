@@ -1,0 +1,4 @@
+{"loop_reminder": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+"max_turns_reminder": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+"question": "How many different $ROOM_CATEGORY$(s) did you encounter?",
+"question_rule": "Now once you have stopped the game, you need to answer some questions in this format: 'Answer: <answer>' replace <answer> with an appropriate integer."}

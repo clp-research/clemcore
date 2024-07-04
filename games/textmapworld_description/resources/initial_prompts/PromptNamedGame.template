@@ -1,0 +1,10 @@
+Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. You are given a description of the room at each step and need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use "GO: DIRECTION" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with "DONE" instead. Omit any other text.
+Here is an example:
+You are in the initial room, which has the following description: a kitchen with light wooden cabinets, a grey floor and a silver oven and dishwasher. Currently available directions: south, west. What is your next instruction?
+GO: west
+You have made a step and entered a room, which has the following description: a bedroom with a large bed, couch, a ceiling fan, 3 windows equipped with shutter and a white floor carpet. Currently available directions: east, north. What is your next instruction?
+GO: north
+...
+You have made a step and entered a room, which has the following description: a bathroom with blue tiles, a sink and a mirror with two towels hanging on the wall to the left. Currently available directions: south. What is your next instruction?
+DONE
+Let us start. You are in the initial room, which has the following description: $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next instruction?

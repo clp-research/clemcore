@@ -1,0 +1,4 @@
+{ "PositiveAnswerNamedGame":
+"You have made a step and entered a room, which has the following description: $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next instruction?",
+"NegativeAnswerNamedGame":
+"The move is not valid. You are still in the room, which has the following description: $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next instruction?"}
