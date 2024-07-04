@@ -100,13 +100,17 @@ class ImageGameMaster(GameMaster):
 
         elif kind == "p1_response":
             instruction = ".+"
+            if self.mode == "liberal":
+                return f"^(?P<head>[\S\s]*?)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>[\S\s]*)$"
+            elif self.mode == "strict":
+                return f"^(?P<head>)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>)$"
+
         elif kind == "p1_terminate":
             instruction = MULTILINGUAL_PATTERNS[self.game.lang]["terminate_token"]
-
-        if self.mode == "liberal":
-            return f"^(?P<head>[\S\s]*?)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>[\S\s]*)$"
-        elif self.mode == "strict":
-            return f"^(?P<head>)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>)$"
+            if self.mode == "liberal":
+                return f"^(?P<head>((?!{tag})[\S\s])*)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>[\S\s]*)$"
+            elif self.mode == "strict":
+                return f"^(?P<head>)(?P<body>(?P<tag>{tag})\s*(?P<instruction>{instruction}))(?P<tail>)$"
 
     @classmethod
     def applies_to(cls, game_name: str) -> bool:
