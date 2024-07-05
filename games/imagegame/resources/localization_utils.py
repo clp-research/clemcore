@@ -22,5 +22,5 @@ MULTILINGUAL_PATTERNS = {
                           "terminate_token": 'berildi'},
                     "tr_google":
                          {"tag": 'talimat:',
-                          "terminate_token": 'bi̇tti̇'}
+                          "terminate_token": 'BİTTİ'}
                      }

@@ -33,5 +33,5 @@ The adjustments are necessary for successful parsing and to ensure comparability
    - player_a_prompt_header
    - player_b_prompt_header
 
-1. lower all words in response patterns
+1. words in response patterns don't have to be lowered because re.IGNORECASE is used. Don't use python `str.lower()` function because in some languages it can lead to unexpected results.
    - localization_utils

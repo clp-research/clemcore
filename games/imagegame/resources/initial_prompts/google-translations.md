@@ -34,6 +34,6 @@ The adjustments are necessary for successful parsing and to ensure comparability
 1. Prompt Question is extracted from line 17, player_a_prompt_header
    - prompt_question
 
-1. lower all words in response patterns
+1. words in response patterns don't have to be lowered because re.IGNORECASE is used. Don't use python `str.lower()` function because in some languages it can lead to unexpected results.
    - localization_utils
 

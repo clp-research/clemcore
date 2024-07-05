@@ -48,7 +48,7 @@ MULTILINGUAL_PATTERNS = {"de":
                               "p1_tag": 'выражение:',
                               "p2_tag": 'ответ:'},
                          "te_google":
-                             {"p2_options": '(ప్రధమ|రెండవ|మూడవది',
+                             {"p2_options": 'ప్రధమ|రెండవ|మూడవది',
                               "p1_tag": 'వ్యక్తీకరణ:',
                               "p2_tag": 'సమాధానం:'},
                          "tk_google":
@@ -57,6 +57,6 @@ MULTILINGUAL_PATTERNS = {"de":
                               "p2_tag": 'jogap:'},
                          "tr_google":
                              {"p2_options": 'birinci|ikinci|üçüncü',
-                              "p1_tag": 'i̇fade:',
+                              "p1_tag": 'İfade:',
                               "p2_tag": 'cevap:'}
                          }
