@@ -104,8 +104,7 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
         self.lang = lang
 
         # load grids
-        with open(GRIDS, 'r') as f:
-            grids = json.load(f)
+        grids = self.load_json(GRIDS)
 
         # generate sub experiments
         for grids_group in grids.keys():
@@ -172,8 +171,7 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
         :param template: filename of prompt template
         :return: prompt string
         """
-        with open(f"resources/initial_prompts/{self.lang}/{template}", encoding='utf8') as f:
-            prompt = f.read()
+        prompt = self.load_template(f"resources/initial_prompts/{self.lang}/{template}")
         return prompt
 
 
