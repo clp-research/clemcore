@@ -254,8 +254,8 @@ class ReferenceGameScorer(GameScorer):
             p2_match = False
             if turn[5]['action']['type'] == "invalid format":
                 # parse again with additionally allowing numbers as answers (and ignore anything that follows (like "grid" or punctuation))
-                tag = MULTILINGUAL_PATTERNS[self.lang]["p2_tag"]
-                content = MULTILINGUAL_PATTERNS[self.lang]["p2_options"] + "|1|2|3"
+                tag = MULTILINGUAL_PATTERNS[self.game_instance['lang']]["p2_tag"]  # self.lang raised AttributeError
+                content = MULTILINGUAL_PATTERNS[self.game_instance['lang']]["p2_options"] + "|1|2|3"
                 p2_pattern_extended = f'^(?P<tag>{tag})\s*(?P<content>{content})'
                 player_2_pattern = re.compile(p2_pattern_extended, re.IGNORECASE)
                 p2_match = re.match(player_2_pattern, turn[5]['action']['original_content'])
