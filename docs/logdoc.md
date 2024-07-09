@@ -1,48 +1,60 @@
 # Keeping Records of Interactions
-
-Every episode produces its own records of the interaction, which is saved as
-```interactions.json``` in the episode folder inside the ```<gamename>/records```
-directory.
+When a clemgame is run, the `GameMaster` class (and the `DialogueGameMaster` class inheriting from it) produces a record 
+of interactions. This record is stored as a JSON file named `interactions.json` in a `records/<model>/<gamename>` 
+subdirectory corresponding to the experiment and episode. For example, the interactions recorded for the openchat-3.5 
+model as both players of the `taboo` clemgame experiment `0_high_en` `episode_0` (corresponding to the first instance of 
+this experiment) are stored in `records/openchat_3.5-t0.0--openchat_3.5-t0.0/taboo/0_high_en/episode_0/`.
 
 The game master should log every action that is necessary to score the game,
 generate the dialogue transcripts and other relevant information for 
 posterior inspection of the interaction.
 
-This is taken care of by the ```GameRecorder``` class, which has methods to log
-various types of information.
+The game master should record every interaction that is necessary to score the game, generate the dialogue transcripts 
+and other relevant information for posterior inspection of the interactions.
 
+This is taken care of by the `GameRecorder` class, which has methods to log various types of information:
+
+- ```log_players```: must be called once, in the game setup, to log the description of the agents playing each role in 
+the game.
 - ```log_event```: must be called to log every action; see details below.
-- ```log_next_turn```: must be called at the beginning of every game turn; 
-what a turn means is a decision of the game designer.
-- ```log_players```: must be called once, in the game setup, to
-log the description of the agents playing each role in the game.
+- ```log_next_turn```: must be called at the beginning of every game turn; what a turn means is a decision of the game 
+designer.
 - ```log_key```: can be optionally used to log game-specific keys and values.
-- ```log_turn_score```: should be called in the scoring method to log turn-level scores.
-- ```log_episode_score```: should be called in the scoring method to log episode-level scores.
 
+The `GameMaster` class inherits these methods from `GameRecorder`.
+
+The `DialogueGameMaster` class inherits these methods from `GameMaster`, and has additional logging methods:
+
+- `log_message_to`: Logs a GM->Player `send_message` action.
+- `log_message_to_self`: Logs a GM->GM `metadata` action.
+- `log_to_self`: Logs a GM->GM action of a type passed as `type_` argument. This method is useful to record both 
+standard and custom scoring-relevant actions.
 
 ## Logging Players
+The GameMaster ```setup``` method must call ```log_player``` passing a dictionary that maps player identifier strings to 
+a description of the player (e.g. is it a pretrained model, a human, or a program).
 
-The GameMaster ```setup``` method must call ```log_player``` passing a dictionary
-that maps player identifier strings to a description of the player 
-(e.g. is it a pretrained model, a human, or a program).
-
-Use ```GM``` for the GameMaster and ```Player i```, where i is an integer, for
-the other players. These identifiers for players are also used in the 
-```interaction``` dictionaries.
+Use ```GM``` for the GameMaster and ```Player i```, where i is an integer, for the other players. These identifiers for 
+players are also used in the ```interaction``` dictionaries.
 
 ## Logging Interaction
-
-An interaction is a list of lists, in choronological order, of the actions made by the
+An interaction is a list of lists, in chronological order, of the actions made by the
 game master. Such actions should be logged by the GameMaster using the 
 ```log_event``` method which also logs the timestamp. 
 
-An event can be only an action or an action and a corresponding API call 
-(in which case they are both identifiable by the shared timestamp).
+The interactions record for an episode is a dictionary containing at least the `players` and `turns` keys.
 
-```log_event``` requires a ```from``` and a ```to``` value (both are Player
-identifiers, see above.) It also require an action dictionary that must contain
-at least the two following keys:
+The `players` key contains a dictionary with the identifiers described in [Logging Players](logging-players).
+
+The `turns` key contains a list of lists, of the actions logged by the game master, in chronological order. The 
+`log_event` method is to be used to log these actions, automatically adding timestamps to actions. 
+
+??? An event can be only an action or an action and a corresponding API call (in which case they are both identifiable by 
+the shared timestamp).
+
+```log_event``` requires a ```from``` and a ```to``` value (both are Player identifiers, see 
+[Logging Players](##logging_players).) It also requires an action dictionary that must contain at least the two 
+following keys:
 
 - ```type```: the action type (see basic types below)
 - ```content```: a string with the action message.
@@ -56,13 +68,13 @@ The basic action types are:
 - ```error```: an error message emited by the GameMaster
 - ```invalid format```: an invalid answer that causes the game to be aborted
 
-If a game needs more custom actions, they should be documented in the game directory.
+If a game needs more custom actions, they should be documented in the game directory. See [Custom Actions](custom-actions).
 
-Use ```from: "GM"``` and ```to: "GM"``` for messages that the Game Master emits to itself (not the players).
+Use `from: "GM"` and `to: "GM"` for messages that the Game Master emits to itself (not the players).
+The `DialogueGameMaster` methods `log_message_to_self` and `log_to_self` call `log_event` with `from: "GM"` and 
+`to: "GM"`.
 
-
-Here is an example of what the ```interactions.json``` file of an episode will
-look like:
+Here is an example of what the `interactions.json` file of an episode will look like:
 
 ```json
 {
@@ -85,28 +97,28 @@ look like:
         }
       },
       {
-        "timestamp": "timestamp",
+        "timestamp": "timestamp_2",
         "from": "Player 1",
         "to": "GM",
         "action": {
           "type": "get message",
-          "content": "this is a message from GM to Player 1."
+          "content": "this is a message from Player 1 to GM."
         }
       },
       {
-        "timestamp": "timestamp",
+        "timestamp": "timestamp_3",
         "from": "GM",
         "to": "GM",
         "action": {
           "type": "parse",
-          "content": "this is a parsed response from Player 1 to GM.",
+          "content": "this is a parsed response from GM to GM.",
           "other_key": "other_value"
         }
       }
     ],
     [
       {
-        "timestamp": "timestamp",
+        "timestamp": "timestamp_4",
         "from": "GM",
         "to": "GM",
         "action": {
@@ -115,7 +127,7 @@ look like:
         }
       },
       {
-        "timestamp": "timestamp_2",
+        "timestamp": "timestamp_5",
         "from": "GM",
         "to": "Player 2",
         "action": {
@@ -124,12 +136,12 @@ look like:
         }
       },
       {
-        "timestamp": "timestamp",
+        "timestamp": "timestamp_6",
         "from": "Player 2",
         "to": "GM",
         "action": {
           "type": "get message",
-          "content": "this is a message Player 2 to GM."
+          "content": "this is a message from Player 2 to GM."
         }
       }
     ]
@@ -138,19 +150,23 @@ look like:
 ```
 
 ## Logging Calls
-
 We also want to log the exact input and output from an API, because sometimes 
 the GameMaster's prompt needs to be manipulated differently for each type of API.
+
+We also want to log the exact input and output from an API, to make sure that there are no issues with model outputs and 
+their processing by backends and the game master.
 
 The API call returns the manipulated prompt and the raw response, that should
 just simple be logged by the GameMaster without further interference.
 
-For that, use the optional ```call``` argument in ```log_event``` to log the
-call with the same timestamp and an action.
+The backend/API call returns the manipulated prompt and the raw response, which should simply be logged by the 
+game master without any modifications. (? The `DialogueGameMaster` class does this automatically.)
 
-The calls will be stored in a ```requests.json``` that containts the raw inputs and outputs of calls made to APIs.
+For that, use the optional ```call``` argument in ```log_event``` to log the call with the same timestamp and an action.
 
-Here is an example of how the requests file of an episode will look like:
+The calls will be stored in a ```requests.json``` that contains the raw inputs and outputs of calls made to APIs.
+
+Here is an example of how a basic requests file of an episode will look like:
 
 ```json
 [
@@ -167,25 +183,37 @@ Here is an example of how the requests file of an episode will look like:
 ]
 ```
 
+Depending on the backend/API `raw_response_obj` is likely to be more extensive.
+
 ## Logging Scores
 
-The game master computes the scores by evaluating the episodes' interaction records.
+Scores are evaluated using the `GameScorer` class, or preferably a game-specific child class of it. Game-specific child 
+classes of `GameScorer` allow for the implementation of custom scores.
 
-Games can have multiple turn-level scores and episode-level scores. 
+`GameScorer` iterates over `turns` in an episode's `interactions.json` and assigns scores based on the recorded actions 
+in each turn.
 
-Use ```log_turn_score``` to log a score name and its value for a given turn index
-and ```log_episode_score``` to log a score name and its value for the whole
-episode. Episode scores are usually measures of game success.
+- `log_turn_score`: should be called in the scoring method to log turn-level scores.
+- `log_episode_score`: should be called in the scoring method to log episode-level scores.
 
-The score results will be stored to ```scores.json``` which contains:
-- ```turn scores```: the turn-level scores for each game turn.
-- ```episode scores```: the episode-level scores for the episode.
+Games can have multiple turn-level scores and episode-level scores.
 
-You can log as many scores as you wish. The minimal requirements is to log the episode-level scores defined in ```clemgame/metrics.py``` (see the paper's appendix for details).
+Use `log_turn_score` to log a score name and its value for a given turn index and `log_episode_score` to log a score 
+name and its value for the whole episode. Episode scores are usually measures of game success.
 
-**Important**: if the game was aborted, all episode-level scores should be ```np.nan``` and turn-level scores can be logged up to the turn when the game was aborted. If the game was won or lost, all metrics should be a numerical value. This is specially revelant for the main score of each game, so that the evaluation script correctly distinguishes %played and computes the main score only for actually played games.  
+The score results will be stored to `scores.json` which contains:
+- `turn scores`: the turn-level scores for each game turn.
+- `episode scores`: the episode-level scores for the episode.
 
-Here is an example of how the ```scores.json``` file of an episode will look like:
+You can log as many scores as you wish. The minimal requirements is to log the episode-level scores defined in 
+`clemgame/metrics.py` (see the paper's appendix for details).
+
+**Important**: If the game was aborted, all episode-level scores should be `np.nan` and turn-level scores can be logged 
+up to the turn when the game was aborted. If the game was won or lost, all metrics should be a numerical value. This is 
+specially revelant for the main score of each game, so that the evaluation script correctly distinguishes %played and 
+computes the main score only for actually played games.  
+
+Here is an example of how the `scores.json` file of an episode will look like:
 
 ```json
 {
@@ -202,9 +230,17 @@ Here is an example of how the ```scores.json``` file of an episode will look lik
 ```
 
 ### IMPORTANT: Inspecting the game records
+During development, always check the generated `interactions.json` and `requests.json` to make sure that the API calls 
+are passing the correct structure and that the records are being correctly saved.
 
-During development, always check the generated ```interactions.json``` and ```requests.json``` to make sure that the API calls are passing the correct structure and that the records are being correctly saved.
+`interactions.json` is built by the game master as a way to represent the actual interaction (with all its meta-events 
+like parsing messages or checking game rules). This is used to create the transcripts, which are a user-friendly 
+visualisation of the interaction. But remember that this does not reflect the actual API calls, this only reflects what 
+the game master makes of the game!
 
-```interactions.json``` is built by the game master as a way to represent the actual interaction (with all its meta-events like parsing messages or checking game rules). This is used to create the transcripts, which are a user-friendly visualisation of the interaction. But remember that this does not reflect the actual API calls, this only reflects what the game master makes of the game!
-
-The actual prompts and responses from the model are saved into ```requests.json```, when an action is logged with its corresponding prompt and response object (see below how to do it). This file will reflect what was actually passed to and from the LLM. Remeber that LLMS do not keep a internal state, so every call to a model must contain its full dialogue history. Also remeber that when there are two LLMs playing at once, each will have its own dialogue history, which may be different! That's why, for debugging purposes, only looking at ```interactions.json``` is not enough, because it may not reflect exactly what the LLMs consumed and output.
+The actual prompts and responses from the model are saved into `requests.json`, when an action is logged with its 
+corresponding prompt and response object (see below how to do it). This file will reflect what was actually passed to 
+and from the LLM. Remember that LLMS do not keep a internal state, so every call to a model must contain its full 
+dialogue history. Also remember that when there are two LLMs playing at once, each will have its own dialogue history, 
+which may be different! That's why, for debugging purposes, only looking at `interactions.json` is not enough, because 
+it may not reflect exactly what the LLMs consumed and output.
