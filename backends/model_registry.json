@@ -521,6 +521,52 @@
     "eos_to_cull": "<|end_of_turn|>"
   },
   {
+    "model_name": "Qwen2-7B-Instruct",
+    "backend": "huggingface_local",
+    "huggingface_id": "Qwen/Qwen2-7B-Instruct",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "Qwen2-72B-Instruct",
+    "backend": "huggingface_local",
+    "huggingface_id": "Qwen/Qwen2-72B-Instruct",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|im_end|>"
+  },
+  {
+    "model_name": "aya-23-8B",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "CohereForAI/aya-23-8B",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
+  },
+  {
+    "model_name": "aya-23-35B",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "CohereForAI/aya-23-35B",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|END_OF_TURN_TOKEN|>"
+  },
+  {
+    "model_name": "gemma-2-9b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-2-9b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<end_of_turn>\n*<eos>"
+  },
+  {
+    "model_name": "gemma-2-27b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-2-27b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<end_of_turn>\n*<eos>"
+  },
+  {
     "model_name": "llama-2-7b-chat-hf",
     "backend": "huggingface_local",
     "requires_api_key": true,
