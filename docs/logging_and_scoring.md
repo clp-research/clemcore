@@ -26,7 +26,7 @@ The `DialogueGameMaster` class inherits these methods from `GameMaster`, and has
 - `log_to_self`: Logs a GM->GM action of a type passed as `type_` argument. This method is useful to record both 
 standard and custom scoring-relevant actions.
 ## Logging Players
-The GameMaster `setup` method must call `log_player` passing a dictionary that maps player identifier strings to 
+The GameMaster `setup` method must call `log_players` passing a dictionary that maps player identifier strings to 
 a description of the player (e.g. is it a pretrained model, a human, or a program).
 
 Use `GM` for the GameMaster and `Player i`, where i is an integer, for the other players. These identifiers for 
