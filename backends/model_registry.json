@@ -535,6 +535,13 @@
     "eos_to_cull": "<|im_end|>"
   },
   {
+    "model_name": "Llama-3-SauerkrautLM-70b-Instruct",
+    "backend": "huggingface_local",
+    "huggingface_id": "VAGOsolutions/Llama-3-SauerkrautLM-70b-Instruct",
+    "premade_chat_template": true,
+    "eos_to_cull": "<|eot_id|>"
+  },
+  {
     "model_name": "aya-23-8B",
     "backend": "huggingface_local",
     "requires_api_key": true,
