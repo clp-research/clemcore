@@ -254,6 +254,8 @@ and from the LLM. Remember that LLMS do not keep a internal state, so every call
 dialogue history. Also remember that when there are two LLMs playing at once, each will have its own dialogue history, 
 which may be different! That's why, for debugging purposes, only looking at `interactions.json` is not enough, because 
 it may not reflect exactly what the LLMs consumed and output.
+
+See [Transcripts](#transcripts) for a more accessible way to inspect episode interactions.
 ## Custom Actions
 You can record any kind of action that is specific to your game, to show it in the interaction transcripts and/or to use 
 it for game-specific scoring.  
@@ -291,3 +293,27 @@ def score_turns(self, episode_interactions: Dict) -> None:
                 state_requirement_fail_count_turn += 1
         self.log_turn_score(turn_idx, "state_requirement_fail", state_requirement_fail_count_turn)
 ```
+## Transcripts
+Episode transcripts allow convenient inspection of interactions, by presenting them in a visual format similar 
+to common chat applications.
+
+The transcripts are generated as HTML files for quick inspection and in LaTeX for convenient insertion into written 
+works.  
+Given existing game records, the following CLI command will generate transcripts in the episode directories:  
+```shell
+python3 scripts/cli.py transcribe
+```
+
+Messages are shown as 'chat bubbles', with orange background for player messages and grey background for game master 
+messages. Each 'chat bubble' has the sender, receiver and the message direction annotated above ("Player 1 to Game 
+Master", for example).
+
+GM-to-GM actions are in boxes with light-grey background to show any processing or intermediate information relevant for 
+inspection. Only GM-to-GM actions with string `content` are inserted. (Currently, can be easily fixed to also show dicts 
+by handling them properly in https://github.com/Gnurro/clembench/blob/2d5cbe6a01f8b15545b3ef1ce712a19be03af54b/clemgame/transcript_utils.py#L127-L142)
+
+![image](transcript_example.png)  
+This example image shows a player message from a 'get message' type action in the interaction log with `content` "> take 
+pillow from bed", a GM->GM 'metadata' type action with game-specific information `content`, and a game master message 
+from a 'send message' type action with `content` "You take the pillow. In your inventory you have a pillow." in the 
+interaction log.
