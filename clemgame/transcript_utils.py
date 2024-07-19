@@ -138,6 +138,8 @@ def build_transcript(interactions: Dict, experiment_config: Dict, game_instance:
                                    f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
                                    f'</a>\n')
                 transcript += '</div>\n'
+            else:
+                transcript += HTML_TEMPLATE.format(speaker, class_name, msg_raw)
         else:
             transcript += HTML_TEMPLATE.format(speaker, class_name, msg_raw)
     transcript += HTML_FOOTER
