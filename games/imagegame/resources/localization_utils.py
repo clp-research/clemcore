@@ -5,6 +5,9 @@ MULTILINGUAL_PATTERNS = {
                     "en":
                          {"tag": 'instruction:',
                           "terminate_token": 'done'},
+                    "ru":
+                         {"tag": 'Инструкция:',
+                          "terminate_token": 'ГОТОВО'},
                     "de_google":
                          {"tag": 'anweisung:',
                           "terminate_token": 'fertig'},
