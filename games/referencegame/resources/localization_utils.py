@@ -19,6 +19,10 @@ MULTILINGUAL_PATTERNS = {"de":
                              {"p2_options": 'primeiro|segundo|terceiro',
                               "p1_tag": 'expressão:',
                               "p2_tag": 'resposta:'},
+                         "ru":
+                             {"p2_options": 'первая|вторая|третья',
+                              "p1_tag": 'выражение:',
+                              "p2_tag": 'ответ:'},
                          "te":
                              {"p2_options": 'మొదటిది|రెండవది|మూడవది',
                               "p1_tag": 'వివరణ:',
