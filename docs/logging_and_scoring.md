@@ -192,7 +192,7 @@ Here is an example of how a basic requests file of an episode will look like:
 ]
 ```
 Depending on the backend/API `raw_response_obj` is likely to be more extensive.
-## Logging Scores
+## Scoring & Logging Scores
 Scores are evaluated using the `GameScorer` class, preferably a game-specific child class of it. Game-specific child 
 classes of `GameScorer` allow for the implementation of custom scores.
 
@@ -220,6 +220,14 @@ appendix for details). For custom, game-specific scores see [Custom Scores](#cus
 up to the turn when the game was aborted. If the game was won or lost, all metrics should be a numerical value. This is 
 specially relevant for the main score of each game, so that the evaluation script correctly distinguishes %played and 
 computes the main score only for actually played games.
+
+The `GameScorer` method `score_turns` is intended to hold all `log_turn_score` calls, iterating over actions in each 
+turn. Complex turn-level score calculations are best implemented inside this method as well.  
+The `score_game` method is intended for episode-level scores. `score_game_end` in turn is intended to hold logging and 
+calculations of episode-level scores, specially those that rely on turn-level or other episode-level scores.
+
+A clemgame's `GameBenchmark` will call the `compute_scores` method of clemgame's `GameScorer`, which calls `score_turns` 
+and then `score_game`. This is followed by its `store_scores` method to store the score results.
 
 The score results will be stored to `scores.json` which contains:
 - `turn scores`: The turn-level scores for each game turn.
