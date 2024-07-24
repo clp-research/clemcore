@@ -1,3 +1,5 @@
+This file contains information about how the Google translations have been created.
+
 **Translations from:** https://translate.google.de/  
 **Created at:** 12-Jun-2024  
 **Updated at:** 23-Jul-2024 (`command` instead of `instruction`)  

@@ -1,3 +1,5 @@
+This file contains information about how the Google translations have been created.
+
 **Translations from:** https://translate.google.de/  
 **Created at:** 12-Jun-2024  
 **Languages:** de, es, ru, te, tk, tr

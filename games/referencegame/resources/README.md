@@ -6,6 +6,8 @@
   * get translations of the three files in `referencegame/resources/initial_prompts/to_translate/`
   * create a language folder under `referencegame/resources/initial_prompts/` and save the translated prompts as `player_a|b_prompt_header.template` (removing the language prefix)
   * create a new entry in `referencegame/resources/localization_utils.py` from the translations in `responses.template` (make sure to include the colon in the language specific version)
+  * machine translations: treat them as separate languages by using a name such as `de_google`  
+    * also see [google-translations.md](initial_prompts/google-translations.md)
 * run `referencegame/instancegenerator.py` to create the instances in `referencegame/in/`
 
 
