@@ -1,0 +1,19 @@
+Birlikte bir matris çizelim. 5'e 5 boyutunda boş bir matris var, ve şöyle:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Size "sol üste bir X koyun" gibi komutlar vereceğim ve siz de verilen komutu şu şekilde uygulayarak matrisi oluşturacaksınız:
+
+Komut: sol üst köşeye bir X koyun
+
+X ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Şimdi GRID_DIMENSION'e GRID_DIMENSION boyutunda boş bir matris oluşturun ve her adımda aşağıdaki komutları uygulayın. Komutu çalıştırdığınızda yalnızca matrisi döndürün ve diğer tüm metni çıktının dışında bırakın.

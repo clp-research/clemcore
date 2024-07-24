@@ -1,0 +1,19 @@
+Dibujemos algo juntos. Hay una cuadrícula vacía con un tamaño de 5 por 5, así:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Te daré comandos como "pon una X en la parte superior izquierda" y devolverás la cuadrícula aplicando los comandos dados, así:
+
+Comando: pon una X en la parte superior izquierda
+
+X ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Ahora crea una cuadrícula vacía con un tamaño de GRID_DIMENSION por GRID_DIMENSION y ejecuta los siguientes comandos en cada paso. Una vez que ejecutes los comandos, devuelve solo la cuadrícula y excluye todo el resto del texto.

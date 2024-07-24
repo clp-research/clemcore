@@ -1,0 +1,30 @@
+Aşağıdaki görevi yapalım. Amaç şuna benzeyen boş bir matrisi doldurmaktır:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Aşağıdaki dolu matris 5'e 5'tir ve şu şekildedir:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ E ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+X X X X X
+
+Bu tabloyu bana adım adım anlatmanızı istiyorum. "▢" ile gösterilen boş kareleri açıklamanıza gerek yok. Yalnızca matrisdeki harflerin konumunu açıklayın. Daha sonra "Bir sonraki komutunuz nedir?" dememi bekliyorsunuz ve bir sonraki adıma geçiyorsunuz. Komutları verirken matris boyutunu dikkate alın. Her şeyi anlattığınızda "BİTTİ" diyorsunuz.
+
+Yukarıdaki doldurulmuş matris için örnek adımları burada bulabilirsiniz.
+
+Bir sonraki komutunuz nedir?
+Komut: İkinci satırın üçüncü sütununa E koyun
+
+Bir sonraki komutunuz nedir?
+Komut: Son satırı X ile doldurun
+
+Bir sonraki komutunuz nedir?
+Komut: BİTTİ
+
+Lütfen bunu GRID_DIMENSION'e GRID_DIMENSION'lik bir matris olan aşağıdaki örnek için yapın.

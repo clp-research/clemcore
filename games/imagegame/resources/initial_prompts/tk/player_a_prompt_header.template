@@ -1,0 +1,30 @@
+Aşakdaky meseläni ýerine ýetireliň. Maksat, şuňa meňzeş boş gözenegi doldurmak:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Aşakda doldurylan gözenek 5-den 5-e çenli we şeýle bolup biler:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ E ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+X X X X X
+
+Bu seti maňa ädimme-ädim suratlandyrmagyňyzy isleýärin. "▢" bilen görkezilen boş öýjükleri suratlandyrmagyň zerurlygy ýok. Gözenekdäki diñe harplaryň öýjüklerini suratlandyryň. Soňra "Indiki buýrugyñyz näme?" diýmegime garaşýarsyňyz, soň bolsa indiki ädimiňizi dowam etdirersiňiz. Görkezmeler berlende gözenegiň ululygyny göz öňünde tutuň. Hemme zady suratlandyranyňyzda "GUTARDY" diýýärsiňiz.
+
+Aboveokardaky doldurylan gözenek üçin mysal ädimleri.
+
+Indiki buýrugyñyz näme?
+Buýruk: E-ni ikinji hatar üçünji sütüne goýuň
+
+Indiki buýrugyñyz näme?
+Buýruk: Iň soňky hatary X bilen dolduryň
+
+Indiki buýrugyñyz näme?
+Buýruk: GUTARDY
+
+Bolýar. Aşakdaky mysal üçin muny GRID_DIMENSION-den GRID_DIMENSION-e çenli gözenek bilen ýerine ýetirmegiňizi haýyş edýäris.

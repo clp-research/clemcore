@@ -1,0 +1,19 @@
+Geliň, bilelikde bir zat çekeliň. 5-den 5-e çenli ululykdaky boş gözenek bar:
+
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Size "ýokarky çep tarapda X goýuň" ýaly buýruklar bererin, berlen buýrugy ulanyp, seti yzyna berersiňiz:
+
+Buýruk: ýokarky çep tarapda X goýuň
+
+X ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+▢ ▢ ▢ ▢ ▢
+
+Indi GRID_DIMENSION-den GRID_DIMENSION ululykdaky boş gözenek dörediň we her ädimde aşakdaky buýruklary ýerine ýetiriň. Buýrugy ýerine ýetireniňizden soň, diňe gözenegi yzyna gaýtaryň we beýleki tekstleri çykyşdan çykaryň.

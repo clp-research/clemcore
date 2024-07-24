@@ -1,29 +1,41 @@
 MULTILINGUAL_PATTERNS = {
                     "de":
-                         {"tag": 'anweisung:',
+                         {"tag": 'befehl:',
                           "terminate_token": 'fertig'},
                     "en":
-                         {"tag": 'instruction:',
+                         {"tag": 'command:',
                           "terminate_token": 'done'},
-                    "ru":
-                         {"tag": 'Инструкция:',
-                          "terminate_token": 'ГОТОВО'},
-                    "de_google":
-                         {"tag": 'anweisung:',
-                          "terminate_token": 'fertig'},
-                    "es_google":
-                         {"tag": 'instrucción:',
+                    "es":
+                         {"tag": 'comando:',
                           "terminate_token": 'hecho'},
-                    "ru_google":
-                         {"tag": 'инструкция:',
-                          "terminate_token": 'готово'},
-                    "te_google":
+                    "ru":
+                         {"tag": 'Команда:',
+                          "terminate_token": 'ГОТОВО'},
+                    "te":
                          {"tag": 'సూచన:',
                           "terminate_token": 'పూర్తయింది'},
+                    "tk":
+                         {"tag": 'buýruk:',
+                          "terminate_token": 'gutardy'},
+                    "tr":
+                         {"tag": 'komut:',
+                          "terminate_token": 'bitti'},
+                    "de_google":
+                         {"tag": 'befehl:',
+                          "terminate_token": 'fertig'},
+                    "es_google":
+                         {"tag": 'comando:',
+                          "terminate_token": 'hecho'},
+                    "ru_google":
+                         {"tag": 'Команда:',
+                          "terminate_token": 'готово'},
+                    "te_google":
+                         {"tag": 'ఆదేశం:',
+                          "terminate_token": 'పూర్తయింది'},
                     "tk_google":
-                         {"tag": 'görkezme:',
-                          "terminate_token": 'berildi'},
+                         {"tag": 'Buýruk:',
+                          "terminate_token": 'BERILDI'},
                     "tr_google":
-                         {"tag": 'talimat:',
+                         {"tag": 'Komut:',
                           "terminate_token": 'BİTTİ'}
                      }
