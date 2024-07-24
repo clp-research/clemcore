@@ -1,11 +1,12 @@
 #!/bin/bash
 
 # Script to run games in multiple languages
+# For each language one subfolder is created: resultspath/lang/model/game...
 
 # Load and prepare path
 source prepare_path.sh
 
-games=("referencegame" "imagegame")
+games=("referencegame" "imagegame")  # possible games: referencegame, imagegame
 
 models=(
 "command-r-plus"
@@ -20,6 +21,7 @@ models=(
 )
 
 languages=(
+  "en"
   "de" "es" "ru" "te" "tk" "tr"
   "de_google" "es_google" "ru_google" "te_google" "tk_google" "tr_google"
   )
@@ -33,9 +35,9 @@ for lang in "${languages[@]}"; do
       { time python3 scripts/cli.py run -g "${game}" -m "${model}" -i instances_v1.5_"${lang}".json -r "${results}"/"${lang}"; } 2>&1 | tee runtime."${game}"."${lang}"."${model}".log
     done
     echo "Transcribing ${game} in ${lang}"
-    { time python3 scripts/cli.py transcribe -g "${game}" -r "${results}"/"${lang}"; } 2>&1 | tee runtime.transcribe."${lang}".log
+    { time python3 scripts/cli.py transcribe -g "${game}" -r "${results}"/"${lang}"; } 2>&1 | tee runtime.transcribe."${game}"."${lang}".log
     echo "Scoring ${game} in ${lang}"
-    { time python3 scripts/cli.py score -g "${game}" -r "${results}"/"${lang}"; } 2>&1 | tee runtime.score."${lang}".log
+    { time python3 scripts/cli.py score -g "${game}" -r "${results}"/"${lang}"; } 2>&1 | tee runtime.score."${game}"."${lang}".log
   done
   echo "Evaluating ${lang}"
   { time python3 evaluation/bencheval.py -p "${results}"/"${lang}"; }
