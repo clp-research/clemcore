@@ -846,5 +846,18 @@
     "eos_to_cull": "<end_of_utterance>",
     "output_split_prefix": "Assistant:",
     "supports_multiple_images": true
+  },
+  {
+    "model_name": "internlm-xcomposer2d5-7b",
+    "backend": "huggingface_multimodal",
+    "huggingface_id": "internlm/internlm-xcomposer2d5-7b",
+    "automodel_type": "transformers.AutoModel",
+    "model_class": "backends.multimodal_utils.intern_utils.InternMLLM",
+    "tokenizer": true,
+    "supports_multiple_images": true,
+    "trust_remote_code": true,
+    "use_bf16": true,
+    "output_split_prefix": "",
+    "not_distributed": true
   }
 ]

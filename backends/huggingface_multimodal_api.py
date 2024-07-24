@@ -1,49 +1,42 @@
 """
-Backend using HuggingFace transformers for open-weight multimodal models.
+Backend for open-weight multimodal models.
 """
 from typing import List, Dict, Tuple, Any
 import torch
-import backends
-from PIL import Image
-import requests
-from transformers import AutoProcessor, AutoModelForVision2Seq, IdeficsForVisionText2Text, AutoConfig
-from jinja2 import Template
+from transformers import (AutoProcessor, AutoConfig, AutoTokenizer)
+import importlib
 
-# Define a map to load model from transformers Auto Classes
-# IdeficsForVisionText2Text is not yet supported by any Auto Class
-MODEL_TYPE_MAP = {
-    "Idefics": IdeficsForVisionText2Text,
-    "Vision2Seq": AutoModelForVision2Seq
-}
+import backends
 
 FALLBACK_CONTEXT_SIZE = 256
-
 logger = backends.get_logger(__name__)
 
+# CONTEXT UTILS
 def get_context_limit(model_spec: backends.ModelSpec) -> int:
     """
-    Get the context limit of the model
+    Get the context limit of the model.
 
-    :param model_spec: Contains definitions about the model to be used
-    :return context: Context limit of the model
+    :param model_spec: Contains definitions about the model to be used.
+    :return: Context limit of the model.
     """
     hf_model_str = model_spec['huggingface_id']
-    model_config = AutoConfig.from_pretrained(hf_model_str)
+    trust_remote_code = getattr(model_spec, 'trust_remote_code', False)
 
-    # Some models have 'max_position_embeddings' others have - 'max_sequence_length'
-    if hasattr(model_config, "text_config"):
-        context = model_config.text_config.max_position_embeddings
-    elif hasattr(model_config, "max_sequence_length"):
-        context = model_config.max_sequence_length
-    else:
-        context = FALLBACK_CONTEXT_SIZE
+    model_config = AutoConfig.from_pretrained(hf_model_str, trust_remote_code=trust_remote_code)
+
+    # Some models have 'max_position_embeddings', others have 'max_sequence_length'
+    context = getattr(
+        getattr(model_config, 'text_config', model_config),
+        'max_position_embeddings',
+        getattr(model_config, 'max_sequence_length', FALLBACK_CONTEXT_SIZE)
+    )
+
     logger.info(f"Context limit for model - {hf_model_str} is {context}")
-
     return context
 
 
-def check_context_limit(context_size: int, prompt_tokens: list, max_new_tokens: int = 100) -> Tuple[
-    bool, int, int, int]:
+# CONTEXT UTILS
+def check_context_limit(context_size: int, prompt_tokens: list, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
     """
     External context limit check
     :param context_size: max_sequence_length/max_position_embeddings of the model
@@ -62,175 +55,94 @@ def check_context_limit(context_size: int, prompt_tokens: list, max_new_tokens: 
     return fits, tokens_used, tokens_left, context_size
 
 
-def load_processor(model_spec: backends.ModelSpec) -> AutoProcessor:
+# MODEL UTILS
+def load_processor_or_tokenizer(model_spec: backends.ModelSpec):
     """
-    Load processor from AutoProcessor a specific model (Example - LlavaProcessor)
+    Load processor/tokenizer from AutoProcessor/AutoTokenizer for a specific model
+    (Ex. LlavaProcessor/InternLM2Tokenizer).
+    Some models use AutoTokenizer and handle image processing separately (InternLM, for example)
 
-    :param model_spec: A dictionary that defines the model to be used, loaded from Model Registry
-    :return processor: Processor for the specific model
+    :param model_spec: Contains definitions the model to be used, loaded from Model Registry.
+    :return input_handler: Processor/Tokenizer for the specific model.
     """
     hf_model_str = model_spec['huggingface_id']  # Get the model name
 
-    if hasattr(model_spec, 'not_fast'):
-        # Only used by LLaVA 1.6 34B (Throws mismatch <image> token error when use_fast is not set to False)
-        processor = AutoProcessor.from_pretrained(hf_model_str, use_fast=False, device_map="auto", verbose=False)
-    else:
-        processor = AutoProcessor.from_pretrained(hf_model_str, device_map="auto", verbose=False)
-    logger.info(f'Loading Processor for model : {model_spec.model_name}')
+    """
+    Change use_fast
+    tokenizer -> use_tokenizer key in model registry
+    Handle processor/tokenizer separately
+    """
 
-    return processor
+    use_fast = getattr(model_spec, 'use_fast', True)  # Default is True, set to False for Llava 34B via Model Registry
+    use_tokenizer = getattr(model_spec, 'tokenizer', False)
+    trust_remote_code = getattr(model_spec, 'trust_remote_code', False)
+    not_distributed = getattr(model_spec, 'not_distributed', False)
+    input_handler_class = AutoTokenizer if use_tokenizer else AutoProcessor
+
+    input_handler = input_handler_class.from_pretrained(
+        hf_model_str,
+        use_fast=use_fast,
+        device_map=None if not_distributed else "auto",
+        verbose=False,
+        trust_remote_code=trust_remote_code
+    )
+
+    logger.info(f'Loading {input_handler_class} for model : {model_spec.model_name}')
+    return input_handler
 
 
+# MODEL UTILS
 def load_model(model_spec: backends.ModelSpec):
     """
-    Load a specific model
+    Load a specific model.
 
-    :param model_spec: A dictionary that defines the model to be used, loaded from Model Registry
-    :return model: The specific model
+    :param model_spec: A dictionary that defines the model to be used, loaded from Model Registry.
+    :return model: The specific model.
     """
     logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
     hf_model_str = model_spec['huggingface_id']  # Get the model name
 
-    model_type = MODEL_TYPE_MAP[model_spec['model_type']]  # Use the appropriate Auto class to  load the model
+    model_type_str = model_spec['automodel_type']  # Load the appropriate Auto class string to load the model
+    module_path, class_name = model_type_str.rsplit('.', 1)
+    module = importlib.import_module(module_path)
+    model_type = getattr(module, class_name)
 
-    model = model_type.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto")  # Load the model
+    trust_remote_code = getattr(model_spec, 'trust_remote_code', False)
+    use_bf16 = getattr(model_spec, 'use_bf16', False)
+    not_distributed = getattr(model_spec, 'not_distributed', False)
 
-    # check if model's generation_config has pad_token_id set:
-    if not model.generation_config.pad_token_id:
-        # set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
-        model.generation_config.pad_token_id = model.generation_config.eos_token_id  # Same as processor.tokenizer.pad_token_id
+    model = model_type.from_pretrained(
+        hf_model_str,
+        torch_dtype=torch.bfloat16 if use_bf16 else "auto",
+        trust_remote_code=trust_remote_code,
+        device_map=None if not_distributed else "auto"
+    )
+
+    # Set pad_token_id to eos_token_id if it's not already set
+    generation_config = model.generation_config
+    if getattr(generation_config, 'pad_token_id', None) is None:
+        generation_config.pad_token_id = generation_config.eos_token_id
 
     logger.info(f"Finished loading huggingface model: {model_spec.model_name}")
-    logger.info(f"Device Map: {model.hf_device_map}")
+
+    # Log the device map if it's available
+    # Some models do not support distributed inference, hence do not have device map arg in the model loader
+    device_map = getattr(model, 'hf_device_map', None)
+    if device_map:
+        logger.info(f"Device Map: {device_map}")
 
     return model
 
 
-def load_image(image: str):
+# BACKEND UTILS
+def check_multiple_images(messages: List[Dict]) -> bool:
     """
-    Load an image based on a given local path or URL
+    Return True if any single message in messages contains multiple images.
 
-    :param image: Image path/url
-    :return loaded_image: PIL Image
+    :param messages: A list[Dict] type object passed to the backend containing 'role', 'content', and 'image'.
+    :return: True if any message contains multiple images, otherwise False.
     """
-
-    if image.startswith('http') or image.startswith('https'):
-        image = Image.open(requests.get(image, stream=True).raw).convert('RGB')
-    else:
-        image = Image.open(image).convert('RGB')
-
-    return image
-
-
-def get_images(messages: list[Dict]) -> list:
-    """
-    Return loaded images from messages
-
-    :param messages: A list of messages passed to the model
-    :return images: A list of PIL Image objects.
-    """
-    # Collect image links/file locations mentioned in messages
-    images = []
-    for message in messages:
-        if 'image' in message:
-            if type(message['image']) == list:
-                for img in message['image']:
-                    images.append(img)
-            else:
-                images.append(message['image'])
-
-    # Return None if no image is passed
-    # Use AutoTokenizer to generate output and not AutoProcessor, as only text is passed.
-    if not images:
-        return None
-
-    # Load Images
-    loaded_images = []
-    for img in images:
-        image = load_image(img)
-        loaded_images.append(image)
-
-    return loaded_images
-
-
-# Separate Input and Output generation for Idefics
-# Input is required for context check
-def generate_idefics_input(messages: list[Dict]):
-    """
-    Return inputs specific to the format of Idefics
-
-    param messages: A list[Dict] type object passed to the backend containing 'role', 'content' and 'image'
-    """
-    # Create a list containing the prompt text and images specific to Idefics input
-    # Refer - https://huggingface.co/HuggingFaceM4/idefics-80b-instruct
-
-    # Use idefics_input as is for input to the model
-    # Use idefics_text, that contains everything from idefics_input, apart from image_urls/loaded_image, used for context check
-    idefics_input = []
-    idefics_text = ""
-    for m in messages:
-        if m['role'] == 'user':
-            idefics_input.append('\nUser: ' + m['content'])
-            idefics_text += 'User: ' + m['content']
-            if 'image' in m.keys():
-                if type(m['image']) == list:  # Check if multiple images are passed, append accordingly
-                    for im in m['image']:
-                        loaded_im = load_image(im)
-                        idefics_input.append(loaded_im)
-                else:
-                    idefics_input.append(m['image'])
-            idefics_input.append('<end_of_utterance>')
-            idefics_text += '<end_of_utterance>'
-        elif m['role'] == 'assistant':
-            idefics_input.append('\nAssistant: ' + m['content'])
-            idefics_input.append('<end_of_utterance>')
-            idefics_text += '\nAssistant: ' + m['content']
-            idefics_text += '<end_of_utterance>'
-    idefics_input.append('\nAssistant:')
-    idefics_input = [idefics_input]
-
-    return idefics_input, idefics_text
-
-
-def generate_idefics_output(messages: list[Dict],
-                            model: IdeficsForVisionText2Text,
-                            processor: AutoProcessor,
-                            max_tokens: int,
-                            device) -> list[str]:
-    """
-    Return generated text from Idefics model
-
-    param messages: A list[Dict] type object passed to the backend containing 'role', 'content' and 'image'
-    param model: Idefics model
-    param processor: Idefics processor
-    param device: Processing device - cuda/CPU
-    """
-    idefics_input, _ = generate_idefics_input(messages=messages)
-    inputs = processor(idefics_input, add_end_of_utterance_token=False, return_tensors="pt").to(device)
-
-    # Generation args for Idefics
-    exit_condition = processor.tokenizer("<end_of_utterance>", add_special_tokens=False).input_ids
-    bad_words_ids = processor.tokenizer(["<image>", "<fake_token_around_image>"], add_special_tokens=False).input_ids
-
-    generated_ids = model.generate(**inputs, eos_token_id=exit_condition, bad_words_ids=bad_words_ids,
-                                   max_new_tokens=max_tokens)
-    generated_text = processor.batch_decode(generated_ids)
-
-    return generated_text
-
-
-def check_multiple_image(messages: List[Dict]):
-    """
-    Return True if a single message contains multiple images
-    param messages: A list[Dict] type object passed to the backend containing 'role', 'content' and 'image'
-    """
-    has_multiple_images = False
-    for msg in messages:
-        if 'image' in msg and type(msg['image']) == list:
-            if len(msg['image']) > 1:
-                has_multiple_images = True
-
-    return has_multiple_images
+    return any('image' in msg and isinstance(msg['image'], list) and len(msg['image']) > 1 for msg in messages)
 
 
 class HuggingfaceMultimodal(backends.Backend):
@@ -248,21 +160,23 @@ class HuggingfaceMultimodalModel(backends.Model):
 
         # Load instance variable used for evey model
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
-        self.model_type = model_spec['model_type']
+        # self.model_type = model_spec['automodel_type']
         self.model_name = model_spec['model_name']
-        self.processor = load_processor(model_spec)
+        self.input_handler = load_processor_or_tokenizer(model_spec)
         self.multimodal_model = load_model(model_spec)
         self.split_prefix = model_spec['output_split_prefix']
         self.context_size = get_context_limit(model_spec)
 
-        # Type cast model_spec to a Dictionary, for cleaner loading of variables
-        model_spec_dict = vars(model_spec)
+        # Use the appropriate custom MLLM class to process inputs and generate outputs
+        model_class_str = model_spec['model_class']
+        module_path, class_name = model_class_str.rsplit('.', 1)
+        module = importlib.import_module(module_path)
+        self.model_class = getattr(module, class_name)()
+
         # Load model specific instance variables
-        self.template = model_spec_dict.get('custom_chat_template', None)
-        self.cull = model_spec_dict.get('eos_to_cull', None)
-        self.supports_multiple_images = model_spec_dict.get('supports_multiple_images', False)
-        self.padding = model_spec_dict.get('padding', False)
-        self.idefics = 'idefics' in model_spec['model_name']
+        self.chat_template = getattr(model_spec, 'custom_chat_template', None)
+        self.eos_to_cull = getattr(model_spec, 'eos_to_cull', None)
+        self.supports_multiple_images = getattr(model_spec, 'supports_multiple_images', False)
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """
@@ -271,30 +185,28 @@ class HuggingfaceMultimodalModel(backends.Model):
                     {"role": "user", "content": "Are there any clouds in the image? Answer with only "Yes" or "No"."},
                     {"role": "assistant", "content": "Yes"},
                     {"role": "user", "content": "This seems correct."},
-                    {'role': 'user', 'content': 'Are there any chickens in the image? Answer with only "Yes" or "No".', 'image': 'games/cloudgame/resources/images/3.jpg'}
+                    {'role': 'user', 'content': 'Are there any chickens in the image? Answer with only "Yes" or "No".',
+                     'image': 'games/cloudgame/resources/images/3.jpg'}
                 ]
         :return: the continuation
         """
+
         # Check to see if game passes multiple images in a single turn
         # Proceed only if model supports multiple images, else return blanks for prompt, response and response_text
-        has_multiple_images = check_multiple_image(messages=messages)
+        has_multiple_images = check_multiple_images(messages=messages)
         if has_multiple_images and not self.supports_multiple_images:
-            print(f"Multiple images not supported in a single turn for model {self.model_name}")
-            return "", {"response": ""}, ""
+            raise ValueError(f"Multiple images not supported in a single turn for model {self.model_name}")
 
-        prompt_text = ""
-        # Get input prompt by applying jinja template, if template is provided
-        if self.template:
-            template_str = self.template
-            template = Template(template_str)
-            prompt_text = template.render(messages=messages)
+        model_kwargs = {"template": self.chat_template, "max_tokens": self.get_max_tokens(), "device": self.device,
+                        "split_prefix": self.split_prefix, "cull": self.eos_to_cull}
 
-        # Get input prompt if model is of type IdeficsForVisionText2Text
-        if self.idefics:
-            _, prompt_text = generate_idefics_input(messages=messages)
+        inputs = self.model_class.prepare_inputs(messages=messages, **model_kwargs)
+
+        prompt_text, images, output_kwargs = inputs['prompt'], inputs['images'], inputs['output_kwargs']
+
+        prompt_tokens = self.model_class.get_tokens(prompt=prompt_text, handler=self.input_handler, **output_kwargs)
 
         # Check context limit
-        prompt_tokens = self.processor.tokenizer.tokenize(prompt_text)
         context_check = check_context_limit(self.context_size, prompt_tokens, max_new_tokens=self.get_max_tokens())
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
@@ -304,34 +216,10 @@ class HuggingfaceMultimodalModel(backends.Model):
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
 
-        # Get a list of images [as input to the Processor]
-        images = get_images(messages)
-
-        # Generate the output
-        if self.idefics:
-            generated_text = generate_idefics_output(messages=messages,
-                                                     model=self.multimodal_model,
-                                                     processor=self.processor,
-                                                     max_tokens=self.get_max_tokens(),
-                                                     device=self.device)
-
-        else:
-            if not images:  # If no images are present in the history + current utterance, use tokenizer to get inputs
-                inputs = self.processor.tokenizer(prompt_text, return_tensors="pt").to(self.device)
-            else:
-                inputs = self.processor(prompt_text, images=images, return_tensors="pt").to(self.device)
-            model_output = self.multimodal_model.generate(**inputs, max_new_tokens=self.get_max_tokens())
-            generated_text = self.processor.batch_decode(model_output, skip_special_tokens=True)
-
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(), "temperature": self.get_temperature()}
 
-        # Store generated text
-        response = {"response": generated_text}
-
-        response_text = generated_text[0].split(self.split_prefix)[-1]  # Get the last assistant response
-        if self.cull:
-            rt_split = response_text.split(self.cull)  # Cull from End of String token
-            response_text = rt_split[0]
-        response_text = response_text.strip()
+        response, response_text = self.model_class.generate_outputs(prompt=prompt_text, images=images,
+                                                                    model=self.multimodal_model,
+                                                                    handler=self.input_handler, **output_kwargs)
 
         return prompt, response, response_text
