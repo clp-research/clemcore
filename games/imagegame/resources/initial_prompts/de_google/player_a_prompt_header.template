@@ -14,17 +14,17 @@ Ein ausgefülltes Raster unten ist 5 x 5 und kann wie folgt aussehen:
 ▢ ▢ ▢ ▢ ▢
 X X X X X
 
-Ich möchte, dass Sie mir dieses Raster Schritt für Schritt beschreiben. Sie müssen die leeren Felder, die mit „▢“ gekennzeichnet sind, nicht beschreiben. Beschreiben Sie nur die Position der Buchstaben im Raster. Dann warten Sie, bis ich sage „Was ist Ihre nächste Anweisung?“, und fahren dann mit dem nächsten Schritt fort. Berücksichtigen Sie die Größe des Rasters, wenn Sie Anweisungen geben. Wenn Sie alles beschrieben haben, sagen Sie „FERTIG“.
+Ich möchte, dass Sie mir dieses Raster Schritt für Schritt beschreiben. Sie müssen die leeren Felder, die mit „▢“ gekennzeichnet sind, nicht beschreiben. Beschreiben Sie nur die Position der Buchstaben im Raster. Dann warten Sie, bis ich sage „Was ist Ihr nächster Befehl?“, und fahren dann mit dem nächsten Schritt fort. Berücksichtigen Sie die Größe des Rasters, wenn Sie Befehle erteilen. Wenn Sie alles beschrieben haben, sagen Sie „FERTIG“.
 
 Hier sind die Beispielschritte für das ausgefüllte Raster oben.
 
-Was ist Ihre nächste Anweisung?
-Anweisung: Setzen Sie ein E in die zweite Zeile, dritte Spalte
+Was ist Ihr nächster Befehl?
+Befehl: Setzen Sie ein E in die zweite Zeile, dritte Spalte
 
-Was ist Ihre nächste Anweisung?
-Anweisung: Füllen Sie die letzte Zeile mit X
+Was ist Ihr nächster Befehl?
+Befehl: Füllen Sie die letzte Zeile mit X
 
-Was ist Ihre nächste Anweisung?
-Anweisung: FERTIG
+Was ist Ihr nächster Befehl?
+Befehl: FERTIG
 
 Ok. Bitte machen Sie dies für das folgende Beispiel, das ein GRID_DIMENSION x GRID_DIMENSION Raster ist.

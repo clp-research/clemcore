@@ -1,4 +1,4 @@
-Aşakdaky meseläni ýerine ýetireliň. Maksat, şuňa meňzeş boş seti doldurmak:
+Aşakdaky meseläni ýerine ýetireliň. Maksat şuňa meňzeş boş seti doldurmak:
 
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
@@ -14,17 +14,17 @@ Aşakda doldurylan gözenek 5-den 5-e çenli bolup biler we şeýle bolup biler:
 ▢ ▢ ▢ ▢ ▢
 X X X X X
 
-Bu seti maňa ädimme-ädim suratlandyrmagyňyzy isleýärin. "▢" bilen görkezilen boş meýdançalary suratlandyrmagyň zerurlygy ýok. Diňe setdäki harplaryň ýerleşişini suratlandyryň. Soňra "Indiki görkezmäňiz näme?" Diýmegime garaşýarsyňyz, soň bolsa indiki ädimiňizi dowam etdirersiňiz. Görkezmeler berlende gözenegiň ululygyny göz öňünde tutuň. Hemme zady suratlandyranyňyzda "BERILDI" diýýärsiňiz.
+Bu seti maňa ädimme-ädim suratlandyrmagyňyzy isleýärin. "▢" bilen görkezilen boş meýdançalary suratlandyrmagyň zerurlygy ýok. Diňe setdäki harplaryň ýerleşişini suratlandyryň. Soňra "Indiki buýrugyňyz näme?" Diýmegime garaşýarsyňyz, indiki ädimiňizi dowam etdirersiňiz. Buýruklar berlende gözenegiň ululygyny göz öňünde tutuň. Hemme zady suratlandyranyňyzda "BERILDI" diýýärsiňiz.
 
 Aboveokardaky doldurylan gözenek üçin mysal ädimleri.
 
-Indiki görkezmäňiz näme?
-Görkezme: E-ni ikinji hatara üçünji sütüne goýuň
+Indiki buýrugyňyz näme?
+Buýruk: E-ni ikinji hatara üçünji sütüne goýuň
 
-Indiki görkezmäňiz näme?
-Görkezme: Iň soňky hatary X bilen dolduryň
+Indiki buýrugyňyz näme?
+Buýruk: Iň soňky hatary X bilen dolduryň
 
-Indiki görkezmäňiz näme?
-Görkezme: BERILDI
+Indiki buýrugyňyz näme?
+Buýruk: BERILDI
 
 Bolýar. Aşakdaky mysal üçin muny GRID_DIMENSION-den GRID_DIMENSION-e çenli gözenek bilen ýerine ýetirmegiňizi haýyş edýäris.

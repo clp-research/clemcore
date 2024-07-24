@@ -6,7 +6,7 @@ Aşağıdaki görevi yapalım. Amaç şuna benzeyen boş bir ızgarayı doldurma
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-Aşağıdaki dolu ızgara 5'e 5'tir ve şu şekilde görünebilir:
+Aşağıdaki dolu ızgara 5'e 5'tir ve şöyle görünebilir:
 
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ E ▢ ▢
@@ -14,17 +14,17 @@ Aşağıdaki dolu ızgara 5'e 5'tir ve şu şekilde görünebilir:
 ▢ ▢ ▢ ▢ ▢
 X X X X X
 
-Bu tabloyu bana adım adım anlatmanızı istiyorum. "▢" ile gösterilen boş kareleri açıklamanıza gerek yok. Yalnızca ızgaradaki harflerin konumunu açıklayın. Daha sonra "Bir sonraki talimatınız nedir?" dememi bekliyorsunuz ve bir sonraki adıma geçiyorsunuz. Talimatları verirken ızgaranın boyutunu dikkate alın. Her şeyi anlattığınızda "BİTTİ" diyorsunuz.
+Bana bu tabloyu adım adım anlatmanı istiyorum. "▢" ile gösterilen boş kareleri açıklamanıza gerek yok. Yalnızca ızgaradaki harflerin konumunu açıklayın. Daha sonra benim "Sıradaki komutunuz nedir?" dememi bekliyorsunuz ve bir sonraki adıma geçiyorsunuz. Komutları verirken ızgaranın boyutunu dikkate alın. Her şeyi anlattığınızda "BİTTİ" diyorsunuz.
 
 Yukarıdaki doldurulmuş ızgara için örnek adımları burada bulabilirsiniz.
 
-Bir sonraki talimatınız nedir?
-Talimat: İkinci satırın üçüncü sütununa E koyun
+Bir sonraki komutunuz nedir?
+Komut: İkinci satırın üçüncü sütununa E koyun
 
-Bir sonraki talimatınız nedir?
-Talimat: Son satırı X ile doldurun
+Bir sonraki komutunuz nedir?
+Komut: Son satırı X ile doldurun
 
-Bir sonraki talimatınız nedir?
-Talimat: BİTTİ
+Bir sonraki komutunuz nedir?
+Komut: BİTTİ
 
 Tamam. Lütfen bunu GRID_DIMENSION'e GRID_DIMENSION'lik bir ızgara olan aşağıdaki örnek için yapın.

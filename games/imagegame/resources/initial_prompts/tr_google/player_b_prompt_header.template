@@ -6,9 +6,9 @@ Birlikte bir şeyler çizelim. 5'e 5 boyutunda boş bir ızgara var, şöyle:
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-Size "sol üste bir X koyun" gibi talimatlar vereceğim ve siz de verilen talimatı şu şekilde uygulayarak ızgarayı döndüreceksiniz:
+Size "sol üste bir X koy" gibi komutlar vereceğim ve siz de verilen komutu uygulayarak ızgarayı şu şekilde döndüreceksiniz:
 
-Talimat: sol üst köşeye bir X koyun
+Komut: sol üst köşeye bir X koyun
 
 X ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
@@ -16,4 +16,4 @@ X ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-Şimdi GRID_DIMENSION'e GRID_DIMENSION boyutunda boş bir ızgara oluşturun ve her adımda aşağıdaki komutları uygulayın. Komutu çalıştırdığınızda yalnızca ızgarayı döndürün ve diğer tüm metni çıktının dışında bırakın.
+Şimdi GRID_DIMENSION'e GRID_DIMENSION boyutunda boş bir ızgara oluşturun ve her adımda aşağıdaki komutları uygulayın. Komutu yürüttükten sonra yalnızca ızgarayı döndürün ve diğer tüm metni çıktıdan hariç tutun.

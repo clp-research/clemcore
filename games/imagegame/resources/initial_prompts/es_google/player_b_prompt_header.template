@@ -6,9 +6,9 @@ Dibujemos algo juntos. Hay una cuadrícula vacía con un tamaño de 5 por 5, as�
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-Te daré instrucciones como "pon una X en la parte superior izquierda" y devolverás la cuadrícula aplicando las instrucciones dadas, así:
+Te daré comandos como "pon una X en la parte superior izquierda" y devolverás la cuadrícula aplicando el comando dado, así:
 
-Instrucción: ponga una X en la parte superior izquierda
+Comando: pon una X en la parte superior izquierda
 
 X ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢

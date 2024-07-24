@@ -14,17 +14,17 @@ Ein gefülltes Gitter der Größe 5x5 kann so aussehen:
 ▢ ▢ ▢ ▢ ▢
 X X X X X
 
-Ich möchte, dass du das Gitter Schritt für Schritt für mich beschreibst. Die leeren Zellen (durch „▢“ gekennzeichnet) musst du nicht beschreiben. Beschreibe nur die Position der Buchstaben im Gitter. Dann warte bis ich sage: „Was ist deine nächste Anweisung?“, und mache dann mit dem nächsten Schritt weiter. Beziehe die Größe des Gitters in deine Anweisungen ein. Wenn du alles beschrieben hast, sage „FERTIG“.
+Ich möchte, dass du das Gitter Schritt für Schritt für mich beschreibst. Die leeren Zellen (durch „▢“ gekennzeichnet) musst du nicht beschreiben. Beschreibe nur die Position der Buchstaben im Gitter. Dann warte bis ich sage: „Was ist dein nächster Befehl?“, und mache dann mit dem nächsten Schritt weiter. Beziehe die Größe des Gitters in deine Befehle ein. Wenn du alles beschrieben hast, sage „FERTIG“.
 
 Hier sind Beispiel-Schritte für das gefüllte Gitter von oben.
 
-Was ist deine nächste Anweisung?
-Anweisung: Füge ein E in die zweite Reihe, dritte Spalte.
+Was ist dein nächster Befehl?
+Befehl: Füge ein E in die zweite Reihe, dritte Spalte.
 
-Was ist deine nächste Anweisung?
-Anweisung: Fülle die letzte Reihe mit X.
+Was ist dein nächster Befehl?
+Befehl: Fülle die letzte Reihe mit X.
 
-Was ist deine nächste Anweisung?
-Anweisung: FERTIG
+Was ist dein nächster Befehl?
+Befehl: FERTIG
 
 Ok. Nun führe dies für das folgende Beispiel aus, welches ein GRID_DIMENSIONxGRID_DIMENSION-Gitter ist.
