@@ -7,6 +7,10 @@ MULTILINGUAL_PATTERNS = {"de":
                              {"p2_options": 'first|second|third',
                               "p1_tag": 'expression:',
                               "p2_tag": 'answer:'},
+                         "es":
+                             {"p2_options": 'primera|segunda|tercera',
+                              "p1_tag": 'expresión:',
+                              "p2_tag": 'respuesta:'},
                          "it":
                              {"p2_options": 'primo|secondo|terzo',
                               "p1_tag": 'espressione:',
