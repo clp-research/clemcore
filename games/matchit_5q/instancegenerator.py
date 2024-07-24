@@ -5,8 +5,8 @@ GAME_NAME: str = "matchit_5q"
 # n instances to be generated
 N: int = 10 # max: len(similar_images.csv) = 161, if not using other image pairs
 # paths to image pair tables
-PATH_DIFF: str = "games/matchit/resources/image_pairs/different_images.csv"
-PATH_SIM: str = "games/matchit/resources/image_pairs/similar_images.csv"
+PATH_DIFF: str = "games/matchit_5q/resources/image_pairs/different_images.csv"
+PATH_SIM: str = "games/matchit_5q/resources/image_pairs/similar_images.csv"
 
 #how many questions can each player ask?
 DEC_TURN: int = 5
@@ -82,11 +82,11 @@ class MatchItInstanceGenerator(GameInstanceGenerator):
                 if image_a.startswith("http"):
                     instance["image_a"] = image_a
                 else:
-                    instance["image_a"] = "games/matchit/resources/images/" + image_a
+                    instance["image_a"] = "games/matchit_5q/resources/images/" + image_a
                 if image_b.startswith("http"):
                     instance["image_b"] = image_b
                 else:
-                    instance["image_b"] = "games/matchit/resources/images/" + image_b
+                    instance["image_b"] = "games/matchit_5q/resources/images/" + image_b
                 
                 instance["decision_turn"] = DEC_TURN
 
