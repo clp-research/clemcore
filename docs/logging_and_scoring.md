@@ -193,12 +193,14 @@ Here is an example of how a basic requests file of an episode will look like:
 ```
 Depending on the backend/API `raw_response_obj` is likely to be more extensive.
 ## Scoring & Logging Scores
-Scores are evaluated using the `GameScorer` class, preferably a game-specific child class of it. Game-specific child 
-classes of `GameScorer` allow for the implementation of custom scores.
+Scores are calculated using the `GameScorer` class, preferably a game-specific child class of it. Game-specific child 
+classes of `GameScorer` allow for the implementation of custom scores.  
+Scoring is to be done after a clembench run has finished, meaning that all results are recorded in an 
+`interactions.json` for each episode.
 
-`GameScorer` should iterate over the `turns` list in an episode's `interactions.json` and assigns scores based on the 
+Default `GameScorer` iterates over the `turns` list in an episode's `interactions.json` and assigns scores based on the 
 recorded actions in each turn.  
-This can be implemented in the `score_turns` method, which receives the entire episode interactions dict as 
+This is implemented in the `score_turns` method, which receives the entire episode interactions dict as 
 `episode_interactions` argument. See the `GameScorer` base class in `clemgame.py` 
 [here](../clemgame/clemgame.py) for a base scoring procedure.
 
@@ -212,22 +214,33 @@ value for the whole episode.
 Games can have multiple turn-level scores and episode-level scores, but only one main score/`BENCH_SCORE` that reflects 
 the core quality of a played episode. Episode scores are usually measures of game success.
 
-You can log as many scores as you wish. The minimal requirements is to log the episode-level scores defined in 
+You can log as many scores as you wish. The minimal requirements is to log the default episode-level scores defined in 
 `clemgame/metrics.py` [here](../clemgame/metrics.py) (see the [paper](https://doi.org/10.48550/arXiv.2305.13455)'s 
 appendix for details). For custom, game-specific scores see [Custom Scores](#custom-scores).
 
-**Important**: If the game was aborted, all episode-level scores should be `np.nan` and turn-level scores can be logged 
-up to the turn when the game was aborted. If the game was won or lost, all metrics should be a numerical value. This is 
-specially relevant for the main score of each game, so that the evaluation script correctly distinguishes %played and 
-computes the main score only for actually played games.
+**Important**: If the game was aborted, all default episode-level scores should be `np.nan` and turn-level scores can be 
+logged up to the turn when the game was aborted. If the game was won or lost, all metrics should be a numerical value. 
+This is specially relevant for the main score of each game, so that the evaluation script correctly distinguishes 
+%played and computes the main score only for actually played games.
 
 The `GameScorer` method `score_turns` is intended to hold all `log_turn_score` calls, iterating over actions in each 
 turn. Complex turn-level score calculations are best implemented inside this method as well.  
-The `score_game` method is intended for episode-level scores. `score_game_end` in turn is intended to hold logging and 
-calculations of episode-level scores, specially those that rely on turn-level or other episode-level scores.
+The `score_game` method is intended for episode-level scores, specially those that rely on turn-level or other 
+episode-level scores.  
+The `score_game_end` and `score_requests` methods are used to conveniently calculate the minimally required scores 
+defined in `clemgame/metrics.py`.
 
-A clemgame's `GameBenchmark` will call the `compute_scores` method of clemgame's `GameScorer`, which calls `score_turns` 
-and then `score_game`. This is followed by its `store_scores` method to store the score results.
+A clemgame's `GameBenchmark` will call the `compute_scores` method of the clemgame's `GameScorer`, which calls 
+`score_turns` and then `score_game` (unless modified for game-specific demands). This is followed by its `store_scores` 
+method to store the score results.  
+The CLI command to score all present results is
+```shell
+python3 scripts/cli.py score 
+```
+Or to only score a specific game, inn this example 'taboo':
+```shell
+python3 scripts/cli.py score -g taboo
+```
 
 The score results will be stored to `scores.json` which contains:
 - `turn scores`: The turn-level scores for each game turn.
@@ -317,11 +330,22 @@ messages. Each 'chat bubble' has the sender, receiver and the message direction 
 Master", for example).
 
 GM-to-GM actions are in boxes with light-grey background to show any processing or intermediate information relevant for 
-inspection. Only GM-to-GM actions with string `content` are inserted. (Currently, can be easily fixed to also show dicts 
-by handling them properly in https://github.com/Gnurro/clembench/blob/2d5cbe6a01f8b15545b3ef1ce712a19be03af54b/clemgame/transcript_utils.py#L127-L142)
+inspection. Only GM-to-GM actions with string `content` are inserted.
 
 ![image](transcript_example.png)  
 This example image shows a player message from a 'get message' type action in the interaction log with `content` "> take 
 pillow from bed", a GM->GM 'metadata' type action with game-specific information `content`, and a game master message 
 from a 'send message' type action with `content` "You take the pillow. In your inventory you have a pillow." in the 
 interaction log.
+## Overall model comparison tables
+To generate overview tables listing all models and aggregate main default scores for all present results, use the 
+following CLI command:
+```shell
+python3 evaluation/bencheval.py
+```
+Alternatively, if results are stored in a different directory, this can be specified:
+```shell
+python3 evaluation/bencheval.py --results_path <PATH>
+```
+See the [benchmark workflow howto](howto_benchmark_workflow.md) for further information and contributing your 
+experimental results.
