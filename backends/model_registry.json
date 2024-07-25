@@ -661,6 +661,14 @@
     "eos_to_cull": "<|eot_id|>"
   },
   {
+    "model_name": "Mistral-Large-Instruct-2407",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "mistralai/Mistral-Large-Instruct-2407",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
+  },
+  {
     "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
     "backend": "llamacpp",
     "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
