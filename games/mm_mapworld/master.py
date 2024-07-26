@@ -181,10 +181,9 @@ class MmMapWorld(DialogueGameMaster):
         self.add_user_message(self.describer, begin_message)
             
     def _on_before_turn(self, turn_idx: int):
+        img_path = 'games/mm_mapworld/resources/images/'
         value = {
-            "turn": turn_idx,
-            "room": self.cats[self.current_room],
-            "image": os.path.split(self.imgs[self.current_room])[1]
+            "image": [img_path + os.path.split(self.imgs[self.current_room])[1]]
         }
         self.log_to_self("room_image", json.dumps(value))
  
