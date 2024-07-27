@@ -30,6 +30,11 @@
     "backend": "openai_compatible"
   },
   {
+    "model_name": "Meta-Llama-3.1-405B-Instruct-Turbo",
+    "model_id": "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
+    "backend": "openai_compatible"
+  },
+  {
     "model_name": "Mixtral-8x22B-Instruct-v0.1",
     "model_id": "mistralai/Mixtral-8x22B-Instruct-v0.1",
     "backend": "openai_compatible"
@@ -659,6 +664,14 @@
     "huggingface_id": "meta-llama/Meta-Llama-3.1-70B-Instruct",
     "premade_chat_template": true,
     "eos_to_cull": "<|eot_id|>"
+  },
+  {
+    "model_name": "Mistral-Large-Instruct-2407",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "mistralai/Mistral-Large-Instruct-2407",
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>"
   },
   {
     "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
