@@ -30,10 +30,6 @@ gpt4_report_ranking = {
 
 
 def calc_kendalltau(a:Union[Dict, pd.Series], b:Union[Dict, pd.Series]):
-    if isinstance(a, pd.Series):
-        a.to_dict()
-    if isinstance(b, pd.Series):
-        b.to_dict()
     # filter out entries that contain nan values
     a_filtered = {k: v for k, v in a.items() if not pd.isnull(v)}
     b_filtered = {k: v for k, v in b.items() if not pd.isnull(v)}
