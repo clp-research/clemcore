@@ -3,6 +3,10 @@ Script for calculation of Kendalls Tau.
 """
 from scipy.stats import kendalltau
 
+import pandas as pd
+from typing import Union, Dict
+import matplotlib.pyplot as plt
+
 
 # source: https://en.wikipedia.org/wiki/Wikipedia:List_of_Wikipedias (accessed: 1 Jul 24)
 wikipedia_articles = {
@@ -24,10 +28,18 @@ gpt4_report_ranking = {
         "tr": 80
     }
 
-def calc_kendalltau(a:dict, b:dict):
+
+def calc_kendalltau(a:Union[Dict, pd.Series], b:Union[Dict, pd.Series]):
+    if isinstance(a, pd.Series):
+        a.to_dict()
+    if isinstance(b, pd.Series):
+        b.to_dict()
+    # filter out entries that contain nan values
+    a_filtered = {k: v for k, v in a.items() if not pd.isnull(v)}
+    b_filtered = {k: v for k, v in b.items() if not pd.isnull(v)}
     # filter out entries that don't occur in both dicts
-    a_filtered = {k: v for k, v in a.items() if k in b}
-    b_filtered = {k: v for k, v in b.items() if k in a}
+    a_filtered = {k: v for k, v in a_filtered.items() if k in b_filtered}
+    b_filtered = {k: v for k, v in b_filtered.items() if k in a_filtered}
     # ensure same order of both dicts (sorted by keys)
     a_filtered = dict(sorted(a_filtered.items()))
     b_filtered = dict(sorted(b_filtered.items()))
@@ -36,3 +48,10 @@ def calc_kendalltau(a:dict, b:dict):
 
 if __name__ == "__main__":
     print(calc_kendalltau(wikipedia_articles, gpt4_report_ranking))
+    tau, _ = calc_kendalltau(wikipedia_articles, gpt4_report_ranking)
+    print(f"Kendall's Tau: {tau}")
+
+    # using pandas as in evaluation/multiling_single_game_evaluation.py:
+    df_scores = pd.DataFrame([wikipedia_articles, gpt4_report_ranking]).transpose()
+    tau, _ = calc_kendalltau(df_scores[0], df_scores[1])
+    print(f"Kendall's Tau: {tau}")
