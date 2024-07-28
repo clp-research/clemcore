@@ -7,7 +7,12 @@ sys.path.append('..')
 import glob
 from pathlib import Path
 import pandas as pd
+import matplotlib.pyplot as plt
+from itertools import combinations
+import seaborn as sns
+
 from clemgame import metrics
+from rank_correlation import calc_kendalltau
 
 
 def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.DataFrame:
@@ -85,6 +90,68 @@ def save_table(df, path: str, file: str):
     print(f'\n Saved results into {path}/{file}.csv, .html and .tex')
 
 
+def save_model_score_plot(df_score, path: str, file: str):
+    """
+    Creates and saves a plot showing the performance of each model (yachsis) for each language (xachsis).
+    """
+    ax = df_score.plot(style=".-")
+    ax.set_xticks(range(len(df_score)))
+    ax.set_xticklabels(df_score.index.str.replace("_google", "_"))
+    plt.savefig(Path(path) / f'{file}.png')
+    plt.close()
+    print(f'\n Saved plot into {path}/{file}.png')
+
+
+def create_model_score_df(df, score_name, model_names):
+    """
+    Creates a df showing the performance of each model in each language.
+    """
+    # create df that contains for each language the mean score over all models
+    df_mean = df.drop("model", axis=1)
+    df_mean = df_mean.groupby("lang").mean()
+    df_mean = df_mean.round(2)
+
+    # new df for scores of one type (score_name)
+    # has one column for each model and one mean models column
+    df_score = pd.DataFrame()
+    mean_models_score = pd.Series(df_mean[score_name], name="mean models")
+    df_score = pd.concat([df_score, mean_models_score.to_frame()])
+    for model in model_names:
+        one_model_df = df.loc[df["model"] == model]
+        model_scores = pd.Series(list(one_model_df[score_name]),
+                                    name=model, index=one_model_df["lang"])
+        df_score = pd.concat([df_score, model_scores.to_frame()], axis=1)
+
+    return df_score
+
+
+def create_score_correlation_df(df):
+    """
+    Build df showing correlation (kendall's tau) between each pair of columns in overgiven df.
+    """
+    col_pairs = combinations(df, 2)  # combinations of column names
+
+    # new df for correlation (kendalls tau) between two models
+    df_corr = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
+    for colname in df.columns:
+        df_corr[colname][colname] = 1.0
+    for col1, col2 in col_pairs:
+        tau, _ = calc_kendalltau(df[col1], df[col2])
+        df_corr[col1][col2] = tau
+        df_corr[col2][col1] = tau
+    return df_corr.round(3)
+
+
+def save_as_heatmap(df, path: str, file: str):
+    ax = sns.heatmap(df, vmin=-1.0, vmax=1.0, annot=True, cmap="coolwarm")
+    ax.figure.tight_layout()
+    plt.xticks(rotation=20)
+    fig = ax.get_figure()
+    fig.savefig(Path(path) / f'{file}.png')
+    plt.close()
+    print(f'\n Saved plot into {path}/{file}.png')
+
+
 if __name__ == '__main__':
 
     arg_parser = argparse.ArgumentParser()
@@ -95,6 +162,8 @@ if __name__ == '__main__':
                             help="Whether to create a detailed overview table by experiment. Default: False")
     arg_parser.add_argument("-c", "--compare", type=str, default="",
                             help="An optional relative or absolute path to another results root directory to which the results should be compared.")
+    arg_parser.add_argument("-cm", "--compare_models", action="store_true",
+                            help="Compare the different language rankings of the models.")
     parser = arg_parser.parse_args()
 
     output_prefix = parser.results_path.rstrip("/").split("/")[-1]
@@ -144,6 +213,46 @@ if __name__ == '__main__':
         with open(f'{parser.results_path}/model_rankings_by_language_{parser.game}.json', 'w', encoding='utf-8') as f:
             json.dump(model_orders, f, ensure_ascii=False)
         save_table(sorted_df.set_index(['lang', 'model']), parser.results_path, f'{output_prefix}_{parser.game}')
+
+    if not parser.detailed and parser.compare_models:
+        models = [
+            "Llama-3-70B-Instruct",
+            "Llama-3-8B-Instruct",
+            "Mixtral-8x7B-Instruct-v0.1",
+            "Mixtral-8x22B-Instruct-v0.1"
+            ]
+
+        # reset colnames
+        df_temp = sorted_df.rename(columns={
+            'clemscore (Played * Success)': metrics.BENCH_SCORE, '% Played': metrics.METRIC_PLAYED, '% Success (of Played)': metrics.METRIC_SUCCESS
+            })
+        df_temp.drop("Aborted at Player 1 (of Aborted)", axis=1, inplace=True)  # no comparison for this metric
+        assert not df_temp[metrics.METRIC_PLAYED].isnull().any(), "Some lang has not been played by some model"
+        # replace nan by 0 so models with nan as success/main score are treated as weakest models
+        df_temp = df_temp.fillna(0)
+
+        # dfs with models as columns and lang as index
+        df_clemscore = create_model_score_df(df_temp, metrics.BENCH_SCORE, models)
+        df_played = create_model_score_df(df_temp, metrics.METRIC_PLAYED, models)
+        df_success = create_model_score_df(df_temp, metrics.METRIC_SUCCESS, models)
+
+        # visualise scores of models in the different languages
+        save_model_score_plot(df_clemscore, parser.results_path, f'{output_prefix}_{parser.game}_models_clemscore')
+        save_model_score_plot(df_played, parser.results_path, f'{output_prefix}_{parser.game}_models_played')
+        save_model_score_plot(df_success, parser.results_path, f'{output_prefix}_{parser.game}_models_success')
+
+        # df with language ranking correlation for each pair of models
+        df_clemscore_corr = create_score_correlation_df(df_clemscore)
+        df_played_corr = create_score_correlation_df(df_played)
+        df_success_corr = create_score_correlation_df(df_success)
+
+        save_as_heatmap(df_clemscore_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_clemscore')
+        save_as_heatmap(df_played_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_played')
+        save_as_heatmap(df_success_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_success')
+
+        save_table(df_clemscore_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_clemscore')
+        save_table(df_played_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_played')
+        save_table(df_success_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_success')
 
     if parser.compare:
         overview_liberal = create_overview_table(df_compare, parser.game, categories)
