@@ -95,7 +95,8 @@
     "support_multiple_images": true,
     "release_date": "06-11-23",
     "open_weight": false,
-    "parameters": "1.76T"
+    "parameters": "",
+    "estimated_parameters": "1.76T"
   },
   {
     "model_name": "gpt-4o-2024-05-13",
@@ -105,7 +106,8 @@
     "support_multiple_images": true,
     "release_date": "13-05-24",
     "open_weight": false,
-    "parameters": "200B"
+    "parameters": "",
+    "estimated_parameters": "200B"
   },
   {
     "model_name": "gpt-4o-mini-2024-07-18",
@@ -115,7 +117,8 @@
     "support_multiple_images": true,
     "release_date": "18-07-24",
     "open_weight": false,
-    "parameters": "8B"
+    "parameters": "",
+    "estimated_parameters": "8B"
   },
   {
     "model_name": "gpt-4-turbo-2024-04-09",
@@ -187,7 +190,8 @@
     "backend": "mistral",
     "release_date": "01-12-23",
     "open_weight": true,
-    "parameters": "141B"
+    "parameters": "",
+    "estimated_parameters": "141B"
   },
   {
     "model_name": "mistral-tiny-2312",
@@ -195,7 +199,8 @@
     "backend": "mistral",
     "release_date": "01-12-23",
     "open_weight": true,
-    "parameters": "7B"
+    "parameters": "",
+    "estimated_parameters": "7B"
   },
   {
     "model_name": "mistral-small-2312",
@@ -203,7 +208,8 @@
     "backend": "mistral",
     "release_date": "01-12-23",
     "open_weight": true,
-    "parameters": "46.7B"
+    "parameters": "",
+    "estimated_parameters": "46.7B"
   },
   {
     "model_name": "mistral-large-2402",
@@ -219,7 +225,8 @@
     "backend": "cohere",
     "release_date": "01-12-22",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "command-r",
@@ -243,7 +250,8 @@
     "backend": "cohere",
     "release_date": "01-12-22",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "claude-v1.3",
@@ -251,7 +259,8 @@
     "backend": "anthropic",
     "release_date": "18-04-23",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "claude-v1.3-100k",
@@ -259,7 +268,8 @@
     "backend": "anthropic",
     "release_date": "18-03-23",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "claude-instant-1.2",
@@ -267,7 +277,8 @@
     "backend": "anthropic",
     "release_date": "09-08-23",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "claude-2",
@@ -323,7 +334,8 @@
     "support_multiple_images": true,
     "release_date": "20-06-24",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "gemini-1.0-pro-001",
@@ -331,7 +343,8 @@
     "backend": "google",
     "release_date": "15-02-24",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
  {
     "model_name": "gemini-1.0-pro-002",
@@ -339,7 +352,8 @@
     "backend": "google",
     "release_date": "09-04-24",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "gemini-1.0-pro-vision-001",
@@ -349,7 +363,8 @@
     "support_multiple_images": true,
     "release_date": "15-02-24",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "gemini-1.5-flash-001",
@@ -359,7 +374,8 @@
     "support_multiple_images": true,
     "release_date": "24-05-24",
     "open_weight": false,
-    "parameters": ""
+    "parameters": "",
+    "estimated_parameters": ""
   },
   {
     "model_name": "gemini-1.5-pro-001",
