@@ -186,32 +186,32 @@
     "model_id": "mistral-medium-2312",
     "backend": "mistral",
     "release_date": "01-12-23",
-    "open_weight": false,
-    "parameters": ""
+    "open_weight": true,
+    "parameters": "141B"
   },
   {
     "model_name": "mistral-tiny-2312",
     "model_id": "mistral-tiny-2312",
     "backend": "mistral",
     "release_date": "01-12-23",
-    "open_weight": false,
-    "parameters": ""
+    "open_weight": true,
+    "parameters": "7B"
   },
   {
     "model_name": "mistral-small-2312",
     "model_id": "mistral-small-2312",
     "backend": "mistral",
     "release_date": "01-12-23",
-    "open_weight": false,
-    "parameters": ""
+    "open_weight": true,
+    "parameters": "46.7B"
   },
   {
     "model_name": "mistral-large-2402",
     "model_id": "mistral-large-2402",
     "backend": "mistral",
     "release_date": "01-02-24",
-    "open_weight": false,
-    "parameters": ""
+    "open_weight": true,
+    "parameters": "123B"
   },
   {
     "model_name": "command",
@@ -977,7 +977,7 @@
     "eos_to_cull": "</s>",
     "release_date": "24-07-24",
     "open_weight": true,
-    "parameters": ""
+    "parameters": "123B"
   },
   {
     "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
