@@ -323,7 +323,7 @@
     "support_multiple_images": true,
     "release_date": "20-06-24",
     "open_weight": false,
-    "parameters": "70B"
+    "parameters": ""
   },
   {
     "model_name": "gemini-1.0-pro-001",
