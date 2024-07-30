@@ -162,11 +162,24 @@ if __name__ == '__main__':
                             help="Whether to create a detailed overview table by experiment. Default: False")
     arg_parser.add_argument("-c", "--compare", type=str, default="",
                             help="An optional relative or absolute path to another results root directory to which the results should be compared.")
+    arg_parser.add_argument("-t", "--translation_type", type=str, default="human+google",
+                            help="Specifies which translations are evaluated (human/google). "
+                                 "The string should match the suffix chosen for the corresponding folders. "
+                                 "E.g. '-t google' if you only want to evaluate folders ending with '_google'. "
+                                 "Write '-t human' to only include folders without suffix. "
+                                 "Use '+' to separate types. Default: human+google.")
     arg_parser.add_argument("-cm", "--compare_models", action="store_true",
                             help="Compare the different language rankings of the models.")
     parser = arg_parser.parse_args()
 
     output_prefix = parser.results_path.rstrip("/").split("/")[-1]
+    translation_types = parser.translation_type.split("+")
+
+    # create subdirectories for evaluation output files
+    assert Path(parser.results_path).is_dir()
+    out_dir = os.path.join(parser.results_path, f"multiling_eval/{parser.game}")
+    out_dir = os.path.join(out_dir, parser.translation_type, ("detailed" if parser.detailed else ""))
+    Path(out_dir).mkdir(parents=True, exist_ok=True)
 
     # collect all language specific results in one dataframe
     df_lang = None
@@ -176,7 +189,15 @@ if __name__ == '__main__':
     lang_dirs = glob.glob(f"{result_dir}/*/") # the trailing / ensures that only directories are found
     for lang_dir in lang_dirs:
         lang = lang_dir.split("/")[-2]
+        # skip directory for output files
+        if lang == "multiling_eval": continue
         assert (len(lang) == 2) or (len(lang.split('_')[0]) == 2)  # machine translations have identifiers such as 'de_google'
+        # skip languages that are not specified in parser.translation_type
+        if len(lang.split("_")) > 1:  # if lang has a suffix
+            if lang.split("_")[1] not in translation_types:  # that is not in translation_types
+                continue
+        elif "human" not in translation_types:  # if lang has no suffix and 'human' is not in translation_types
+            continue
         raw_file = os.path.join(lang_dir, 'raw.csv')
         assert Path(raw_file).is_file()
         lang_result = pd.read_csv(raw_file, index_col=0)
@@ -193,12 +214,12 @@ if __name__ == '__main__':
     if parser.detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] # detailed by experiment
         overview_detailed = create_overview_table(df_lang, parser.game, categories)
-        save_overview_tables_by_scores(overview_detailed, categories[:-1], parser.results_path, f'{output_prefix}_{parser.game}_by_experiment')
+        save_overview_tables_by_scores(overview_detailed, categories[:-1], out_dir, f'{output_prefix}_{parser.game}_by_experiment')
 
     else:
         categories = ['lang', 'model', 'metric']
         overview_strict = create_overview_table(df_lang, parser.game, categories)
-        save_overview_tables_by_scores(overview_strict, categories[:-1], parser.results_path, f'{output_prefix}_{parser.game}')
+        save_overview_tables_by_scores(overview_strict, categories[:-1], out_dir, f'{output_prefix}_{parser.game}')
 
         # sort models within language by clemscore
         sorted_df = overview_strict.sort_values(['lang','clemscore (Played * Success)'],ascending=[True,False])
@@ -210,9 +231,9 @@ if __name__ == '__main__':
             scores = sorted_df.loc[sorted_df.lang == lang, 'clemscore (Played * Success)']
             models_and_scores = list(zip(models.tolist(), scores.tolist()))
             model_orders[lang] = models_and_scores
-        with open(f'{parser.results_path}/model_rankings_by_language_{parser.game}.json', 'w', encoding='utf-8') as f:
+        with open(f'{out_dir}/model_rankings_by_language_{parser.game}.json', 'w', encoding='utf-8') as f:
             json.dump(model_orders, f, ensure_ascii=False)
-        save_table(sorted_df.set_index(['lang', 'model']), parser.results_path, f'{output_prefix}_{parser.game}')
+        save_table(sorted_df.set_index(['lang', 'model']), out_dir, f'{output_prefix}_{parser.game}')
 
     if not parser.detailed and parser.compare_models:
         models = [
@@ -237,22 +258,24 @@ if __name__ == '__main__':
         df_success = create_model_score_df(df_temp, metrics.METRIC_SUCCESS, models)
 
         # visualise scores of models in the different languages
-        save_model_score_plot(df_clemscore, parser.results_path, f'{output_prefix}_{parser.game}_models_clemscore')
-        save_model_score_plot(df_played, parser.results_path, f'{output_prefix}_{parser.game}_models_played')
-        save_model_score_plot(df_success, parser.results_path, f'{output_prefix}_{parser.game}_models_success')
+        save_model_score_plot(df_clemscore, out_dir, f'{output_prefix}_{parser.game}_models_clemscore')
+        save_model_score_plot(df_played, out_dir, f'{output_prefix}_{parser.game}_models_played')
+        save_model_score_plot(df_success, out_dir, f'{output_prefix}_{parser.game}_models_success')
 
         # df with language ranking correlation for each pair of models
         df_clemscore_corr = create_score_correlation_df(df_clemscore)
         df_played_corr = create_score_correlation_df(df_played)
         df_success_corr = create_score_correlation_df(df_success)
 
-        save_as_heatmap(df_clemscore_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_clemscore')
-        save_as_heatmap(df_played_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_played')
-        save_as_heatmap(df_success_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_success')
+        save_as_heatmap(df_clemscore_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_clemscore')
+        save_as_heatmap(df_played_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_played')
+        save_as_heatmap(df_success_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_success')
 
-        save_table(df_clemscore_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_clemscore')
-        save_table(df_played_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_played')
-        save_table(df_success_corr, parser.results_path, f'{output_prefix}_{parser.game}_correlation_success')
+        save_table(df_clemscore_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_clemscore')
+        save_table(df_played_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_played')
+        save_table(df_success_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_success')
+
+
 
     if parser.compare:
         overview_liberal = create_overview_table(df_compare, parser.game, categories)
