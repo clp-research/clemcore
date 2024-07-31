@@ -158,7 +158,7 @@ if __name__ == '__main__':
     arg_parser.add_argument("-g", "--game", type=str, help="The game that should be evaluated.")
     arg_parser.add_argument("-p", "--results_path", type=str, default="../results/v1.5_multiling",
                             help="A relative or absolute path to the results root directory. Default: ../results/v1.5_multiling")
-    arg_parser.add_argument("-d", "--detailed", type=bool, default=False,
+    arg_parser.add_argument("-d", "--detailed", action="store_true",
                             help="Whether to create a detailed overview table by experiment. Default: False")
     arg_parser.add_argument("-c", "--compare", type=str, default="",
                             help="An optional relative or absolute path to another results root directory to which the results should be compared.")
@@ -238,17 +238,18 @@ if __name__ == '__main__':
     if not parser.detailed and parser.compare_models:
         models = [
             "Llama-3-70B-Instruct",
-            "Llama-3-8B-Instruct",
-            "Mixtral-8x7B-Instruct-v0.1",
             "Mixtral-8x22B-Instruct-v0.1"
             ]
 
+        # check if all models played in all languages
+        for model in models:
+            assert model in sorted_df["model"].unique(), f"{model} has not been run"
+            assert sorted_df["model"].value_counts()[model] == len(languages), f"{model} has not benn run in all languages"
         # reset colnames
         df_temp = sorted_df.rename(columns={
             'clemscore (Played * Success)': metrics.BENCH_SCORE, '% Played': metrics.METRIC_PLAYED, '% Success (of Played)': metrics.METRIC_SUCCESS
             })
         df_temp.drop("Aborted at Player 1 (of Aborted)", axis=1, inplace=True)  # no comparison for this metric
-        assert not df_temp[metrics.METRIC_PLAYED].isnull().any(), "Some lang has not been played by some model"
         # replace nan by 0 so models with nan as success/main score are treated as weakest models
         df_temp = df_temp.fillna(0)
 
