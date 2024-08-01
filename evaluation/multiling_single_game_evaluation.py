@@ -12,7 +12,7 @@ from itertools import combinations
 import seaborn as sns
 
 from clemgame import metrics
-from rank_correlation import calc_kendalltau
+from rank_correlation import calc_kendalltau, wikipedia_articles, gpt4_report_ranking
 
 
 def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.DataFrame:
@@ -102,7 +102,7 @@ def save_model_score_plot(df_score, path: str, file: str):
     print(f'\n Saved plot into {path}/{file}.png')
 
 
-def create_model_score_df(df, score_name, model_names):
+def create_model_score_df(df, score_name: str, model_names: list[str]):
     """
     Creates a df showing the performance of each model in each language.
     """
@@ -125,10 +125,17 @@ def create_model_score_df(df, score_name, model_names):
     return df_score
 
 
-def create_score_correlation_df(df):
+def create_rank_correlation_df(df, *compare_rankings: pd.Series):
     """
     Build df showing correlation (kendall's tau) between each pair of columns in overgiven df.
+    A ranking is created from the values in each column.
+    If a language is missing in a column, the correlation with this column is calculated without the missing language.
+
+    :param df: Each column contains scores. Language identifiers are in the index.
+    :compare_rankings: Additional Series objects to be compared to each column in df.
     """
+    df = pd.concat([df, *compare_rankings], axis=1)
+
     col_pairs = combinations(df, 2)  # combinations of column names
 
     # new df for correlation (kendalls tau) between two models
@@ -151,6 +158,19 @@ def save_as_heatmap(df, path: str, file: str):
     plt.close()
     print(f'\n Saved plot into {path}/{file}.png')
 
+def prepare_external_language_rank(rank: dict, name: str, languages: list[str]):
+    """
+    :param rank: Values are language identifiers (iso-639-1).
+    :param name: Will be the name of the resulting pd.Series.
+    :param languages: The languages that have been evaluated.
+    """
+    # for each entry with key 'lang' insert an entry 'lang_suffix'
+    rank_suf = {f"{key}_{machine_suffix}": value for key, value in rank.items()}
+    rank.update(rank_suf)
+    # remove language entries that are not languages
+    rank = {key: value for key, value in rank.items() if key in languages}
+    return pd.Series(rank, name=name)
+
 
 if __name__ == '__main__':
 
@@ -163,17 +183,22 @@ if __name__ == '__main__':
     arg_parser.add_argument("-c", "--compare", type=str, default="",
                             help="An optional relative or absolute path to another results root directory to which the results should be compared.")
     arg_parser.add_argument("-t", "--translation_type", type=str, default="human+google",
-                            help="Specifies which translations are evaluated (human/google). "
-                                 "The string should match the suffix chosen for the corresponding folders. "
+                            help="Specifies which translations are evaluated (human/machine). "
+                                 "The string representing the machine translations should match the suffix chosen for the corresponding folders. "
                                  "E.g. '-t google' if you only want to evaluate folders ending with '_google'. "
                                  "Write '-t human' to only include folders without suffix. "
-                                 "Use '+' to separate types. Default: human+google.")
+                                 "Use '+' to separate both types. Default: human+google.")
     arg_parser.add_argument("-cm", "--compare_models", action="store_true",
                             help="Compare the different language rankings of the models.")
     parser = arg_parser.parse_args()
 
     output_prefix = parser.results_path.rstrip("/").split("/")[-1]
-    translation_types = parser.translation_type.split("+")
+
+    human = "human" in parser.translation_type
+    machine_suffix = parser.translation_type.replace("human", "").replace("+", "", 1)
+
+    # check if not more than one translation suffix is specified
+    assert "+" not in machine_suffix, "Not more than one suffix can be specified in --translation_type"
 
     # create subdirectories for evaluation output files
     assert Path(parser.results_path).is_dir()
@@ -194,9 +219,9 @@ if __name__ == '__main__':
         assert (len(lang) == 2) or (len(lang.split('_')[0]) == 2)  # machine translations have identifiers such as 'de_google'
         # skip languages that are not specified in parser.translation_type
         if len(lang.split("_")) > 1:  # if lang has a suffix
-            if lang.split("_")[1] not in translation_types:  # that is not in translation_types
+            if lang.split("_")[1] != machine_suffix:  # and that suffix is not specified in translation_type
                 continue
-        elif "human" not in translation_types:  # if lang has no suffix and 'human' is not in translation_types
+        elif not human:  # if lang has no suffix and 'human' is not specified in translation_type
             continue
         raw_file = os.path.join(lang_dir, 'raw.csv')
         assert Path(raw_file).is_file()
@@ -263,10 +288,20 @@ if __name__ == '__main__':
         save_model_score_plot(df_played, out_dir, f'{output_prefix}_{parser.game}_models_played')
         save_model_score_plot(df_success, out_dir, f'{output_prefix}_{parser.game}_models_success')
 
-        # df with language ranking correlation for each pair of models
-        df_clemscore_corr = create_score_correlation_df(df_clemscore)
-        df_played_corr = create_score_correlation_df(df_played)
-        df_success_corr = create_score_correlation_df(df_success)
+        if human and not machine_suffix:
+            # model rankings are compared to two external rankings (wikipedia_articles, gpt4_report_ranking)
+            wikipedia_articles = prepare_external_language_rank(wikipedia_articles, name="wikipedia articles", languages=languages)
+            gpt4_report_ranking = prepare_external_language_rank(gpt4_report_ranking, name="gpt4 report ranking", languages=languages)
+
+            # df with language ranking correlation for each pair of models
+            df_clemscore_corr = create_rank_correlation_df(df_clemscore, wikipedia_articles, gpt4_report_ranking)
+            df_played_corr = create_rank_correlation_df(df_played, wikipedia_articles, gpt4_report_ranking)
+            df_success_corr = create_rank_correlation_df(df_success, wikipedia_articles, gpt4_report_ranking)
+        else:  # only compare human ranking with external rankings
+            # df with language ranking correlation for each pair of models
+            df_clemscore_corr = create_rank_correlation_df(df_clemscore)
+            df_played_corr = create_rank_correlation_df(df_played)
+            df_success_corr = create_rank_correlation_df(df_success)
 
         save_as_heatmap(df_clemscore_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_clemscore')
         save_as_heatmap(df_played_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_played')
@@ -276,6 +311,10 @@ if __name__ == '__main__':
         save_table(df_played_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_played')
         save_table(df_success_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_success')
 
+
+    if human and machine_suffix:
+        # create bar plot to compare human vs. machine (mean models)
+        pass
 
 
     if parser.compare:
