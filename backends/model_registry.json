@@ -963,6 +963,17 @@
     "parameters": "2B"
   },
   {
+    "model_name": "gemma-2-2b-it",
+    "backend": "huggingface_local",
+    "requires_api_key": true,
+    "huggingface_id": "google/gemma-2-2b-it",
+    "premade_chat_template": true,
+    "eos_to_cull": "<eos>",
+    "release_date": "16-07-24",
+    "open_weight": true,
+    "parameters": "2B"
+  },
+  {
     "model_name": "Meta-Llama-3.1-8B-Instruct",
     "backend": "huggingface_local",
     "requires_api_key": true,
