@@ -188,8 +188,10 @@ if __name__ == '__main__':
                                  "E.g. '-t google' if you only want to evaluate folders ending with '_google'. "
                                  "Write '-t human' to only include folders without suffix. "
                                  "Use '+' to separate both types. Default: human+google.")
-    arg_parser.add_argument("-cm", "--compare_models", action="store_true",
-                            help="Compare the different language rankings of the models.")
+    arg_parser.add_argument("-cm", "--compare_models", nargs="+",
+                            help="Compare the language rankings of the models. Default: [Llama-3-70B-Instruct, Mixtral-8x22B-Instruct-v0.1]",
+                            default=["Llama-3-70B-Instruct",
+                                     "Mixtral-8x22B-Instruct-v0.1"])
     parser = arg_parser.parse_args()
 
     output_prefix = parser.results_path.rstrip("/").split("/")[-1]
@@ -260,11 +262,9 @@ if __name__ == '__main__':
             json.dump(model_orders, f, ensure_ascii=False)
         save_table(sorted_df.set_index(['lang', 'model']), out_dir, f'{output_prefix}_{parser.game}')
 
-    if not parser.detailed and parser.compare_models:
-        models = [
-            "Llama-3-70B-Instruct",
-            "Mixtral-8x22B-Instruct-v0.1"
-            ]
+
+        # --Compare models--
+        models = parser.compare_models
 
         # check if all models played in all languages
         for model in models:
@@ -312,9 +312,9 @@ if __name__ == '__main__':
         save_table(df_success_corr, out_dir, f'{output_prefix}_{parser.game}_correlation_success')
 
 
-    if human and machine_suffix:
-        # create bar plot to compare human vs. machine (mean models)
-        pass
+        if human and machine_suffix:
+            # create bar plot to compare human vs. machine (mean models)
+            pass
 
 
     if parser.compare:
