@@ -70,6 +70,8 @@ class ImageGameMaster(GameMaster):
         Liberal parsing mode:
         - "tag" doesn't have to be at the beginning but only somewhere in the reply
         - "head" and "tail" don't have to be empty
+        - In case the model generates multiple instructions in one answer
+          the first instruction is extracted and others are ignored.
 
         The player 2 regex matches with a 5 by 5 grid.
         It has 3 named groups: head, grid and tail.
@@ -77,11 +79,16 @@ class ImageGameMaster(GameMaster):
         "grid": the grid. Must start at line beginning.
         "tail": is everything after the grid.
         Strict parsing mode:
-        - "head" can consist of whitespaces but must end with a newline character (so the grid starts at line beginning)
-        - "tail" can consist of whitespaces
+        - "head" and "tail" can consist of newline characters
         Liberal parsing mode:
-        - "head": everything is allowed but the line before the grid must be empty or whitespaces
-        - "tail": everything is allowed but the line after the grid must be empty or whitespaces
+        - "head": if not empty:
+            - the line above the grid must be empty or whitespaces
+            - above the empty line, everything is allowed
+            - must end with newline character, so grid starts at line beginning
+        - "tail": if not empty:
+            - whitespaces are allowed after the grid
+            - the line under the grid must be empty or whitespaces
+            - after the empty line, everything is allowed
 
         :param kind: string identifier for the type of regex ("p1_response", "p1_terminate", "p2_response")
         :return: regex pattern of given kind in the current language and the current parsing mode
@@ -148,10 +155,8 @@ class ImageGameMaster(GameMaster):
         self.game.given_instruction.add_system_message(player_1_response_text)
 
         # check if it reached the end on 1 side
-        # Note: Unfortunately, some models (mixtral) generate multiple instructions in one answer: <tag>: <instruction1>\n\n<tag>: <instruction2>...
-        #   In liberal parsing mode, this is currently handled by extracting the first instruction and ignoring the others.
-        #   In case the model generates the terminate pattern somewhere in the answer, the game is ended.
-        #   TODO: overthink this
+        # Note: In case the model generates the terminate pattern as first instruction, the game is ended (not aborted).
+        #   TODO: game should be aborted in this case because player 2 didn't have a chance to generate grid?
         match = re.compile(self.player_1_terminate_pattern, re.IGNORECASE).match(player_1_response_text)
         if match:
             # Player 1 message matched with the terminate pattern in the given mode
@@ -353,6 +358,12 @@ class ImageGameScorer(GameScorer):
             self.log_turn_score(t_index, metrics.METRIC_REQUEST_COUNT_VIOLATED,
                                 turn_violated_request_count)
 
+
+        # quick fix for ZeroDevisionError when player 1 generated terminate token in first answer:
+        # treat as if game was aborted
+        # should be handled in GameMaster (see todo in self.turn())
+        if number_of_turns == 0:
+            aborted = True
 
         # Episode level logging
         if aborted:
