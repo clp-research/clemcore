@@ -1,0 +1,10 @@
+argparse == 1.1
+pandas == 2.0.1
+json == 2.0.9
+SetSimilaritySearch
+re == 2.2.1
+requests == 2.29.0
+clip
+torch == 2.1.0
+PIL == 9.4.0
+tqdm == 4.65.0

@@ -115,6 +115,8 @@ class ReferenceGameScorer(GameScorer):
     def __init__(self, experiment: Dict, game_instance: Dict):
         super().__init__(GAME_NAME, experiment, game_instance)
         self.target_grid_name = game_instance["target_grid_name"]
+        self.player_2_response_pattern = game_instance["player_2_response_pattern"]
+        self.player_1_response_pattern = game_instance["player_1_response_pattern"]
 
     def compute_scores(self, episode_interactions: Dict) -> None:
         '''
@@ -145,7 +147,13 @@ class ReferenceGameScorer(GameScorer):
             episode_parsed_request_count += 1
             
             # log the Player 1 - message length
-            p1_expression = turn[2]['action']['expression']
+            p1_expression = ''
+            if 'expression' not in turn[2]['action']:
+                player_1_pattern = re.compile(self.player_1_response_pattern, re.IGNORECASE)
+                p1_match = re.match(player_1_pattern, turn[2]['action']['content'])
+                p1_expression = p1_match.group('content')
+            else:
+                p1_expression = turn[2]['action']['expression']
             expression_length = len(p1_expression)
             self.log_turn_score(turn_index, 'Generated Expression Length', expression_length)
             # as there is just one turn, this is the same as episode scores
@@ -162,18 +170,41 @@ class ReferenceGameScorer(GameScorer):
             episode_request_count += 1
             # check if the Player 2 message matched the rule
             # (true if sixth interaction (GM to GM) has type "parse")
-            if turn[5]['action']['type'] == "parse":
+
+            # allow for more liberal player 2 parsing by rematching original response with more liberal regex
+            #TODO: move to game master for future runs 
+            p2_match = False
+            if turn[5]['action']['type'] == "invalid format":
+                player_2_pattern = re.compile(self.player_2_response_pattern, re.IGNORECASE)
+                p2_match = re.match(player_2_pattern, turn[5]['action']['original_content'])
+
+            if turn[5]['action']['type'] == "parse" or p2_match:
                 turn_parsed_request_count += 1
                 episode_parsed_request_count += 1
                 # check if the target grid number matches the output from Player 2
-                player_2_answer = turn[5]['action']['answer']
-                if player_2_answer.lower() == self.target_grid_name.lower():
+                player_2_answer = ""
+                if p2_match:
+                    player_2_answer = p2_match.group('content')
+                elif turn[5]['action']['type'] == "parse":
+                    if 'answer' not in turn[5]['action']:
+                        player_2_pattern = re.compile(self.player_2_response_pattern, re.IGNORECASE)
+                        p2_match = re.match(player_2_pattern, turn[5]['action']['content'])
+                        player_2_answer = p2_match.group('content')
+                    else:
+                        player_2_answer = turn[5]['action']['answer']
+                    
+                if player_2_answer.lower() in self.target_grid_name:
                     success = 1
+                    
+                self.log_episode_score('Aborted at Player 1', 0)
+                self.log_episode_score('Aborted at Player 2', 0)
             else:
+                self.log_episode_score('Aborted at Player 1', 0)
                 self.log_episode_score('Aborted at Player 2', 1)
                 aborted = True
         else:
             self.log_episode_score('Aborted at Player 1', 1)
+            self.log_episode_score('Aborted at Player 2', 0)
             self.log_turn_score(turn_index, 'Generated Expression Length', np.nan)
             self.log_episode_score('Generated Expression Length', np.nan)
             self.log_turn_score(turn_index, 'Generated Expression Number of Tokens', np.nan)

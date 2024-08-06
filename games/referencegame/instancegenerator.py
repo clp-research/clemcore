@@ -151,21 +151,21 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     game_instance['player_1_third_grid'] = third_grid
 
                     first_grid = ""
-                    target_grid_name = ""
+                    target_grid_name = []
                     if i == 1:
                         first_grid = target_grid
                         # keep order from player 1 for second and third grid
-                        target_grid_name = "first"
+                        target_grid_name = ["first", "1st", "1"]
                     elif i == 2:
                         first_grid = second_grid
                         second_grid = target_grid
                         # third grid stays third grid
-                        target_grid_name = "second"
+                        target_grid_name = ["second", "2nd", "2"]
                     elif i == 3:
                         first_grid = third_grid
                         # second grid stays second grid
                         third_grid = target_grid
-                        target_grid_name = "third"
+                        target_grid_name = ["third", "3rd", "3"]
 
                     game_instance["player_2_prompt_header"] = player_b_prompt_header.replace('FIRST_GRID', first_grid)\
                                                                                     .replace('SECOND_GRID', second_grid)\
@@ -178,7 +178,7 @@ class ReferenceGameInstanceGenerator(GameInstanceGenerator):
                     # named groups:
                     # 'content' captures only the generated referring expression
                     # 'remainder' should be empty (if models followed the instructions)
-                    game_instance['player_2_response_pattern'] = '^answer:\s(?P<content>first|second|third)\n*(?P<remainder>.*)'
+                    game_instance['player_2_response_pattern'] = '^answer:\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)'
                     # 'content' can directly be compared to gold answer
                     # 'remainder' should be empty (if models followed the instructions)
 

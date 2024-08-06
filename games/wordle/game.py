@@ -1,6 +1,6 @@
 from typing import Dict, List
 
-from backends import Model
+from backends import Model, ContextExceededError
 from clemgame import get_logger
 from games.wordle.utils.guesser import Guesser
 from games.wordle.utils.critic import Critic
@@ -91,7 +91,7 @@ class WordleGame:
                 return False
 
         if self.guesser_error:
-            if self.guesser_error == "NO_CLUE_FOUND":
+            if self.guesser_error in ["NO_CLUE_FOUND", "CONTEXT_EXCEEDED_ERROR"]:
                 return False
             if self.guesser_error == "NOT_VALID_ENGLISH_WORD":
                 if self.guesser_retry_invalid_word < self.max_retry_invalid_word:
@@ -147,9 +147,15 @@ class WordleGame:
             self.promptgen.tailor_prompt(self.critic_prompt, self.guess_critic_mode)
             send_prompt = self.critic_prompt.copy()
 
-            send_prompt, message, response = self.guess_critic(
-                send_prompt, self.attempts
-            )
+            try:
+                send_prompt, message, response = self.guess_critic(
+                    send_prompt, self.attempts
+                )
+            except ContextExceededError as error:
+                logger.error(f"Context Exceeded Error: {error}")
+                response = "CONTEXT_EXCEEDED_ERROR"
+                message = "Context Exceeded Error"
+
             response_keyword = self.response_format_keywords["agreement"]  # "agreement"
             result = {
                 response_keyword: "",
@@ -209,7 +215,12 @@ class WordleGame:
             self.promptgen.tailor_prompt(self.guesser_prompt, self.guesser_mode)
             send_prompt = self.guesser_prompt.copy()
 
-            send_prompt, message, response = self.guesser(send_prompt, self.attempts)
+            try:
+                send_prompt, message, response = self.guesser(send_prompt, self.attempts)
+            except ContextExceededError as error:
+                logger.error(f"Context Exceeded Error: {error}")
+                response = "CONTEXT_EXCEEDED_ERROR"
+                message = "Context Exceeded Error"
 
             response_keyword = self.response_format_keywords["guess"]
             result = {
@@ -277,6 +288,8 @@ class WordleGame:
         start_index = text.find(keyword)
         end_index = text.find("\n", start_index)
         if start_index == -1 or end_index == -1:
+            if text.find("CONTEXT_EXCEEDED_ERROR") != -1:
+                return "CONTEXT_EXCEEDED_ERROR"
             return "INVALID_FORMAT"
         start_index += len(keyword)
         word = text[start_index:end_index].strip()
@@ -310,6 +323,8 @@ class WordleGame:
     def check_for_errors(self, word: str, for_guesser: bool = True):
         if word == "INVALID_FORMAT":
             return "INVALID_FORMAT"
+        if word == "CONTEXT_EXCEEDED_ERROR":
+            return "CONTEXT_EXCEEDED_ERROR"
         if for_guesser:
             if not word.isalpha():
                 return "INVALID_WORD"

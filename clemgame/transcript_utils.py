@@ -1,6 +1,8 @@
+import json
+import os
 from string import Template
 from typing import Dict
-from clemgame import file_utils
+from clemgame import file_utils, project_root
 
 import html
 
@@ -108,12 +110,38 @@ def build_transcript(interactions: Dict, experiment_config: Dict, game_instance:
     events = [event for turn in interactions['turns'] for event in turn]
     for event in events:
         class_name = _get_class_name(event)
-        msg_content = html.escape(f"{event['action']['content']}").replace('\n', '<br/>')
+        msg_content = event['action']['content']
+        msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
         if event['from'] == 'GM' and event['to'] == 'GM':
             speaker = f'Game Master: {event["action"]["type"]}'
         else:
             speaker = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
-        transcript += HTML_TEMPLATE.format(speaker, class_name, msg_content)
+        # in case the content is a json BUT given as a string!
+        # we still want to check for image entry
+        if isinstance(msg_content, str):
+            try:
+                msg_content = json.loads(msg_content)
+            except:
+                ...
+        # in case the content is a json with an image entry
+        if isinstance(msg_content, dict):
+            if "image" in msg_content:
+                transcript += f'<div speaker="{speaker}" class="msg {class_name}">\n'
+                transcript += f'  <p>{msg_raw}</p>\n'
+                for image_src in msg_content["image"]:
+                    if not image_src.startswith("http"):  # take the web url as it is
+                        if "IMAGE_ROOT" in os.environ:
+                            image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
+                        else:
+                            image_src = os.path.join(project_root, image_src)
+                    transcript += (f'  <a title="{image_src}">'
+                                   f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
+                                   f'</a>\n')
+                transcript += '</div>\n'
+            else:
+                transcript += HTML_TEMPLATE.format(speaker, class_name, msg_raw)
+        else:
+            transcript += HTML_TEMPLATE.format(speaker, class_name, msg_raw)
     transcript += HTML_FOOTER
     return transcript
 

@@ -5,7 +5,7 @@
 from typing import List, Dict, Tuple, Any
 
 import backends
-from backends.utils import check_context_limit_generic
+from backends.utils import check_context_limit_generic, ensure_alternating_roles
 
 import llama_cpp
 from llama_cpp import Llama
@@ -38,15 +38,28 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     elif hasattr(model_spec, 'gpu_layers_offloaded'):
         gpu_layers_offloaded = model_spec.gpu_layers_offloaded
 
+    additional_files = []
+    if hasattr(model_spec, 'additional_files'):
+        additional_files = model_spec.additional_files
+
     if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
         # load HF API key:
         creds = backends.load_credentials("huggingface")
         api_key = creds["huggingface"]["api_key"]
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False,
-                                      n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
+
+        if additional_files:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, additional_files=additional_files, token=api_key,
+                                          verbose=False, n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
+        else:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False,
+                                          n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
     else:
-        model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=gpu_layers_offloaded,
-                                      n_ctx=0)
+        if additional_files:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, additional_files=additional_files, verbose=False,
+                                          n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
+        else:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=gpu_layers_offloaded,
+                                          n_ctx=0)
 
     logger.info(f"Finished loading llama.cpp model: {model_spec.model_name}")
 
@@ -153,8 +166,10 @@ class LlamaCPPLocalModel(backends.Model):
         :param return_full_text: If True, whole input context is returned.
         :return: the continuation
         """
+        current_messages = ensure_alternating_roles(messages)
+
         # use llama.cpp jinja to apply chat template for prompt:
-        prompt_text = self.chat_formatter(messages=messages).prompt
+        prompt_text = self.chat_formatter(messages=current_messages).prompt
 
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
                   "temperature": self.get_temperature(), "return_full_text": return_full_text}

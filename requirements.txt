@@ -17,8 +17,12 @@ aleph-alpha-client==7.0.1
 openai==1.12.0
 anthropic==0.16.0
 cohere==4.48
+google-generativeai==0.5.3
 mistralai==0.0.12
 # Slurk Integration
 python-engineio==4.4.0
 python-socketio==5.7.2
 websocket-client
+# multimodal games
+imageio==2.34.1
+networkx==3.2.1

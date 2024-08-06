@@ -302,7 +302,9 @@ class GameMaster(GameRecorder):
 
 
 class GameScorer(GameResourceLocator):
-
+    """
+    Calculates scores based on interaction logs.
+    """
     def __init__(self, name: str, experiment: Dict, game_instance: Dict):
         super().__init__(name)
         self.experiment = experiment
@@ -375,7 +377,10 @@ class GameScorer(GameResourceLocator):
 
 
 class DialogueGameMaster(GameMaster):
-
+    """
+    Extended GameMaster, implementing turns as described in the clembench paper.
+    Has most logging and gameplay procedures implemented, including convenient logging methods.
+    """
     def __init__(self, name: str, experiment: dict, player_models: List[Model]):
         super().__init__(name, experiment, player_models)
         # the logging works with an internal mapping of "Player N" -> Player
@@ -405,6 +410,7 @@ class DialogueGameMaster(GameMaster):
         players_descriptions = collections.OrderedDict(GM=f"Game master for {self.name}")
         for name, player in self.players_by_names.items():
             players_descriptions[name] = player.get_description()
+        # log player ID and description dcit:
         self.log_players(players_descriptions)
 
     def _on_setup(self, **kwargs):
@@ -454,6 +460,7 @@ class DialogueGameMaster(GameMaster):
 
         # Player -> GM
         action = {'type': 'get message', 'content': response_message}
+        # log 'get message' event including backend/API call:
         self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
 
         # GM -> GM

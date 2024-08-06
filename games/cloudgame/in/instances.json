@@ -1,0 +1,44 @@
+{
+    "experiments": [
+        {
+            "name": "no",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "image": "games/cloudgame/resources/images/6.jpg",
+                    "prompt": "Are there any clouds in the image? Answer with only \"Yes\" or \"No\"."
+                },
+                {
+                    "game_id": 1,
+                    "image": "games/cloudgame/resources/images/5.jpg",
+                    "prompt": "Are there any clouds in the image? Answer with only \"Yes\" or \"No\"."
+                },
+                {
+                    "game_id": 2,
+                    "image": "games/cloudgame/resources/images/6.jpg",
+                    "prompt": "Are there any clouds in the image? Answer with only \"Yes\" or \"No\"."
+                }
+            ]
+        },
+        {
+            "name": "yes",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "image": "games/cloudgame/resources/images/2.jpg",
+                    "prompt": "Are there any clouds in the image? Answer with only \"Yes\" or \"No\"."
+                },
+                {
+                    "game_id": 1,
+                    "image": "games/cloudgame/resources/images/2.jpg",
+                    "prompt": "Are there any clouds in the image? Answer with only \"Yes\" or \"No\"."
+                },
+                {
+                    "game_id": 2,
+                    "image": "games/cloudgame/resources/images/3.jpg",
+                    "prompt": "Are there any clouds in the image? Answer with only \"Yes\" or \"No\"."
+                }
+            ]
+        }
+    ]
+}

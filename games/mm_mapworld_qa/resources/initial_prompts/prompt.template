@@ -1,0 +1,3 @@
+Please help me with the following task. The goal is to explore rooms and find a $GOAL$. In each room I will show you an image of the room and tell you in what directions we can go from there. You then give me a description of the room you see in exactly one sentence. Please give your answer in the following format: "{"description": "<room description>", "action": "<action>"}". To move to a neighboring room, replace <action> with "GO: DIRECTION" where DIRECTION can be one of [north, south, east, west]. Most importantly, once we have found a $GOAL$, replace <action> with "DONE" instead, so I know we have found our target.
+Let us start. 
+From here we can go: $INITIAL_DIRECTIONS$. What should we do?

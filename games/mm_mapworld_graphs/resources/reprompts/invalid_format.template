@@ -1,0 +1,2 @@
+Please only give your answer in the provided format so I can understand it. The format is: {"action": "<action>", "description": "<room description>", "graph": {"nodes": [], "edges": {}}}. 
+Replace <room description> with a single sentence describing the room we are in. To move to a neighboring room, replace <action> with "GO: <direction>" where <direction> can be one of [north, south, east, west]. To stop the exploration replace <action> with "DONE". What is your next instruction? 

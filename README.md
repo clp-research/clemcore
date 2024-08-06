@@ -1,4 +1,5 @@
-### UPDATE (16.02.24): We released v0.3 of the benchmark code. The main branch will continue as v1.0-beta which has changes that effect the game code. Follow [this guide](docs/howto_update_to_v1.md) to update your game.
+### Updates
+(February 2024): We have updated the framework code. If you have written games using the initial release version, see [this guide](docs/howto_update_to_v1.md) on how to update your game.
 
 # clembench: A Framework for the Systematic Evaluation of Chat-Optimized Language Models as Conversational Agents
 
