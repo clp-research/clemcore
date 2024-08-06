@@ -24,7 +24,7 @@ display_names = {
     "Llama-3-70B-Instruct-t0.0" : "Llama3 70B",
     "Mixtral-8x7B-Instruct-v0.1-t0.0": "Mixtral 8x7B",
     "Mixtral-8x22B-Instruct-v0.1-t0.0": "Mixtral 8x22B",
-    "fsc-openchat-3.5-0106-t0.0" : "openchat 3.5"
+    "fsc-openchat-3.5-0106-t0.0" : "Openchat 3.5"
 }
 
 # from evaluation.evalutils:
@@ -69,7 +69,7 @@ def load_episode_scores(results_path):
     df = df.rename(columns={'model': 'Model', BENCH_SCORE: QUALITY_SCORE})
     df = df.set_index(['Model', 'order_number', 'experiment', 'episode'])
     df.sort_index(level = 1, inplace = True)
-    keys = ['Llama3 8B', 'Llama3 70B', 'Mixtral 8x7B', 'Mixtral 8x22B', 'openchat 3.5', 'ideal mock', 'random mock', 'Llama3 70B : Mixtral 8x22B', 'Mixtral 8x22B : Llama3 70B']
+    keys = ['Llama3 8B', 'Llama3 70B', 'Mixtral 8x7B', 'Mixtral 8x22B', 'Openchat 3.5', 'ideal mock', 'random mock', 'Llama3 70B : Mixtral 8x22B', 'Mixtral 8x22B : Llama3 70B']
     working_keys = [key for key in keys if key in df.index]
     df = df.loc[working_keys, :,:,:]
     return df
@@ -105,6 +105,14 @@ def score_experiments(args):
         save_table(df_requests, f"{args.results_path}/experiment-results", f"{variable}-requests")
         save_table(df_flags, f"{args.results_path}/experiment-results", f"{variable}-flags")
         save_table(df_average_turn_scores, f"{args.results_path}/experiment-results", f"{variable}-turn scores")
+
+def score_clemscores(args):
+    episode_df = load_episode_scores(args.results_path)
+    #df_experiments_avg = (episode_df.groupby([VARIABLE, 'Model', 'experiment name'], sort=False, dropna=False)
+    #              .mean())
+    clemscores = make_clemscore_per_experiment(episode_df)
+    save_table(clemscores, f"{args.results_path}/experiment-results", "clemscores")
+
 
 def score_amount_played(df_episode_scores):
     if METRIC_PLAYED in df_episode_scores['metric'].unique():
@@ -176,6 +184,29 @@ def make_experiment_tables(df: pd.DataFrame) -> pd.DataFrame:
     df_average_turn_scores = df_average_turn_scores.apply(pd.to_numeric).round(2)
     return df_game_metrics, df_requests, df_flags, df_average_turn_scores
 
+def make_clemscore_per_experiment(df: pd.DataFrame) -> pd.DataFrame:
+    columns = [column for column in df.columns if column in utils.MAIN_METRICS]
+    columns.append(QUALITY_SCORE)
+    df_aux = df[columns]
+
+    # compute mean benchscore and mean played (which is binary, so a proportion)
+    df_mean = (df_aux.groupby(['Model', 'experiment'], sort=False)
+                  .mean(numeric_only=False))  #numeric_only=True
+    df_mean = df_mean.apply(pd.to_numeric)
+    
+    df_mean[METRIC_PLAYED] *= 100
+    df_mean = df_mean.round(2)
+    df_mean.rename(columns={METRIC_PLAYED : f'% {METRIC_PLAYED}'}, inplace=True)
+    df_mean = df_mean[sorted(df_mean.columns)]
+
+    # compute clemscores and add to df
+    clemscore = ((df_mean['% Played'] / 100)
+                 * df_mean[QUALITY_SCORE])
+    df_mean.insert(0, 'clemscore', clemscore.values.astype(float).round(2))
+    df_clemscore = df_mean['clemscore']
+    df_clemscore = df_clemscore.unstack(level=1)
+    return df_clemscore
+
 def save_table(df, path, table_name):
     old_columns = df.columns
     df.columns = [column.title() for column in df.columns]
@@ -211,16 +242,16 @@ def error_evaluation(results_path):
         for turn in turns:
             for event in turn:
                 action = event["action"]
-                match action["type"]:
-                    case Turn_logs.VALIDATION_ERROR:
-                        role = action["content"]["player"]
-                        error_type = action["content"]["type"]
-                        errors[players][f"{role} {error_type}"] += 1
+                #match action["type"]:
+                #    case Turn_logs.VALIDATION_ERROR:
+                #        role = action["content"]["player"]
+                #        error_type = action["content"]["type"]
+                #        errors[players][f"{role} {error_type}"] += 1
 
-                        error_cause = action["content"]["utterance"]
-                        if f"{role} {error_type}" not in error_causes[players][-1]:
-                            error_causes[players][-1][f"{role} {error_type}"] = []
-                        error_causes[players][-1][f"{role} {error_type}"].append(error_cause)
+                #        error_cause = action["content"]["utterance"]
+                #        if f"{role} {error_type}" not in error_causes[players][-1]:
+                #            error_causes[players][-1][f"{role} {error_type}"] = []
+                #        error_causes[players][-1][f"{role} {error_type}"].append(error_cause)
 
     # save errors aggregated over models as a table
     error_df = pd.DataFrame.from_dict(errors)
@@ -244,12 +275,14 @@ def main(args):
         score_experiments(args)
     elif args.mode == "errors":
         error_evaluation(args.results_path)
+    elif args.mode == "clemscores":
+        score_clemscores(args)
     elif args.mode == "all":
         score_models(args)
         score_experiments(args)
         error_evaluation(args.results_path)
     else:
-        print("Usage: $: python3 evaluation/codenames_eval.py [-m <models|experiments|errors|all>] [-r <results_path>]")
+        print("Usage: $: python3 evaluation/codenames_eval.py [-m <models|experiments|errors|clemscores|all>] [-r <results_path>]")
 
 if __name__ == '__main__':
     parser = ArgumentParser()
