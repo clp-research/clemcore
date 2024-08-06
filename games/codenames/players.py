@@ -1,5 +1,3 @@
-# TODO: reuse players for other codename variants, e.g. Duet?
-
 from typing import Dict, List
 import re, random, string, nltk, backends
 
