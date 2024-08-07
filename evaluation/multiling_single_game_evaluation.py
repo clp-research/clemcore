@@ -11,8 +11,10 @@ import matplotlib.pyplot as plt
 from itertools import combinations
 import seaborn as sns
 
-from clemgame import metrics
+from clemgame import metrics, get_logger
 from rank_correlation import calc_kendalltau, wikipedia_articles, gpt4_report_ranking
+
+logger = get_logger(__name__)
 
 
 def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.DataFrame:
@@ -34,7 +36,6 @@ def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.D
     df_means = (scored_df.groupby(categories)
                 .mean(numeric_only=True)
                 .reset_index())
-
     # convert to percentages
     aux_ab_p1 = df_means.loc[df_means.metric == "Aborted at Player 1", 'value']
     aux_played = df_means.loc[df_means.metric == metrics.METRIC_PLAYED, 'value']
@@ -54,7 +55,6 @@ def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.D
     # make metrics separate columns
     df_means = df_means.pivot(columns=categories[-1], index=categories[:-1])
     df_means = df_means.droplevel(0, axis=1)
-
     # compute clemscores and add to df
     clemscore = (df_means['% Played'] / 100) * df_means['% Success (of Played)']
     clemscore = clemscore.round(2).to_frame(name=('clemscore (Played * Success)'))
@@ -87,7 +87,7 @@ def save_table(df, path: str, file: str):
     df.to_latex(Path(path) / f'{file}.tex', float_format="%.2f") # index = False
     # for easy checking in a browser
     df.to_html(Path(path) / f'{file}.html')
-    print(f'\n Saved results into {path}/{file}.csv, .html and .tex')
+    logger.info(f'\n Saved results into {path}/{file}.csv, .html and .tex')
 
 
 def save_model_score_plot(df_score, path: str, file: str):
@@ -99,7 +99,7 @@ def save_model_score_plot(df_score, path: str, file: str):
     ax.set_xticklabels(df_score.index.str.replace("_google", "_"))
     plt.savefig(Path(path) / f'{file}.png')
     plt.close()
-    print(f'\n Saved plot into {path}/{file}.png')
+    logger.info(f'\n Saved plot into {path}/{file}.png')
 
 
 def create_model_score_df(df, score_name: str, model_names: list[str]):
@@ -156,7 +156,7 @@ def save_as_heatmap(df, path: str, file: str):
     fig = ax.get_figure()
     fig.savefig(Path(path) / f'{file}.png')
     plt.close()
-    print(f'\n Saved plot into {path}/{file}.png')
+    logger.info(f'\n Saved plot into {path}/{file}.png')
 
 def prepare_external_language_rank(rank: dict, name: str, languages: list[str]):
     """
@@ -170,6 +170,15 @@ def prepare_external_language_rank(rank: dict, name: str, languages: list[str]):
     # remove language entries that are not languages
     rank = {key: value for key, value in rank.items() if key in languages}
     return pd.Series(rank, name=name)
+
+
+def assert_log(condition: bool, message: str = ""):
+    """Raise AssertionError if condition is false and log error."""
+    try:
+        assert condition, message
+    except AssertionError as e:
+        logger.warning(e)
+        sys.exit()
 
 
 if __name__ == '__main__':
@@ -200,10 +209,10 @@ if __name__ == '__main__':
     machine_suffix = parser.translation_type.replace("human", "").replace("+", "", 1)
 
     # check if not more than one translation suffix is specified
-    assert "+" not in machine_suffix, "Not more than one suffix can be specified in --translation_type"
+    assert_log("+" not in machine_suffix, "Not more than one suffix can be specified in --translation_type")
 
     # create subdirectories for evaluation output files
-    assert Path(parser.results_path).is_dir()
+    assert_log(Path(parser.results_path).is_dir())
     out_dir = os.path.join(parser.results_path, f"multiling_eval/{parser.game}")
     out_dir = os.path.join(out_dir, parser.translation_type, ("detailed" if parser.detailed else ""))
     Path(out_dir).mkdir(parents=True, exist_ok=True)
@@ -217,10 +226,11 @@ if __name__ == '__main__':
     for lang_dir in lang_dirs:
         lang = lang_dir.split("/")[-2]
 
-        # skip directory for output files
-        if lang == "multiling_eval": continue
-
-        assert (len(lang) == 2) or (len(lang.split('_')[0]) == 2)  # machine translations have identifiers such as 'de_google'
+        # skip non-language directories
+        if not (
+            (len(lang) == 2) or (len(lang.split('_')[0]) == 2)
+            ):  # machine translations have identifiers such as 'de_google'
+            continue
 
         # skip languages that are not specified in parser.translation_type
         if len(lang.split("_")) > 1:  # if lang has a suffix
@@ -232,22 +242,22 @@ if __name__ == '__main__':
         # check if game folders exist for all models
         model_dirs = glob.glob(f"{lang_dir}/*/")
         for model_dir in model_dirs:
-            assert os.path.exists(os.path.join(model_dir, parser.game)), f"Missing directory '{parser.game}/' in '{model_dir}'"
+            assert_log(os.path.exists(os.path.join(model_dir, parser.game)), f"Missing directory '{parser.game}/' in '{model_dir}'")
 
         raw_file = os.path.join(lang_dir, 'raw.csv')
-        assert Path(raw_file).is_file()
+        assert_log(Path(raw_file).is_file())
         lang_result = pd.read_csv(raw_file, index_col=0)
         lang_result.insert(0, 'lang', lang)
         df_lang = pd.concat([df_lang, lang_result], ignore_index=True)
 
         if parser.compare:
             raw_file = raw_file.replace(output_prefix, parser.compare.rstrip("/").split("/")[-1])
-            assert Path(raw_file).is_file()
+            assert_log(Path(raw_file).is_file())
             lang_result = pd.read_csv(raw_file, index_col=0)
             lang_result.insert(0, 'lang', lang)
             df_compare = pd.concat([df_compare, lang_result], ignore_index=True)
 
-    assert not df_lang.empty, f"no results folders found for {parser.translation_type}"
+    assert_log(not df_lang.empty, f"no results found for {parser.game} {parser.translation_type}")
 
     if parser.detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] # detailed by experiment
@@ -279,8 +289,8 @@ if __name__ == '__main__':
 
         # check if all models played in all languages
         for model in models:
-            assert model in sorted_df["model"].unique(), f"{model} has not been run"
-            assert sorted_df["model"].value_counts()[model] == len(languages), f"{model} has not benn run in all languages"
+            assert_log(model in sorted_df["model"].unique(), f"{model} has not been run")
+            assert_log(sorted_df["model"].value_counts()[model] == len(languages), f"{model} has not benn run in all languages")
         # reset colnames
         df_temp = sorted_df.rename(columns={
             'clemscore (Played * Success)': metrics.BENCH_SCORE, '% Played': metrics.METRIC_PLAYED, '% Success (of Played)': metrics.METRIC_SUCCESS
