@@ -141,7 +141,7 @@ def create_rank_correlation_df(df, *compare_rankings: pd.Series):
     # new df for correlation (kendalls tau) between two models
     df_corr = pd.DataFrame(index=df.columns, columns=df.columns, dtype=float)
     for colname in df.columns:
-        df_corr[colname][colname] = 1.0
+        df_corr[colname][colname] = calc_kendalltau(df[colname], df[colname])[0]  # kendalltau is nan when all languages in a rank are in a tie
     for col1, col2 in col_pairs:
         tau, _ = calc_kendalltau(df[col1], df[col2])
         df_corr[col1][col2] = tau
@@ -216,15 +216,24 @@ if __name__ == '__main__':
     lang_dirs = glob.glob(f"{result_dir}/*/") # the trailing / ensures that only directories are found
     for lang_dir in lang_dirs:
         lang = lang_dir.split("/")[-2]
+
         # skip directory for output files
         if lang == "multiling_eval": continue
+
         assert (len(lang) == 2) or (len(lang.split('_')[0]) == 2)  # machine translations have identifiers such as 'de_google'
+
         # skip languages that are not specified in parser.translation_type
         if len(lang.split("_")) > 1:  # if lang has a suffix
             if lang.split("_")[1] != machine_suffix:  # and that suffix is not specified in translation_type
                 continue
         elif not human:  # if lang has no suffix and 'human' is not specified in translation_type
             continue
+
+        # check if game folders exist for all models
+        model_dirs = glob.glob(f"{lang_dir}/*/")
+        for model_dir in model_dirs:
+            assert os.path.exists(os.path.join(model_dir, parser.game)), f"Missing directory '{parser.game}/' in '{model_dir}'"
+
         raw_file = os.path.join(lang_dir, 'raw.csv')
         assert Path(raw_file).is_file()
         lang_result = pd.read_csv(raw_file, index_col=0)
@@ -237,6 +246,8 @@ if __name__ == '__main__':
             lang_result = pd.read_csv(raw_file, index_col=0)
             lang_result.insert(0, 'lang', lang)
             df_compare = pd.concat([df_compare, lang_result], ignore_index=True)
+
+    assert not df_lang.empty, f"no results folders found for {parser.translation_type}"
 
     if parser.detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] # detailed by experiment
@@ -313,8 +324,22 @@ if __name__ == '__main__':
 
 
         if human and machine_suffix:
-            # create bar plot to compare human vs. machine (mean models)
-            pass
+            # create table to compare human vs. machine (mean models)
+            df_temp = pd.concat([df_clemscore["mean models"].rename(f"{metrics.BENCH_SCORE} (Ø models)"),
+                            df_played["mean models"].rename(f"{metrics.METRIC_PLAYED} (Ø models)"),
+                            df_success["mean models"].rename(f"{metrics.METRIC_SUCCESS} (Ø models)")],
+                            axis=1)
+
+            translator_series = pd.Series(df_temp.index.str.len() == 2).replace({True: "human", False: machine_suffix})
+            translator_series.index = df_temp.index
+            df_temp["translator"] = translator_series
+            df_temp.index = df_temp.index.str.replace(f"_{machine_suffix}", "")
+
+            df_human_machine = df_temp.pivot(columns=["translator"])
+
+            save_table(df_human_machine, out_dir, f'{output_prefix}_{parser.game}_human_vs_machine')
+            df_human_machine.plot(kind="bar")
+
 
 
     if parser.compare:
