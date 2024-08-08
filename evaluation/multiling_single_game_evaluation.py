@@ -13,6 +13,7 @@ import seaborn as sns
 
 from clemgame import metrics, get_logger
 from rank_correlation import calc_kendalltau, wikipedia_articles, gpt4_report_ranking
+from multiling_eval_utils import short_names, gpt4_report_str, wiki_articles_str, mean_models_str
 
 logger = get_logger(__name__)
 
@@ -31,6 +32,7 @@ def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.D
 
     # refactor model names for readability
     scored_df = scored_df.replace(to_replace=r'(.+)-t0.0--.+', value=r'\1', regex=True)
+    scored_df = scored_df.replace(short_names)
 
     # compute mean metrics
     df_means = (scored_df.groupby(categories)
@@ -114,7 +116,7 @@ def create_model_score_df(df, score_name: str, model_names: list[str]):
     # new df for scores of one type (score_name)
     # has one column for each model and one mean models column
     df_score = pd.DataFrame()
-    mean_models_score = pd.Series(df_mean[score_name], name="mean models")
+    mean_models_score = pd.Series(df_mean[score_name], name=mean_models_str)
     df_score = pd.concat([df_score, mean_models_score.to_frame()])
     for model in model_names:
         one_model_df = df.loc[df["model"] == model]
@@ -199,17 +201,23 @@ if __name__ == '__main__':
                                  "Use '+' to separate both types. Default: human+google.")
     arg_parser.add_argument("-cm", "--compare_models", nargs="+",
                             help="Compare the language rankings of the models. Default: [Llama-3-70B-Instruct, Mixtral-8x22B-Instruct-v0.1]",
-                            default=["Llama-3-70B-Instruct",
-                                     "Mixtral-8x22B-Instruct-v0.1"])
+                            default=["aya-23-35B",
+                                     "Llama-3-70B-Instruct",
+                                     "Llama-3-SauerkrautLM-70b-Instruct",
+                                     "Meta-Llama-3.1-70B-Instruct",
+                                     "Mixtral-8x22B-Instruct-v0.1",
+                                     "Qwen1.5-72B-Chat"])
     parser = arg_parser.parse_args()
 
     output_prefix = parser.results_path.rstrip("/").split("/")[-1]
 
     human = "human" in parser.translation_type
     machine_suffix = parser.translation_type.replace("human", "").replace("+", "", 1)
-
     # check if not more than one translation suffix is specified
     assert_log("+" not in machine_suffix, "Not more than one suffix can be specified in --translation_type")
+
+    # use model short names
+    models = [short_names[model] for model in parser.compare_models if model in short_names]
 
     # create subdirectories for evaluation output files
     assert_log(Path(parser.results_path).is_dir())
@@ -285,7 +293,6 @@ if __name__ == '__main__':
 
 
         # --Compare models--
-        models = parser.compare_models
 
         # check if all models played in all languages
         for model in models:
@@ -311,8 +318,8 @@ if __name__ == '__main__':
 
         if human and not machine_suffix:
             # model rankings are compared to two external rankings (wikipedia_articles, gpt4_report_ranking)
-            wikipedia_articles = prepare_external_language_rank(wikipedia_articles, name="wikipedia articles", languages=languages)
-            gpt4_report_ranking = prepare_external_language_rank(gpt4_report_ranking, name="gpt4 report ranking", languages=languages)
+            wikipedia_articles = prepare_external_language_rank(wikipedia_articles, name=wiki_articles_str, languages=languages)
+            gpt4_report_ranking = prepare_external_language_rank(gpt4_report_ranking, name=gpt4_report_str, languages=languages)
 
             # df with language ranking correlation for each pair of models
             df_clemscore_corr = create_rank_correlation_df(df_clemscore, wikipedia_articles, gpt4_report_ranking)
@@ -335,11 +342,12 @@ if __name__ == '__main__':
 
         if human and machine_suffix:
             # create table to compare human vs. machine (mean models)
-            df_temp = pd.concat([df_clemscore["mean models"].rename(f"{metrics.BENCH_SCORE} (Ø models)"),
-                            df_played["mean models"].rename(f"{metrics.METRIC_PLAYED} (Ø models)"),
-                            df_success["mean models"].rename(f"{metrics.METRIC_SUCCESS} (Ø models)")],
+            df_temp = pd.concat([df_clemscore[mean_models_str].rename(f"{metrics.BENCH_SCORE} (Ø models)"),
+                            df_played[mean_models_str].rename(f"{metrics.METRIC_PLAYED} (Ø models)"),
+                            df_success[mean_models_str].rename(f"{metrics.METRIC_SUCCESS} (Ø models)")],
                             axis=1)
 
+            # create new column that specifies the translation type (human/machine)
             translator_series = pd.Series(df_temp.index.str.len() == 2).replace({True: "human", False: machine_suffix})
             translator_series.index = df_temp.index
             df_temp["translator"] = translator_series
@@ -348,7 +356,13 @@ if __name__ == '__main__':
             df_human_machine = df_temp.pivot(columns=["translator"])
 
             save_table(df_human_machine, out_dir, f'{output_prefix}_{parser.game}_human_vs_machine')
-            df_human_machine.plot(kind="bar")
+
+            # create bar plot
+            df_human_machine.columns.rename("metric", level=0, inplace=True)
+            ax = df_human_machine.plot(kind="bar", color=["orange", "blue"])
+            plt.savefig(Path(out_dir) / f'{output_prefix}_{parser.game}_human_vs_machine.png')
+            plt.close()
+            logger.info(f'\n Saved plot into {out_dir}/{output_prefix}_{parser.game}_human_vs_machine.png')
 
 
 
