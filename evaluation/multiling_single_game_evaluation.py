@@ -13,7 +13,7 @@ import seaborn as sns
 
 from clemgame import metrics, get_logger
 from rank_correlation import calc_kendalltau, wikipedia_articles, gpt4_report_ranking
-from multiling_eval_utils import short_names, gpt4_report_str, wiki_articles_str, mean_models_str
+from multiling_eval_utils import short_names, gpt4_report_str, wiki_articles_str, mean_models_str, mean_langs_str
 
 logger = get_logger(__name__)
 
@@ -66,23 +66,21 @@ def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.D
 
     return df_results
 
-
 def create_overview_tables_by_scores(df, categories):
     pivot_cols = ['lang', 'experiment'] if 'experiment' in categories else 'lang'
 
-    df_played = df[categories + ['% Played']]
-    df_played = df_played.pivot(columns=pivot_cols, index="model")
-    df_played.loc[mean_models_str] = df_played.mean().round(2)  # row for mean of models
+    metrics = ['% Played', '% Success (of Played)', 'clemscore (Played * Success)']
 
-    df_success = df[categories + ['% Success (of Played)']]
-    df_success = df_success.pivot(columns=pivot_cols, index="model")
-    df_success.loc[mean_models_str] = df_success.mean().round(2)  # row for mean of models
+    dfs_out = []
+    for metric in metrics:
+        df_score = df[categories + [metric]]
+        df_score = df_score.pivot(columns=pivot_cols, index="model")
+        df_score.loc[mean_models_str] = df_score.mean().round(2)  # row for mean of models
+        if 'experiment' not in categories:
+            df_score[metric, mean_langs_str] = df_score.mean(axis=1).round(2)  # column for mean over languages
+        dfs_out.append(df_score)
 
-    df_clemscore = df[categories + ['clemscore (Played * Success)']]
-    df_clemscore = df_clemscore.pivot(columns=pivot_cols, index="model")
-    df_clemscore.loc[mean_models_str] = df_clemscore.mean().round(2)  # row for mean of models
-
-    return df_played, df_success, df_clemscore
+    return dfs_out
 
 
 def save_overview_tables_by_scores(df, categories, path, prefix):
@@ -100,6 +98,17 @@ def save_table(df, path: str, file: str):
     # for easy checking in a browser
     df.to_html(Path(path) / f'{file}.html')
     logger.info(f'\n Saved results into {path}/{file}.csv, .html and .tex')
+
+
+def prepare_compare_models_dfs(*dfs):
+    """Takes dfs computed by create_overview_tables_by_scores."""
+    dfs_out = []
+    for df in dfs:
+        df.columns = df.columns.droplevel(0)
+        df = df.transpose()
+        df = df.drop(mean_langs_str)
+        dfs_out.append(df)
+    return dfs_out
 
 
 def save_model_score_plot(df_score, path: str, file: str):
@@ -290,14 +299,8 @@ if __name__ == '__main__':
 
         # dfs with models as index and lang as columns
         df_played, df_success, df_clemscore = create_overview_tables_by_scores(overview_strict, categories[:-1])
-
         # prepare dfs to create plot
-        df_played.columns = df_played.columns.droplevel(0)
-        df_played = df_played.transpose()
-        df_success.columns = df_success.columns.droplevel(0)
-        df_success = df_success.transpose()
-        df_clemscore.columns = df_clemscore.columns.droplevel(0)
-        df_clemscore = df_clemscore.transpose()
+        df_played, df_success, df_clemscore = prepare_compare_models_dfs(df_played, df_success, df_clemscore)
 
         # visualise scores of models in the different languages
         save_model_score_plot(df_clemscore, out_dir, f'{output_prefix}_{parser.game}_models_clemscore')

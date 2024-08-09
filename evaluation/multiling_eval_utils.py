@@ -9,5 +9,6 @@ short_names = {
 }
 
 mean_models_str = "Ø models"
+mean_langs_str = "Ø langs"
 gpt4_report_str = "rank-gpt"
 wiki_articles_str = "art-wik"
