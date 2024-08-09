@@ -59,6 +59,7 @@ def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.D
     df_means = df_means.droplevel(0, axis=1)
     # compute clemscores and add to df
     clemscore = (df_means['% Played'] / 100) * df_means['% Success (of Played)']
+    clemscore = clemscore.fillna(0)  # set clemscore to 0 if no game is played
     clemscore = clemscore.round(2).to_frame(name=('clemscore (Played * Success)'))
     df_results = pd.concat([clemscore, df_means], axis=1)
     df_results.reset_index(inplace=True)
@@ -66,20 +67,29 @@ def create_overview_table(df: pd.DataFrame, game: str, categories: list) -> pd.D
     return df_results
 
 
+def create_overview_tables_by_scores(df, categories):
+    pivot_cols = ['lang', 'experiment'] if 'experiment' in categories else 'lang'
+
+    df_played = df[categories + ['% Played']]
+    df_played = df_played.pivot(columns=pivot_cols, index="model")
+    df_played.loc[mean_models_str] = df_played.mean().round(2)  # row for mean of models
+
+    df_success = df[categories + ['% Success (of Played)']]
+    df_success = df_success.pivot(columns=pivot_cols, index="model")
+    df_success.loc[mean_models_str] = df_success.mean().round(2)  # row for mean of models
+
+    df_clemscore = df[categories + ['clemscore (Played * Success)']]
+    df_clemscore = df_clemscore.pivot(columns=pivot_cols, index="model")
+    df_clemscore.loc[mean_models_str] = df_clemscore.mean().round(2)  # row for mean of models
+
+    return df_played, df_success, df_clemscore
+
+
 def save_overview_tables_by_scores(df, categories, path, prefix):
-     pivot_cols = ['lang', 'experiment'] if 'experiment' in categories else 'lang'
-
-     df_played = df[categories + ['% Played']]
-     df_played = df_played.pivot(columns=pivot_cols, index="model")
-     save_table(df_played, path, f"{prefix}_by_played")
-
-     df_success = df[categories + ['% Success (of Played)']]
-     df_success = df_success.pivot(columns=pivot_cols, index="model")
-     save_table(df_success, path, f"{prefix}_by_success")
-
-     df_clemscore = df[categories + ['clemscore (Played * Success)']]
-     df_clemscore = df_clemscore.pivot(columns=pivot_cols, index="model")
-     save_table(df_clemscore, path, f"{prefix}_by_clemscore")
+    df_played, df_success, df_clemscore = create_overview_tables_by_scores(df, categories)
+    save_table(df_played, path, f"{prefix}_by_played")
+    save_table(df_success, path, f"{prefix}_by_success")
+    save_table(df_clemscore, path, f"{prefix}_by_clemscore")
 
 
 def save_table(df, path: str, file: str):
@@ -99,32 +109,10 @@ def save_model_score_plot(df_score, path: str, file: str):
     ax = df_score.plot(style=".-")
     ax.set_xticks(range(len(df_score)))
     ax.set_xticklabels(df_score.index.str.replace("_google", "_"))
+    ax.legend(title=None)
     plt.savefig(Path(path) / f'{file}.png')
     plt.close()
     logger.info(f'\n Saved plot into {path}/{file}.png')
-
-
-def create_model_score_df(df, score_name: str, model_names: list[str]):
-    """
-    Creates a df showing the performance of each model in each language.
-    """
-    # create df that contains for each language the mean score over all models
-    df_mean = df.drop("model", axis=1)
-    df_mean = df_mean.groupby("lang").mean()
-    df_mean = df_mean.round(2)
-
-    # new df for scores of one type (score_name)
-    # has one column for each model and one mean models column
-    df_score = pd.DataFrame()
-    mean_models_score = pd.Series(df_mean[score_name], name=mean_models_str)
-    df_score = pd.concat([df_score, mean_models_score.to_frame()])
-    for model in model_names:
-        one_model_df = df.loc[df["model"] == model]
-        model_scores = pd.Series(list(one_model_df[score_name]),
-                                    name=model, index=one_model_df["lang"])
-        df_score = pd.concat([df_score, model_scores.to_frame()], axis=1)
-
-    return df_score
 
 
 def create_rank_correlation_df(df, *compare_rankings: pd.Series):
@@ -159,6 +147,7 @@ def save_as_heatmap(df, path: str, file: str):
     fig.savefig(Path(path) / f'{file}.png')
     plt.close()
     logger.info(f'\n Saved plot into {path}/{file}.png')
+
 
 def prepare_external_language_rank(rank: dict, name: str, languages: list[str]):
     """
@@ -217,7 +206,7 @@ if __name__ == '__main__':
     assert_log("+" not in machine_suffix, "Not more than one suffix can be specified in --translation_type")
 
     # use model short names
-    models = [short_names[model] for model in parser.compare_models if model in short_names]
+    compare_models = [short_names[model] for model in parser.compare_models if model in short_names]
 
     # create subdirectories for evaluation output files
     assert_log(Path(parser.results_path).is_dir())
@@ -295,21 +284,20 @@ if __name__ == '__main__':
         # --Compare models--
 
         # check if all models played in all languages
-        for model in models:
+        for model in compare_models:
             assert_log(model in sorted_df["model"].unique(), f"{model} has not been run")
             assert_log(sorted_df["model"].value_counts()[model] == len(languages), f"{model} has not benn run in all languages")
-        # reset colnames
-        df_temp = sorted_df.rename(columns={
-            'clemscore (Played * Success)': metrics.BENCH_SCORE, '% Played': metrics.METRIC_PLAYED, '% Success (of Played)': metrics.METRIC_SUCCESS
-            })
-        df_temp.drop("Aborted at Player 1 (of Aborted)", axis=1, inplace=True)  # no comparison for this metric
-        # replace nan by 0 so models with nan as success/main score are treated as weakest models
-        df_temp = df_temp.fillna(0)
 
-        # dfs with models as columns and lang as index
-        df_clemscore = create_model_score_df(df_temp, metrics.BENCH_SCORE, models)
-        df_played = create_model_score_df(df_temp, metrics.METRIC_PLAYED, models)
-        df_success = create_model_score_df(df_temp, metrics.METRIC_SUCCESS, models)
+        # dfs with models as index and lang as columns
+        df_played, df_success, df_clemscore = create_overview_tables_by_scores(overview_strict, categories[:-1])
+
+        # prepare dfs to create plot
+        df_played.columns = df_played.columns.droplevel(0)
+        df_played = df_played.transpose()
+        df_success.columns = df_success.columns.droplevel(0)
+        df_success = df_success.transpose()
+        df_clemscore.columns = df_clemscore.columns.droplevel(0)
+        df_clemscore = df_clemscore.transpose()
 
         # visualise scores of models in the different languages
         save_model_score_plot(df_clemscore, out_dir, f'{output_prefix}_{parser.game}_models_clemscore')
