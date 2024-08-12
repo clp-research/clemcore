@@ -110,6 +110,17 @@
     "estimated_parameters": "200B"
   },
   {
+    "model_name": "gpt-4o-2024-08-06",
+    "model_id": "gpt-4o-2024-08-06",
+    "backend": "openai",
+    "supports_images": true,
+    "support_multiple_images": true,
+    "release_date": "06-08-24",
+    "open_weight": false,
+    "parameters": "",
+    "estimated_parameters": "200B"
+  },
+  {
     "model_name": "gpt-4o-mini-2024-07-18",
     "model_id": "gpt-4o-mini-2024-07-18",
     "backend": "openai",
@@ -384,6 +395,16 @@
     "supports_images": true,
     "support_multiple_images": true,
     "release_date": "24-05-24",
+    "open_weight": false,
+    "parameters": "1.5T"
+  },
+  {
+    "model_name": "gemini-1.5-pro-exp-0801",
+    "model_id": "gemini-1.5-pro-exp-0801",
+    "backend": "google",
+    "supports_images": true,
+    "support_multiple_images": true,
+    "release_date": "01-08-24",
     "open_weight": false,
     "parameters": "1.5T"
   },
