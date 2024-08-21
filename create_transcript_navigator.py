@@ -1,6 +1,8 @@
 import glob
 import re
 
+from evaluation.create_excel_overview import natural_sort_key
+
 HTML_HEAD = """
 <!DOCTYPE html>
 <html>
@@ -59,21 +61,6 @@ HTML_TAIL = """
 """
 
 
-def natural_sort_key(s):
-    # von Anne Beyer
-    """
-    Generiert einen Sortierschlüssel für natürliche Sortierung von Zeichenketten
-    Nötig, da Ordnung der Episoden-Ordner sonst 1, 10, 11, ..., 2, 20, 21, ... wäre
-    # TODO: kurze Beschreibung, was hier genau passiert
-    :param s:
-    :return:
-    """
-    return [
-        int(text) if text.isdigit() else text.lower()
-        for text in re.split(r"(\d+)", str(s))
-    ]
-
-
 def get_transcript_htmls(results_path, games, languages=None, episode_sample=None):
     filename = "transcript.html"
     paths_per_game = []
@@ -101,5 +88,5 @@ if __name__ == "__main__":
         html += html_link
     html += HTML_TAIL
 
-    with open(f"transcript_navigator_imagegame_liberal_human.html", "w") as file:
+    with open("transcript_navigator_imagegame_liberal_human.html", "w") as file:
         file.write(html)
