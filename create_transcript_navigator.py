@@ -74,26 +74,32 @@ def natural_sort_key(s):
     ]
 
 
-def get_transcript_htmls(results_path, games):
+def get_transcript_htmls(results_path, games, languages=None, episode_sample=None):
     filename = "transcript.html"
     paths_per_game = []
     for game in games:
         paths = glob.glob(f"{results_path}/**/{game}/**/{filename}", recursive=True)
         paths = sorted(paths, key=natural_sort_key)
+        if languages:
+            paths = [path for path in paths
+                     if re.search(f"{results_path}/(\w+)/", path).group(1) in languages]
+        if episode_sample:
+            paths = [path for path in paths
+                     if int(re.search("episode_(\d*)", path).group(1)) in episode_sample]
         paths_per_game.append(paths)
     paths_per_game = [path for game in paths_per_game for path in game]
     return paths_per_game
 
 
 if __name__ == "__main__":
-    results_path = "results/v1.5_multiling_debug"
-    games = ["referencegame", "imagegame"]
-    transcript_paths = get_transcript_htmls(results_path, games)
+    results_path = "results/v1.5_multiling_liberal"
+    games = ["imagegame"]  # "imagegame" "referencegame"
+    transcript_paths = get_transcript_htmls(results_path, games, languages=["en", "es", "ru", "te", "tk", "tr"])
     html = HTML_HEAD
     for path in transcript_paths:
         html_link = TRANSCRIPT_LINK.format(path)
         html += html_link
     html += HTML_TAIL
 
-    with open(f"transcript_navigator.html", "w") as file:
+    with open(f"transcript_navigator_imagegame_liberal_human.html", "w") as file:
         file.write(html)
