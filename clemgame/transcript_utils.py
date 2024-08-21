@@ -60,7 +60,7 @@ TEX_HEADER = '''
 \\begin{supertabular}{c@{$\;$}|p{.15\\linewidth}@{}p{.15\\linewidth}p{.15\\linewidth}p{.15\\linewidth}p{.15\\linewidth}p{.15\linewidth}}
 
     \\# & $\\;$A & \\multicolumn{4}{c}{Game Master} & $\\;\\:$B\\\\
-    \\hline 
+    \\hline
 '''
 
 TEX_BUBBLE_PARAMS = {
@@ -72,9 +72,9 @@ TEX_BUBBLE_PARAMS = {
 }
 
 TEX_TEMPLATE = Template('''
-    \\theutterance \\stepcounter{utterance}  
+    \\theutterance \\stepcounter{utterance}
 
-    $cols_init \\multicolumn{$ncols}{p{$width\\linewidth}}{\\cellcolor[rgb]{$rgb}{%\n\t\\makecell[{{p{\\linewidth}}}]{% \n\t  \\tt {\\tiny [$speakers]}  \n\t $msg \n\t  } \n\t   } \n\t   } \n\t $cols_end \\\\ \n 
+    $cols_init \\multicolumn{$ncols}{p{$width\\linewidth}}{\\cellcolor[rgb]{$rgb}{%\n\t\\makecell[{{p{\\linewidth}}}]{% \n\t  \\tt {\\tiny [$speakers]}  \n\t $msg \n\t  } \n\t   } \n\t   } \n\t $cols_end \\\\ \n
 ''')
 
 TEX_FOOTER = '''
@@ -101,7 +101,7 @@ def _get_class_name(event):
 def build_transcript(interactions: Dict, experiment_config: Dict, game_instance: Dict, dialogue_pair: str):
     """Create an html with the interaction transcript."""
     transcript = HTML_HEADER.format(CSS_STRING)
-    title = f"Interaction Transcript for {experiment_config['name']}, " \
+    title = f"Interaction Transcript for {game_instance['lang']}, {experiment_config['name']}, " \
             f"episode {game_instance['game_id']} with {dialogue_pair}."
     transcript += top_info.format(title)
     # Collect all events over all turns (ignore turn boundaries here)
