@@ -68,8 +68,23 @@ def extract_player_expressions(interaction_path):
             p2 = interaction["turns"][0][4]["action"]["content"]
         except IndexError:
             p2 = None
-
-    return p1, p2
+        try:
+            # The parsed expression without tag, if valid (is stored in interaction 2; GM to GM)
+            if interaction["turns"][0][2]["action"]["type"] == "parse":
+                p1_parsed = interaction["turns"][0][2]["action"]["expression"]
+            elif interaction["turns"][0][2]["action"]["type"] == "invalid format":
+                p1_parsed = interaction["turns"][0][2]["action"]["content"]
+        except IndexError:
+            p1_parsed = None
+        try:
+            # The answer without tag, if valid (is stored in interaction 5)
+            if interaction["turns"][0][5]["action"]["type"] == "parse":
+                p2_parsed = interaction["turns"][0][5]["action"]["answer"]
+            elif interaction["turns"][0][5]["action"]["type"] == "invalid format":
+                p2_parsed = interaction["turns"][0][5]["action"]["content"]
+        except IndexError:
+            p2_parsed = None
+    return p1, p2, p1_parsed, p2_parsed
 
 
 def process_triplet(triplet_path, all_target_grids, all_formula_cells):
@@ -89,7 +104,7 @@ def process_triplet(triplet_path, all_target_grids, all_formula_cells):
         # extract instance content and model responses
         target_grid, distractor_grid_1, distractor_grid_2, gold_answer = extract_instance(
             Path(os.path.join(instance, "instance.json")))
-        player1_expression, player2_answer = extract_player_expressions(
+        player1_text, player2_text, player1_expression, player2_answer = extract_player_expressions(
             Path(os.path.join(instance, "interactions.json")))
 
         # collect all information in specific cells
@@ -118,9 +133,11 @@ def process_triplet(triplet_path, all_target_grids, all_formula_cells):
                 "D9": "",
                 "D10": "",
                 "Target Position": i + 1,
-                "Player 1 Expression": player1_expression,  # using the captured expression
-                "Player 2 Answer": player2_answer,
+                "Player 1 Text": player1_text,  # using the captured expression
+                "Player 2 Text": player2_text,
                 "Ground Truth": gold_answer,
+                "Player 1 Parsed Expression": player1_expression,
+                "Player 2 Parsed Answer": player2_answer
             }
         )
     # Add three empty rows
