@@ -43,6 +43,9 @@ def extract_instance(instance_path):
         distractor_grid_1 = instance_data["player_1_second_grid"]
         distractor_grid_2 = instance_data["player_1_third_grid"]
         gold_label = instance_data["target_grid_name"]
+        # fix for te_google: accidentally inserted '(' in target_grid_name -> ["(ప్రధమ", "1"] (only mixtral and llama-3-70b)
+        if "te_google" in str(instance_path):
+            gold_label[0] = gold_label[0].lstrip("(")
         return target_grid, distractor_grid_1, distractor_grid_2, gold_label
 
 
