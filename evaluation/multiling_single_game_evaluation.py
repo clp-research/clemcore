@@ -1,3 +1,6 @@
+# tested on Linux OpenSUSE Leap 15.4
+# Python 3.9.19
+
 import argparse
 import json
 import os
@@ -264,6 +267,10 @@ if __name__ == '__main__':
             df_compare = pd.concat([df_compare, lang_result], ignore_index=True)
 
     assert_log(not df_lang.empty, f"no results found for {parser.game} {parser.translation_type}")
+
+    # save all raw results together in one file
+    if human and machine_suffix:
+        df_lang.to_csv(result_dir / "raw.csv")
 
     if parser.detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] # detailed by experiment

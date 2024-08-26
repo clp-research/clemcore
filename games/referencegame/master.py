@@ -187,6 +187,7 @@ class ReferenceGameScorer(GameScorer):
     def __init__(self, experiment: Dict, game_instance: Dict):
         super().__init__(GAME_NAME, experiment, game_instance)
         self.target_grid_name = self.extend_target(game_instance["target_grid_name"], game_instance["lang"])
+        self.mode = "strict"  # quick fix. parsing mode that was active when running GameMaster
 
     def extend_target(self, target, lang):
         """
@@ -256,9 +257,12 @@ class ReferenceGameScorer(GameScorer):
                 # parse again with additionally allowing numbers as answers (and ignore anything that follows (like "grid" or punctuation))
                 tag = MULTILINGUAL_PATTERNS[self.game_instance['lang']]["p2_tag"]  # self.lang raised AttributeError
                 content = MULTILINGUAL_PATTERNS[self.game_instance['lang']]["p2_options"] + "|1|2|3"
-                p2_pattern_extended = f'^(?P<tag>{tag})\s*(?P<content>{content})'
+                p2_pattern_extended = f'^(?P<tag>{tag})\s*(?P<content>{content})\n*(?P<remainder>(.|\n)*)'
                 player_2_pattern = re.compile(p2_pattern_extended, re.IGNORECASE)
                 p2_match = re.match(player_2_pattern, turn[5]['action']['original_content'])
+                # quick fix: in strict mode remainder has to be checked again
+                if p2_match and (self.mode == "strict") and p2_match.group("remainder"):
+                    p2_match = False
 
             if turn[5]['action']['type'] == "parse" or p2_match:
                 turn_parsed_request_count += 1

@@ -31,7 +31,7 @@ The adjustments are necessary for successful parsing and to ensure comparability
    - player_a_prompt_header: line 8, 12, 16 (`TARGET_GRID`, `SECOND_GRID`, `THIRD_GRID`)
    - player_b_prompt_header: line 9, 13, 17, 19 (`FIRST_GRID`, `SECOND_GRID`, `THIRD_GRID`, `TARGET_EXPRESSION`)
 
-1. line number should be identical (no extra line breaks)
+1. line number should be identical to files in `/to_translate` (no extra line breaks)
    - player_a_prompt_header
    - player_b_prompt_header
 
