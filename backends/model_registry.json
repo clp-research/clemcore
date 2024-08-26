@@ -1283,6 +1283,30 @@
     "parameters": "70B"
   },
   {
+    "model_name": "Meta-Llama-3.1-70B-Instruct-FP8-neuralmagic-1gpu-4k",
+    "backend": "vllm",
+    "huggingface_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",
+    "number_gpus": 1,
+    "context_limit": 4096,
+    "premade_chat_template": true,
+    "eos_to_cull": "<|eot_id|>",
+    "release_date": "23-07-23",
+    "open_weight": true,
+    "parameters": "70B"
+  },
+  {
+    "model_name": "Meta-Llama-3.1-70B-Instruct-FP8-neuralmagic-1gpu-8k",
+    "backend": "vllm",
+    "huggingface_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",
+    "number_gpus": 1,
+    "context_limit": 8192,
+    "premade_chat_template": true,
+    "eos_to_cull": "<|eot_id|>",
+    "release_date": "23-07-23",
+    "open_weight": true,
+    "parameters": "70B"
+  },
+  {
     "model_name": "Meta-Llama-3.1-70B-Instruct-FP8-neuralmagic-2gpu",
     "backend": "vllm",
     "huggingface_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",

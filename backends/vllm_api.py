@@ -110,19 +110,40 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
         # if number of GPUs to use is not set in the modelSpec, default to one:
         number_gpus = 1
 
-    hf_model_str = model_spec['huggingface_id']
-    if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
-        # NOTE: this is left here in case some issue with gated models comes up later
-        # load HF API key:
-        creds = backends.load_credentials("huggingface")
-        api_key = creds["huggingface"]["api_key"]
-        # load model:
-        model = LLM(hf_model_str, tensor_parallel_size=number_gpus)
+    if 'context_limit' in model_spec and model_spec['context_limit']:
+        max_model_len = model_spec['context_limit']
+        use_context_limit = True
     else:
-        model = LLM(hf_model_str, tensor_parallel_size=number_gpus)
+        # if context limit is not set in the modelSpec, default to model config:
+        use_context_limit = False
+
+    hf_model_str = model_spec['huggingface_id']
+
+    if use_context_limit:
+        if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
+            # NOTE: this is left here in case some issue with gated models comes up later
+            # load HF API key:
+            creds = backends.load_credentials("huggingface")
+            api_key = creds["huggingface"]["api_key"]
+            # load model:
+            model = LLM(hf_model_str, tensor_parallel_size=number_gpus, max_model_len=max_model_len)
+        else:
+            model = LLM(hf_model_str, tensor_parallel_size=number_gpus, max_model_len=max_model_len)
+    else:
+        if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
+            # NOTE: this is left here in case some issue with gated models comes up later
+            # load HF API key:
+            creds = backends.load_credentials("huggingface")
+            api_key = creds["huggingface"]["api_key"]
+            # load model:
+            model = LLM(hf_model_str, tensor_parallel_size=number_gpus)
+        else:
+            model = LLM(hf_model_str, tensor_parallel_size=number_gpus)
 
     logger.info(f"Finished loading model weights from HuggingFace: {model_spec.model_name}")
     logger.info(f"Number of GPUs used for model: {number_gpus}")
+    if use_context_limit:
+        logger.info(f"Context size limited to {max_model_len} tokens.")
 
     return model
 
