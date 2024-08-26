@@ -1,5 +1,10 @@
+# tested with Linux OpenSUSE Leap 15.4
+# Python 3.9.19
+
 """
 Script for calculation of Kendalls Tau.
+
+`pip install scipy` necessary.
 """
 from scipy.stats import kendalltau
 

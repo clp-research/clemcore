@@ -1,3 +1,6 @@
+# tested on Linux OpenSUSE Leap 15.4
+# Python 3.9.19
+
 import argparse
 import json
 import os

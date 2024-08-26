@@ -1,3 +1,6 @@
+# tested with Linux OpenSUSE Leap 15.4
+# Python 3.9.19
+
 """
 Calculate the bleu score for all translations (machine vs. human)
 """
