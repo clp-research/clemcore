@@ -234,7 +234,12 @@ class HuggingfaceLocalModel(backends.Model):
 
             # remove eos token string:
             eos_to_cull = self.model_spec['eos_to_cull']
-            response_text = re.sub(eos_to_cull, "", response_text)
+            if "|" in eos_to_cull:
+                eos_len = len(eos_to_cull)
+                if response_text.endswith(eos_to_cull):
+                    response_text = response_text[:-eos_len]
+            else:
+                response_text = re.sub(eos_to_cull, "", response_text)
         else:
             response_text = model_output.strip()
 
