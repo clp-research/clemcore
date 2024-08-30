@@ -3,6 +3,7 @@
 """
 
 from typing import List, Dict, Tuple, Any
+import re
 
 import backends
 from backends.utils import check_context_limit_generic, ensure_alternating_roles
@@ -202,10 +203,9 @@ class LlamaCPPLocalModel(backends.Model):
             if 'output_split_prefix' in self.model_spec:
                 response_text = response_text.rsplit(self.model_spec['output_split_prefix'], maxsplit=1)[1]
 
-            eos_len = len(self.model_spec['eos_to_cull'])
-
-            if response_text.endswith(self.model_spec['eos_to_cull']):
-                response_text = response_text[:-eos_len]
+            # remove eos token string:
+            eos_to_cull = self.model_spec['eos_to_cull']
+            response_text = re.sub(eos_to_cull, "", response_text)
 
         else:
             response_text = prompt_text + model_output['choices'][0]['text'].strip()

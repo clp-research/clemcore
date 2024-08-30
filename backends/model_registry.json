@@ -478,7 +478,7 @@
     "huggingface_id": "tiiuae/falcon-7b-instruct",
     "premade_chat_template": false,
     "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "25-04-23",
     "open_weight": true,
     "parameters": "7B"
@@ -489,7 +489,7 @@
     "huggingface_id": "tiiuae/falcon-40b-instruct",
     "premade_chat_template": false,
     "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ 'USER: ' + message['content'] + '\\n' }}{% elif message['role'] == 'assistant' %}{{ 'ASSISTANT: ' + message['content'] + '\\n' }}{% endif %}{% if loop.last %}{{ 'ASSISTANT:' }}{% endif %}{% endfor %}",
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "25-05-23",
     "open_weight": true,
     "parameters": "40B"
@@ -500,7 +500,7 @@
     "huggingface_id": "OpenAssistant/oasst-sft-4-pythia-12b-epoch-3.5",
     "premade_chat_template": false,
     "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '<|prompter|>' + message['content'] + '<|endoftext|>' }}{% elif message['role'] == 'assistant' %}{{ '<|assistant|>' + message['content'] + '<|endoftext|>' }}{% endif %}{% if loop.last %}{{ '<|assistant|>' }}{% endif %}{% endfor %}",
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "03-04-23",
     "open_weight": true,
     "parameters": "12B"
@@ -628,7 +628,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "openchat/openchat_3.5",
     "premade_chat_template": true,
-    "eos_to_cull": "<|end_of_turn|>",
+    "eos_to_cull": "<\\|end_of_turn\\|>",
     "release_date": "30-10-23",
     "open_weight": true,
     "parameters": "7B"
@@ -640,7 +640,7 @@
     "premade_chat_template": true,
     "slow_tokenizer": true,
     "output_split_prefix": "assistant\n",
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "22-11-23",
     "open_weight": true,
     "parameters": "34B"
@@ -704,7 +704,7 @@
     "premade_chat_template": false,
     "custom_chat_template": "{% for message in messages %}{% if message['role'] == 'user' %}{{ '### Human: ' + message['content'] + '\\n\\n' }}{% elif message['role'] == 'assistant' %}{{ '### Assistant: ' + message['content'] }}{% endif %}{% if loop.last %}{{ '### Assistant: ' }}{% endif %}{% endfor %}",
     "slow_tokenizer": true,
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "29-11-23",
     "open_weight": true,
     "parameters": "34B"
@@ -724,7 +724,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "openchat/openchat-3.5-0106",
     "premade_chat_template": true,
-    "eos_to_cull": "<|end_of_turn|>",
+    "eos_to_cull": "<\\|end_of_turn\\|>",
     "release_date": "06-01-24",
     "open_weight": true,
     "parameters": "7B"
@@ -734,7 +734,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "openchat/openchat-3.5-1210",
     "premade_chat_template": true,
-    "eos_to_cull": "<|end_of_turn|>",
+    "eos_to_cull": "<\\|end_of_turn\\|>",
     "release_date": "10-12-23",
     "open_weight": true,
     "parameters": "7B"
@@ -744,7 +744,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "NousResearch/Nous-Hermes-2-Mixtral-8x7B-DPO",
     "premade_chat_template": true,
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "11-01-24",
     "open_weight": true,
     "parameters": "46.7B"
@@ -755,7 +755,7 @@
     "huggingface_id": "abacusai/Smaug-72B-v0.1",
     "premade_chat_template": false,
     "custom_chat_template": "{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}{% set system_message = messages[0]['content'] %}{% else %}{% set loop_messages = messages %}{% set system_message = false %}{% endif %}{% for message in loop_messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if loop.index0 == 0 and system_message != false %}{% set content = '<<SYS>>\n' + system_message + '\n<</SYS>>\n\n' + message['content'] %}{% else %}{% set content = message['content'] %}{% endif %}{% if message['role'] == 'user' %}{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}{% elif message['role'] == 'assistant' %}{{ ' '  + content.strip() + ' ' + eos_token }}{% endif %}{% endfor %}",
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "02-02-24",
     "open_weight": true,
     "parameters": "72B"
@@ -766,7 +766,7 @@
     "huggingface_id": "abacusai/Smaug-34B-v0.1",
     "premade_chat_template": false,
     "custom_chat_template": "{% if messages[0]['role'] == 'system' %}{% set loop_messages = messages[1:] %}{% set system_message = messages[0]['content'] %}{% else %}{% set loop_messages = messages %}{% set system_message = false %}{% endif %}{% for message in loop_messages %}{% if (message['role'] == 'user') != (loop.index0 % 2 == 0) %}{{ raise_exception('Conversation roles must alternate user/assistant/user/assistant/...') }}{% endif %}{% if loop.index0 == 0 and system_message != false %}{% set content = '<<SYS>>\n' + system_message + '\n<</SYS>>\n\n' + message['content'] %}{% else %}{% set content = message['content'] %}{% endif %}{% if message['role'] == 'user' %}{{ bos_token + '[INST] ' + content.strip() + ' [/INST]' }}{% elif message['role'] == 'assistant' %}{{ ' '  + content.strip() + ' ' + eos_token }}{% endif %}{% endfor %}",
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "25-01-24",
     "open_weight": true,
     "parameters": "34B"
@@ -776,7 +776,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "Qwen/Qwen1.5-7B-Chat",
     "premade_chat_template": true,
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "30-01-24",
     "open_weight": true,
     "parameters": "7B"
@@ -786,7 +786,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "Qwen/Qwen1.5-72B-Chat",
     "premade_chat_template": true,
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "30-01-24",
     "open_weight": true,
     "parameters": "72B"
@@ -806,7 +806,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "microsoft/Phi-3-mini-128k-instruct",
     "premade_chat_template": true,
-    "eos_to_cull": "<|endoftext|>",
+    "eos_to_cull": "<\\|endoftext\\|>",
     "release_date": "22-04-24",
     "open_weight": true,
     "parameters": "3.8B"
@@ -816,7 +816,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "Nexusflow/Starling-LM-7B-beta",
     "premade_chat_template": true,
-    "eos_to_cull": "<|end_of_turn|>",
+    "eos_to_cull": "<\\|end_of_turn\\|>",
     "release_date": "19-03-24",
     "open_weight": true,
     "parameters": "7B"
@@ -826,7 +826,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "Qwen/Qwen2-7B-Instruct",
     "premade_chat_template": true,
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "04-06-24",
     "open_weight": true,
     "parameters": "7B"
@@ -836,7 +836,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "Qwen/Qwen2-72B-Instruct",
     "premade_chat_template": true,
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "28-05-24",
     "open_weight": true,
     "parameters": "72B"
@@ -846,7 +846,7 @@
     "backend": "huggingface_local",
     "huggingface_id": "VAGOsolutions/Llama-3-SauerkrautLM-70b-Instruct",
     "premade_chat_template": true,
-    "eos_to_cull": "<|eot_id|>",
+    "eos_to_cull": "<\\|eot_id\\|>",
     "release_date": "24-04-24",
     "open_weight": true,
     "parameters": "70B"
@@ -857,7 +857,7 @@
     "requires_api_key": true,
     "huggingface_id": "CohereForAI/aya-23-8B",
     "premade_chat_template": true,
-    "eos_to_cull": "<|END_OF_TURN_TOKEN|>",
+    "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>",
     "release_date": "19-05-24",
     "open_weight": true,
     "parameters": "8B"
@@ -868,7 +868,7 @@
     "requires_api_key": true,
     "huggingface_id": "CohereForAI/aya-23-35B",
     "premade_chat_template": true,
-    "eos_to_cull": "<|END_OF_TURN_TOKEN|>",
+    "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>",
     "release_date": "19-05-24",
     "open_weight": true,
     "parameters": "35B"
@@ -1000,7 +1000,7 @@
     "requires_api_key": true,
     "huggingface_id": "meta-llama/Meta-Llama-3.1-8B-Instruct",
     "premade_chat_template": true,
-    "eos_to_cull": "<|eot_id|>",
+    "eos_to_cull": "<\\|eot_id\\|>",
     "release_date": "23-07-24",
     "open_weight": true,
     "parameters": "8B"
@@ -1011,7 +1011,7 @@
     "requires_api_key": true,
     "huggingface_id": "meta-llama/Meta-Llama-3.1-70B-Instruct",
     "premade_chat_template": true,
-    "eos_to_cull": "<|eot_id|>",
+    "eos_to_cull": "<\\|eot_id\\|>",
     "release_date": "23-07-24",
     "open_weight": true,
     "parameters": "70B"
@@ -1035,7 +1035,7 @@
     "premade_chat_template": true,
     "bos_string": "<s>",
     "eos_string": "<|im_end|>",
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "03-02-24",
     "open_weight": true,
     "parameters": "0.5B"
@@ -1048,7 +1048,7 @@
     "premade_chat_template": true,
     "bos_string": "<s>",
     "eos_string": "<|im_end|>",
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "31-01-24",
     "open_weight": true,
     "parameters": "7B"
@@ -1061,7 +1061,7 @@
     "premade_chat_template": true,
     "bos_string": "<s>",
     "eos_string": "<|im_end|>",
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "31-01-24",
     "open_weight": true,
     "parameters": "7B"
@@ -1074,7 +1074,7 @@
     "premade_chat_template": true,
     "bos_string": "<s>",
     "eos_string": "<|im_end|>",
-    "eos_to_cull": "<|im_end|>",
+    "eos_to_cull": "<\\|im_end\\|>",
     "release_date": "31-01-24",
     "open_weight": true,
     "parameters": "7B"
@@ -1116,7 +1116,7 @@
     "custom_chat_template": "{{ bos_token }}{% for message in messages %}{{ 'GPT4 Correct ' + message['role'].title() + ': ' + message['content'] + '<|end_of_turn|>'}}{% endfor %}{% if add_generation_prompt %}{{ 'GPT4 Correct Assistant:' }}{% endif %}",
     "bos_string": "<s>",
     "eos_string": "<|end_of_turn|>",
-    "eos_to_cull": "<|end_of_turn|>",
+    "eos_to_cull": "<\\|end_of_turn\\|>",
     "release_date": "02-11-23",
     "open_weight": true,
     "parameters": "7B"
@@ -1129,7 +1129,7 @@
     "premade_chat_template": true,
     "bos_string": "<|begin_of_text|>",
     "eos_string": "<|eot_id|>",
-    "eos_to_cull": "<|eot_id|>",
+    "eos_to_cull": "<\\|eot_id\\|>",
     "release_date": "18-04-24",
     "open_weight": true,
     "parameters": "70B"
@@ -1143,7 +1143,7 @@
     "premade_chat_template": true,
     "bos_string": "<|begin_of_text|>",
     "eos_string": "<|eot_id|>",
-    "eos_to_cull": "<|eot_id|>",
+    "eos_to_cull": "<\\|eot_id\\|>",
     "release_date": "18-04-24",
     "open_weight": true,
     "parameters": "70B"
@@ -1157,7 +1157,7 @@
     "premade_chat_template": true,
     "bos_string": "<BOS_TOKEN>",
     "eos_string": "<|END_OF_TURN_TOKEN|>",
-    "eos_to_cull": "<|END_OF_TURN_TOKEN|>",
+    "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>",
     "release_date": "04-04-24",
     "open_weight": true,
     "parameters": "104B"
@@ -1171,7 +1171,7 @@
     "premade_chat_template": true,
     "bos_string": "<BOS_TOKEN>",
     "eos_string": "<|END_OF_TURN_TOKEN|>",
-    "eos_to_cull": "<|END_OF_TURN_TOKEN|>",
+    "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>",
     "release_date": "04-04-24",
     "open_weight": true,
     "parameters": "104B"
