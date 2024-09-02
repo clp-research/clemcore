@@ -52,33 +52,36 @@ class OpenAIModel(backends.Model):
         encoded_messages = []
 
         for message in messages:
-            this = {"role": message["role"],
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": message["content"].replace(" <image> ", " ")
-                        }
-                    ]}
+            if "image" not in message.keys():
+                encoded_messages.append(message)
+            else:
+                this = {"role": message["role"],
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": message["content"].replace(" <image> ", " ")
+                            }
+                        ]}
 
-            if self.model_spec.has_attr('supports_images'):
-                if "image" in message.keys():
+                if self.model_spec.has_attr('supports_images'):
+                    if "image" in message.keys():
 
-                    if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
-                        logger.info(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
-                        raise Exception(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
-                    else:
-                        # encode each image
-                        for image in message['image']:
-                            is_url, loaded, image_type = self.encode_image(image)
-                            if is_url:
-                                this["content"].append(dict(type="image_url", image_url={
-                                    "url": loaded
-                                }))
-                            else:
-                                this["content"].append(dict(type="image_url", image_url={
-                                    "url": f"data:{image_type};base64,{loaded}"
-                                }))
-            encoded_messages.append(this)
+                        if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
+                            logger.info(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                            raise Exception(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                        else:
+                            # encode each image
+                            for image in message['image']:
+                                is_url, loaded, image_type = self.encode_image(image)
+                                if is_url:
+                                    this["content"].append(dict(type="image_url", image_url={
+                                        "url": loaded
+                                    }))
+                                else:
+                                    this["content"].append(dict(type="image_url", image_url={
+                                        "url": f"data:{image_type};base64,{loaded}"
+                                    }))
+                encoded_messages.append(this)
         return encoded_messages
 
     @retry(tries=3, delay=0, logger=logger)

@@ -36,6 +36,13 @@ DELTA_TO_CARDINAL = {
     (-1,0): 'west'
 }
 
+REV_DIR = {
+    'north': 'south',
+    'east': 'west',
+    'south': 'north',
+    'west': 'east'
+}
+
 
 class PathWalker(Player):
     def __init__(self, model: Model):
@@ -319,6 +326,9 @@ class MM_MapWorldGraphsScorer(GameScorer):
         self.actual_graph = nx.Graph()
         self.actual_graph.add_nodes_from(self.nodes)
         self.actual_graph.add_edges_from(self.edges)
+        self.graph_repr = nx.Graph()
+        self.vertex_to_coor = {}
+        self.gen_start = None
         
     def adj(self, node):
         return set([ed[1] for ed in self.edges if ed[0] == node])
@@ -362,6 +372,143 @@ class MM_MapWorldGraphsScorer(GameScorer):
                         q.put(new)
         return found
     
+    def gen_graph(self, graph_info):
+        nodes = graph_info['nodes']
+        edges = []
+        for dir in graph_info['edges']:
+            for edge in graph_info['edges'][dir]:
+                if len(edge) == 2:
+                    edges.append([edge[0], dir, edge[1]])
+                    edges.append([edge[1], REV_DIR[dir], edge[0]])
+        if nodes:
+            if self.gen_start is None or self.gen_start not in nodes:
+                self.gen_start = nodes[0]
+                self.vertex_to_coor[self.gen_start] = self.start_node
+            for node in nodes:
+                if not node in self.vertex_to_coor:
+                    for edge in edges:
+                        if node == edge[2] and edge[0] in self.vertex_to_coor:
+                            self.vertex_to_coor[node] = (
+                                self.vertex_to_coor[edge[0]][0] + CARDINAL_TO_DELTA[edge[1]][0],
+                                self.vertex_to_coor[edge[0]][1] + CARDINAL_TO_DELTA[edge[1]][1]
+                            )
+                            break
+            coord_nodes = [self.vertex_to_coor[v] for v in self.vertex_to_coor]
+            coord_edges = []
+            for e in edges:
+                if e[0] in self.vertex_to_coor and e[2] in self.vertex_to_coor:
+                    coord_edges.append([self.vertex_to_coor[e[0]], self.vertex_to_coor[e[2]]])
+        else:
+            if self.gens:
+                coord_nodes = self.gens[-1]['V']
+                coord_edges = self.gens[-1]['E']
+            else:
+                coord_nodes = []
+                coord_edges = []
+        unique_nodes = []
+        unique_edges = []
+        for cnode in coord_nodes:
+            if cnode not in unique_nodes:
+                unique_nodes.append(cnode)
+        for cedge in coord_edges:
+            if cedge not in unique_edges:
+                unique_edges.append(cedge)
+        return {"V": unique_nodes, "E": unique_edges}  
+    
+    def gen_plot(self, graph):
+        #creates a figure with the generated graph
+        fig = plt.figure(figsize=(4, 4))
+        nodes = graph['V']
+        edges = graph['E']
+        for node in nodes:
+            plt.plot(node[0], node[1], 'o', color='brown', 
+                    linewidth = 10, markersize = 17.5, zorder = 9, mfc = 'tab:gray')
+        plt.xlim(-2, 5)
+        plt.ylim(-2, 5)
+        for edge in edges:
+            plt.plot([edge[0][0], edge[1][0]], [edge[0][1], edge[1][1]], color='gray', 
+                     linestyle='--', zorder = 5, linewidth = 1.8)
+        plt.xlabel('X')
+        plt.ylabel('Y')
+        plt.grid(True)
+        return fig
+    
+    def plot_path_and_gen(self, path, graph):
+        offset = 0.05
+        fig, (ax1, ax2) = plt.subplots(1,2, figsize = (8,4), sharex = True, sharey = True)
+        plt.xlim(-3, 6)
+        plt.ylim(-3, 6)
+        # path plot on the left (ax1)
+        for node in self.nodes:
+            if node in path and node != path[-1]:
+                ax1.plot(node[0], node[1], 'o', color='brown', 
+                        linewidth = 20, markersize = 17.5, zorder = 9, mfc = 'tab:olive')
+            if node == path[-1]:
+                ax1.plot(node[0], node[1], 'o', color='brown', 
+                        linewidth = 20, markersize = 17.5, zorder = 9, mfc = 'tab:cyan')
+            if not node in path:
+                ax1.plot(node[0], node[1], 'o', color='brown', 
+                        linewidth = 20, markersize = 17.5, zorder = 9, mfc = 'tab:gray')    
+        traveled = {node: 0 for node in self.nodes}
+        traveled[self.start_node] += 1
+        for edge in self.edges:
+            if edge[0] in path and edge[1] in path:
+                ax1.plot([edge[0][0], edge[1][0]], [edge[0][1], edge[1][1]], color='black', 
+                         linestyle='--', zorder = 5, linewidth = 1.8)
+            else:
+                ax1.plot([edge[0][0], edge[1][0]], [edge[0][1], edge[1][1]], color='gray', 
+                         linestyle='--', zorder = 5, linewidth = 1.8)
+        last = path[0]
+        if len(path) > 1:
+            for i in range(1, len(path)):
+                if path[i] == path[i - 1]:
+                    continue
+                x1, y1 = last
+                x2, y2 = path[i]
+                dx = x2 - x1
+                dy = y2 - y1
+                t = traveled[path[i]]
+                traveled[path[i]] += 1
+                color = "black"
+                if i == len(path)-1:
+                    color = "red"
+                t = sum([(1/(1+j)) for j in range(t)])
+                ax1.arrow(x1, 
+                        y1, 
+                        dx + t * offset, 
+                        dy + t * offset, 
+                        color=color, 
+                        width = 0.005, 
+                        head_width = 0.05, 
+                        length_includes_head = True, 
+                        zorder = 10)
+                last = (
+                    x1 + dx + t * offset,
+                    y1 + dy + t * offset
+                )   
+        # the generated graph goes on the right (ax2)
+        nodes = graph['V']
+        edges = graph['E']
+        for node in nodes:
+            ax2.plot(node[0], node[1], 'o', color='brown', 
+                    linewidth = 10, markersize = 17.5, zorder = 9, mfc = 'tab:gray')
+        for edge in edges:
+            ax2.plot([edge[0][0], edge[1][0]], [edge[0][1], edge[1][1]], color='gray', 
+                     linestyle='--', zorder = 5, linewidth = 1.8)
+        ax1.set_xlabel('X')
+        ax2.set_xlabel('X')
+        ax1.set_ylabel('Y')
+        ax1.grid(True)
+        ax2.grid(True)
+        tcks = np.arange(-2, 7)
+        ax1.set_xticks(tcks)
+        ax2.set_xticks(tcks)
+        ax1.set_yticks(tcks)
+        ax2.set_yticks(tcks)
+        ax1.set_title("Target Graph")
+        ax2.set_title("Generated Graph")
+        return fig
+                
     def plot_path(self, path):
         offset = 0.05
         fig = plt.figure(figsize=(4, 4))
@@ -440,6 +587,7 @@ class MM_MapWorldGraphsScorer(GameScorer):
         aborted = False
         good_move = []
         similarities = []
+        self.gens = []
         
         for turn in episode_interactions["turns"]:
             for event in turn:
@@ -476,6 +624,7 @@ class MM_MapWorldGraphsScorer(GameScorer):
                             "nodes": [],
                             "edges": {}
                         }
+                    self.gens.append(self.gen_graph(loaded_graph_info))
                     nx_graph = nx.Graph()
                     nx_graph.add_nodes_from(loaded_graph_info['nodes'])
                     for direction in loaded_graph_info['edges']:
@@ -541,7 +690,6 @@ class MM_MapWorldGraphsScorer(GameScorer):
                                 dialogue_pair=dialogue_pair,
                                 sub_dir=game_record_dir,
                                 root_dir=results_root)
-        
         # plotting & animation
         if not os.path.exists("tmp"):
             os.makedirs("tmp")
@@ -551,6 +699,19 @@ class MM_MapWorldGraphsScorer(GameScorer):
         if not os.path.exists("tmp/step_plots"):
             os.makedirs("tmp/step_plots")
         images = []
+        gen_images = []
+        gen_dir = os.path.join(results_root, dialogue_pair, self.name, game_record_dir, "generated_graphs")
+        tmp_gen_dir = os.path.join(results_root, dialogue_pair, self.name, game_record_dir, "generated_graphs", "tmp")
+        if not os.path.exists(tmp_gen_dir):
+            os.makedirs(tmp_gen_dir)
+        for i in range(len(self.gens)):
+            generated_graph_turn = self.plot_path_and_gen(self.path[:i+1], self.gens[i])
+            generated_graph_turn.savefig(os.path.join(tmp_gen_dir, f"{i}.png"))
+            generated_graph_turn.savefig(os.path.join(gen_dir, f"{i}.pdf"))
+            gen_images.append(imageio.imread(os.path.join(tmp_gen_dir, f"{i}.png")))
+            plt.close()
+        if self.gens:
+            imageio.mimsave(os.path.join(gen_dir, "animation.gif"), gen_images, fps=1, loop=True)
         for i in range(len(self.path)):
             step_plot = self.plot_path(self.path[:i+1])
             step_plot.savefig(f"tmp/step_plots/{i}.png")
@@ -559,6 +720,7 @@ class MM_MapWorldGraphsScorer(GameScorer):
         imageio.mimsave(os.path.join(results_root, dialogue_pair, self.name, game_record_dir, "animation.gif"), images, fps=1, loop=True)
         try:
             shutil.rmtree("tmp")
+            shutil.rmtree(tmp_gen_dir)
         except OSError as e:
             print("Error: %s - %s." % (e.filename, e.strerror))
         
