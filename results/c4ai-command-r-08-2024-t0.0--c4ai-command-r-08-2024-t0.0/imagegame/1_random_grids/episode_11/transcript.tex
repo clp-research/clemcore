@@ -1,0 +1,60 @@
+
+\documentclass{article}
+\usepackage{colortbl}
+\usepackage{makecell}
+\usepackage{multirow}
+\usepackage{supertabular}
+
+\begin{document}
+
+\newcounter{utterance}
+
+\twocolumn
+
+{ \footnotesize  \setcounter{utterance}{1}
+\setlength{\tabcolsep}{0pt}
+\begin{supertabular}{c@{$\;$}|p{.15\linewidth}@{}p{.15\linewidth}p{.15\linewidth}p{.15\linewidth}p{.15\linewidth}p{.15\linewidth}}
+
+    \# & $\;$A & \multicolumn{4}{c}{Game Master} & $\;\:$B\\
+    \hline 
+
+    \theutterance \stepcounter{utterance}  
+
+    & & \multicolumn{4}{p{0.6\linewidth}}{\cellcolor[rgb]{0.9,0.9,0.9}{%
+	\makecell[{{p{\linewidth}}}]{% 
+	  \tt {\tiny [A$\langle$GM]}  
+	 Let us do the following task. The goal is to fill an empty grid that looks like this:\\ \tt \\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt \\ \tt A filled grid below is 5 by 5 and can look like this:\\ \tt \\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt ▢ ▢ E ▢ ▢\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt X X X X X\\ \tt \\ \tt I want you to describe this grid to me, step by step. You don't need to describe the empty squares, which are denoted with "▢". Only describe the location of letters in the grid. Then you wait for me to say "What is your next instruction?", and then you continue with the next step. Take the size of the grid into consideration while giving instructions. When you have described everything, you say "DONE".\\ \tt \\ \tt For the filled grid above, here are the example steps.\\ \tt \\ \tt What is your next instruction?\\ \tt Instruction: Put an E in second row third column\\ \tt \\ \tt What is your next instruction?\\ \tt Instruction: Fill the last row with X\\ \tt \\ \tt What is your next instruction?\\ \tt Instruction: DONE\\ \tt \\ \tt Ok. Please do this for the following example, which is a 5 by 5 grid.\\ \tt ▢ ▢ ▢ ▢ ▢\\ \tt Z Z Z ▢ Z\\ \tt Z ▢ Z ▢ Z\\ \tt Z ▢ ▢ ▢ ▢\\ \tt Z ▢ ▢ ▢ ▢\\ \tt What is your next instruction?\\ \tt  
+	  } 
+	   } 
+	   } 
+	 & \\ 
+ 
+
+    \theutterance \stepcounter{utterance}  
+
+    & \multicolumn{4}{p{0.6\linewidth}}{\cellcolor[rgb]{0.8,1,0.9}{%
+	\makecell[{{p{\linewidth}}}]{% 
+	  \tt {\tiny [A$\rangle$GM]}  
+	 Instruction: Place a 'Z' in the first column of the first row.\\ \tt \\ \tt What is your next instruction? 
+	  } 
+	   } 
+	   } 
+	 & & \\ 
+ 
+
+    \theutterance \stepcounter{utterance}  
+
+    & & & \multicolumn{2}{p{0.3\linewidth}}{\cellcolor[rgb]{0.95,0.95,0.95}{%
+	\makecell[{{p{\linewidth}}}]{% 
+	  \tt {\tiny [GM$|$GM]}  
+	 Invalid instruction format 
+	  } 
+	   } 
+	   } 
+	 & & \\ 
+ 
+
+\end{supertabular}
+}
+
+\end{document}

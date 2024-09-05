@@ -1,0 +1,1 @@
+{"turn scores": {"0": {"Accuracy": 1, "Violated Request Count": 0, "Parsed Request Count": 1, "Request Count": 1}}, "episode scores": {"Violated Request Count": 0, "Parsed Request Count": 1, "Request Count": 1, "Request Success Ratio": 1.0, "Aborted": 0, "Success": 1, "Lose": 0, "Main Score": 100.0, "Repetition-Guesser": 0, "Repetition-Describer": 0}}

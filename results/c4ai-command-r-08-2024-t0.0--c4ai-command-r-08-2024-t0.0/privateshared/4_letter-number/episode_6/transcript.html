@@ -1,0 +1,2714 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* This CSS is an adaptation from the answer by Roko C. Buljan in https://stackoverflow.com/a/71155446 */ 
+
+* {margin: 0; box-sizing: border-box;}
+
+body {background-color: rgb(157, 152, 150);}
+
+  /* dialogue header */
+
+.top-info {
+  text-align: center;
+  --rad: 20px;
+  --rad-sm: 3px;
+  font: 20px/1.5 sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+  background: #3f3e3e;
+  color: #fff;
+}
+
+.chat {
+    --rad: 20px;
+    --rad-sm: 3px;
+    font: 16px/1.5 sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+  }
+  
+  .msg {
+    position: relative;
+    max-width: 75%;
+    padding: 7px 15px;
+    margin-bottom: 30px;
+  }
+  
+  /* 5 levels, two players to/from game master and meta messages form game master */
+
+  .msg.b-gm {
+    border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
+    background: #874aaf;
+    color: #fff;
+    margin-left: 60%;
+  }
+
+  .msg.a-gm {
+    border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
+    background: #f39109;
+    color: #fff;
+    margin-right: 60%;
+  }
+  
+  .msg.gm-a {
+    border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
+    background: #c4c3c3;    
+    color: #0c0c0c;
+    margin-right: 40%;
+    margin-left: 20%;
+  }
+
+  .msg.gm-b {
+    border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
+    background: #c4c3c3;
+    color: #0c0c0c;
+    margin-right: 20%;
+    margin-left: 40%;
+  }
+
+  .msg.gm-gm {
+    background: #f1f1f1;
+    color: #373636;
+    margin-left: 40%;
+    margin-right: 40%;
+    font-size: 0.8rem;
+
+  }
+  
+  /* speaker labels */
+  
+  .msg::before {
+    content: attr(speaker);
+    font-size: 0.8rem;
+    position: absolute;
+    bottom: 100%;
+    color: #888;
+    white-space: nowrap;
+
+  }
+  
+  .msg.b-gm::before {
+    right: 15px;
+  }
+
+  .msg.gm-a::before {
+    right: 15px;
+  }
+
+  .msg.a-gm::before {
+    left: 15px;
+  }
+
+  .msg.gm-b::before {
+    left: 15px;
+  }
+
+  .msg.gm-gm::before {
+    left: 0px;
+  }
+  
+
+    </style>
+</head>
+<body>
+
+<br/>
+
+<div class="top-info">
+    <p>Interaction Transcript for letter-number, episode 6 with c4ai-command-r-08-2024-t0.0--c4ai-command-r-08-2024-t0.0.</p>
+</div>
+
+<br/>
+
+<div class="chat">
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>Numbers have been assigned to letters, but the questioner does not know about it yet. Here is the mapping:<br/><br/>WHAT: Numbered letters<br/>A: 4010<br/>B: 5678<br/>C: 8888<br/>D: 6555<br/>E: 5464<br/>F: 2130<br/>G: 3434<br/>H: 4767<br/>I: 8228<br/>J: 8003<br/><br/>Questions from the questioner will start with QUESTIONER. Please reply in the form: ANSWER: &lt;some text&gt;<br/><br/>I will also ask you questions. These questions will start with ME: . Please answer these questions with: ASIDE: &lt;some text&gt;<br/><br/>Important: Give short, direct answers!<br/><br/>Let us start.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is b?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is b? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 5678</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>5678</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>5678</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is c?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is c? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 8888</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>8888</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>8888</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is a?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is a? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 4010</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>4010</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>4010</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is d?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is d? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 6555</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>6555</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>6555</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is e?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is e? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 5464</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>5464</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>5464</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is f?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is f? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 2130</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>2130</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>2130</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is g?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is g? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 3434</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>3434</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>3434</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is h?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is h? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 4767</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>4767</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>4767</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is j?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is j? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 8003</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>8003</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>8003</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What number is i?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>QUESTIONER: What number is i? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: 8228</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>8228</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>8228</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for a is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for A valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for b is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for B valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for c is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for C valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for d is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for D valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for e is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for E valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for f is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for F valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for g is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for G valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for h is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for H valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for i is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: no</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for I valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the questioner know what the number for j is? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for J valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master: end" class="msg gm-gm">
+        <p>Game finished.</p>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,1 @@
+{"turn scores": {}, "episode scores": {"Precision": NaN, "Recall": NaN, "F1": NaN, "Main Score": NaN, "Average Changed Cell Count": NaN, "Average Generated Instruction Length": NaN, "Average Generated Expression Number of Tokens": NaN, "Success": 0, "Lose": 0, "Aborted": 1, "Request Count": 2, "Violated Request Count": 1, "Parsed Request Count": 1, "Request Success Ratio": 0.5}}

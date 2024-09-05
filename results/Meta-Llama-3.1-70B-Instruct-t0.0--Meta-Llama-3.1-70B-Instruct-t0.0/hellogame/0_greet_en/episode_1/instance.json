@@ -1,0 +1,1 @@
+{"game_id": 1, "prompt": "Your task is to greet and happily welcome the other person with the name:\n\nMax\n\nRules:\n\n1. You must start your message with 'GREET:'\n2. Your message must include 'Hello', 'welcome' and the other person's name\n\nImportant: You only have one try.\n\nLet's start.", "target_name": "Max"}

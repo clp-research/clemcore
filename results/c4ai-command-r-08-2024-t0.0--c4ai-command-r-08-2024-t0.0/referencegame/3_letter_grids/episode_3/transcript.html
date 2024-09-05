@@ -1,0 +1,162 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* This CSS is an adaptation from the answer by Roko C. Buljan in https://stackoverflow.com/a/71155446 */ 
+
+* {margin: 0; box-sizing: border-box;}
+
+body {background-color: rgb(157, 152, 150);}
+
+  /* dialogue header */
+
+.top-info {
+  text-align: center;
+  --rad: 20px;
+  --rad-sm: 3px;
+  font: 20px/1.5 sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+  background: #3f3e3e;
+  color: #fff;
+}
+
+.chat {
+    --rad: 20px;
+    --rad-sm: 3px;
+    font: 16px/1.5 sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+  }
+  
+  .msg {
+    position: relative;
+    max-width: 75%;
+    padding: 7px 15px;
+    margin-bottom: 30px;
+  }
+  
+  /* 5 levels, two players to/from game master and meta messages form game master */
+
+  .msg.b-gm {
+    border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
+    background: #874aaf;
+    color: #fff;
+    margin-left: 60%;
+  }
+
+  .msg.a-gm {
+    border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
+    background: #f39109;
+    color: #fff;
+    margin-right: 60%;
+  }
+  
+  .msg.gm-a {
+    border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
+    background: #c4c3c3;    
+    color: #0c0c0c;
+    margin-right: 40%;
+    margin-left: 20%;
+  }
+
+  .msg.gm-b {
+    border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
+    background: #c4c3c3;
+    color: #0c0c0c;
+    margin-right: 20%;
+    margin-left: 40%;
+  }
+
+  .msg.gm-gm {
+    background: #f1f1f1;
+    color: #373636;
+    margin-left: 40%;
+    margin-right: 40%;
+    font-size: 0.8rem;
+
+  }
+  
+  /* speaker labels */
+  
+  .msg::before {
+    content: attr(speaker);
+    font-size: 0.8rem;
+    position: absolute;
+    bottom: 100%;
+    color: #888;
+    white-space: nowrap;
+
+  }
+  
+  .msg.b-gm::before {
+    right: 15px;
+  }
+
+  .msg.gm-a::before {
+    right: 15px;
+  }
+
+  .msg.a-gm::before {
+    left: 15px;
+  }
+
+  .msg.gm-b::before {
+    left: 15px;
+  }
+
+  .msg.gm-gm::before {
+    left: 0px;
+  }
+  
+
+    </style>
+</head>
+<body>
+
+<br/>
+
+<div class="top-info">
+    <p>Interaction Transcript for letter_grids, episode 3 with c4ai-command-r-08-2024-t0.0--c4ai-command-r-08-2024-t0.0.</p>
+</div>
+
+<br/>
+
+<div class="chat">
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>You are given three grids, where each of them is 5 by 5 in size.<br/>Grids have empty cells marked with &quot;▢&quot; and filled cells marked with &quot;X&quot;.<br/>Your task is to generate a referring expression that best describes the target grid while distinguishing it from the two other distractor grids.<br/>The first grid is the target grid, and the following two grids are the distractors.<br/><br/>Target grid:<br/><br/>X X X X X<br/>X ▢ ▢ ▢ ▢<br/>X X X ▢ ▢<br/>X ▢ ▢ ▢ ▢<br/>X ▢ ▢ ▢ ▢<br/><br/>Distractor grid 1:<br/><br/>X X X X X<br/>X ▢ ▢ ▢ ▢<br/>X X X ▢ ▢<br/>X ▢ ▢ ▢ ▢<br/>X X X X X<br/><br/>Distractor grid 2:<br/><br/>X ▢ ▢ ▢ X<br/>X ▢ ▢ X ▢<br/>X X X ▢ ▢<br/>X ▢ ▢ X ▢<br/>X ▢ ▢ ▢ X<br/><br/>Instruction: Describe the target grid.<br/>Generate the referring expression starting with the tag &quot;Expression: &quot; for the given target grid. Omit any other text.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>Expression: The grid has a solid top row and a single column of X&#x27;s on the right side.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>Expression: The grid has a solid top row and a single column of X&#x27;s on the right side.</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>You are given three grids, where each of them is 5 by 5 in size.<br/>Grids have empty cells marked with &quot;▢&quot; and filled cells marked with &quot;X&quot;.<br/>You are also given a referring expression that describes one of the given grids.<br/>Your task is to select the grid that matches the given referring expression.<br/>Generate only the number (in text) of the grid that matches the given expression by selecting first, second, or third.<br/><br/>First:<br/><br/>X X X X X<br/>X ▢ ▢ ▢ ▢<br/>X X X ▢ ▢<br/>X ▢ ▢ ▢ ▢<br/>X ▢ ▢ ▢ ▢<br/><br/>Second:<br/><br/>X X X X X<br/>X ▢ ▢ ▢ ▢<br/>X X X ▢ ▢<br/>X ▢ ▢ ▢ ▢<br/>X X X X X<br/><br/>Third:<br/><br/>X ▢ ▢ ▢ X<br/>X ▢ ▢ X ▢<br/>X X X ▢ ▢<br/>X ▢ ▢ X ▢<br/>X ▢ ▢ ▢ X<br/><br/>Expression: The grid has a solid top row and a single column of X&#x27;s on the right side.<br/>Question: Which grid does the expression refer to?<br/>Start with the tag &quot;Answer: &quot;, followed by your selection. Omit any other text.<br/></p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>Answer: Third</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>Answer: Third</p>
+    </div>
+
+</div>
+
+</body>
+</html>

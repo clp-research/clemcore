@@ -1,0 +1,950 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* This CSS is an adaptation from the answer by Roko C. Buljan in https://stackoverflow.com/a/71155446 */ 
+
+* {margin: 0; box-sizing: border-box;}
+
+body {background-color: rgb(157, 152, 150);}
+
+  /* dialogue header */
+
+.top-info {
+  text-align: center;
+  --rad: 20px;
+  --rad-sm: 3px;
+  font: 20px/1.5 sans-serif;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  max-width: 900px;
+  margin: auto;
+  background: #3f3e3e;
+  color: #fff;
+}
+
+.chat {
+    --rad: 20px;
+    --rad-sm: 3px;
+    font: 16px/1.5 sans-serif;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    background: #fff;
+  }
+  
+  .msg {
+    position: relative;
+    max-width: 75%;
+    padding: 7px 15px;
+    margin-bottom: 30px;
+  }
+  
+  /* 5 levels, two players to/from game master and meta messages form game master */
+
+  .msg.b-gm {
+    border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
+    background: #874aaf;
+    color: #fff;
+    margin-left: 60%;
+  }
+
+  .msg.a-gm {
+    border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
+    background: #f39109;
+    color: #fff;
+    margin-right: 60%;
+  }
+  
+  .msg.gm-a {
+    border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
+    background: #c4c3c3;    
+    color: #0c0c0c;
+    margin-right: 40%;
+    margin-left: 20%;
+  }
+
+  .msg.gm-b {
+    border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
+    background: #c4c3c3;
+    color: #0c0c0c;
+    margin-right: 20%;
+    margin-left: 40%;
+  }
+
+  .msg.gm-gm {
+    background: #f1f1f1;
+    color: #373636;
+    margin-left: 40%;
+    margin-right: 40%;
+    font-size: 0.8rem;
+
+  }
+  
+  /* speaker labels */
+  
+  .msg::before {
+    content: attr(speaker);
+    font-size: 0.8rem;
+    position: absolute;
+    bottom: 100%;
+    color: #888;
+    white-space: nowrap;
+
+  }
+  
+  .msg.b-gm::before {
+    right: 15px;
+  }
+
+  .msg.gm-a::before {
+    right: 15px;
+  }
+
+  .msg.a-gm::before {
+    left: 15px;
+  }
+
+  .msg.gm-b::before {
+    left: 15px;
+  }
+
+  .msg.gm-gm::before {
+    left: 0px;
+  }
+  
+
+    </style>
+</head>
+<body>
+
+<br/>
+
+<div class="top-info">
+    <p>Interaction Transcript for travel-booking, episode 6 with c4ai-command-r-08-2024-t0.0--c4ai-command-r-08-2024-t0.0.</p>
+</div>
+
+<br/>
+
+<div class="chat">
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>You are a customer of a travel agency. Here is a description of the details of the travel you want to make:<br/><br/>WHAT: Travel<br/>FROM: Prague<br/>TO: Brussels<br/>BY: Taxi<br/>CLASS: First<br/>WHEN: In two weeks<br/><br/>The travel agent does not know about it yet. <br/><br/>Questions from the travel agent will start with TRAVEL-AGENT. Please reply in the form: ANSWER: &lt;some text&gt;<br/><br/>I will also ask you questions. These questions will start with ME: . Please answer these questions with: ASIDE: &lt;some text&gt;<br/><br/>Important: Give short, direct answers!<br/><br/>Let us start.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Is the travel agent aware of your origin? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for FROM valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know where you want to go to? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for TO valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you believe that the travel agent is aware of how you are going to travel? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: no</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for BY valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows in which class the trip will happen? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for CLASS valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Have you informed the travel agent about your dates? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: no</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for WHEN valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>What kind of class do you wish?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>TRAVEL-AGENT: What kind of class do you wish? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: First class.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>First class.</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>First class.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know where your trip is starting? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for FROM valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you believe that the travel agent is aware of where you are going? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for TO valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Has the travel agent been informed about your preferred means of transportation? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for BY valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows in which class the trip will happen? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for CLASS valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Have you informed the travel agent about your dates? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: no</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for WHEN valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>When are you leaving?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>TRAVEL-AGENT: When are you leaving? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: In two weeks.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>In two weeks.</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>In two weeks.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Have you already mentioned the origin of your trip to the travel agent? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: no</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for FROM valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  If I asked the travel agent where you want to go, would he or she know the answer? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for TO valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know how you wish to travel? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for BY valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows in which class the trip will happen? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for CLASS valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Have you informed the travel agent about your dates? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: no</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for WHEN valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>Do you want a specific kind of transport?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>TRAVEL-AGENT: Do you want a specific kind of transport? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: Yes, I would like to travel by taxi.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>Yes, I would like to travel by taxi.</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>Yes, I would like to travel by taxi.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know where your trip is starting? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for FROM valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows where you want to go to? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for TO valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know how you wish to travel? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for BY valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know your preference for class? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for CLASS valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows when you want to leave? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for WHEN valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>Where are you going to?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>TRAVEL-AGENT: Where are you going to? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: I am traveling from Prague to Brussels.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>I am traveling from Prague to Brussels.</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Value for FROM anticipated; ground truth turn updated from 4 to 3.</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>I am traveling from Prague to Brussels.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows where you depart from? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for FROM valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Is the travel agent aware of your destination? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for TO valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Have you already mentioned the means of transportation of your trip to the travel agent? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for BY valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Is the travel agent aware of which class you would like to book? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for CLASS valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Do you think the travel agent knows when you want to leave? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for WHEN valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>What is the next request?</p>
+    </div>
+
+    <div speaker="Player 2 to Game Master" class="msg b-gm">
+        <p>Where does your trip begin?</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>TRAVEL-AGENT: Where does your trip begin? Answer only this question in one short sentence and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ANSWER: Prague.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>Prague.</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Slot filled: True</p>
+    </div>
+
+    <div speaker="Game Master to Player 2" class="msg gm-b">
+        <p>Prague.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>Begin probing</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent already know your origin? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for FROM valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Is the travel agent aware of your destination? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for TO valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  If I asked the travel agent how you are travelling, would he or she know the answer? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>NA</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME: Please answer this question carefully. If I asked the travel agent how you are travelling, would he or she know the answer? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for BY valid after 2 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Does the travel agent know your preference for class? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: Yes</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>yes</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for CLASS valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is correct.</p>
+    </div>
+
+    <div speaker="Game Master to Player 1" class="msg gm-a">
+        <p>ME:  Has the travel agent been informed about the dates of your trip? Answer this question with yes or no and then stop.</p>
+    </div>
+
+    <div speaker="Player 1 to Game Master" class="msg a-gm">
+        <p>ASIDE: No.</p>
+    </div>
+
+    <div speaker="Game Master: parse" class="msg gm-gm">
+        <p>no</p>
+    </div>
+
+    <div speaker="Game Master: metadata" class="msg gm-gm">
+        <p>Answer for WHEN valid after 1 tries.</p>
+    </div>
+
+    <div speaker="Game Master: check" class="msg gm-gm">
+        <p>Answer is incorrect.</p>
+    </div>
+
+    <div speaker="Game Master: info" class="msg gm-gm">
+        <p>End probing</p>
+    </div>
+
+    <div speaker="Game Master: end" class="msg gm-gm">
+        <p>Game finished.</p>
+    </div>
+
+</div>
+
+</body>
+</html>
