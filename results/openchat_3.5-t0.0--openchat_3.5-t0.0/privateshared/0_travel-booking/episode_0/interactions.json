@@ -1,1 +1,406 @@
-{"players": {"GM": "Game master for privateshared", "Player 1": "Answerer: openchat_3.5", "Player 2": "Questioner: Programmatic"}, "turns": [[{"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:14.939513", "action": {"type": "send message", "content": "You are a customer of a travel agency. Here is a description of the details of the travel you want to make:\n\nWHAT: Travel\nFROM: London\nTO: Amsterdam\nBY: Plane\nCLASS: The cheapest\nWHEN: On March 3\n\nThe travel agent does not know about it yet. \n\nQuestions from the travel agent will start with TRAVEL-AGENT. Please reply in the form: ANSWER: <some text>\n\nI will also ask you questions. These questions will start with ME: . Please answer these questions with: ASIDE: <some text>\n\nImportant: Give short, direct answers!\n\nLet us start."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:14.939578", "action": {"type": "info", "content": "Begin probing"}}, {"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:14.939660", "action": {"type": "probe question", "content": "ME:  Have you informed the travel agent about the place of departure? Answer this question with yes or no and then stop."}}, {"from": "Player 1", "to": "GM", "timestamp": "2024-09-05T16:23:15.879913", "action": {"type": "probe answer", "content": "ASIDE: No."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:15.880173", "action": {"type": "parse", "content": "no"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:15.880209", "action": {"type": "metadata", "content": "Answer for FROM valid after 1 tries."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:15.880254", "action": {"type": "check", "content": "Answer is correct."}}, {"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:15.880282", "action": {"type": "probe question", "content": "ME:  Have you informed the travel agent about your destination? Answer this question with yes or no and then stop."}}, {"from": "Player 1", "to": "GM", "timestamp": "2024-09-05T16:23:16.103693", "action": {"type": "probe answer", "content": "ASIDE: No."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.103843", "action": {"type": "parse", "content": "no"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.103874", "action": {"type": "metadata", "content": "Answer for TO valid after 1 tries."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.103918", "action": {"type": "check", "content": "Answer is correct."}}, {"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:16.103945", "action": {"type": "probe question", "content": "ME:  Has the travel agent been informed about your preferred means of transportation? Answer this question with yes or no and then stop."}}, {"from": "Player 1", "to": "GM", "timestamp": "2024-09-05T16:23:16.328476", "action": {"type": "probe answer", "content": "ASIDE: No."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.328662", "action": {"type": "parse", "content": "no"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.328695", "action": {"type": "metadata", "content": "Answer for BY valid after 1 tries."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.328738", "action": {"type": "check", "content": "Answer is correct."}}, {"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:16.328765", "action": {"type": "probe question", "content": "ME:  Have you informed the travel agent about your class preference? Answer this question with yes or no and then stop."}}, {"from": "Player 1", "to": "GM", "timestamp": "2024-09-05T16:23:16.552390", "action": {"type": "probe answer", "content": "ASIDE: No."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.552535", "action": {"type": "parse", "content": "no"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.552566", "action": {"type": "metadata", "content": "Answer for CLASS valid after 1 tries."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.552609", "action": {"type": "check", "content": "Answer is correct."}}, {"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:16.552634", "action": {"type": "probe question", "content": "ME:  Is the travel agent aware of the dates of your trip? Answer this question with yes or no and then stop."}}, {"from": "Player 1", "to": "GM", "timestamp": "2024-09-05T16:23:16.739554", "action": {"type": "probe answer", "content": "ASIDE: No"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.739708", "action": {"type": "parse", "content": "no"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.739739", "action": {"type": "metadata", "content": "Answer for WHEN valid after 1 tries."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.739781", "action": {"type": "check", "content": "Answer is correct."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:16.739804", "action": {"type": "info", "content": "End probing"}}], [{"from": "GM", "to": "Player 2", "timestamp": "2024-09-05T16:23:16.740144", "action": {"type": "send message", "content": "What is the next request?"}}, {"from": "Player 2", "to": "GM", "timestamp": "2024-09-05T16:23:16.740186", "action": {"type": "get message", "content": "When do you wish to start your journey?"}}, {"from": "GM", "to": "Player 1", "timestamp": "2024-09-05T16:23:16.740211", "action": {"type": "send message", "content": "TRAVEL-AGENT: When do you wish to start your journey? Answer only this question in one short sentence and then stop."}}, {"from": "Player 1", "to": "GM", "timestamp": "2024-09-05T16:23:17.073517", "action": {"type": "get message", "content": "ASIDE: On March 3."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:17.073725", "action": {"type": "parse", "content": "NA"}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:17.073751", "action": {"type": "invalid format", "content": "Abort: invalid format in slot filling."}}, {"from": "GM", "to": "GM", "timestamp": "2024-09-05T16:23:17.073813", "action": {"type": "end", "content": "Game finished."}}]], "probes": [[{"target": "FROM", "question": "ME: Have you informed the travel agent about the place of departure? Answer this question with yes or no and then stop.", "gt": 0, "answer": "ASIDE: No.", "value": 0, "tries": 1}, {"target": "TO", "question": "ME: Have you informed the travel agent about your destination? Answer this question with yes or no and then stop.", "gt": 0, "answer": "ASIDE: No.", "value": 0, "tries": 1}, {"target": "BY", "question": "ME: Has the travel agent been informed about your preferred means of transportation? Answer this question with yes or no and then stop.", "gt": 0, "answer": "ASIDE: No.", "value": 0, "tries": 1}, {"target": "CLASS", "question": "ME: Have you informed the travel agent about your class preference? Answer this question with yes or no and then stop.", "gt": 0, "answer": "ASIDE: No.", "value": 0, "tries": 1}, {"target": "WHEN", "question": "ME: Is the travel agent aware of the dates of your trip? Answer this question with yes or no and then stop.", "gt": 0, "answer": "ASIDE: No", "value": 0, "tries": 1}]], "realised_slots": {"when": 0, "class": 1, "to": 2, "from": 3, "by": 4}, "Request Count": [5, 1, 0, 0, 0, 0], "Parsed Request Count": [5, 0, 0, 0, 0, 0], "Violated Request Count": [0, 1, 0, 0, 0, 0], "Filled Slots": [], "Aborted": true, "Played Probe Rounds": 1}
+{
+  "players": {
+    "GM": "Game master for privateshared",
+    "Player 1": "Answerer: openchat_3.5",
+    "Player 2": "Questioner: Programmatic"
+  },
+  "turns": [
+    [
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:14.939513",
+        "action": {
+          "type": "send message",
+          "content": "You are a customer of a travel agency. Here is a description of the details of the travel you want to make:\n\nWHAT: Travel\nFROM: London\nTO: Amsterdam\nBY: Plane\nCLASS: The cheapest\nWHEN: On March 3\n\nThe travel agent does not know about it yet. \n\nQuestions from the travel agent will start with TRAVEL-AGENT. Please reply in the form: ANSWER: <some text>\n\nI will also ask you questions. These questions will start with ME: . Please answer these questions with: ASIDE: <some text>\n\nImportant: Give short, direct answers!\n\nLet us start."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:14.939578",
+        "action": {
+          "type": "info",
+          "content": "Begin probing"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:14.939660",
+        "action": {
+          "type": "probe question",
+          "content": "ME:  Have you informed the travel agent about the place of departure? Answer this question with yes or no and then stop."
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:15.879913",
+        "action": {
+          "type": "probe answer",
+          "content": "ASIDE: No."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:15.880173",
+        "action": {
+          "type": "parse",
+          "content": "no"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:15.880209",
+        "action": {
+          "type": "metadata",
+          "content": "Answer for FROM valid after 1 tries."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:15.880254",
+        "action": {
+          "type": "check",
+          "content": "Answer is correct."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:15.880282",
+        "action": {
+          "type": "probe question",
+          "content": "ME:  Have you informed the travel agent about your destination? Answer this question with yes or no and then stop."
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.103693",
+        "action": {
+          "type": "probe answer",
+          "content": "ASIDE: No."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.103843",
+        "action": {
+          "type": "parse",
+          "content": "no"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.103874",
+        "action": {
+          "type": "metadata",
+          "content": "Answer for TO valid after 1 tries."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.103918",
+        "action": {
+          "type": "check",
+          "content": "Answer is correct."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:16.103945",
+        "action": {
+          "type": "probe question",
+          "content": "ME:  Has the travel agent been informed about your preferred means of transportation? Answer this question with yes or no and then stop."
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.328476",
+        "action": {
+          "type": "probe answer",
+          "content": "ASIDE: No."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.328662",
+        "action": {
+          "type": "parse",
+          "content": "no"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.328695",
+        "action": {
+          "type": "metadata",
+          "content": "Answer for BY valid after 1 tries."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.328738",
+        "action": {
+          "type": "check",
+          "content": "Answer is correct."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:16.328765",
+        "action": {
+          "type": "probe question",
+          "content": "ME:  Have you informed the travel agent about your class preference? Answer this question with yes or no and then stop."
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.552390",
+        "action": {
+          "type": "probe answer",
+          "content": "ASIDE: No."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.552535",
+        "action": {
+          "type": "parse",
+          "content": "no"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.552566",
+        "action": {
+          "type": "metadata",
+          "content": "Answer for CLASS valid after 1 tries."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.552609",
+        "action": {
+          "type": "check",
+          "content": "Answer is correct."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:16.552634",
+        "action": {
+          "type": "probe question",
+          "content": "ME:  Is the travel agent aware of the dates of your trip? Answer this question with yes or no and then stop."
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.739554",
+        "action": {
+          "type": "probe answer",
+          "content": "ASIDE: No"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.739708",
+        "action": {
+          "type": "parse",
+          "content": "no"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.739739",
+        "action": {
+          "type": "metadata",
+          "content": "Answer for WHEN valid after 1 tries."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.739781",
+        "action": {
+          "type": "check",
+          "content": "Answer is correct."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.739804",
+        "action": {
+          "type": "info",
+          "content": "End probing"
+        }
+      }
+    ],
+    [
+      {
+        "from": "GM",
+        "to": "Player 2",
+        "timestamp": "2024-09-05T16:23:16.740144",
+        "action": {
+          "type": "send message",
+          "content": "What is the next request?"
+        }
+      },
+      {
+        "from": "Player 2",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:16.740186",
+        "action": {
+          "type": "get message",
+          "content": "When do you wish to start your journey?"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "Player 1",
+        "timestamp": "2024-09-05T16:23:16.740211",
+        "action": {
+          "type": "send message",
+          "content": "TRAVEL-AGENT: When do you wish to start your journey? Answer only this question in one short sentence and then stop."
+        }
+      },
+      {
+        "from": "Player 1",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:17.073517",
+        "action": {
+          "type": "get message",
+          "content": "ASIDE: On March 3."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:17.073725",
+        "action": {
+          "type": "parse",
+          "content": "NA"
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:17.073751",
+        "action": {
+          "type": "invalid format",
+          "content": "Abort: invalid format in slot filling."
+        }
+      },
+      {
+        "from": "GM",
+        "to": "GM",
+        "timestamp": "2024-09-05T16:23:17.073813",
+        "action": {
+          "type": "end",
+          "content": "Game finished."
+        }
+      }
+    ]
+  ],
+  "probes": [
+    [
+      {
+        "target": "FROM",
+        "question": "ME: Have you informed the travel agent about the place of departure? Answer this question with yes or no and then stop.",
+        "gt": 0,
+        "answer": "ASIDE: No.",
+        "value": 0,
+        "tries": 1
+      },
+      {
+        "target": "TO",
+        "question": "ME: Have you informed the travel agent about your destination? Answer this question with yes or no and then stop.",
+        "gt": 0,
+        "answer": "ASIDE: No.",
+        "value": 0,
+        "tries": 1
+      },
+      {
+        "target": "BY",
+        "question": "ME: Has the travel agent been informed about your preferred means of transportation? Answer this question with yes or no and then stop.",
+        "gt": 0,
+        "answer": "ASIDE: No.",
+        "value": 0,
+        "tries": 1
+      },
+      {
+        "target": "CLASS",
+        "question": "ME: Have you informed the travel agent about your class preference? Answer this question with yes or no and then stop.",
+        "gt": 0,
+        "answer": "ASIDE: No.",
+        "value": 0,
+        "tries": 1
+      },
+      {
+        "target": "WHEN",
+        "question": "ME: Is the travel agent aware of the dates of your trip? Answer this question with yes or no and then stop.",
+        "gt": 0,
+        "answer": "ASIDE: No",
+        "value": 0,
+        "tries": 1
+      }
+    ]
+  ],
+  "realised_slots": {
+    "when": 0,
+    "class": 1,
+    "to": 2,
+    "from": 3,
+    "by": 4
+  },
+  "Request Count": [
+    5,
+    1,
+    0,
+    0,
+    0,
+    0
+  ],
+  "Parsed Request Count": [
+    5,
+    0,
+    0,
+    0,
+    0,
+    0
+  ],
+  "Violated Request Count": [
+    0,
+    1,
+    0,
+    0,
+    0,
+    0
+  ],
+  "Filled Slots": [],
+  "Aborted": true,
+  "Played Probe Rounds": 1
+}
