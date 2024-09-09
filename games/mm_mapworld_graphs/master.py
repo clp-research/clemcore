@@ -648,7 +648,7 @@ class MM_MapWorldGraphsScorer(GameScorer):
             self.log_episode_score('invalid_moves', np.NaN)
             self.log_episode_score('visited', np.NaN)
             self.log_episode_score('seen', np.NaN)
-            self.log_episode_score('effieciency', np.NaN)
+            self.log_episode_score('efficiency', np.NaN)
             self.log_episode_score('graph_similarity', np.NaN)
             self.log_episode_score('exploration', np.NaN)
             self.log_episode_score(BENCH_SCORE, np.NaN)
@@ -665,7 +665,7 @@ class MM_MapWorldGraphsScorer(GameScorer):
                 self.log_episode_score(METRIC_SUCCESS, 0)
                 self.log_episode_score(METRIC_LOSE, 1)
             if similarities:
-                self.log_episode_score('graph_similarity', similarities[-1])
+                self.log_episode_score('graph_similarity', similarities[-1]*100)
             else:
                 self.log_episode_score('graph_similarity', 0)
             self.log_episode_score('moves', valid_moves + invalid_moves)
@@ -674,7 +674,7 @@ class MM_MapWorldGraphsScorer(GameScorer):
             self.log_episode_score('visited', len(visited))
             self.log_episode_score('seen', len(seen))
             eff = 100*sum(good_move)/max([len(good_move), 1])
-            self.log_episode_score('effieciency', eff)
+            self.log_episode_score('efficiency', eff)
             exp = 100*len(visited)/len(self.nodes)
             self.log_episode_score('exploration', exp)
             if not exp and not eff:
