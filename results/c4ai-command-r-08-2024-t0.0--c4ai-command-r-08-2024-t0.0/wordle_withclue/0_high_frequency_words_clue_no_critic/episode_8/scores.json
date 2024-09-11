@@ -1,1 +1,0 @@
-{"turn scores": {"1": {"Request Count": 2, "Parsed Request Count": 1, "Violated Request Count": 1, "closeness score": 25, "strategy score": 100}}, "episode scores": {"Aborted": 0, "Lose": 0, "Success": 1, "Request Count": 2, "Parsed Request Count": 1, "Violated Request Count": 1, "Request Success Ratio": 0.5, "Main Score": 100.0, "repeats guess": 0, "total guess repetitions": 0}}
