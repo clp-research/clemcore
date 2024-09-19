@@ -85,7 +85,7 @@ Open `backends/hf_local_models.json` in your editor of choice. This file contain
 the huggingface-local backend. To make a new model available, an entry for it needs to be added to this registry.  
 ##### Basic model entry
 A minimal model entry contains the model name, the backend to handle it, its HF ID, a bool that determines if a premade 
-chat template for it will be loaded from HF and the EOS string to be culled from its outputs:  
+chat template for it will be loaded from HF and the EOS regular expression to be culled from its outputs:  
 ```json
 {
   "model_name": "Mistral-7B-Instruct-v0.1",

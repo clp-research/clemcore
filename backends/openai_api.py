@@ -99,7 +99,12 @@ class OpenAIModel(backends.Model):
         """
         prompt = self.encode_messages(messages)
 
-        api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
+        if self.model_spec.o1_model:
+            api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
+                                                               messages=prompt,
+                                                               temperature=1)
+        else:
+            api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
                                                            messages=prompt,
                                                            temperature=self.get_temperature(),
                                                            max_tokens=self.get_max_tokens())

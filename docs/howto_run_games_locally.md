@@ -41,6 +41,26 @@ Create a file `key.json` in the project root and paste in your api key and base 
 }
 ```
 
+### Providers hosting models
+
+We strive to have available a hosted model on our infrastructure (enquire with you supervisor), but can't guarantee that it's up all the time.
+
+There are some commercial providers offering a variety of (open-weight) models; some of these offer generous inference credit when you sign up. These can be a good choice when you're starting out.
+
+
+- Together.ai - 25 $
+  Models list: https://docs.together.ai/docs/inference-models
+  Base API URL: https://api.together.xyz/v1
+- Anyscale - 20 $
+  Models list: https://console.anyscale.com/v2
+  Base API URL: https://api.endpoints.anyscale.com/v1
+- Groq - 20 $
+  Models list: https://console.groq.com/docs/models
+  Base URL: https://api.groq.com/openai/v1
+
+
+
+
 # Validating your installation
 
 Go into the project root and prepare path to run from cmdline
