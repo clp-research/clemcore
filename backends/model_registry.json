@@ -1046,6 +1046,46 @@
       "parameters": "123B"
   },
   {
+      "model_name": "Qwen2.5-7B-Instruct",
+      "backend": "huggingface_local",
+      "huggingface_id": "Qwen/Qwen2.5-7B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-07-24",
+      "open_weight": true,
+      "parameters": "7B"
+  },
+  {
+      "model_name": "Qwen2.5-14B-Instruct",
+      "backend": "huggingface_local",
+      "huggingface_id": "Qwen/Qwen2.5-14B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-07-24",
+      "open_weight": true,
+      "parameters": "14B"
+  },
+  {
+      "model_name": "Qwen2.5-32B-Instruct",
+      "backend": "huggingface_local",
+      "huggingface_id": "Qwen/Qwen2.5-32B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-07-24",
+      "open_weight": true,
+      "parameters": "32B"
+  },
+  {
+      "model_name": "Qwen2.5-72B-Instruct",
+      "backend": "huggingface_local",
+      "huggingface_id": "Qwen/Qwen2.5-72B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-07-24",
+      "open_weight": true,
+      "parameters": "72B"
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
