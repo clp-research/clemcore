@@ -314,7 +314,7 @@ class WordleGameMaster(GameMaster):
                 if game.use_critic:
                     if not ignore_critic:
                         guess_before_criticism = guess
-                        while game.proceeds:
+                        while game.proceeds():
                             (
                                 critic_agreement,
                                 critic_explanation,

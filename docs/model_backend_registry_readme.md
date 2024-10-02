@@ -10,7 +10,13 @@ Further key/values depend on the backend handling the model.
 This backend requires these **mandatory** key/values:  
 `huggingface_id`(string): The full huggingface model ID; huggingface user name / model name. Example: `01-ai/Yi-34B-Chat`  
 `premade_chat_template`(bool): If `true`, the chat template that is applied for generation is loaded from the model repository on huggingface. If `false`, the value of `custom_chat_template` will be used if defined, otherwise a generic chat template is applied (highly discouraged).  
-`eos_to_cull`(string): This is the string representation of the model's EOS token. It needs to be removed by the backend to assure proper processing by clembench. Example: `<|im_end|>` (This is mandatory as there are models that do not define this in their tokenizer configuration.)  
+`eos_to_cull`(string): This is a regular expression matching the model's EOS token or longer substrings at the end of 
+the model's outputs. These need to be removed by the backend to assure proper processing by clembench. Make sure that 
+this contains proper python regular expressions matching the intended substrings. Characters and sequences that can be 
+parsed as python regular expression special characters or special sequences, but are part of model special token strings 
+or chat templates need to be properly escaped by "\\"! Note the double backslash "\\", which is necessary to properly 
+handle the escape between JSON and python!
+Example: `<\\|im_end\\|>` (This is mandatory as there are models that do not define this in their tokenizer configuration.)  
 
 The following key/values are **optional**, but should be defined for models that require them for proper functioning:  
 `requires_api_key`(bool): If `true`, the backend will load a huggingface api access key/token from `key.json`, which is required to access 'gated' models like Meta's Llama2.  
@@ -27,7 +33,13 @@ the `TheBloke/openchat_3.5-GGUF` repository.
 `premade_chat_template`(bool): If `true`, the chat template that is applied for generation is loaded from the model 
 repository on huggingface. If `false`, the value of `custom_chat_template` will be used if defined, otherwise a generic 
 chat template is applied (highly discouraged).  
-`eos_to_cull`(string): This is the string representation of the model's EOS token. It needs to be removed by the backend to assure proper processing by clembench. Example: `<|im_end|>` (This is mandatory as there are models that do not define this in their tokenizer configuration.)  
+`eos_to_cull`(string): This is a regular expression matching the model's EOS token or longer substrings at the end of 
+the model's outputs. These need to be removed by the backend to assure proper processing by clembench. Make sure that 
+this contains proper python regular expressions matching the intended substrings. Characters and sequences that can be 
+parsed as python regular expression special characters or special sequences, but are part of model special token strings 
+or chat templates need to be properly escaped by "\\"! Note the double backslash "\\", which is necessary to properly 
+handle the escape between JSON and python!
+Example: `<\\|im_end\\|>` (This is mandatory as there are models that do not define this in their tokenizer configuration.)
 
 The following key/values are **optional**, but should be defined for models that require them for proper functioning:  
 `requires_api_key`(bool): If `true`, the backend will load a huggingface api access key/token from `key.json`, which is required to access 'gated' models like Meta's Llama2.  
