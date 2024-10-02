@@ -4,7 +4,7 @@
         "generator": "random",
         "opponent difficulty": 1,
         "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
-        "wordlist": "default.json"
+        "wordlist": "original.json"
     },  
     "variables": {
         "Risk": {
