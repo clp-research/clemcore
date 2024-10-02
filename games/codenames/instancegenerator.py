@@ -12,7 +12,7 @@ from clemgame.file_utils import file_path
 from games.codenames.constants import *
 
 FILENAME = "instances.json"
-STRICT_FILENAME = "strict_instances.json"
+GENEROUS_FILENAME = "generous_instances.json"
 FLAGS = ["IGNORE RAMBLING", "IGNORE FALSE TARGETS OR GUESSES", "REPROMPT ON ERROR", "STRIP WORDS", "IGNORE NUMBER OF TARGETS"]
 
 def generate_random(wordlist, required):
@@ -140,13 +140,13 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
     def __init__(self):
         super().__init__(GAME_NAME)
 
-    def generate(self, keep=False, variable_name=None, experiment_name=None, strict=False):
+    def generate(self, keep=False, variable_name=None, experiment_name=None, generous=False):
         # @overwrite
-        if strict:
-            filename = STRICT_FILENAME
+        if generous:
+            filename = GENEROUS_FILENAME
         else:
             filename = FILENAME
-        if not self.on_generate(variable_name, experiment_name, strict):
+        if not self.on_generate(variable_name, experiment_name, generous):
             return
         if keep:
             if variable_name and experiment_name:
@@ -158,7 +158,7 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
             self.replace_instances(variable_name, experiment_name, filename)
         self.store_file(self.instances, filename, sub_dir="in")
         
-    def on_generate(self, variable_name = None, experiment_name = None, strict=False):
+    def on_generate(self, variable_name = None, experiment_name = None, generous=False):
         # read experiment config file
         experiment_config = self.load_json("resources/experiments.json")
         defaults = experiment_config["default"]
@@ -212,15 +212,15 @@ class CodenamesInstanceGenerator(GameInstanceGenerator):
                 # set flags
                 experiment["flags"] = {}
                 for flag in FLAGS:
-                    if strict:
-                        experiment["flags"][flag] = False
-                    else:
+                    if generous:
                         experiment["flags"][flag] = True
+                    else:
+                        experiment["flags"][flag] = False
 
                 # FIXME: bad hack to always strip words
                 experiment["flags"]["STRIP WORDS"] = True
 
-                # create game instances
+                # create game instances (also with tqdm possible here)
                 for game_id in tqdm(range(experiment["number of instances"])):
                     # choose correct generator function
                     assignments = experiment[ASSIGNMENTS]
@@ -291,10 +291,10 @@ if __name__ == '__main__':
     parser.add_argument("-k", "--keep", help="Optional flag to keep already generated instances and only replace new instances that will be generated for a specific variable and/or experiment. Otherwise overwrite all old instances.", action="store_true")
     parser.add_argument("-v", "--variable-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment suite aka variable.")
     parser.add_argument("-e", "--experiment-name", type=str, help="Optional argument to only (re-) generate instances for a specific experiment (variable name must also be set!).")
-    parser.add_argument("-s", "--strict", help="Optional flag to generate strict instances where all flags are set to False.", action="store_true")
+    parser.add_argument("-g", "--generous", help="Optional flag to generate generous instances where all flags are set to True.", action="store_true")
     args = parser.parse_args()
     if args.experiment_name and not args.variable_name:
         print("Running a specific experiment requires both the experiment name (-e) and the variable name (-v)!")
     else:
         random.seed(SEED)
-        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name, strict = args.strict)
+        CodenamesInstanceGenerator().generate(keep = args.keep, variable_name = args.variable_name, experiment_name = args.experiment_name, generous = args.generous)
