@@ -33,26 +33,25 @@ class CodenamesScorer(GameScorer):
                           REVEALED: {TARGET: 0, TEAM: 0, OPPONENT: 0, INNOCENT: 0, ASSASSIN: 0, TOTAL: 0}}
             for event in turn:
                 action = event["action"]
-                match action["type"]:
-                    case Turn_logs.VALIDATION_ERROR:
-                        player = action["content"]["player"]
-                        turn_score[player][Turn_logs.VALIDATION_ERROR] += 1
-                    case Turn_logs.GUESSES:
-                        turn_score[Turn_logs.GUESSES] =  action["content"]
-                    case Turn_logs.WORD_TARGETED:
-                        # FIXME: this should not be needed when wrong targets and guesses are removed from the utterances!
-                        if not action["content"]["assignment"]:
-                            continue
-                        turn_score[TARGETED][action["content"]["assignment"]] += 1
-                        turn_score[TARGETED][TOTAL] += 1
+                if action["type"] == Turn_logs.VALIDATION_ERROR:
+                    player = action["content"]["player"]
+                    turn_score[player][Turn_logs.VALIDATION_ERROR] += 1
+                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.GUESSES:
+                    turn_score[Turn_logs.GUESSES] =  action["content"]
+                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.WORD_TARGETED:
+                    # FIXME: this should not be needed when wrong targets and guesses are removed from the utterances!
+                    if not action["content"]["assignment"]:
+                        continue
+                    turn_score[TARGETED][action["content"]["assignment"]] += 1
+                    turn_score[TARGETED][TOTAL] += 1
                     
-                    case Turn_logs.TEAM_REVEALED:
-                        turn_score[REVEALED][action["content"]["assignment"]] += 1
-                        turn_score[REVEALED][TOTAL] += 1
-                    case Turn_logs.TARGET_REVEALED:
-                        turn_score[REVEALED][TARGET] += 1
-                    case Turn_logs.BOARD_STATUS:
-                        board_status = action["content"]
+                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.TEAM_REVEALED:
+                    turn_score[REVEALED][action["content"]["assignment"]] += 1
+                    turn_score[REVEALED][TOTAL] += 1
+                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.TARGET_REVEALED:
+                    turn_score[REVEALED][TARGET] += 1
+                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.BOARD_STATUS:
+                    board_status = action["content"]
                     
             self.log_turn_score(turn_idx, "turn", turn_score) # TODO: needed?
             self.log_turn_score(turn_idx, f"{CLUEGIVER} {Turn_logs.VALIDATION_ERROR.value}", turn_score[CLUEGIVER][Turn_logs.VALIDATION_ERROR])
