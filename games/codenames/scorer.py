@@ -36,21 +36,21 @@ class CodenamesScorer(GameScorer):
                 if action["type"] == Turn_logs.VALIDATION_ERROR:
                     player = action["content"]["player"]
                     turn_score[player][Turn_logs.VALIDATION_ERROR] += 1
-                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.GUESSES:
+                elif action["type"] == Turn_logs.GUESSES:
                     turn_score[Turn_logs.GUESSES] =  action["content"]
-                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.WORD_TARGETED:
+                elif action["type"] == Turn_logs.WORD_TARGETED:
                     # FIXME: this should not be needed when wrong targets and guesses are removed from the utterances!
                     if not action["content"]["assignment"]:
                         continue
                     turn_score[TARGETED][action["content"]["assignment"]] += 1
                     turn_score[TARGETED][TOTAL] += 1
                     
-                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.TEAM_REVEALED:
+                elif action["type"] == Turn_logs.TEAM_REVEALED:
                     turn_score[REVEALED][action["content"]["assignment"]] += 1
                     turn_score[REVEALED][TOTAL] += 1
-                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.TARGET_REVEALED:
+                elif action["type"] == Turn_logs.TARGET_REVEALED:
                     turn_score[REVEALED][TARGET] += 1
-                elif action["type"] == Turn_logs.VALIDATION_ERROR: Turn_logs.BOARD_STATUS:
+                elif action["type"] == Turn_logs.BOARD_STATUS:
                     board_status = action["content"]
                     
             self.log_turn_score(turn_idx, "turn", turn_score) # TODO: needed?
