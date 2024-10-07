@@ -12,7 +12,7 @@ from clemgame.clemgame import GameInstanceGenerator
 
 N_INSTANCES = 20  # how many different target words; zero means "all"
 N_GUESSES = 3  # how many tries the guesser will have
-N_REATED_WORDS = 3
+N_RELATED_WORDS = 3
 LANGUAGE = "en"
 
 logger = clemgame.get_logger(__name__)
@@ -54,8 +54,8 @@ class TabooGameInstanceGenerator(GameInstanceGenerator):
                 game_instance["target_word"] = target
                 game_instance["related_word"] = []  # ps: add manually for now b.c. api doesn't provide ranking
 
-                if len(game_instance["related_word"]) < N_REATED_WORDS:
-                    print(f"Found less than {N_REATED_WORDS} related words for: {target}")
+                if len(game_instance["related_word"]) < N_RELATED_WORDS:
+                    print(f"Found less than {N_RELATED_WORDS} related words for: {target}")
 
 
 if __name__ == '__main__':

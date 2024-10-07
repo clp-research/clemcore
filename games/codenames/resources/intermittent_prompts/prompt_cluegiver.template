@@ -1,0 +1,6 @@
+Now provide another clue relating to some of your remaining team words and a list of the related target words. Remember to start your clue with 'CLUE: ', put a new line, and start your comma-separated list of target words with 'TARGETS: '. Notice: some words have been removed from the lists compared to previous requests.
+
+Your remaining team words are: $team_words.
+Remaining words for your opponent are: $opponent_words.
+Remaining distractor words are: $innocent_words.
+Remaining kill words are: $assassin_words.

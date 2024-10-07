@@ -238,6 +238,9 @@ class HuggingfaceLocalModel(backends.Model):
         else:
             response_text = model_output.strip()
 
+        if log_messages:
+            logger.info(f"Response message: {response_text}")
+
         return prompt, response, response_text
 
 

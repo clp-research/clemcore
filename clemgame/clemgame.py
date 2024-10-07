@@ -221,7 +221,7 @@ class GameRecorder(GameResourceLocator):
             "timestamp": timestamp,
             "action": action
         }
-        self.interactions["turns"][self.log_current_turn].append(action_obj.copy())
+        self.interactions["turns"][self.log_current_turn].append(copy.deepcopy(action_obj))
         self.logger.info(
             f"{self.name}: Logged {action['type']} action ({from_}->{to}).")
         if call:

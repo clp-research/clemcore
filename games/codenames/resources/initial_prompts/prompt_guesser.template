@@ -1,0 +1,3 @@
+Provide a comma-separated list of up to $number words from the following list that best relate or are most closely associated with the word '$clue'. Always start your list of guess(es) with 'GUESS: ' and do not include any other text in your answer.
+
+$board

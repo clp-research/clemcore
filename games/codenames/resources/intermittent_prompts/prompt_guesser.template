@@ -1,0 +1,3 @@
+Now provide another comma-separated list of at least 1 and up to $number words from the following list of words that best relate or are most closely associated with the word '$clue'. Remember to start your answer with 'GUESS: '. Notice: some words have been removed from the list compared to previous requests.
+
+$board

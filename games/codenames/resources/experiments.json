@@ -1,0 +1,63 @@
+{
+    "default": {
+        "number of instances": 10,
+        "generator": "random",
+        "opponent difficulty": 1,
+        "assignments": {"team": 9, "opponent": 8, "innocent": 7, "assassin": 1},
+        "wordlist": "original.json"
+    },  
+    "variables": {
+        "Risk": {
+            "experiments": {
+                "low": {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 8, "assassin": 0}},
+                "high" : {
+                    "assignments": {"team": 9, "opponent": 8, "innocent": 3, "assassin": 5}}
+            }
+        },
+        "Word Assignments": {
+            "experiments": {
+                "easy": {
+                    "generator": "easy word assignments",
+                    "wordlist": "categories.json"},
+                "difficult": {
+                    "generator": "difficult word assignments",
+                    "wordlist": "categories.json"}
+            }
+        },
+        "Opponent Difficulty": {
+            "experiments": {
+                "none": {
+                    "opponent difficulty": 0},
+                "easy": {
+                    "opponent difficulty": 1},
+                "difficult": {
+                    "opponent difficulty": 2}
+            }
+        },
+        "Word Frequency": {
+            "experiments": {
+                "low": {
+                    "wordlist": "low_frequency.json"},
+                "high": {
+                    "wordlist": "high_frequency.json"}
+            }
+        },
+        "Word Ambiguity": {
+            "experiments": {
+                "unambiguous": {
+                    "wordlist": "unambiguous_words.json"},
+                "ambiguous": {
+                    "wordlist": "ambiguous_words.json"}
+            }
+        },
+        "Word Concreteness": {
+            "experiments": {
+                "concrete": {
+                    "wordlist": "concrete_words.json"},
+                "abstract": {
+                    "wordlist": "abstract_words.json"}
+            }
+        }
+    }
+}

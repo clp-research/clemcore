@@ -1,0 +1,13 @@
+Provide one single-word clue that relates to some of your team's words from the list below. You can choose to how many and to which words your clue relates to.
+The goal is to have your partner guess all of your team's words based on the clues you give them, before the other team has uncovered all of theirs. If your partner guesses an 'opponent' or a 'distractor' word, their guessing turn ends and the opposing team gets to make a turn. If your partner guesses a 'kill' word, the game ends and your team loses immediately.
+The more words your clue relates to, the quicker you can win the game, but the harder the associations may be to guess for your partner, so choose your clue word wisely. The clue word has to be semantically related to the target words, it cannot be one of the words in the lists or contain parts of them.
+
+Always give your single-word clue and your comma-separated list of related target words in the following format and make your answers as short as possible, never include any other text than is required in this form:
+
+CLUE: <WORD>
+TARGETS: <TARGETS>
+
+Your team words are: $team_words.
+Your opponent's team words are: $opponent_words.
+Distractor words are: $innocent_words.
+The kill words are: $assassin_words.

@@ -438,6 +438,16 @@
       "estimated_parameters": ""
   },
   {
+      "model_name": "gemini-1.5-flash-8b-001",
+      "model_id": "gemini-1.5-flash-8b-001",
+      "backend": "google",
+      "supports_images": true,
+      "support_multiple_images": true,
+      "release_date": "2024-10-03",
+      "open_weight": false,
+      "parameters": "8B"
+  },
+  {
       "model_name": "luminous-supreme-control",
       "model_id": "luminous-supreme-control",
       "backend": "alephalpha",
