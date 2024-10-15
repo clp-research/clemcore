@@ -55,7 +55,10 @@ def calc_statistics(results_path):
             raise FileNotFoundError("Execute 'calc_statistics_for_all_langs()' or 'create_excel_overview.py' to receive the missing file.")
         p1_expressions = overview["Player 1 Parsed Expression"].dropna()  # contains parsed expressions without tag. Or 'invalid generated expression'
         p1_output = overview["Player 1 Text"].dropna()                    # contains whole answer
-        p2_answers = overview["Player 2 Parsed Answer"]                   # contains parsed answer without tag. Or 'invalid generated choice'. Or Nan when aborted at player A.
+        p2_answers = overview["Player 2 Parsed Answer"]                   # contains parsed answer without tag. Or 'Invalid generated choice'. Or Nan when aborted at player A.
+        # invalid answers of p2
+        p2_answers_invalid = overview["Player 2 Text"].loc[overview["Player 2 Parsed Answer"] == "Invalid generated choice"].dropna().value_counts()
+
         # convert p2 literal answers to their underlying meaning
         p2_options = tuple(overview["Ground Truth"][:3].apply(literal_eval))
         p2_answers = p2_answers.apply(get_meaning,
@@ -112,7 +115,10 @@ def calc_statistics(results_path):
                     "Choices Distribution": {},
                     "Grid Consistency": None,
                     "Position Consistency": None,
-                }
+                    "Invalid Answers": {"Number Unique": p2_answers_invalid.size, "Frequent Answers": p2_answers_invalid.head(5).to_dict()},
+                },
+                "% Played Consistent": 0.0,
+                "Quality Score Consistent": None,
             })
             continue
 
@@ -125,36 +131,53 @@ def calc_statistics(results_path):
         n_consistent_pos = 0
 
         # Consistency in grid selection
-        consistant_orders = {
+        consistent_orders = [
             ("1", "2", "3"),  # target grid is always in this order
             ("2", "1", "2"),  # distracor grid 1 is always in this order
             ("3", "3", "1")   # distracor grid 2 is always in this order
-            }
+        ]
+        # number of consistent triplets
         n_consistent_grid = 0
+        # number of correct and consistent triplets
+        n_consistent_correct = 0
+        # number of complete triplets (all three episodes non-aborted)
         n_complete_triplets = 0
         for triplet in np.reshape(p2_answers, newshape=((n_triplets*2)-1, 3)):
             if (pd.isnull(triplet).any()) or ("Invalid generated choice" in triplet):
                 # skip triplets where answers are missing
                 # every second triplet is empty because of the format of overview
                 # some are empty because of abort at player 1
+                # skip triplets where some of player B's answers were invalid
                 continue
-            if tuple(triplet) in consistant_orders:
+            if tuple(triplet) == consistent_orders[0]:
+                n_consistent_correct += 1
+            if tuple(triplet) in consistent_orders:
                 n_consistent_grid += 1
             elif triplet[0] == triplet[1] == triplet[2]:
                 n_consistent_pos += 1
             n_complete_triplets += 1
+
+        # Consistent % Played: percentage of triplets where all three episodes were not aborted
+        played_consistent = (n_complete_triplets / n_triplets) * 100
+
         try:
             p2_grid_consistency = n_consistent_grid / n_complete_triplets  # expectation by chance is 1/9
             p2_pos_consistency = n_consistent_pos / n_complete_triplets  # expectation by chance is 1/9
+            # Consistent Quality Score: percentage of consistently correct triplets
+            quality_score_consistent = (n_consistent_correct / n_complete_triplets) * 100
         except ZeroDivisionError:
             p2_grid_consistency = None
             p2_pos_consistency = None
+            quality_score_consistent = None
         statistics[model_shortname].update({
                 "p2": {
                     "Choices Distribution": p2_choices_dist,  # is dict
                     "Grid Consistency": p2_grid_consistency,
                     "Position Consistency": p2_pos_consistency,
-                }
+                    "Invalid Answers": {"Number Unique": p2_answers_invalid.size, "Frequent Answers": p2_answers_invalid.head(5).to_dict()},
+                },
+                "% Played Consistent": played_consistent,
+                "Quality Score Consistent": quality_score_consistent,
             })
 
     return dict(sorted(statistics.items()))
@@ -265,23 +288,70 @@ def create_tables(statistics, path):
         fig.savefig(os.path.join(path, f"p2_choice_dist_{model}.png"))
         plt.close()
 
+    # Consistent Quality Score & Consistent Played
+    temp = {"% Played Consistent": {},
+            "Quality Score Consistent": {}}
+    for lang, models in statistics.items():
+        for model, scores in models.items():
+            temp["% Played Consistent"][(lang, model)] = scores["% Played Consistent"]
+            temp["Quality Score Consistent"][(lang, model)] = scores["Quality Score Consistent"]
+    df_scores_consistent = pd.DataFrame(temp)
+    df_scores_consistent.index = df_scores_consistent.index.set_names(["lang", "model"])
+    df_scores_consistent.columns = df_scores_consistent.columns.str.replace("google", "")
+    df_scores_consistent = df_scores_consistent.round(2)
+    df_scores_consistent.to_csv(os.path.join(path, "results_consistent.csv"))
+    df_scores_consistent.to_html(os.path.join(path, "results_consistent.html"))
+    df_scores_consistent.to_latex(os.path.join(path, "results_consistent.tex"), float_format="%.2f")
 
+
+def combine_results(file_results, file_results_consistent, path_out):
+    """
+    Creates one df with % Played, Quality Score, % Played Consistent and Quality Score Consistent
+
+    :param file_results: path to csv that contains df with results for all model-lang-combinations.
+    :param file_results_consistent: path to csv that contains df with consistent scores.
+    """
+    df_results = pd.read_csv(file_results, index_col=[0, 1])
+    df_results = df_results.sort_index(level=[0, 1], ascending=[True, True])
+    df_results_consistent = pd.read_csv(file_results_consistent, index_col=[0, 1])
+    df_results_consistent = df_results_consistent.sort_index(level=[0, 1], ascending=[True, True])
+
+    df_out = pd.concat([df_results, df_results_consistent], axis=1)
+    df_out.rename(columns={"clemscore (Played * Success)": "clemscore", "% Success (of Played)": "Quality Score"}, inplace=True)
+    df_out.drop(columns="Aborted at Player 1 (of Aborted)", inplace=True)
+
+    df_out.to_csv(os.path.join(path_out, "results_combined.csv"))
+    df_out.to_html(os.path.join(path_out, "results_combined.html"))
+    df_out.to_latex(os.path.join(path_out, "results_combined.tex"), float_format="%.2f")
 
 
 if __name__ == "__main__":
     results_path = "results/v1.5_multiling"
+    output_path = os.path.join(results_path, "multiling_eval/referencegame/answer_statistics")
+
+    results_file_reference = os.path.join(results_path, "multiling_eval/referencegame/human+google/v1.5_multiling_referencegame.csv")
+
+    assert os.path.exists(results_path)
+
+    if not os.path.exists(output_path):
+        os.makedirs(output_path)
+
     # get excel overviews
     # execute_create_exel_overview_for_all_langs(results_path)
 
     # statistics for one language
     # statistics = calc_statistics(results_path + "/ru_google")
 
-    if not os.path.exists(os.path.join(results_path, "referencegame_additional_statistics.json")):
+    if not os.path.exists(os.path.join(output_path, "referencegame_additional_statistics.json")):
         statistics = calc_statistics_for_all_langs(results_path)
-        with open(os.path.join(results_path, "referencegame_additional_statistics.json"), "w") as file:
+        with open(os.path.join(output_path, "referencegame_additional_statistics.json"), "w") as file:
             json.dump(statistics, file, indent=4)
     else:
-        with open(os.path.join(results_path, "referencegame_additional_statistics.json")) as file:
+        with open(os.path.join(output_path, "referencegame_additional_statistics.json")) as file:
             statistics = json.load(file)
 
-    create_tables(statistics, os.path.join(results_path, "multiling_eval/referencegame"))
+    create_tables(statistics, output_path)
+
+    combine_results(results_file_reference,
+                    os.path.join(output_path, "results_consistent.csv"),
+                    path_out=results_path)
