@@ -13,6 +13,7 @@ import subprocess
 from ast import literal_eval
 import json
 import matplotlib.pyplot as plt
+import argparse
 
 import pandas as pd
 import numpy as np
@@ -20,6 +21,45 @@ import re
 from tqdm import tqdm
 
 from multiling_eval_utils import short_names
+
+
+def get_arguments(parser):
+    parser.add_argument("results_path", help="Path where the result files are stored by language")
+    parser.add_argument("-o", "--output_path", help="Path to output directory. Default: results_path + 'multiling_eval/referencegame/answer_statistics'", default="")
+
+    parser.add_argument("-s", "--calc_statistics", action="store_true", help="If given, calculates statistics for all langs and creates output tables in 'output_path'. Option 'create_excel_overviews' must have been executed or must be given.")
+
+    parser.add_argument("-e", "--create_excel_overviews", action="store_true", help="If given, creates excel overviews for all languages. Uses 'create_excel_overview.py'. Creates output in each model directory.")
+
+    parser.add_argument("-t", "--create_tables", action="store_true", help="If given, creates output tables in 'output_path'. Reads in 'statistics.json'. Option 'calc_statistics' must have been executed before.")
+
+    parser.add_argument("-f", "--multiling_results_file", help="Overgive path to csv that contains df with main results for all model-lang-combinations. If given, it is combined with the df results_consistent.csv. Option 'calc_statistics' must have been executed or must be given.")
+
+    return parser.parse_args()
+
+
+def verify_args(args):
+    if not os.path.exists(args.results_path):
+        raise FileNotFoundError(f"results_path '{args.results_path}' does not exist.")
+
+    if args.calc_statistics or args.create_tables or args.multiling_results_file:
+        if not args.output_path:
+            args.output_path = os.path.join(args.results_path, "multiling_eval/referencegame/answer_statistics")
+            if not os.path.exists(args.output_path):
+                os.makedirs(args.output_path)
+
+    if args.create_tables and not args.calc_statistics:
+        statistics_path = os.path.join(args.output_path, "statistics.json")
+        if not os.path.exists(statistics_path):
+            raise FileNotFoundError(f"'{statistics_path}' not found. Execute option 'calc_statistics' first.")
+
+    if args.multiling_results_file:
+        if not os.path.exists(args.multiling_results_file):
+            raise FileNotFoundError(f"'{args.multiling_results_file}' not found.")
+        if not (args.calc_statistics or args.create_tables):
+            results_consistent_path = os.path.join(args.output_path, "results_consistent.csv")
+            if not os.path.exists(results_consistent_path):
+                raise FileNotFoundError(f"'{results_consistent_path}' not found. Execute option 'calc_statistics' first.")
 
 
 def get_meaning(string, options):
@@ -306,7 +346,7 @@ def create_tables(statistics, path):
 
 def combine_results(file_results, file_results_consistent, path_out):
     """
-    Creates one df with % Played, Quality Score, % Played Consistent and Quality Score Consistent
+    Creates one df with % Played, Quality Score, % Played Consistent and Quality Score Consistent.
 
     :param file_results: path to csv that contains df with results for all model-lang-combinations.
     :param file_results_consistent: path to csv that contains df with consistent scores.
@@ -326,32 +366,23 @@ def combine_results(file_results, file_results_consistent, path_out):
 
 
 if __name__ == "__main__":
-    results_path = "results/v1.5_multiling"
-    output_path = os.path.join(results_path, "multiling_eval/referencegame/answer_statistics")
+    args = get_arguments(argparse.ArgumentParser())
+    verify_args(args)
 
-    results_file_reference = os.path.join(results_path, "multiling_eval/referencegame/human+google/v1.5_multiling_referencegame.csv")
+    if args.create_excel_overviews:
+        execute_create_exel_overview_for_all_langs(args.results_path)
 
-    assert os.path.exists(results_path)
-
-    if not os.path.exists(output_path):
-        os.makedirs(output_path)
-
-    # get excel overviews
-    # execute_create_exel_overview_for_all_langs(results_path)
-
-    # statistics for one language
-    # statistics = calc_statistics(results_path + "/ru_google")
-
-    if not os.path.exists(os.path.join(output_path, "referencegame_additional_statistics.json")):
-        statistics = calc_statistics_for_all_langs(results_path)
-        with open(os.path.join(output_path, "referencegame_additional_statistics.json"), "w") as file:
+    if args.calc_statistics:
+        statistics = calc_statistics_for_all_langs(args.results_path)
+        with open(os.path.join(args.output_path, "statistics.json"), "w") as file:
             json.dump(statistics, file, indent=4)
-    else:
-        with open(os.path.join(output_path, "referencegame_additional_statistics.json")) as file:
+
+    if args.calc_statistics or args.create_tables:
+        with open(os.path.join(args.output_path, "statistics.json")) as file:
             statistics = json.load(file)
+        create_tables(statistics, args.output_path)
 
-    create_tables(statistics, output_path)
-
-    combine_results(results_file_reference,
-                    os.path.join(output_path, "results_consistent.csv"),
-                    path_out=results_path)
+    if args.multiling_results_file:
+        combine_results(file_results=args.multiling_results_file,
+                        file_results_consistent=os.path.join(args.output_path, "results_consistent.csv"),
+                        path_out=args.output_path)
