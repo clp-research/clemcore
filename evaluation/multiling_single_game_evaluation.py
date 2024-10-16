@@ -208,6 +208,9 @@ if __name__ == '__main__':
                                      "Meta-Llama-3.1-70B-Instruct",
                                      "Mixtral-8x22B-Instruct-v0.1",
                                      "Qwen1.5-72B-Chat"])
+    arg_parser.add_argument("-s", "--save_merged_csv", action="store_true", help="Save a big csv file 'raw.csv' to the results_path that combines all raw.csv's from the lang directories. Is filtered as specified by option '-t'.")
+    arg_parser.add_argument("-sq", "--save_merged_csv_and_quit", action="store_true", help="Save a big csv file as with option '-s' and quit directly afterwards.")
+
     parser = arg_parser.parse_args()
 
     output_prefix = parser.results_path.rstrip("/").split("/")[-1]
@@ -268,9 +271,12 @@ if __name__ == '__main__':
 
     assert_log(not df_lang.empty, f"no results found for {parser.game} {parser.translation_type}")
 
-    # save all raw results together in one file
-    if human and machine_suffix:
-        df_lang.to_csv(result_dir / "raw.csv")
+    # save combined raw results together in one file
+    if parser.save_merged_csv or parser.save_merged_csv_and_quit:
+        df_lang.to_csv(result_dir / f"{parser.translation_type}_raw.csv")
+        print(f"Saved '{parser.translation_type}_raw.csv' to {result_dir}")
+        if parser.save_merged_csv_and_quit:
+            sys.exit()
 
     if parser.detailed:
         categories = ['lang', 'model', 'experiment', 'metric'] # detailed by experiment
