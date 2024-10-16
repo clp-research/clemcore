@@ -12,7 +12,7 @@ results="results/v1.5_multiling"
 
 for game in "${games[@]}"; do
     set -x
-    python3 evaluation/multiling_single_game_evaluation.py -g "${game}" -p "${results}"
+    python3 evaluation/multiling_single_game_evaluation.py -g "${game}" -p "${results}" -s
     python3 evaluation/multiling_single_game_evaluation.py -g "${game}" -p "${results}" -t human
     python3 evaluation/multiling_single_game_evaluation.py -g "${game}" -p "${results}" -t google
     python3 evaluation/multiling_single_game_evaluation.py -g "${game}" -p "${results}" -d
