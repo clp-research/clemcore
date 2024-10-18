@@ -1147,6 +1147,16 @@
       "parameters": "7B"
   },
   {
+      "model_name": "Llama-3.1-Nemotron-70B-Instruct-HF",
+      "backend": "huggingface_local",
+      "huggingface_id": "nvidia/Llama-3.1-Nemotron-70B-Instruct-HF",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|eot_id\\|>",
+      "release_date": "2024-10-12",
+      "open_weight": true,
+      "parameters": "70B"
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
