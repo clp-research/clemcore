@@ -31,9 +31,12 @@ def get_arguments(parser):
 
     parser.add_argument("-e", "--create_excel_overviews", action="store_true", help="If given, creates excel overviews for all languages. Uses 'create_excel_overview.py'. Creates output in each model directory.")
 
-    parser.add_argument("-t", "--create_tables", action="store_true", help="If given, creates output tables in 'output_path'. Reads in 'statistics.json'. Option 'calc_statistics' must have been executed before.")
+    parser.add_argument("-i", "--show_p2_invalid", action="store_true", help="If given, creates csv files to each model dir with the invalid answers player B gave. Only works together with option 'calc_statistics'.")
 
     parser.add_argument("-f", "--multiling_results_file", help="Overgive path to csv that contains df with main results for all model-lang-combinations. If given, it is combined with the df results_consistent.csv. Option 'calc_statistics' must have been executed or must be given.")
+
+    # This option is for debugging. create_tables is automatically done when calling calc_statistics.
+    parser.add_argument("-t", "--create_tables", action="store_true", help="(For debugging) If given, creates output tables in 'output_path'. Reads in 'statistics.json'. Option 'calc_statistics' must have been executed before.")
 
     return parser.parse_args()
 
@@ -75,11 +78,12 @@ def get_meaning(string, options):
     return string
 
 
-def calc_statistics(results_path):
+def calc_statistics(results_path, show_p2_invalid: bool):
     """
     Calculate statistics for all models in results_path.
 
     :param results_path: Path with model dirs.
+    :param show_p2_invalid: If true, save csv files with player B's invalid answers to results_path/model.
     """
     assert os.path.isdir(results_path)
 
@@ -147,6 +151,10 @@ def calc_statistics(results_path):
         }
 
         # Statistics player B
+
+        # Save invalid answers to csv file
+        if show_p2_invalid:
+            p2_answers_invalid.to_csv(os.path.join(model_dir, "player2_invalid_answers.csv"))
 
         if p2_answers.dropna().loc[p2_answers != "Invalid generated choice"].empty:
             # leave player B statistics empty when there are only nan or invalid answers
@@ -223,11 +231,12 @@ def calc_statistics(results_path):
     return dict(sorted(statistics.items()))
 
 
-def calc_statistics_for_all_langs(results_path):
+def calc_statistics_for_all_langs(results_path, show_p2_invalid: bool):
     """
     Calculate statistics for all languages in results_path.
 
     :param results_path: Path were language dirs are.
+    :param show_p2_invalid: If true, save csv files with player B's invalid answers to results_path/lang/model.
     """
     lang_dirs = glob.glob(f"{results_path}/*/")
     statistics = {}
@@ -238,7 +247,7 @@ def calc_statistics_for_all_langs(results_path):
             (len(lang) == 2) or (len(lang.split('_')[0]) == 2)
             ):  # machine translations have identifiers such as 'de_google'
             continue
-        statistics[lang] = calc_statistics(lang_dir)
+        statistics[lang] = calc_statistics(lang_dir, show_p2_invalid=show_p2_invalid)
     return dict(sorted(statistics.items()))
 
 
@@ -373,7 +382,7 @@ if __name__ == "__main__":
         execute_create_exel_overview_for_all_langs(args.results_path)
 
     if args.calc_statistics:
-        statistics = calc_statistics_for_all_langs(args.results_path)
+        statistics = calc_statistics_for_all_langs(args.results_path, show_p2_invalid=args.show_p2_invalid)
         with open(os.path.join(args.output_path, "statistics.json"), "w") as file:
             json.dump(statistics, file, indent=4)
 
