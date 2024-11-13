@@ -101,7 +101,9 @@ def _get_class_name(event):
 def build_transcript(interactions: Dict, experiment_config: Dict, game_instance: Dict, dialogue_pair: str):
     """Create an html with the interaction transcript."""
     transcript = HTML_HEADER.format(CSS_STRING)
-    title = f"Interaction Transcript for {game_instance['lang']}, {experiment_config['name']}, " \
+    title = f"Interaction Transcript for " \
+            f"{game_instance['lang'] + ', ' if 'lang' in game_instance else ''}" \
+            f"{experiment_config['name']}, " \
             f"episode {game_instance['game_id']} with {dialogue_pair}."
     transcript += top_info.format(title)
     # Collect all events over all turns (ignore turn boundaries here)
