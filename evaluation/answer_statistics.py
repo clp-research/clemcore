@@ -5,6 +5,9 @@
 """
 Calculate interesting answer statistics about the referencegame
 using excel overviews created by create_excel_overview.py
+
+Usage: See pipeline_answer_statistics.sh
+
 """
 
 import os
@@ -67,15 +70,20 @@ def verify_args(args):
 
 def get_meaning(string, options):
     """
+    Function is used to replace synonymous answer strings by one 'underlying' answer.
+    The digit variant is chosen because it's (mostly) language unspecific.
+
     :param options: nested list -> [["first", "1"], ["second", ...]...]
     """
+    # String can be None, when game was aborted at player 1 or due to the format of overview
     if not isinstance(string, str):
         return string
+    # Check if answer is in options
     for opt in options:
         if re.match("|".join(opt), string, flags=re.IGNORECASE):
             assert opt[1].isdigit()
-            return opt[1]
-    return string
+            return opt[1]  # Return the digit variant of the selected option
+    return string  # invalid answer
 
 
 def calc_statistics(results_path, show_p2_invalid: bool):
@@ -99,17 +107,24 @@ def calc_statistics(results_path, show_p2_invalid: bool):
             raise FileNotFoundError("Execute 'calc_statistics_for_all_langs()' or 'create_excel_overview.py' to receive the missing file.")
         p1_expressions = overview["Player 1 Parsed Expression"].dropna()  # contains parsed expressions without tag. Or 'invalid generated expression'
         p1_output = overview["Player 1 Text"].dropna()                    # contains whole answer
-        p2_answers = overview["Player 2 Parsed Answer"]                   # contains parsed answer without tag. Or 'Invalid generated choice'. Or Nan when aborted at player A.
+        p2_answers = overview["Player 2 Parsed Answer"]                   # contains parsed answer
+        # without tag. Or 'Invalid generated choice'. Or Nan when aborted at player A. Here
+        # we cant use dropna to drop the empty rows that occur due to the format of overview.
+
         # invalid answers of p2
         p2_answers_invalid = overview["Player 2 Text"].loc[overview["Player 2 Parsed Answer"] == "Invalid generated choice"].dropna().value_counts()
 
-        # convert p2 literal answers to their underlying meaning
-        p2_options = tuple(overview["Ground Truth"][:3].apply(literal_eval))
+        # get possible answer options
+        p2_options = tuple(overview["Ground Truth"][:3].apply(literal_eval))  # e.g. (["first", 1], ["second", 2], ["third", 3])
+        # p2 answers can have different formats. Here they are converted to have all
+        # the same format. (The digit variant is selected)
         p2_answers = p2_answers.apply(get_meaning,
                                     options=p2_options)
 
+        # There are 180 episodes in the referencegame (6 experiments with each 30 episodes)
         assert len(p1_expressions) == 180
         assert len(p1_expressions) == ((len(p2_answers) + 3) / 2) == len(p1_output)
+        # p2_answers has another length because of the format of overview
 
         n_episodes = len(p1_expressions)
         n_triplets = int(n_episodes / 3)
