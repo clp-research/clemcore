@@ -9,7 +9,7 @@ This file contains information about how the Google translations have been creat
 
 The adjustments are necessary for successful parsing and to ensure comparability.
 
-1. The tag `instruction:` must be identical (case-insensitive) at:
+1. The tag `command:` must be identical (case-insensitive) at:
    - player_a_prompt_header: 3x in the example (l.22, 25, 28)
    - localization_utils
 
