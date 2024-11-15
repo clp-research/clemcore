@@ -1,4 +1,9 @@
-MULTILINGUAL_PATTERNS = {"de":
+MULTILINGUAL_PATTERNS = {"ar":
+                             {"p2_options": 'أول|ثاني|ثالث',
+                              "p1_tag": 'التعبير:',
+                              "p2_tag": 'الإجابة:'
+                              },
+                         "de":
                              {"p2_options": 'erstes|zweites|drittes',
                               "p1_tag": 'ausdruck:',
                               "p2_tag": 'antwort:'
