@@ -1,3 +1,33 @@
+"""This script is a helper for qualitative evaluation of games.
+
+It creates a big html file (size depending on the arguments specified).
+The file contains a list of paths to all transcript files present in the
+specified results directory.
+
+Usage of Output:
+    When opening the html file in a browser you will get two buttons 'next'
+    and 'previous' to navigate through the episodes one after the other.
+
+    Be aware that your progress is not saved when closing the browser.
+    Tipp: Don't create one huge transcript_navigator.html for all episodes,
+    but one for each game and language.
+
+Arguments:
+    Games, languages or episodes to be included in the output file can be
+    specified in the if __name__ block.
+
+Supported games and result types:
+    - The script is not game specific but only tested with the imagegame and
+      referencegame.
+        - I used it only for the imagegame since it's multi-turn. For
+          the qualitative analysis of the referencegame there is also the script
+          'create_excel_overview.py' which gives a faster overview.
+    - It should work with multilingual and monolingual results folders. But was
+      developed primarily for multilingual results.
+
+"""
+
+
 import glob
 import re
 
@@ -62,6 +92,20 @@ HTML_TAIL = """
 
 
 def get_transcript_htmls(results_path, games, languages=None, episode_sample=None):
+    """Get transcript paths.
+
+    Args:
+        results_path (str): The results folder.
+        games (list[str]): List of games. Can't be empty.
+        languages (list[str]): List of language identifiers. If empty/None, includes all.
+            Should also be None when the results_path folder is monolingual.
+        episode_sample (list[int]): List of episodes given as integers. If empty/None, includes all.
+            Useful when you don't want to look through all episodes, but just get an overview.
+
+    Returns:
+        list: Flat list of all paths.
+
+    """
     filename = "transcript.html"
     paths_per_game = []
     for game in games:
@@ -79,14 +123,22 @@ def get_transcript_htmls(results_path, games, languages=None, episode_sample=Non
 
 
 if __name__ == "__main__":
-    results_path = "results/v1.5_multiling_liberal"
+    # Example run (change arguments if needed):
+    results_path = "results/v1.5_multiling"
     games = ["imagegame"]  # "imagegame" "referencegame"
-    transcript_paths = get_transcript_htmls(results_path, games, languages=["en", "es", "ru", "te", "tk", "tr"])
+    languages = ["en", "es", "ru", "te", "tk", "tr"]
+    file_out = "transcript_navigator_imagegame_human.html"
+
+    # Extract paths to transcript.html's
+    transcript_paths = get_transcript_htmls(results_path, games, languages=languages)
+
+    # Build html
     html = HTML_HEAD
     for path in transcript_paths:
         html_link = TRANSCRIPT_LINK.format(path)
         html += html_link
     html += HTML_TAIL
 
-    with open("transcript_navigator_imagegame_liberal_human.html", "w") as file:
+    # Save
+    with open(file_out, "w") as file:
         file.write(html)
