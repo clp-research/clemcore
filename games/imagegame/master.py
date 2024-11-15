@@ -364,6 +364,7 @@ class ImageGameScorer(GameScorer):
         # should be handled in GameMaster (see todo in self.turn())
         if number_of_turns == 0:
             aborted = True
+            aborted_at = 1
 
         # Episode level logging
         if aborted:
