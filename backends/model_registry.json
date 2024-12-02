@@ -1157,6 +1157,16 @@
       "parameters": "1.3B"
   },
   {
+      "model_name": "Llama-3.1-Tulu-3-8B",
+      "backend": "huggingface_local",
+      "huggingface_id": "allenai/Llama-3.1-Tulu-3-8B",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|end_of_text\\|>",
+      "release_date": "2024-11-20",
+      "open_weight": true,
+      "parameters": "8B"
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
