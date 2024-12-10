@@ -1,5 +1,8 @@
-import random
+"""
+Generate instances for the wordle_withclue game.
 
+Creates files in ./instances
+"""
 from games.wordle.instancegenerator import WordleGameInstanceGenerator
 
 GAME_NAME = "wordle_withclue"

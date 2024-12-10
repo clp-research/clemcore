@@ -1,0 +1,329 @@
+{
+    "experiments": [
+        {
+            "name": "line_grids_rows",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/grid_images/0.png",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/grid_images/1.png",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/grid_images/2.png",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/grid_images/0.png",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/grid_images/1.png",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/grid_images/2.png",
+                    "target_image_name": [
+                        "first",
+                        "1st",
+                        "1"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "line_grids_columns",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/grid_images/10.png",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/grid_images/11.png",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/grid_images/12.png",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/grid_images/10.png",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/grid_images/11.png",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/grid_images/12.png",
+                    "target_image_name": [
+                        "first",
+                        "1st",
+                        "1"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "diagonal_grids",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/grid_images/20.png",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/grid_images/21.png",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/grid_images/22.png",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/grid_images/20.png",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/grid_images/21.png",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/grid_images/22.png",
+                    "target_image_name": [
+                        "first",
+                        "1st",
+                        "1"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "letter_grids",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/grid_images/30.png",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/grid_images/31.png",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/grid_images/32.png",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/grid_images/30.png",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/grid_images/31.png",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/grid_images/32.png",
+                    "target_image_name": [
+                        "first",
+                        "1st",
+                        "1"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "shape_grids",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/grid_images/40.png",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/grid_images/41.png",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/grid_images/42.png",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/grid_images/40.png",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/grid_images/41.png",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/grid_images/42.png",
+                    "target_image_name": [
+                        "first",
+                        "1st",
+                        "1"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "random_grids",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/grid_images/50.png",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/grid_images/51.png",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/grid_images/52.png",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/grid_images/50.png",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/grid_images/51.png",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/grid_images/52.png",
+                    "target_image_name": [
+                        "first",
+                        "1st",
+                        "1"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "ADE_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/scene_images/1.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/scene_images/2.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/scene_images/3.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/scene_images/2.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/scene_images/1.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/scene_images/3.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "DOCCI_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/docci_images/1.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/docci_images/2.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/docci_images/3.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/docci_images/2.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/docci_images/1.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/docci_images/3.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "CLEVR_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/clevr_images/1.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/clevr_images/2.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/clevr_images/3.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/clevr_images/2.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/clevr_images/1.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/clevr_images/3.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "CLEVR_static_target_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/clevr_images/32.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/clevr_images/33.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/clevr_images/34.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/clevr_images/33.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/clevr_images/32.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/clevr_images/34.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "DOCCI_static_target_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/docci_images/32.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/docci_images/33.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/docci_images/34.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/docci_images/33.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/docci_images/32.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/docci_images/34.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "ADE_static_target_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/scene_images/32.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/scene_images/33.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/scene_images/34.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/scene_images/33.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/scene_images/32.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/scene_images/34.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        },
+        {
+            "name": "pentomino_images",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "player_1_prompt_header": "You are given three images, one is called target and the other two are distractors.\nYour task is to generate a referring expression that best describes the target image while distinguishing it from the two other distractor images.\nThe first image is the target, the second image is a distractor, and the third image is a distractor. Instruction: Describe the target image. Generate the referring expression starting with the tag \"Expression: \" for the given target image. Omit any other text.",
+                    "player_1_first_image": "games/multimodal_referencegame/resources/pentomino_images/1.jpg",
+                    "player_1_second_image": "games/multimodal_referencegame/resources/pentomino_images/2.jpg",
+                    "player_1_third_image": "games/multimodal_referencegame/resources/pentomino_images/3.jpg",
+                    "player_2_prompt_header": "You are given three images.\nYou are also given a referring expression that describes one of the given images.\nYour task is to select the image that matches the given referring expression.\nGenerate only the number (in text) of the image that matches the given expression by selecting first, second, or third.\n\nTARGET_EXPRESSION\nQuestion: Which image does the expression refer to?\nStart with the tag \"Answer: \", followed by your selection. Omit any other text.\n",
+                    "player_2_first_image": "games/multimodal_referencegame/resources/pentomino_images/2.jpg",
+                    "player_2_second_image": "games/multimodal_referencegame/resources/pentomino_images/1.jpg",
+                    "player_2_third_image": "games/multimodal_referencegame/resources/pentomino_images/3.jpg",
+                    "target_image_name": [
+                        "second",
+                        "2",
+                        "2nd"
+                    ],
+                    "player_1_response_pattern": "^expression:\\s(?P<content>.+)\n*(?P<remainder>.*)",
+                    "player_2_response_pattern": "^answer:\\s(?P<content>first|second|third|1|2|3|1st|2nd|3rd)\n*(?P<remainder>.*)",
+                    "player_1_response_tag": "expression:",
+                    "player_2_response_tag": "answer:"
+                }
+            ]
+        }
+    ]
+}

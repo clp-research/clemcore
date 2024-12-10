@@ -1,7 +1,7 @@
 from clemgame.clemgame import Player, GameMaster, GameBenchmark, DialogueGameMaster, GameScorer
 from clemgame import metrics as ms
 from clemgame import get_logger
-from games.matchit.instancegenerator import GAME_NAME
+from games.matchit_info.instancegenerator import GAME_NAME
 from backends import Model
 from nltk import word_tokenize, pos_tag
 from nltk.stem import WordNetLemmatizer

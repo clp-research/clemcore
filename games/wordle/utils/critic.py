@@ -9,6 +9,10 @@ class Critic(Player):
         self.response_format_keywords = response_format_keywords
         super().__init__(model_name)
 
+        # a list to keep the dialogue history
+        self.history: List = []
+        self.count_turn = 0
+
     def __call__(self, messages: List[Dict], turn_idx) -> str:
         # assert self.backend in ["human", "llm", "mock"], f"Invalid player role {self.backend}, please check the config file"
         if self.model.model_spec.is_human():
@@ -19,5 +23,5 @@ class Critic(Player):
 
     def _custom_response(self, messages, turn_idx) -> str:
         # Repeating the same to maintain similar results w.r.t LLM mode
-        dummy_response = f'{self.response_format_keywords["agreement"]}:yes\n{self.response_format_keywords["explanation"]}:agree with your guess'
+        dummy_response = f'{self.response_format_keywords["agreement_lang"]} yes\n{self.response_format_keywords["explanation_lang"]} agree with your guess'
         return dummy_response

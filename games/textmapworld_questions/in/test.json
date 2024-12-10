@@ -1,0 +1,115 @@
+{
+    "experiments": [
+        {
+            "name": "none",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. In each room, you need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the Kitchen. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a Lobby. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a Bedroom. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "QA_Construction": "^Answer:\\s*(\\d+)\\s*$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['Balcony', 'Library', 'Studio', 'Gallery', 'Recreation room', 'Bar', 'Foyer', 'Billiard room']",
+                    "Graph_Edges": "[('Balcony', 'Library'), ('Library', 'Studio'), ('Studio', 'Gallery'), ('Gallery', 'Recreation room'), ('Recreation room', 'Bar'), ('Bar', 'Foyer'), ('Foyer', 'Billiard room')]",
+                    "Current_Position": "Studio",
+                    "Picture_Name": "graph_1567.png",
+                    "Directions": "[('Balcony', ['north']), ('Library', ['west', 'south']), ('Studio', ['south', 'east']), ('Gallery', ['south', 'north']), ('Recreation room', ['east', 'north']), ('Bar', ['west', 'east']), ('Foyer', ['west', 'south']), ('Billiard room', ['north'])]",
+                    "Moves": "[{'node': 'Balcony', 'node_moves': [('north', 'Library')]}, {'node': 'Library', 'node_moves': [('west', 'Studio'), ('south', 'Balcony')]}, {'node': 'Library', 'node_moves': [('west', 'Studio'), ('south', 'Balcony')]}, {'node': 'Studio', 'node_moves': [('south', 'Gallery'), ('east', 'Library')]}, {'node': 'Studio', 'node_moves': [('south', 'Gallery'), ('east', 'Library')]}, {'node': 'Gallery', 'node_moves': [('south', 'Recreation room'), ('north', 'Studio')]}, {'node': 'Gallery', 'node_moves': [('south', 'Recreation room'), ('north', 'Studio')]}, {'node': 'Recreation room', 'node_moves': [('east', 'Bar'), ('north', 'Gallery')]}, {'node': 'Recreation room', 'node_moves': [('east', 'Bar'), ('north', 'Gallery')]}, {'node': 'Bar', 'node_moves': [('west', 'Recreation room'), ('east', 'Foyer')]}, {'node': 'Bar', 'node_moves': [('west', 'Recreation room'), ('east', 'Foyer')]}, {'node': 'Foyer', 'node_moves': [('west', 'Bar'), ('south', 'Billiard room')]}, {'node': 'Foyer', 'node_moves': [('west', 'Bar'), ('south', 'Billiard room')]}, {'node': 'Billiard room', 'node_moves': [('north', 'Foyer')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Question": "How many different $ROOM_CATEGORY$(s) did you encounter?",
+                    "First_Question_Answer": "('Library', 1)",
+                    "Second_Question_Answer": "('Bar', 1)",
+                    "Third_Question_Answer": "('Dining room', 0)",
+                    "Question_reprompt": "Now once you have stopped the game, you need to answer some questions in this format: 'Answer: <answer>' replace <answer> with an appropriate integer.",
+                    "Mapping": "{(2, 2): 'Balcony', (2, 3): 'Library', (1, 3): 'Studio', (1, 2): 'Gallery', (1, 1): 'Recreation room', (2, 1): 'Bar', (3, 1): 'Foyer', (3, 0): 'Billiard room'}",
+                    "Strict": true
+                }
+            ]
+        },
+        {
+            "name": "limited",
+            "game_instances": [
+                {
+                    "game_id": 10,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. In each room, you need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the Kitchen. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a Lobby. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a Bedroom. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "QA_Construction": "^Answer:\\s*(\\d+)\\s*$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['Dining room_(3, 1)', 'Mudroom_(3, 2)', 'Basement_(2, 2)', 'Dining room_(2, 1)', 'Pantry_(3, 3)', 'Gallery_(2, 3)', 'Nursery_(1, 3)', 'Home office_(1, 2)']",
+                    "Graph_Edges": "[('Dining room_(3, 1)', 'Mudroom_(3, 2)'), ('Mudroom_(3, 2)', 'Basement_(2, 2)'), ('Mudroom_(3, 2)', 'Pantry_(3, 3)'), ('Basement_(2, 2)', 'Dining room_(2, 1)'), ('Pantry_(3, 3)', 'Gallery_(2, 3)'), ('Gallery_(2, 3)', 'Nursery_(1, 3)'), ('Nursery_(1, 3)', 'Home office_(1, 2)')]",
+                    "Current_Position": "Pantry_(3, 3)",
+                    "Picture_Name": "graph_1365.png",
+                    "Directions": "[('Dining room_(3, 1)', ['north']), ('Mudroom_(3, 2)', ['west', 'south', 'north']), ('Basement_(2, 2)', ['south', 'east']), ('Dining room_(2, 1)', ['north']), ('Pantry_(3, 3)', ['west', 'south']), ('Gallery_(2, 3)', ['west', 'east']), ('Nursery_(1, 3)', ['south', 'east']), ('Home office_(1, 2)', ['north'])]",
+                    "Moves": "[{'node': 'Dining room_(3, 1)', 'node_moves': [('north', 'Mudroom_(3, 2)')]}, {'node': 'Mudroom_(3, 2)', 'node_moves': [('west', 'Basement_(2, 2)'), ('south', 'Dining room_(3, 1)'), ('north', 'Pantry_(3, 3)')]}, {'node': 'Mudroom_(3, 2)', 'node_moves': [('west', 'Basement_(2, 2)'), ('south', 'Dining room_(3, 1)'), ('north', 'Pantry_(3, 3)')]}, {'node': 'Mudroom_(3, 2)', 'node_moves': [('west', 'Basement_(2, 2)'), ('south', 'Dining room_(3, 1)'), ('north', 'Pantry_(3, 3)')]}, {'node': 'Basement_(2, 2)', 'node_moves': [('south', 'Dining room_(2, 1)'), ('east', 'Mudroom_(3, 2)')]}, {'node': 'Basement_(2, 2)', 'node_moves': [('south', 'Dining room_(2, 1)'), ('east', 'Mudroom_(3, 2)')]}, {'node': 'Dining room_(2, 1)', 'node_moves': [('north', 'Basement_(2, 2)')]}, {'node': 'Pantry_(3, 3)', 'node_moves': [('west', 'Gallery_(2, 3)'), ('south', 'Mudroom_(3, 2)')]}, {'node': 'Pantry_(3, 3)', 'node_moves': [('west', 'Gallery_(2, 3)'), ('south', 'Mudroom_(3, 2)')]}, {'node': 'Gallery_(2, 3)', 'node_moves': [('west', 'Nursery_(1, 3)'), ('east', 'Pantry_(3, 3)')]}, {'node': 'Gallery_(2, 3)', 'node_moves': [('west', 'Nursery_(1, 3)'), ('east', 'Pantry_(3, 3)')]}, {'node': 'Nursery_(1, 3)', 'node_moves': [('south', 'Home office_(1, 2)'), ('east', 'Gallery_(2, 3)')]}, {'node': 'Nursery_(1, 3)', 'node_moves': [('south', 'Home office_(1, 2)'), ('east', 'Gallery_(2, 3)')]}, {'node': 'Home office_(1, 2)', 'node_moves': [('north', 'Nursery_(1, 3)')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": [
+                        1,
+                        2
+                    ],
+                    "Game_Type": "named_graph",
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Question": "How many different $ROOM_CATEGORY$(s) did you encounter?",
+                    "First_Question_Answer": "('Dining room', 2)",
+                    "Second_Question_Answer": "('Basement', 1)",
+                    "Third_Question_Answer": "('Workshop', 0)",
+                    "Question_reprompt": "Now once you have stopped the game, you need to answer some questions in this format: 'Answer: <answer>' replace <answer> with an appropriate integer.",
+                    "Mapping": "{(3, 1): 'Dining room', (2, 1): 'Dining room', (3, 2): 'Mudroom', (2, 2): 'Basement', (3, 3): 'Pantry', (2, 3): 'Gallery', (1, 3): 'Nursery', (1, 2): 'Home office'}",
+                    "Strict": true
+                }
+            ]
+        },
+        {
+            "name": "strong",
+            "game_instances": [
+                {
+                    "game_id": 20,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. In each room, you need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the Kitchen. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a Lobby. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a Bedroom. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "QA_Construction": "^Answer:\\s*(\\d+)\\s*$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['Music room_(2, 1)', 'Home theater_(2, 0)', 'Dining room_(3, 1)', 'Garage_(3, 2)', 'Wine cellar_(3, 3)', 'Garage_(2, 3)', 'Music room_(1, 3)', 'Dining room_(2, 2)']",
+                    "Graph_Edges": "[('Music room_(2, 1)', 'Home theater_(2, 0)'), ('Music room_(2, 1)', 'Dining room_(3, 1)'), ('Dining room_(3, 1)', 'Garage_(3, 2)'), ('Garage_(3, 2)', 'Wine cellar_(3, 3)'), ('Wine cellar_(3, 3)', 'Garage_(2, 3)'), ('Garage_(2, 3)', 'Music room_(1, 3)'), ('Garage_(2, 3)', 'Dining room_(2, 2)')]",
+                    "Current_Position": "Garage_(2, 3)",
+                    "Picture_Name": "graph_4675.png",
+                    "Directions": "[('Music room_(2, 1)', ['south', 'east']), ('Home theater_(2, 0)', ['north']), ('Dining room_(3, 1)', ['west', 'north']), ('Garage_(3, 2)', ['south', 'north']), ('Wine cellar_(3, 3)', ['west', 'south']), ('Garage_(2, 3)', ['west', 'south', 'east']), ('Music room_(1, 3)', ['east']), ('Dining room_(2, 2)', ['north'])]",
+                    "Moves": "[{'node': 'Music room_(2, 1)', 'node_moves': [('south', 'Home theater_(2, 0)'), ('east', 'Dining room_(3, 1)')]}, {'node': 'Music room_(2, 1)', 'node_moves': [('south', 'Home theater_(2, 0)'), ('east', 'Dining room_(3, 1)')]}, {'node': 'Home theater_(2, 0)', 'node_moves': [('north', 'Music room_(2, 1)')]}, {'node': 'Dining room_(3, 1)', 'node_moves': [('west', 'Music room_(2, 1)'), ('north', 'Garage_(3, 2)')]}, {'node': 'Dining room_(3, 1)', 'node_moves': [('west', 'Music room_(2, 1)'), ('north', 'Garage_(3, 2)')]}, {'node': 'Garage_(3, 2)', 'node_moves': [('south', 'Dining room_(3, 1)'), ('north', 'Wine cellar_(3, 3)')]}, {'node': 'Garage_(3, 2)', 'node_moves': [('south', 'Dining room_(3, 1)'), ('north', 'Wine cellar_(3, 3)')]}, {'node': 'Wine cellar_(3, 3)', 'node_moves': [('west', 'Garage_(2, 3)'), ('south', 'Garage_(3, 2)')]}, {'node': 'Wine cellar_(3, 3)', 'node_moves': [('west', 'Garage_(2, 3)'), ('south', 'Garage_(3, 2)')]}, {'node': 'Garage_(2, 3)', 'node_moves': [('west', 'Music room_(1, 3)'), ('south', 'Dining room_(2, 2)'), ('east', 'Wine cellar_(3, 3)')]}, {'node': 'Garage_(2, 3)', 'node_moves': [('west', 'Music room_(1, 3)'), ('south', 'Dining room_(2, 2)'), ('east', 'Wine cellar_(3, 3)')]}, {'node': 'Garage_(2, 3)', 'node_moves': [('west', 'Music room_(1, 3)'), ('south', 'Dining room_(2, 2)'), ('east', 'Wine cellar_(3, 3)')]}, {'node': 'Music room_(1, 3)', 'node_moves': [('east', 'Garage_(2, 3)')]}, {'node': 'Dining room_(2, 2)', 'node_moves': [('north', 'Garage_(2, 3)')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": [
+                        3,
+                        2
+                    ],
+                    "Game_Type": "named_graph",
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Question": "How many different $ROOM_CATEGORY$(s) did you encounter?",
+                    "First_Question_Answer": "('Garage', 2)",
+                    "Second_Question_Answer": "('Dining room', 2)",
+                    "Third_Question_Answer": "('Playroom', 0)",
+                    "Question_reprompt": "Now once you have stopped the game, you need to answer some questions in this format: 'Answer: <answer>' replace <answer> with an appropriate integer.",
+                    "Mapping": "{(2, 1): 'Music room', (1, 3): 'Music room', (3, 2): 'Garage', (2, 3): 'Garage', (2, 2): 'Dining room', (3, 1): 'Dining room', (2, 0): 'Home theater', (3, 3): 'Wine cellar'}",
+                    "Strict": true
+                }
+            ]
+        }
+    ]
+}

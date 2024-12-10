@@ -6,9 +6,9 @@ Let us draw something together. There is an empty grid with a size 5 by 5, like 
 ▢ ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢
 
-I will give you instructions like "put an X in the top left", and you return the grid by applying the given instruction, like so:
+I will give you commands like "put an X in the top left", and you return the grid by applying the given command, like so:
 
-Instruction: put an X in the top left
+command: put an X in the top left
 
 X ▢ ▢ ▢ ▢
 ▢ ▢ ▢ ▢ ▢

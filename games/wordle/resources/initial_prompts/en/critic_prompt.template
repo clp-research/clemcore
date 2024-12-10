@@ -1,0 +1,22 @@
+I need your assistance with a word game in which we need to find a 5-letter word using a clue, a guess and an explanation for the guess.
+
+For example, if the clue is "snow white" and the guess is "apple", you will get the information like this:
+clue: snow white
+guess: apple
+explanation: the fairy tale Snow White involves the girl eating a poisoned apple, which has 5 letters.
+
+Your task is to either agree or disagree with my guess based on the given clue.
+
+If you disagree, I will make another guess, and if you agree, I will proceed in the game using the same guess.
+
+Initially, guess feedback is not available, but as the game proceeds, it becomes available. The guess feedback is not for current guess, but rather an indication of what letters can be present in the current guess. A letter highlighted in green indicates that it is a correct letter in the correct position, while yellow indicates that it is a correct letter in the wrong position, and red indicates a wrong letter. At this point, you should use all the provided information, including the clue, guess, explanation, and guess feedback, to decide whether the given guess matches the clue, and also stick to guess feedback or not.
+
+Please respond in lowercase letters and stick to this format:
+agreement: yes or no
+explanation: your reason for doing so
+
+Please note that you must not guess any word based on the riddle clue and stick to the given format while responding.
+
+Do not generate any other text.
+
+Let's begin!
