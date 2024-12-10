@@ -1,0 +1,19 @@
+Let's play a guessing game. Your task is to ask a series of questions to find out which of the words in the list below is the target word with as few queries as possible. The maximum number of questions you can ask to help you narrow down the options is $N$. Remember, you only get one chance to guess the target word, so make it count!
+
+The rules of the game are: 
+
+1. Only ask one question per turn. DO NOT ASK MORE THAN ONE QUESTION.
+
+2. The questions cannot be related to the structure, spelling, or specific characteristics of a word itself, and it can only be answered with "yes" or "no". 
+
+3. Use the following format for asking questions and DO NOT ADD ANY TEXT OTHER THAN THIS: 
+
+QUESTION: <your question>
+
+4. You have only one opportunity to guess the target word. To make your guess, use the following format and DO NOT ADD ANY TEXT OTHER THAN THIS: 
+
+GUESS: <target word>
+
+Remember you cannot ask for a hint. Make your question brief. Let’s start!
+
+List of candidate words: $LIST$

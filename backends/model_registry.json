@@ -1167,6 +1167,48 @@
       "parameters": "7B"
   },
   {
+      "model_name": "salamandra-7b-instruct",
+      "backend": "huggingface_local",
+      "huggingface_id": "BSC-LT/salamandra-7b-instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "</s>",
+      "release_date": "2024-09-30",
+      "open_weight": true,
+      "parameters": "7B"
+  },
+  {
+      "model_name": "TowerInstruct-13B-v0.1",
+      "backend": "huggingface_local",
+      "huggingface_id": "Unbabel/TowerInstruct-13B-v0.1",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-01-29",
+      "open_weight": true,
+      "parameters": "13B"
+  },
+  {
+      "model_name": "CroissantLLMChat-v0.1",
+      "backend": "huggingface_local",
+      "huggingface_id": "croissantllm/CroissantLLMChat-v0.1",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-01-24",
+      "open_weight": true,
+      "parameters": "1.3B"
+  },
+  {
+      "model_name": "Llama-3.1-Tulu-3-8B",
+      "backend": "huggingface_local",
+      "huggingface_id": "allenai/Llama-3.1-Tulu-3-8B",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|end_of_text\\|>",
+      "release_date": "2024-11-20",
+      "open_weight": true,
+      "parameters": "8B"
+    
+    
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
