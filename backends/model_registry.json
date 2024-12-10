@@ -1219,6 +1219,7 @@
   {
       "model_name": "Llama-3.3-70B-Instruct",
       "backend": "huggingface_local",
+      "requires_api_key": true,
       "huggingface_id": "meta-llama/Llama-3.3-70B-Instruct",
       "premade_chat_template": true,
       "eos_to_cull": "<\\|eot_id\\|>",
