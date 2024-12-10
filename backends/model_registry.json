@@ -1217,6 +1217,16 @@
       "parameters": "8B"
   },
   {
+      "model_name": "Llama-3.3-70B-Instruct",
+      "backend": "huggingface_local",
+      "huggingface_id": "meta-llama/Llama-3.3-70B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|eot_id\\|>",
+      "release_date": "2024-12-06",
+      "open_weight": false,
+      "parameters": "70B"
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
