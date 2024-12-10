@@ -1,0 +1,7 @@
+Let’s play a guessing game! Your task is to answer the other player's questions. Based on your knowledge of the word: $TARGET WORD$, respond to the following questions or guesses. Limit your response to only 'yes' or 'no' with no explanation or other words. Never reveal the answer in your response.
+
+You must reply using the format below and DO NOT ADD ANY TEXT OTHER THAN THIS:
+
+ANSWER: <some text>
+
+Target Word: $TARGET WORD$

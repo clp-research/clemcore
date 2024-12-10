@@ -1,7 +1,7 @@
 from clemgame.clemgame import Player, GameMaster, GameBenchmark, DialogueGameMaster, GameScorer
 from clemgame import metrics as ms
 from clemgame import get_logger
-from games.matchit_ascii.instancegenerator import GAME_NAME
+from games.matchit_ascii_1q.instancegenerator import GAME_NAME
 from backends import Model
 
 from typing import List, Dict, Tuple

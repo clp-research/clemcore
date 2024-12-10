@@ -1,0 +1,185 @@
+{
+    "experiments": [
+        {
+            "name": "small",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. You are given a description of the room at each step and need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the initial room, which has the following description: a kitchen with light wooden cabinets, a grey floor and a silver oven and dishwasher. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a room, which has the following description: a bedroom with a large bed, couch, a ceiling fan, 3 windows equipped with shutter and a white floor carpet. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a room, which has the following description: a bathroom with blue tiles, a sink and a mirror with two towels hanging on the wall to the left. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the initial room, which has the following description: $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered a room, which has the following description: $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the room, which has the following description: $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['nursery', 'stable', 'shower', 'wine_cellar']",
+                    "Graph_Edges": "[('nursery', 'stable'), ('stable', 'shower'), ('shower', 'wine_cellar'), ('stable', 'nursery'), ('shower', 'stable'), ('wine_cellar', 'shower')]",
+                    "Current_Position": "nursery",
+                    "Picture_Name": "map_3479.png",
+                    "Directions": "[('nursery', ['west']), ('stable', ['south', 'east']), ('shower', ['north', 'west']), ('wine_cellar', ['east'])]",
+                    "Moves": "[{'node': 'nursery', 'node_moves': [('west', 'stable')]}, {'node': 'stable', 'node_moves': [('south', 'shower'), ('east', 'nursery')]}, {'node': 'stable', 'node_moves': [('south', 'shower'), ('east', 'nursery')]}, {'node': 'shower', 'node_moves': [('north', 'stable'), ('west', 'wine_cellar')]}, {'node': 'shower', 'node_moves': [('north', 'stable'), ('west', 'wine_cellar')]}, {'node': 'wine_cellar', 'node_moves': [('east', 'shower')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Descriptions": {
+                        "nursery": "A white bunk bed in a attic with a window in the background.",
+                        "stable": "Many small green houses and large trees in the back.",
+                        "shower": "A shower floor with turqoise tiles, a brown seat attached to the wall and a white toilet on the right.",
+                        "wine_cellar": "A wine cellar with many large wooden barrels."
+                    },
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{'(2, 3)': 'nursery', '(1, 3)': 'stable', '(1, 2)': 'shower', '(0, 2)': 'wine_cellar'}",
+                    "Strict": true
+                }
+            ]
+        },
+        {
+            "name": "medium",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. You are given a description of the room at each step and need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the initial room, which has the following description: a kitchen with light wooden cabinets, a grey floor and a silver oven and dishwasher. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a room, which has the following description: a bedroom with a large bed, couch, a ceiling fan, 3 windows equipped with shutter and a white floor carpet. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a room, which has the following description: a bathroom with blue tiles, a sink and a mirror with two towels hanging on the wall to the left. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the initial room, which has the following description: $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered a room, which has the following description: $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the room, which has the following description: $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['hotel_room', 'living_room', 'shower', 'home_office', 'poolroom', 'living_room']",
+                    "Graph_Edges": "[('hotel_room', 'living_room'), ('hotel_room', 'shower'), ('shower', 'home_office'), ('home_office', 'poolroom'), ('poolroom', 'living_room'), ('living_room', 'hotel_room'), ('shower', 'hotel_room'), ('home_office', 'shower'), ('poolroom', 'home_office'), ('living_room', 'poolroom')]",
+                    "Current_Position": "living_room",
+                    "Picture_Name": "map_563.png",
+                    "Directions": "[('hotel_room', ['south', 'west']), ('living_room', ['east']), ('shower', ['north', 'south']), ('home_office', ['north', 'south']), ('poolroom', ['north', 'west']), ('living_room', ['east'])]",
+                    "Moves": "[{'node': 'hotel_room', 'node_moves': [('south', 'shower'), ('west', 'living_room')]}, {'node': 'hotel_room', 'node_moves': [('south', 'shower'), ('west', 'living_room')]}, {'node': 'living_room', 'node_moves': [('east', 'hotel_room')]}, {'node': 'shower', 'node_moves': [('north', 'hotel_room'), ('south', 'home_office')]}, {'node': 'shower', 'node_moves': [('north', 'hotel_room'), ('south', 'home_office')]}, {'node': 'home_office', 'node_moves': [('north', 'shower'), ('south', 'poolroom')]}, {'node': 'home_office', 'node_moves': [('north', 'shower'), ('south', 'poolroom')]}, {'node': 'poolroom', 'node_moves': [('north', 'home_office'), ('west', 'living_room')]}, {'node': 'poolroom', 'node_moves': [('north', 'home_office'), ('west', 'living_room')]}, {'node': 'living_room', 'node_moves': [('east', 'poolroom')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Descriptions": {
+                        "hotel_room": "A bed with green sheets with pink flowers on it and a lamp with white lamp shade and a white window in the background.",
+                        "living_room": "A living room with red couches, a big wooden table in the middle, a large mirror on top of a fireplace and a flat sceen TV in the corner.",
+                        "shower": "A shower floor with turqoise tiles, a brown seat attached to the wall and a white toilet on the right.",
+                        "home_office": "A wooden desk with metal feet with a white computer on the right and a blue and grey chair in the middle.",
+                        "poolroom": "A room with a pool table and several chairs placed in front of home cinema."
+                    },
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{'(3, 3)': 'hotel_room', '(2, 3)': 'living_room', '(3, 2)': 'shower', '(3, 1)': 'home_office', '(3, 0)': 'poolroom', '(2, 0)': 'living_room'}",
+                    "Strict": true
+                }
+            ]
+        },
+        {
+            "name": "large",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. You are given a description of the room at each step and need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the initial room, which has the following description: a kitchen with light wooden cabinets, a grey floor and a silver oven and dishwasher. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a room, which has the following description: a bedroom with a large bed, couch, a ceiling fan, 3 windows equipped with shutter and a white floor carpet. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a room, which has the following description: a bathroom with blue tiles, a sink and a mirror with two towels hanging on the wall to the left. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the initial room, which has the following description: $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered a room, which has the following description: $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the room, which has the following description: $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['laundromat', 'laundromat', 'closet', 'garage', 'bow_window', 'bow_window', 'garage', 'bow_window']",
+                    "Graph_Edges": "[('laundromat', 'laundromat'), ('laundromat', 'bow_window'), ('laundromat', 'closet'), ('closet', 'garage'), ('garage', 'bow_window'), ('bow_window', 'garage'), ('garage', 'bow_window'), ('laundromat', 'laundromat'), ('bow_window', 'laundromat'), ('closet', 'laundromat'), ('garage', 'closet'), ('bow_window', 'garage'), ('garage', 'bow_window'), ('bow_window', 'garage')]",
+                    "Current_Position": "laundromat",
+                    "Picture_Name": "map_9262.png",
+                    "Directions": "[('laundromat', ['north', 'south']), ('laundromat', ['north', 'east']), ('closet', ['east', 'west']), ('garage', ['east', 'west']), ('bow_window', ['west']), ('bow_window', ['north', 'south']), ('garage', ['south', 'east']), ('bow_window', ['west'])]",
+                    "Moves": "[{'node': 'laundromat', 'node_moves': [('north', 'bow_window'), ('south', 'laundromat')]}, {'node': 'laundromat', 'node_moves': [('north', 'bow_window'), ('south', 'laundromat')]}, {'node': 'laundromat', 'node_moves': [('north', 'laundromat'), ('east', 'closet')]}, {'node': 'laundromat', 'node_moves': [('north', 'laundromat'), ('east', 'closet')]}, {'node': 'closet', 'node_moves': [('east', 'garage'), ('west', 'laundromat')]}, {'node': 'closet', 'node_moves': [('east', 'garage'), ('west', 'laundromat')]}, {'node': 'garage', 'node_moves': [('east', 'bow_window'), ('west', 'closet')]}, {'node': 'garage', 'node_moves': [('east', 'bow_window'), ('west', 'closet')]}, {'node': 'bow_window', 'node_moves': [('west', 'garage')]}, {'node': 'bow_window', 'node_moves': [('north', 'garage'), ('south', 'laundromat')]}, {'node': 'bow_window', 'node_moves': [('north', 'garage'), ('south', 'laundromat')]}, {'node': 'garage', 'node_moves': [('south', 'bow_window'), ('east', 'bow_window')]}, {'node': 'garage', 'node_moves': [('south', 'bow_window'), ('east', 'bow_window')]}, {'node': 'bow_window', 'node_moves': [('west', 'garage')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Descriptions": {
+                        "laundromat": "A laundry room with many washing machines or dryers and a filled laundry basked on the floor.",
+                        "closet": "A bright and organized closet consisting of a lot of clothes in earth tones.",
+                        "garage": "A garage with a grey car parked inside and two bicycles being attached on some  fixation at the ceiling.",
+                        "bow_window": "A bow window in a living room with a view on some trees in the the street."
+                    },
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{'(0, 1)': 'laundromat', '(0, 0)': 'laundromat', '(1, 0)': 'closet', '(2, 0)': 'garage', '(3, 0)': 'bow_window', '(0, 2)': 'bow_window', '(0, 3)': 'garage', '(1, 3)': 'bow_window'}",
+                    "Strict": true
+                }
+            ]
+        },
+        {
+            "name": "medium_cycle",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. You are given a description of the room at each step and need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the initial room, which has the following description: a kitchen with light wooden cabinets, a grey floor and a silver oven and dishwasher. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a room, which has the following description: a bedroom with a large bed, couch, a ceiling fan, 3 windows equipped with shutter and a white floor carpet. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a room, which has the following description: a bathroom with blue tiles, a sink and a mirror with two towels hanging on the wall to the left. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the initial room, which has the following description: $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered a room, which has the following description: $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the room, which has the following description: $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['wet_bar', 'youth_hostel', 'kitchenette', 'home_office', 'nursery', 'playroom']",
+                    "Graph_Edges": "[('wet_bar', 'youth_hostel'), ('youth_hostel', 'kitchenette'), ('youth_hostel', 'nursery'), ('kitchenette', 'home_office'), ('home_office', 'nursery'), ('home_office', 'playroom'), ('youth_hostel', 'wet_bar'), ('kitchenette', 'youth_hostel'), ('nursery', 'youth_hostel'), ('home_office', 'kitchenette'), ('nursery', 'home_office'), ('playroom', 'home_office')]",
+                    "Current_Position": "playroom",
+                    "Picture_Name": "map_9684.png",
+                    "Directions": "[('wet_bar', ['west']), ('youth_hostel', ['south', 'east', 'west']), ('kitchenette', ['north', 'west']), ('home_office', ['north', 'south', 'east']), ('nursery', ['south', 'east']), ('playroom', ['north'])]",
+                    "Moves": "[{'node': 'wet_bar', 'node_moves': [('west', 'youth_hostel')]}, {'node': 'youth_hostel', 'node_moves': [('south', 'kitchenette'), ('east', 'wet_bar'), ('west', 'nursery')]}, {'node': 'youth_hostel', 'node_moves': [('south', 'kitchenette'), ('east', 'wet_bar'), ('west', 'nursery')]}, {'node': 'youth_hostel', 'node_moves': [('south', 'kitchenette'), ('east', 'wet_bar'), ('west', 'nursery')]}, {'node': 'kitchenette', 'node_moves': [('north', 'youth_hostel'), ('west', 'home_office')]}, {'node': 'kitchenette', 'node_moves': [('north', 'youth_hostel'), ('west', 'home_office')]}, {'node': 'home_office', 'node_moves': [('north', 'nursery'), ('south', 'playroom'), ('east', 'kitchenette')]}, {'node': 'home_office', 'node_moves': [('north', 'nursery'), ('south', 'playroom'), ('east', 'kitchenette')]}, {'node': 'home_office', 'node_moves': [('north', 'nursery'), ('south', 'playroom'), ('east', 'kitchenette')]}, {'node': 'nursery', 'node_moves': [('south', 'home_office'), ('east', 'youth_hostel')]}, {'node': 'nursery', 'node_moves': [('south', 'home_office'), ('east', 'youth_hostel')]}, {'node': 'playroom', 'node_moves': [('north', 'home_office')]}]",
+                    "Cycle": "cycle_true",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Descriptions": {
+                        "wet_bar": "A hallway in house with a staircaise on the left, a sink integrated in a cabinet on the right and walls and ceiling painted in white.",
+                        "youth_hostel": "2 bunk beds in an attic with walls painted in yellow.",
+                        "kitchenette": "A tiny kitchenette without a stove or a fridge with a mahogany door in the back.",
+                        "home_office": "An home office located next to a living room, with a chair, a table a lamp, many documents and books.",
+                        "nursery": "A white baby crib with a mobile installed and pink sofa on the right.",
+                        "playroom": "A children bedroom with a TV broadcasting a cartoon program in the background, several plastic toys on its left and 6 frames with pictures on the wall."
+                    },
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{'(2, 3)': 'wet_bar', '(1, 3)': 'youth_hostel', '(1, 2)': 'kitchenette', '(0, 2)': 'home_office', '(0, 3)': 'nursery', '(0, 1)': 'playroom'}",
+                    "Strict": true
+                }
+            ]
+        },
+        {
+            "name": "large_cycle",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to visit all the rooms with the fewest number of room changes possible. You are given a description of the room at each step and need to decide the direction to go in. Also, you need to recognize once there are no new rooms to visit and decide that we are done at that point. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. To stop the exploration, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nYou are in the initial room, which has the following description: a kitchen with light wooden cabinets, a grey floor and a silver oven and dishwasher. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a room, which has the following description: a bedroom with a large bed, couch, a ceiling fan, 3 windows equipped with shutter and a white floor carpet. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a room, which has the following description: a bathroom with blue tiles, a sink and a mirror with two towels hanging on the wall to the left. Currently available directions: south. What is your next command?\nDONE\nLet us start. You are in the initial room, which has the following description: $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?",
+                    "Player2_positive_answer": "You have made a step and entered a room, which has the following description: $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the room, which has the following description: $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['nursery', 'playroom', 'youth_hostel', 'living_room', 'bow_window', 'parlor', 'playroom', 'laundromat']",
+                    "Graph_Edges": "[('nursery', 'playroom'), ('playroom', 'youth_hostel'), ('playroom', 'bow_window'), ('youth_hostel', 'living_room'), ('living_room', 'bow_window'), ('living_room', 'parlor'), ('parlor', 'playroom'), ('parlor', 'laundromat'), ('playroom', 'nursery'), ('youth_hostel', 'playroom'), ('bow_window', 'playroom'), ('living_room', 'youth_hostel'), ('bow_window', 'living_room'), ('parlor', 'living_room'), ('playroom', 'parlor'), ('laundromat', 'parlor')]",
+                    "Current_Position": "playroom",
+                    "Picture_Name": "map_6840.png",
+                    "Directions": "[('nursery', ['west']), ('playroom', ['south', 'east', 'west']), ('youth_hostel', ['north', 'west']), ('living_room', ['north', 'south', 'east']), ('bow_window', ['south', 'east']), ('parlor', ['north', 'south', 'east']), ('playroom', ['north']), ('laundromat', ['west'])]",
+                    "Moves": "[{'node': 'nursery', 'node_moves': [('west', 'playroom')]}, {'node': 'playroom', 'node_moves': [('south', 'youth_hostel'), ('east', 'nursery'), ('west', 'bow_window')]}, {'node': 'playroom', 'node_moves': [('south', 'youth_hostel'), ('east', 'nursery'), ('west', 'bow_window')]}, {'node': 'playroom', 'node_moves': [('south', 'youth_hostel'), ('east', 'nursery'), ('west', 'bow_window')]}, {'node': 'youth_hostel', 'node_moves': [('north', 'playroom'), ('west', 'living_room')]}, {'node': 'youth_hostel', 'node_moves': [('north', 'playroom'), ('west', 'living_room')]}, {'node': 'living_room', 'node_moves': [('north', 'bow_window'), ('south', 'parlor'), ('east', 'youth_hostel')]}, {'node': 'living_room', 'node_moves': [('north', 'bow_window'), ('south', 'parlor'), ('east', 'youth_hostel')]}, {'node': 'living_room', 'node_moves': [('north', 'bow_window'), ('south', 'parlor'), ('east', 'youth_hostel')]}, {'node': 'bow_window', 'node_moves': [('south', 'living_room'), ('east', 'playroom')]}, {'node': 'bow_window', 'node_moves': [('south', 'living_room'), ('east', 'playroom')]}, {'node': 'parlor', 'node_moves': [('north', 'living_room'), ('south', 'playroom'), ('east', 'laundromat')]}, {'node': 'parlor', 'node_moves': [('north', 'living_room'), ('south', 'playroom'), ('east', 'laundromat')]}, {'node': 'parlor', 'node_moves': [('north', 'living_room'), ('south', 'playroom'), ('east', 'laundromat')]}, {'node': 'playroom', 'node_moves': [('north', 'parlor')]}, {'node': 'laundromat', 'node_moves': [('west', 'parlor')]}]",
+                    "Cycle": "cycle_true",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Descriptions": {
+                        "nursery": "A white baby crib with a mobile installed and pink sofa on the right.",
+                        "playroom": "A small white table with a black lamp on it, a dotted arm chair and a basket full of toys in front of a light blue wall with framed pictures on it.",
+                        "youth_hostel": "2 bunk beds in an attic with walls painted in yellow.",
+                        "living_room": "An open living room with wooden furniture in white and earthy tones with a body of water in the background.",
+                        "bow_window": "A room with a bow window and a luster.",
+                        "parlor": "A white fireplace on the left and a dark sofa with a white table on the right.",
+                        "laundromat": "Many white and silver washing machines in the back and two white tables with wooden chairs in the center."
+                    },
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{'(2, 3)': 'nursery', '(1, 3)': 'playroom', '(1, 2)': 'youth_hostel', '(0, 2)': 'living_room', '(0, 3)': 'bow_window', '(0, 1)': 'parlor', '(0, 0)': 'playroom', '(1, 1)': 'laundromat'}",
+                    "Strict": true
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,97 @@
+{
+    "experiments": [
+        {
+            "name": "on",
+            "game_instances": [
+                {
+                    "game_id": 0,
+                    "Prompt": "Please help me with the following task. The goal is to explore rooms and find the target room. In each room, you need to decide the direction to go in. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. Most importantly, once we have found the target room, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nThe target room is a Bedroom. You are in the Kitchen. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a Lobby. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a Bedroom. Currently available directions: south. What is your next command?\nDONE\nLet us start. The target room is $GOAL$. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?\n",
+                    "Player2_positive_answer": "You have made a step and entered $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['Bar', 'Home office', 'Playroom', 'Laundry room', 'Recreation room', 'Living room', 'Media room', 'Wine cellar']",
+                    "Graph_Edges": "[('Bar', 'Home office'), ('Home office', 'Playroom'), ('Home office', 'Living room'), ('Playroom', 'Laundry room'), ('Playroom', 'Recreation room'), ('Living room', 'Media room'), ('Media room', 'Wine cellar')]",
+                    "Current_Position": "Bar",
+                    "Picture_Name": "graph_3169.png",
+                    "Directions": "[('Bar', ['west']), ('Home office', ['east', 'south', 'north']), ('Playroom', ['east', 'west', 'north']), ('Laundry room', ['east']), ('Recreation room', ['west']), ('Living room', ['east', 'south']), ('Media room', ['east', 'west']), ('Wine cellar', ['west'])]",
+                    "Moves": "[{'node': 'Bar', 'node_moves': [('west', 'Home office')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Laundry room', 'node_moves': [('east', 'Playroom')]}, {'node': 'Recreation room', 'node_moves': [('west', 'Playroom')]}, {'node': 'Living room', 'node_moves': [('east', 'Media room'), ('south', 'Home office')]}, {'node': 'Living room', 'node_moves': [('east', 'Media room'), ('south', 'Home office')]}, {'node': 'Media room', 'node_moves': [('east', 'Wine cellar'), ('west', 'Living room')]}, {'node': 'Media room', 'node_moves': [('east', 'Wine cellar'), ('west', 'Living room')]}, {'node': 'Wine cellar', 'node_moves': [('west', 'Media room')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{(2, 1): 'Bar', (1, 1): 'Home office', (1, 0): 'Playroom', (0, 0): 'Laundry room', (2, 0): 'Recreation room', (1, 2): 'Living room', (2, 2): 'Media room', (3, 2): 'Wine cellar'}",
+                    "Strict": true,
+                    "Specific_Room": "Bar",
+                    "Specific_Room_Distance": "0"
+                }
+            ]
+        },
+        {
+            "name": "close",
+            "game_instances": [
+                {
+                    "game_id": 10,
+                    "Prompt": "Please help me with the following task. The goal is to explore rooms and find the target room. In each room, you need to decide the direction to go in. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. Most importantly, once we have found the target room, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nThe target room is a Bedroom. You are in the Kitchen. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a Lobby. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a Bedroom. Currently available directions: south. What is your next command?\nDONE\nLet us start. The target room is $GOAL$. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?\n",
+                    "Player2_positive_answer": "You have made a step and entered $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['Bar', 'Home office', 'Playroom', 'Laundry room', 'Recreation room', 'Living room', 'Media room', 'Wine cellar']",
+                    "Graph_Edges": "[('Bar', 'Home office'), ('Home office', 'Playroom'), ('Home office', 'Living room'), ('Playroom', 'Laundry room'), ('Playroom', 'Recreation room'), ('Living room', 'Media room'), ('Media room', 'Wine cellar')]",
+                    "Current_Position": "Bar",
+                    "Picture_Name": "graph_3169.png",
+                    "Directions": "[('Bar', ['west']), ('Home office', ['east', 'south', 'north']), ('Playroom', ['east', 'west', 'north']), ('Laundry room', ['east']), ('Recreation room', ['west']), ('Living room', ['east', 'south']), ('Media room', ['east', 'west']), ('Wine cellar', ['west'])]",
+                    "Moves": "[{'node': 'Bar', 'node_moves': [('west', 'Home office')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Laundry room', 'node_moves': [('east', 'Playroom')]}, {'node': 'Recreation room', 'node_moves': [('west', 'Playroom')]}, {'node': 'Living room', 'node_moves': [('east', 'Media room'), ('south', 'Home office')]}, {'node': 'Living room', 'node_moves': [('east', 'Media room'), ('south', 'Home office')]}, {'node': 'Media room', 'node_moves': [('east', 'Wine cellar'), ('west', 'Living room')]}, {'node': 'Media room', 'node_moves': [('east', 'Wine cellar'), ('west', 'Living room')]}, {'node': 'Wine cellar', 'node_moves': [('west', 'Media room')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{(2, 1): 'Bar', (1, 1): 'Home office', (1, 0): 'Playroom', (0, 0): 'Laundry room', (2, 0): 'Recreation room', (1, 2): 'Living room', (2, 2): 'Media room', (3, 2): 'Wine cellar'}",
+                    "Strict": true,
+                    "Specific_Room": "Playroom",
+                    "Specific_Room_Distance": "2"
+                }
+            ]
+        },
+        {
+            "name": "far",
+            "game_instances": [
+                {
+                    "game_id": 20,
+                    "Prompt": "Please help me with the following task. The goal is to explore rooms and find the target room. In each room, you need to decide the direction to go in. Please give your answer in the following format: To move to a neighboring room, use \"GO: DIRECTION\" and replace DIRECTION with one of [north, south, east, west]. Most importantly, once we have found the target room, answer with \"DONE\" instead. Omit any other text.\nHere is an example:\nThe target room is a Bedroom. You are in the Kitchen. Currently available directions: south, west. What is your next command?\nGO: west\nYou have made a step and entered a Lobby. Currently available directions: east, north. What is your next command?\nGO: north\n...\nYou have made a step and entered a Bedroom. Currently available directions: south. What is your next command?\nDONE\nLet us start. The target room is $GOAL$. You are in the $INITIAL_ROOM$. Currently available directions: $INITIAL_DIRECTIONS$. What is your next command?\n",
+                    "Player2_positive_answer": "You have made a step and entered $ANOTHER_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Player2_negative_answer": "The move is not valid. You are still in the $SAME_ROOM$. Currently available directions: $DIRECTIONS$. What is your next command?",
+                    "Move_Construction": "^GO:\\s*(north|east|west|south)$",
+                    "Stop_Construction": "^DONE$",
+                    "Grid_Dimension": "4",
+                    "Graph_Nodes": "['Bar', 'Home office', 'Playroom', 'Laundry room', 'Recreation room', 'Living room', 'Media room', 'Wine cellar']",
+                    "Graph_Edges": "[('Bar', 'Home office'), ('Home office', 'Playroom'), ('Home office', 'Living room'), ('Playroom', 'Laundry room'), ('Playroom', 'Recreation room'), ('Living room', 'Media room'), ('Media room', 'Wine cellar')]",
+                    "Current_Position": "Bar",
+                    "Picture_Name": "graph_3169.png",
+                    "Directions": "[('Bar', ['west']), ('Home office', ['east', 'south', 'north']), ('Playroom', ['east', 'west', 'north']), ('Laundry room', ['east']), ('Recreation room', ['west']), ('Living room', ['east', 'south']), ('Media room', ['east', 'west']), ('Wine cellar', ['west'])]",
+                    "Moves": "[{'node': 'Bar', 'node_moves': [('west', 'Home office')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Home office', 'node_moves': [('east', 'Bar'), ('south', 'Playroom'), ('north', 'Living room')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Playroom', 'node_moves': [('east', 'Recreation room'), ('west', 'Laundry room'), ('north', 'Home office')]}, {'node': 'Laundry room', 'node_moves': [('east', 'Playroom')]}, {'node': 'Recreation room', 'node_moves': [('west', 'Playroom')]}, {'node': 'Living room', 'node_moves': [('east', 'Media room'), ('south', 'Home office')]}, {'node': 'Living room', 'node_moves': [('east', 'Media room'), ('south', 'Home office')]}, {'node': 'Media room', 'node_moves': [('east', 'Wine cellar'), ('west', 'Living room')]}, {'node': 'Media room', 'node_moves': [('east', 'Wine cellar'), ('west', 'Living room')]}, {'node': 'Wine cellar', 'node_moves': [('west', 'Media room')]}]",
+                    "Cycle": "cycle_false",
+                    "Ambiguity": null,
+                    "Game_Type": "named_graph",
+                    "Loop_Reminder": false,
+                    "Loop_Reminder_Text": "It seems like we are going back and forth between two rooms. To stop exploring choose 'DONE' as our next action.",
+                    "Max_Turns_Reminder": false,
+                    "Max_Turns_Reminder_Text": "We have been exploring for a while now. To stop exploring choose 'DONE' as our next action.",
+                    "Mapping": "{(2, 1): 'Bar', (1, 1): 'Home office', (1, 0): 'Playroom', (0, 0): 'Laundry room', (2, 0): 'Recreation room', (1, 2): 'Living room', (2, 2): 'Media room', (3, 2): 'Wine cellar'}",
+                    "Strict": true,
+                    "Specific_Room": "Wine cellar",
+                    "Specific_Room_Distance": "4"
+                }
+            ]
+        }
+    ]
+}

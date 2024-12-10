@@ -7,46 +7,33 @@ from clemgame import file_utils
 
 
 class InstanceUtils:
-    def __init__(self, experiment_config, game_name):
+    def __init__(self, experiment_config, game_name, language):
         self.experiment_config = experiment_config
         self.game_name = game_name
+        self.language = language
         self.common_config = file_utils.load_json(
             "../wordle/resources/common_config.json", self.game_name
         )
 
     def read_inital_prompt(self, use_clue, use_critic):
-        file_name = self.common_config["system_definition_file_name"]
-        system_definition = file_utils.load_file(
-            f"../wordle/resources/{file_name}", self.game_name
-        )
+        guesser_prompt = ""
+        guesser_critic_prompt = ""
 
-        guesser_prompt = []
-        guesser_critic_prompt = []
+        # Hardcoded the game_name argument in the load_template function to wordle
+        # During the instance creation of wordle_withclue, wordle_withcritic, game_name would be different and that leads to file not found error
 
         if use_critic:
-            file_name = self.common_config["guess_prompt_with_critic_file_name"]
-            guesser_prompt = file_utils.load_json(
-                f"../wordle/resources/{file_name}", self.game_name
-            )
-
-            file_name = self.common_config["critic_prompt_file_name"]
-            guesser_critic_prompt = file_utils.load_json(
-                f"../wordle/resources/{file_name}", self.game_name
-            )
+            guesser_prompt = file_utils.load_template(f"resources/initial_prompts/{self.language}/guesser_withcritic_prompt", "wordle")
+            guesser_critic_prompt = file_utils.load_template(f"resources/initial_prompts/{self.language}/critic_prompt", "wordle")
 
         else:
             if use_clue:
-                file_name = self.common_config["guess_prompt_with_clue_file_name"]
-                guesser_prompt = file_utils.load_json(
-                    f"../wordle/resources/{file_name}", self.game_name
-                )
-            else:
-                file_name = self.common_config["guess_prompt_file_name"]
-                guesser_prompt = file_utils.load_json(
-                    f"../wordle/resources/{file_name}", self.game_name
-                )
+                guesser_prompt = file_utils.load_template(f"resources/initial_prompts/{self.language}/guesser_withclue_prompt", "wordle")
 
-        return system_definition, guesser_prompt, guesser_critic_prompt
+            else:
+                guesser_prompt = file_utils.load_template(f"resources/initial_prompts/{self.language}/guesser_prompt", "wordle")
+
+        return guesser_prompt, guesser_critic_prompt
     
     def download_nytcrosswords(self):
         #Requires kaggle authentication for successfully downloading the file
@@ -59,7 +46,7 @@ class InstanceUtils:
             return
 
         print("Downloading nytcrosswords...")
-        fp = file_utils.file_path("resources/", "wordle")
+        fp = file_utils.file_path(f"resources/{self.language}/", "wordle")
         from kaggle.api.kaggle_api_extended import KaggleApi
         api = KaggleApi()
         api.authenticate()
@@ -71,11 +58,11 @@ class InstanceUtils:
         print("Stored the nytc crosswords clues file", fp)
 
     def download_allowed_words(self):
-        print("Downloading wordle recognized words...")
-        url = self.common_config["official_recognized_english_words_file_url"]
+        print("Downloading wordle recognized words for EN Language...")
+        url = self.common_config["official_recognized_words_file_url"][self.language]
         r = requests.get(url, allow_redirects=True)
-        fp = file_utils.file_path("resources/", "wordle")
-        file_utils.store_file(r.content.decode("utf-8"), self.common_config["official_recognized_english_words_file"], fp)
+        fp = file_utils.file_path(f"resources/{self.language}", "wordle")
+        file_utils.store_file(r.content.decode("utf-8"), "official_recognized_words.txt", fp)
         print("Stored the wordle recognized words file", fp)
 
     def read_file_contents(self, filename, file_ext="txt"):
@@ -94,10 +81,10 @@ class InstanceUtils:
                     )
 
                 else:
-                    print(f"File {filename} not found")
+                    print(f"Word clues file {filename} not found, check and download the relevant files")
                     return []
 
-            if filename == "nytcrosswords.csv":
+            if "nytcrosswords.csv" in filename:
                 for word in words_list:
                     words_dict[word[1].lower().strip()] = word[2].lower().strip()
                 return words_dict
@@ -163,11 +150,10 @@ class InstanceUtils:
         return data
 
     def read_word_lists(self):
-        english_words = []
+        official_words = []
         # officially recognized wordle words are downloaded from
         # https://github.com/3b1b/videos/blob/master/_2022/wordle/data/allowed_words.txt
-        file_name = self.common_config["official_recognized_english_words_file"]
-        english_words = self.read_file_contents(file_name)
+        official_words = self.read_file_contents(f"target_words/{self.language}/official_recognized_words.txt")
 
         # wordle target words are downloaded from
         # https://github.com/3b1b/videos/blob/master/_2022/wordle/data/possible_words.txt
@@ -184,38 +170,35 @@ class InstanceUtils:
 
         # Crosswords Clues are downloaded from
         # https://www.kaggle.com/datasets/darinhawley/new-york-times-crossword-clues-answers-19932021
+
+        # Crosswords Clues are: List of lists and each sublist has: [date, word, clue]
+        # We are only interested in the word and clue
+        # Data cleanup happens inside the read_file_contents function
         word_clues_dict = {}
-        file_name = self.common_config["word_clues_file_name"]
-        word_clues_dict = self.read_file_contents(file_name, file_ext="csv")
+        word_clues_dict = self.read_file_contents(f"target_words/{self.language}/nytcrosswords.csv", file_ext="csv")
 
         # Currently the categorized words are read directly from the files
         #   without doing the categorization during instance generation
         # Check the file dump_categorized_words.py to see how the
         #   categorization is done
         # easy_words_list, medium_words_list, hard_words_list = self._categorize_target_words(unigram_freq_sorted_dict, word_clues_dict)
-        easy_words_list = self.read_file_contents(
-            self.common_config["easy_words_file_name"]
-        )
-        medium_words_list = self.read_file_contents(
-            self.common_config["medium_words_file_name"]
-        )
-        hard_words_list = self.read_file_contents(
-            self.common_config["hard_words_file_name"]
-        )
+        easy_words_list = self.read_file_contents(f"target_words/{self.language}/easy_words.txt")
+        medium_words_list = self.read_file_contents(f"target_words/{self.language}/medium_words.txt")
+        hard_words_list = self.read_file_contents(f"target_words/{self.language}/hard_words.txt")
 
-        if not english_words or not word_clues_dict:
+        if not official_words or not word_clues_dict:
             print("Error in reading the word lists, check and download the relevant files")
             return "DATA_NOT_AVAILABLE"
 
-        self.english_words = english_words
+        self.official_words = official_words
         # self.target_words = target_words
         self.word_clues_dict = word_clues_dict
         self.easy_words_list = easy_words_list
         self.medium_words_list = medium_words_list
         self.hard_words_list = hard_words_list
 
-    def select_target_words(self):
-        use_seed = self.common_config["seed_to_select_target_word"]
+    def select_target_words(self, use_seed):
+        #use_seed = self.common_config["seed_to_select_target_word"]
         number_of_target_words = self.common_config["number_of_target_words"]
 
         target_words_test_dict = {}
@@ -247,21 +230,21 @@ class InstanceUtils:
 
         return target_words_test_dict
 
-    def update_experiment_dict(self, experiment):
+    def update_experiment_dict(self, experiment, lang_keywords):
         experiment["common_config"] = self.common_config
-        experiment["english_words"] = self.english_words
+        experiment["common_config"]["max_word_length"] = lang_keywords["max_word_length"]
         experiment["use_clue"] = self.experiment_config["use_clue"]
         experiment["use_critic"] = self.experiment_config["use_critic"]
 
         (
-            system_definition,
             guesser_prompt,
             guesser_critic_prompt,
         ) = self.read_inital_prompt(experiment["use_clue"], experiment["use_critic"])
-        experiment["system_definition"] = system_definition
+
         experiment["guesser_prompt"] = guesser_prompt
         experiment["guesser_critic_prompt"] = guesser_critic_prompt
-        experiment["response_format_keywords"] = self.common_config["response_format_keywords"]
+        experiment["lang_keywords"] = lang_keywords
+        experiment["lang_keywords"]["official_words_list"] = self.official_words        
 
     def update_game_instance_dict(self, game_instance, word, difficulty):
         game_instance["target_word"] = word

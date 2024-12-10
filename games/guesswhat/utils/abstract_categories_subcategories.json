@@ -1,0 +1,5739 @@
+{
+    "Categories": [
+        {
+            "Category": "academic subject",
+            "Subcategories": [
+                {
+                    "Subcategory": "promotion.n.01",
+                    "Members": [
+                        "advertising"
+                    ]
+                },
+                {
+                    "Subcategory": "science.n.01",
+                    "Members": [
+                        "math",
+                        "psychology"
+                    ]
+                },
+                {
+                    "Subcategory": "commerce.n.01",
+                    "Members": [
+                        "marketing"
+                    ]
+                },
+                {
+                    "Subcategory": "auditory communication.n.01",
+                    "Members": [
+                        "music"
+                    ]
+                },
+                {
+                    "Subcategory": "anthropology.n.01",
+                    "Members": [
+                        "archaeology"
+                    ]
+                },
+                {
+                    "Subcategory": "natural science.n.01",
+                    "Members": [
+                        "chemistry"
+                    ]
+                },
+                {
+                    "Subcategory": "craftsman.n.03",
+                    "Members": [
+                        "mechanic"
+                    ]
+                },
+                {
+                    "Subcategory": "medicine.n.01",
+                    "Members": [
+                        "dentistry"
+                    ]
+                },
+                {
+                    "Subcategory": "care.n.01",
+                    "Members": [
+                        "healthcare"
+                    ]
+                },
+                {
+                    "Subcategory": "native.n.01",
+                    "Members": [
+                        "russian"
+                    ]
+                },
+                {
+                    "Subcategory": "social science.n.01",
+                    "Members": [
+                        "anthropology",
+                        "sociology"
+                    ]
+                },
+                {
+                    "Subcategory": "european.n.01",
+                    "Members": [
+                        "german",
+                        "italian"
+                    ]
+                },
+                {
+                    "Subcategory": "life science.n.01",
+                    "Members": [
+                        "biology"
+                    ]
+                },
+                {
+                    "Subcategory": "italic.n.02",
+                    "Members": [
+                        "latin"
+                    ]
+                },
+                {
+                    "Subcategory": "datum.n.01",
+                    "Members": [
+                        "statistic"
+                    ]
+                },
+                {
+                    "Subcategory": "west germanic.n.01",
+                    "Members": [
+                        "english"
+                    ]
+                },
+                {
+                    "Subcategory": "collection.n.01",
+                    "Members": [
+                        "law"
+                    ]
+                },
+                {
+                    "Subcategory": "principle.n.02",
+                    "Members": [
+                        "ethic"
+                    ]
+                },
+                {
+                    "Subcategory": "dramatic composition.n.01",
+                    "Members": [
+                        "drama"
+                    ]
+                },
+                {
+                    "Subcategory": "chinese.n.01",
+                    "Members": [
+                        "cantonese"
+                    ]
+                },
+                {
+                    "Subcategory": "letter.n.02",
+                    "Members": [
+                        "pe"
+                    ]
+                },
+                {
+                    "Subcategory": "belief.n.01",
+                    "Members": [
+                        "philosophy"
+                    ]
+                },
+                {
+                    "Subcategory": "discipline.n.01",
+                    "Members": [
+                        "science"
+                    ]
+                },
+                {
+                    "Subcategory": "citrus.n.02",
+                    "Members": [
+                        "mandarin"
+                    ]
+                },
+                {
+                    "Subcategory": "communication.n.02",
+                    "Members": [
+                        "language"
+                    ]
+                },
+                {
+                    "Subcategory": "medicine.n.02",
+                    "Members": [
+                        "physic"
+                    ]
+                },
+                {
+                    "Subcategory": "past.n.01",
+                    "Members": [
+                        "history"
+                    ]
+                },
+                {
+                    "Subcategory": "creation.n.02",
+                    "Members": [
+                        "art"
+                    ]
+                },
+                {
+                    "Subcategory": "indo-european.n.02",
+                    "Members": [
+                        "greek"
+                    ]
+                },
+                {
+                    "Subcategory": "earth science.n.01",
+                    "Members": [
+                        "geology",
+                        "geography"
+                    ]
+                },
+                {
+                    "Subcategory": "social control.n.01",
+                    "Members": [
+                        "management"
+                    ]
+                },
+                {
+                    "Subcategory": "romance.n.03",
+                    "Members": [
+                        "french",
+                        "spanish"
+                    ]
+                },
+                {
+                    "Subcategory": "medical science.n.01",
+                    "Members": [
+                        "neurology",
+                        "medicine"
+                    ]
+                },
+                {
+                    "Subcategory": "explanation.n.01",
+                    "Members": [
+                        "accounting"
+                    ]
+                },
+                {
+                    "Subcategory": "application.n.01",
+                    "Members": [
+                        "technology",
+                        "engineering"
+                    ]
+                },
+                {
+                    "Subcategory": "sociology.n.01",
+                    "Members": [
+                        "criminology"
+                    ]
+                },
+                {
+                    "Subcategory": "semitic.n.01",
+                    "Members": [
+                        "arabic"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "art form",
+            "Subcategories": [
+                {
+                    "Subcategory": "publication.n.01",
+                    "Members": [
+                        "book"
+                    ]
+                },
+                {
+                    "Subcategory": "artwork.n.01",
+                    "Members": [
+                        "illustration",
+                        "drawing"
+                    ]
+                },
+                {
+                    "Subcategory": "building.n.01",
+                    "Members": [
+                        "architecture",
+                        "theatre"
+                    ]
+                },
+                {
+                    "Subcategory": "show.n.03",
+                    "Members": [
+                        "performance"
+                    ]
+                },
+                {
+                    "Subcategory": "peer.n.01",
+                    "Members": [
+                        "contemporary"
+                    ]
+                },
+                {
+                    "Subcategory": "artistic movement.n.01",
+                    "Members": [
+                        "cubism"
+                    ]
+                },
+                {
+                    "Subcategory": "beginning.n.05",
+                    "Members": [
+                        "installation"
+                    ]
+                },
+                {
+                    "Subcategory": "product.n.02",
+                    "Members": [
+                        "movie"
+                    ]
+                },
+                {
+                    "Subcategory": "drawing.n.02",
+                    "Members": [
+                        "sketch"
+                    ]
+                },
+                {
+                    "Subcategory": "contact.n.04",
+                    "Members": [
+                        "touch"
+                    ]
+                },
+                {
+                    "Subcategory": "instrumentality.n.03",
+                    "Members": [
+                        "ceramic"
+                    ]
+                },
+                {
+                    "Subcategory": "creator.n.02",
+                    "Members": [
+                        "artist"
+                    ]
+                },
+                {
+                    "Subcategory": "graphic art.n.01",
+                    "Members": [
+                        "painting"
+                    ]
+                },
+                {
+                    "Subcategory": "speech act.n.01",
+                    "Members": [
+                        "speech"
+                    ]
+                },
+                {
+                    "Subcategory": "man-made fiber.n.01",
+                    "Members": [
+                        "acrylic"
+                    ]
+                },
+                {
+                    "Subcategory": "dramatic composition.n.01",
+                    "Members": [
+                        "play"
+                    ]
+                },
+                {
+                    "Subcategory": "artifact.n.01",
+                    "Members": [
+                        "textile"
+                    ]
+                },
+                {
+                    "Subcategory": "word picture.n.01",
+                    "Members": [
+                        "portrait"
+                    ]
+                },
+                {
+                    "Subcategory": "plastic art.n.01",
+                    "Members": [
+                        "sculpture"
+                    ]
+                },
+                {
+                    "Subcategory": "musical performance.n.01",
+                    "Members": [
+                        "singing"
+                    ]
+                },
+                {
+                    "Subcategory": "writing.n.02",
+                    "Members": [
+                        "literature"
+                    ]
+                },
+                {
+                    "Subcategory": "performer.n.01",
+                    "Members": [
+                        "comic"
+                    ]
+                },
+                {
+                    "Subcategory": "foodstuff.n.02",
+                    "Members": [
+                        "colouring"
+                    ]
+                },
+                {
+                    "Subcategory": "structure.n.01",
+                    "Members": [
+                        "monument",
+                        "building"
+                    ]
+                },
+                {
+                    "Subcategory": "timepiece.n.01",
+                    "Members": [
+                        "clock"
+                    ]
+                },
+                {
+                    "Subcategory": "ceramic ware.n.01",
+                    "Members": [
+                        "pottery"
+                    ]
+                },
+                {
+                    "Subcategory": "writing.n.04",
+                    "Members": [
+                        "printing"
+                    ]
+                },
+                {
+                    "Subcategory": "hypothesis.n.02",
+                    "Members": [
+                        "model"
+                    ]
+                },
+                {
+                    "Subcategory": "person.n.01",
+                    "Members": [
+                        "modern"
+                    ]
+                },
+                {
+                    "Subcategory": "engraving.n.01",
+                    "Members": [
+                        "etching"
+                    ]
+                },
+                {
+                    "Subcategory": "scenery.n.02",
+                    "Members": [
+                        "landscape"
+                    ]
+                },
+                {
+                    "Subcategory": "sculpture.n.01",
+                    "Members": [
+                        "statue"
+                    ]
+                },
+                {
+                    "Subcategory": "cosmetic.n.01",
+                    "Members": [
+                        "makeup"
+                    ]
+                },
+                {
+                    "Subcategory": "work.n.02",
+                    "Members": [
+                        "woodwork"
+                    ]
+                },
+                {
+                    "Subcategory": "supply.v.01",
+                    "Members": [
+                        "computerised"
+                    ]
+                },
+                {
+                    "Subcategory": "verbal creation.n.01",
+                    "Members": [
+                        "writing"
+                    ]
+                },
+                {
+                    "Subcategory": "figure.n.04",
+                    "Members": [
+                        "figurine"
+                    ]
+                },
+                {
+                    "Subcategory": "art.n.01",
+                    "Members": [
+                        "dance"
+                    ]
+                },
+                {
+                    "Subcategory": "ballet dancer.n.01",
+                    "Members": [
+                        "ballerina"
+                    ]
+                },
+                {
+                    "Subcategory": "pictorial representation.n.01",
+                    "Members": [
+                        "photography"
+                    ]
+                },
+                {
+                    "Subcategory": "artist.n.01",
+                    "Members": [
+                        "surrealist"
+                    ]
+                },
+                {
+                    "Subcategory": "pigment.n.01",
+                    "Members": [
+                        "watercolour"
+                    ]
+                },
+                {
+                    "Subcategory": "drama.n.03",
+                    "Members": [
+                        "comedy"
+                    ]
+                },
+                {
+                    "Subcategory": "writing style.n.01",
+                    "Members": [
+                        "poetry"
+                    ]
+                },
+                {
+                    "Subcategory": "activity.n.01",
+                    "Members": [
+                        "acting"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "artistic movement",
+            "Subcategories": [
+                {
+                    "Subcategory": "concept.n.01",
+                    "Members": [
+                        "abstract"
+                    ]
+                },
+                {
+                    "Subcategory": "artistic movement.n.01",
+                    "Members": [
+                        "surrealism",
+                        "impressionism"
+                    ]
+                },
+                {
+                    "Subcategory": "genre.n.04",
+                    "Members": [
+                        "modernism",
+                        "postmodernism"
+                    ]
+                },
+                {
+                    "Subcategory": "east germanic.n.01",
+                    "Members": [
+                        "gothic"
+                    ]
+                },
+                {
+                    "Subcategory": "procurator.n.02",
+                    "Members": [
+                        "pilate"
+                    ]
+                },
+                {
+                    "Subcategory": "increase.n.02",
+                    "Members": [
+                        "jump"
+                    ]
+                },
+                {
+                    "Subcategory": "round shape.n.01",
+                    "Members": [
+                        "swirl"
+                    ]
+                },
+                {
+                    "Subcategory": "father.n.01",
+                    "Members": [
+                        "dada"
+                    ]
+                },
+                {
+                    "Subcategory": "dancing.n.01",
+                    "Members": [
+                        "choreography"
+                    ]
+                },
+                {
+                    "Subcategory": "music genre.n.01",
+                    "Members": [
+                        "classical"
+                    ]
+                },
+                {
+                    "Subcategory": "handwriting.n.01",
+                    "Members": [
+                        "calligraphy"
+                    ]
+                },
+                {
+                    "Subcategory": "occupation.n.01",
+                    "Members": [
+                        "craft"
+                    ]
+                },
+                {
+                    "Subcategory": "artist.n.01",
+                    "Members": [
+                        "pre-raphaelite"
+                    ]
+                },
+                {
+                    "Subcategory": "stage dancing.n.01",
+                    "Members": [
+                        "ballet"
+                    ]
+                },
+                {
+                    "Subcategory": "practicality.n.01",
+                    "Members": [
+                        "realism"
+                    ]
+                },
+                {
+                    "Subcategory": "hinduism.n.02",
+                    "Members": [
+                        "yoga"
+                    ]
+                },
+                {
+                    "Subcategory": "contemplation.n.02",
+                    "Members": [
+                        "meditation"
+                    ]
+                },
+                {
+                    "Subcategory": "event.n.01",
+                    "Members": [
+                        "happening"
+                    ]
+                },
+                {
+                    "Subcategory": "idealism.n.02",
+                    "Members": [
+                        "romanticism"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "book genre",
+            "Subcategories": [
+                {
+                    "Subcategory": "poem.n.01",
+                    "Members": [
+                        "epic"
+                    ]
+                },
+                {
+                    "Subcategory": "biography.n.01",
+                    "Members": [
+                        "autobiography"
+                    ]
+                },
+                {
+                    "Subcategory": "history.n.02",
+                    "Members": [
+                        "biography"
+                    ]
+                },
+                {
+                    "Subcategory": "literary composition.n.01",
+                    "Members": [
+                        "fiction"
+                    ]
+                },
+                {
+                    "Subcategory": "experience.n.02",
+                    "Members": [
+                        "reality"
+                    ]
+                },
+                {
+                    "Subcategory": "perplexity.n.01",
+                    "Members": [
+                        "mystery"
+                    ]
+                },
+                {
+                    "Subcategory": "reformer.n.01",
+                    "Members": [
+                        "feminist",
+                        "utopian"
+                    ]
+                },
+                {
+                    "Subcategory": "motion.n.06",
+                    "Members": [
+                        "travel"
+                    ]
+                },
+                {
+                    "Subcategory": "feeling.n.01",
+                    "Members": [
+                        "humour"
+                    ]
+                },
+                {
+                    "Subcategory": "remark.n.01",
+                    "Members": [
+                        "reference"
+                    ]
+                },
+                {
+                    "Subcategory": "fear.n.01",
+                    "Members": [
+                        "horror"
+                    ]
+                },
+                {
+                    "Subcategory": "joke.n.01",
+                    "Members": [
+                        "funny"
+                    ]
+                },
+                {
+                    "Subcategory": "elaborate.v.01",
+                    "Members": [
+                        "illustrated"
+                    ]
+                },
+                {
+                    "Subcategory": "adventure story.n.01",
+                    "Members": [
+                        "thriller"
+                    ]
+                },
+                {
+                    "Subcategory": "relationship.n.02",
+                    "Members": [
+                        "romance"
+                    ]
+                },
+                {
+                    "Subcategory": "undertaking.n.01",
+                    "Members": [
+                        "adventure"
+                    ]
+                },
+                {
+                    "Subcategory": "imagination.n.01",
+                    "Members": [
+                        "fantasy"
+                    ]
+                },
+                {
+                    "Subcategory": "reference book.n.01",
+                    "Members": [
+                        "encyclopaedia"
+                    ]
+                },
+                {
+                    "Subcategory": "fiction.n.01",
+                    "Members": [
+                        "novel"
+                    ]
+                },
+                {
+                    "Subcategory": "aid.n.02",
+                    "Members": [
+                        "self-help"
+                    ]
+                },
+                {
+                    "Subcategory": "fundamental quantity.n.01",
+                    "Members": [
+                        "period"
+                    ]
+                },
+                {
+                    "Subcategory": "act.n.02",
+                    "Members": [
+                        "action"
+                    ]
+                },
+                {
+                    "Subcategory": "transgression.n.01",
+                    "Members": [
+                        "crime"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "crime",
+            "Subcategories": [
+                {
+                    "Subcategory": "felony.n.01",
+                    "Members": [
+                        "stealing",
+                        "theft",
+                        "burglary"
+                    ]
+                },
+                {
+                    "Subcategory": "murder.n.01",
+                    "Members": [
+                        "massacre"
+                    ]
+                },
+                {
+                    "Subcategory": "mustard.n.01",
+                    "Members": [
+                        "rape"
+                    ]
+                },
+                {
+                    "Subcategory": "larceny.n.01",
+                    "Members": [
+                        "embezzlement",
+                        "robbery",
+                        "shoplifting"
+                    ]
+                },
+                {
+                    "Subcategory": "promotion.n.01",
+                    "Members": [
+                        "endorsement"
+                    ]
+                },
+                {
+                    "Subcategory": "hijack.n.01",
+                    "Members": [
+                        "carjacking"
+                    ]
+                },
+                {
+                    "Subcategory": "be.v.01",
+                    "Members": [
+                        "littering",
+                        "loitering"
+                    ]
+                },
+                {
+                    "Subcategory": "artillery.n.02",
+                    "Members": [
+                        "battery"
+                    ]
+                },
+                {
+                    "Subcategory": "seize.v.02",
+                    "Members": [
+                        "kidnap"
+                    ]
+                },
+                {
+                    "Subcategory": "imitation.n.02",
+                    "Members": [
+                        "forgery"
+                    ]
+                },
+                {
+                    "Subcategory": "transgress.v.01",
+                    "Members": [
+                        "trespassing"
+                    ]
+                },
+                {
+                    "Subcategory": "aggression.n.03",
+                    "Members": [
+                        "violence"
+                    ]
+                },
+                {
+                    "Subcategory": "battle.n.01",
+                    "Members": [
+                        "assault"
+                    ]
+                },
+                {
+                    "Subcategory": "annoyance.n.02",
+                    "Members": [
+                        "harassment"
+                    ]
+                },
+                {
+                    "Subcategory": "cut.v.01",
+                    "Members": [
+                        "hacking"
+                    ]
+                },
+                {
+                    "Subcategory": "homicide.n.01",
+                    "Members": [
+                        "manslaughter",
+                        "murder"
+                    ]
+                },
+                {
+                    "Subcategory": "crime.n.01",
+                    "Members": [
+                        "fraud"
+                    ]
+                },
+                {
+                    "Subcategory": "burning.n.01",
+                    "Members": [
+                        "arson"
+                    ]
+                },
+                {
+                    "Subcategory": "mistreatment.n.01",
+                    "Members": [
+                        "abuse"
+                    ]
+                },
+                {
+                    "Subcategory": "agent.n.03",
+                    "Members": [
+                        "drug"
+                    ]
+                },
+                {
+                    "Subcategory": "elimination.n.02",
+                    "Members": [
+                        "urination"
+                    ]
+                },
+                {
+                    "Subcategory": "highjacking.n.01",
+                    "Members": [
+                        "piracy"
+                    ]
+                },
+                {
+                    "Subcategory": "destruction.n.01",
+                    "Members": [
+                        "vandalism"
+                    ]
+                },
+                {
+                    "Subcategory": "killing.n.02",
+                    "Members": [
+                        "homicide"
+                    ]
+                },
+                {
+                    "Subcategory": "misdemeanor.n.01",
+                    "Members": [
+                        "perjury"
+                    ]
+                },
+                {
+                    "Subcategory": "paraphilia.n.01",
+                    "Members": [
+                        "paedophilia"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "day of the week",
+            "Subcategories": [
+                {
+                    "Subcategory": "weekday.n.01",
+                    "Members": [
+                        "tuesday",
+                        "monday",
+                        "saturday",
+                        "friday",
+                        "thursday",
+                        "wednesday"
+                    ]
+                },
+                {
+                    "Subcategory": "rest day.n.01",
+                    "Members": [
+                        "sunday"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "disease",
+            "Subcategories": [
+                {
+                    "Subcategory": "cancer.n.01",
+                    "Members": [
+                        "leukemia"
+                    ]
+                },
+                {
+                    "Subcategory": "contagious disease.n.01",
+                    "Members": [
+                        "flu",
+                        "std",
+                        "measles"
+                    ]
+                },
+                {
+                    "Subcategory": "headache.n.02",
+                    "Members": [
+                        "migraine"
+                    ]
+                },
+                {
+                    "Subcategory": "inflammation.n.01",
+                    "Members": [
+                        "pinkeye"
+                    ]
+                },
+                {
+                    "Subcategory": "metallic element.n.01",
+                    "Members": [
+                        "tb"
+                    ]
+                },
+                {
+                    "Subcategory": "venereal disease.n.01",
+                    "Members": [
+                        "chlamydia",
+                        "gonorrhoea"
+                    ]
+                },
+                {
+                    "Subcategory": "measles.n.01",
+                    "Members": [
+                        "rubella"
+                    ]
+                },
+                {
+                    "Subcategory": "infectious disease.n.01",
+                    "Members": [
+                        "cholera",
+                        "herpes",
+                        "mumps",
+                        "polio",
+                        "typhoid"
+                    ]
+                },
+                {
+                    "Subcategory": "psychological state.n.01",
+                    "Members": [
+                        "depression",
+                        "anxiety"
+                    ]
+                },
+                {
+                    "Subcategory": "pox.n.02",
+                    "Members": [
+                        "smallpox",
+                        "chickenpox"
+                    ]
+                },
+                {
+                    "Subcategory": "zoonosis.n.01",
+                    "Members": [
+                        "rabies"
+                    ]
+                },
+                {
+                    "Subcategory": "drug addiction.n.01",
+                    "Members": [
+                        "alcoholism"
+                    ]
+                },
+                {
+                    "Subcategory": "cardiovascular disease.n.01",
+                    "Members": [
+                        "aneurism"
+                    ]
+                },
+                {
+                    "Subcategory": "building material.n.01",
+                    "Members": [
+                        "shingle"
+                    ]
+                },
+                {
+                    "Subcategory": "fungal infection.n.01",
+                    "Members": [
+                        "ringworm"
+                    ]
+                },
+                {
+                    "Subcategory": "protozoal infection.n.01",
+                    "Members": [
+                        "malaria"
+                    ]
+                },
+                {
+                    "Subcategory": "animal disease.n.01",
+                    "Members": [
+                        "cowpox"
+                    ]
+                },
+                {
+                    "Subcategory": "respiratory disease.n.01",
+                    "Members": [
+                        "asthma"
+                    ]
+                },
+                {
+                    "Subcategory": "resource.n.02",
+                    "Members": [
+                        "aid"
+                    ]
+                },
+                {
+                    "Subcategory": "hemorrhagic fever.n.01",
+                    "Members": [
+                        "ebola"
+                    ]
+                },
+                {
+                    "Subcategory": "anxiety disorder.n.01",
+                    "Members": [
+                        "ptsd"
+                    ]
+                },
+                {
+                    "Subcategory": "malignant tumor.n.01",
+                    "Members": [
+                        "cancer"
+                    ]
+                },
+                {
+                    "Subcategory": "physical condition.n.01",
+                    "Members": [
+                        "addiction"
+                    ]
+                },
+                {
+                    "Subcategory": "polygenic disorder.n.01",
+                    "Members": [
+                        "diabetes"
+                    ]
+                },
+                {
+                    "Subcategory": "skin disease.n.01",
+                    "Members": [
+                        "eczema"
+                    ]
+                },
+                {
+                    "Subcategory": "symptom.n.01",
+                    "Members": [
+                        "cough"
+                    ]
+                },
+                {
+                    "Subcategory": "viral infection.n.01",
+                    "Members": [
+                        "hiv"
+                    ]
+                },
+                {
+                    "Subcategory": "growth.n.06",
+                    "Members": [
+                        "tumour"
+                    ]
+                },
+                {
+                    "Subcategory": "anxiety.n.01",
+                    "Members": [
+                        "hypochondria"
+                    ]
+                },
+                {
+                    "Subcategory": "epidemic disease.n.01",
+                    "Members": [
+                        "plague"
+                    ]
+                },
+                {
+                    "Subcategory": "communicable disease.n.01",
+                    "Members": [
+                        "cold"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "emotion",
+            "Subcategories": [
+                {
+                    "Subcategory": "party.n.04",
+                    "Members": [
+                        "jolly"
+                    ]
+                },
+                {
+                    "Subcategory": "irritation.n.01",
+                    "Members": [
+                        "impatience"
+                    ]
+                },
+                {
+                    "Subcategory": "stimulate.v.03",
+                    "Members": [
+                        "elated"
+                    ]
+                },
+                {
+                    "Subcategory": "throw.n.01",
+                    "Members": [
+                        "shy"
+                    ]
+                },
+                {
+                    "Subcategory": "dissatisfaction.n.01",
+                    "Members": [
+                        "disappointment",
+                        "boredom"
+                    ]
+                },
+                {
+                    "Subcategory": "longing.n.01",
+                    "Members": [
+                        "nostalgia"
+                    ]
+                },
+                {
+                    "Subcategory": "sexual desire.n.01",
+                    "Members": [
+                        "lust"
+                    ]
+                },
+                {
+                    "Subcategory": "emotion.n.01",
+                    "Members": [
+                        "love",
+                        "hatred",
+                        "joy",
+                        "fear"
+                    ]
+                },
+                {
+                    "Subcategory": "stupefaction.n.01",
+                    "Members": [
+                        "shock"
+                    ]
+                },
+                {
+                    "Subcategory": "discourage.v.02",
+                    "Members": [
+                        "depressed"
+                    ]
+                },
+                {
+                    "Subcategory": "feather.n.01",
+                    "Members": [
+                        "down"
+                    ]
+                },
+                {
+                    "Subcategory": "calmness.n.02",
+                    "Members": [
+                        "quiet"
+                    ]
+                },
+                {
+                    "Subcategory": "arouse.v.01",
+                    "Members": [
+                        "excited"
+                    ]
+                },
+                {
+                    "Subcategory": "beat.v.01",
+                    "Members": [
+                        "outgoing"
+                    ]
+                },
+                {
+                    "Subcategory": "agitation.n.01",
+                    "Members": [
+                        "upset"
+                    ]
+                },
+                {
+                    "Subcategory": "disposition.n.01",
+                    "Members": [
+                        "calm"
+                    ]
+                },
+                {
+                    "Subcategory": "displease.v.01",
+                    "Members": [
+                        "annoyed"
+                    ]
+                },
+                {
+                    "Subcategory": "astonishment.n.01",
+                    "Members": [
+                        "surprise"
+                    ]
+                },
+                {
+                    "Subcategory": "affect.v.05",
+                    "Members": [
+                        "troubled"
+                    ]
+                },
+                {
+                    "Subcategory": "denial.n.01",
+                    "Members": [
+                        "negative"
+                    ]
+                },
+                {
+                    "Subcategory": "better.v.02",
+                    "Members": [
+                        "relieved"
+                    ]
+                },
+                {
+                    "Subcategory": "gladden.v.01",
+                    "Members": [
+                        "overjoyed"
+                    ]
+                },
+                {
+                    "Subcategory": "devolve.v.03",
+                    "Members": [
+                        "tired"
+                    ]
+                },
+                {
+                    "Subcategory": "gaiety.n.01",
+                    "Members": [
+                        "glee"
+                    ]
+                },
+                {
+                    "Subcategory": "danger.n.01",
+                    "Members": [
+                        "insecurity"
+                    ]
+                },
+                {
+                    "Subcategory": "depressive.n.01",
+                    "Members": [
+                        "melancholic"
+                    ]
+                },
+                {
+                    "Subcategory": "express emotion.v.01",
+                    "Members": [
+                        "laughing"
+                    ]
+                },
+                {
+                    "Subcategory": "discovery.n.01",
+                    "Members": [
+                        "determination"
+                    ]
+                },
+                {
+                    "Subcategory": "collection.n.01",
+                    "Members": [
+                        "content"
+                    ]
+                },
+                {
+                    "Subcategory": "mistake.v.01",
+                    "Members": [
+                        "confused"
+                    ]
+                },
+                {
+                    "Subcategory": "activity.n.01",
+                    "Members": [
+                        "disturbance"
+                    ]
+                },
+                {
+                    "Subcategory": "feeling.n.01",
+                    "Members": [
+                        "pride"
+                    ]
+                },
+                {
+                    "Subcategory": "stimulate.v.06",
+                    "Members": [
+                        "disgusted",
+                        "thrilled"
+                    ]
+                },
+                {
+                    "Subcategory": "surprise.v.01",
+                    "Members": [
+                        "amazed"
+                    ]
+                },
+                {
+                    "Subcategory": "anger.n.01",
+                    "Members": [
+                        "infuriation",
+                        "rage"
+                    ]
+                },
+                {
+                    "Subcategory": "condition.n.01",
+                    "Members": [
+                        "guilt"
+                    ]
+                },
+                {
+                    "Subcategory": "elate.v.01",
+                    "Members": [
+                        "exhilarated"
+                    ]
+                },
+                {
+                    "Subcategory": "fear.n.01",
+                    "Members": [
+                        "terror"
+                    ]
+                },
+                {
+                    "Subcategory": "wonder.n.01",
+                    "Members": [
+                        "awe"
+                    ]
+                },
+                {
+                    "Subcategory": "frighten.v.01",
+                    "Members": [
+                        "horrified"
+                    ]
+                },
+                {
+                    "Subcategory": "cognitive state.n.01",
+                    "Members": [
+                        "curiosity"
+                    ]
+                },
+                {
+                    "Subcategory": "intimidate.v.02",
+                    "Members": [
+                        "daunted"
+                    ]
+                },
+                {
+                    "Subcategory": "psychological state.n.01",
+                    "Members": [
+                        "irritation"
+                    ]
+                },
+                {
+                    "Subcategory": "sorrow.n.01",
+                    "Members": [
+                        "grief"
+                    ]
+                },
+                {
+                    "Subcategory": "elation.n.02",
+                    "Members": [
+                        "euphoria"
+                    ]
+                },
+                {
+                    "Subcategory": "contentment.n.01",
+                    "Members": [
+                        "satisfaction"
+                    ]
+                },
+                {
+                    "Subcategory": "order.n.03",
+                    "Members": [
+                        "peace"
+                    ]
+                },
+                {
+                    "Subcategory": "disappointment.n.01",
+                    "Members": [
+                        "frustration"
+                    ]
+                },
+                {
+                    "Subcategory": "adjective.n.01",
+                    "Members": [
+                        "positive"
+                    ]
+                },
+                {
+                    "Subcategory": "express.v.01",
+                    "Members": [
+                        "stressed"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "family relationship",
+            "Subcategories": [
+                {
+                    "Subcategory": "stepchild.n.01",
+                    "Members": [
+                        "stepson",
+                        "stepdaughter"
+                    ]
+                },
+                {
+                    "Subcategory": "female offspring.n.01",
+                    "Members": [
+                        "daughter"
+                    ]
+                },
+                {
+                    "Subcategory": "kinswoman.n.01",
+                    "Members": [
+                        "niece",
+                        "auntie"
+                    ]
+                },
+                {
+                    "Subcategory": "brother.n.01",
+                    "Members": [
+                        "stepbrother"
+                    ]
+                },
+                {
+                    "Subcategory": "godparent.n.01",
+                    "Members": [
+                        "godmother",
+                        "godfather"
+                    ]
+                },
+                {
+                    "Subcategory": "female sibling.n.01",
+                    "Members": [
+                        "sister"
+                    ]
+                },
+                {
+                    "Subcategory": "man.n.01",
+                    "Members": [
+                        "ex-husband"
+                    ]
+                },
+                {
+                    "Subcategory": "father.n.01",
+                    "Members": [
+                        "father-in-law"
+                    ]
+                },
+                {
+                    "Subcategory": "grandparent.n.01",
+                    "Members": [
+                        "grandma",
+                        "grandfather"
+                    ]
+                },
+                {
+                    "Subcategory": "in-law.n.01",
+                    "Members": [
+                        "brother-in-law",
+                        "mother-in-law",
+                        "sister-in-law"
+                    ]
+                },
+                {
+                    "Subcategory": "parent.n.01",
+                    "Members": [
+                        "father",
+                        "mother",
+                        "stepparent"
+                    ]
+                },
+                {
+                    "Subcategory": "male offspring.n.01",
+                    "Members": [
+                        "son"
+                    ]
+                },
+                {
+                    "Subcategory": "genitor.n.01",
+                    "Members": [
+                        "parent"
+                    ]
+                },
+                {
+                    "Subcategory": "forebear.n.01",
+                    "Members": [
+                        "grandparent"
+                    ]
+                },
+                {
+                    "Subcategory": "grandchild.n.01",
+                    "Members": [
+                        "grandson",
+                        "granddaughter"
+                    ]
+                },
+                {
+                    "Subcategory": "spouse.n.01",
+                    "Members": [
+                        "wife",
+                        "husband"
+                    ]
+                },
+                {
+                    "Subcategory": "juvenile.n.01",
+                    "Members": [
+                        "child"
+                    ]
+                },
+                {
+                    "Subcategory": "kinsman.n.01",
+                    "Members": [
+                        "uncle",
+                        "nephew"
+                    ]
+                },
+                {
+                    "Subcategory": "male sibling.n.01",
+                    "Members": [
+                        "brother"
+                    ]
+                },
+                {
+                    "Subcategory": "relative.n.01",
+                    "Members": [
+                        "cousin",
+                        "sibling"
+                    ]
+                },
+                {
+                    "Subcategory": "sister.n.01",
+                    "Members": [
+                        "stepsister"
+                    ]
+                },
+                {
+                    "Subcategory": "offspring.n.01",
+                    "Members": [
+                        "grandchild"
+                    ]
+                },
+                {
+                    "Subcategory": "woman.n.01",
+                    "Members": [
+                        "ex-wife"
+                    ]
+                },
+                {
+                    "Subcategory": "animal.n.01",
+                    "Members": [
+                        "pet"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "fraction",
+            "Subcategories": [
+                {
+                    "Subcategory": "united states liquid unit.n.01",
+                    "Members": [
+                        "fifth"
+                    ]
+                },
+                {
+                    "Subcategory": "rank.n.02",
+                    "Members": [
+                        "eleventh",
+                        "eighth",
+                        "twelfth",
+                        "ninth",
+                        "seventh",
+                        "hundredth",
+                        "sixth",
+                        "thirteenth",
+                        "fourth",
+                        "sixteenth",
+                        "fourteenth"
+                    ]
+                },
+                {
+                    "Subcategory": "common fraction.n.01",
+                    "Members": [
+                        "tenth",
+                        "half",
+                        "third",
+                        "quarter"
+                    ]
+                },
+                {
+                    "Subcategory": "material.n.01",
+                    "Members": [
+                        "chemical"
+                    ]
+                },
+                {
+                    "Subcategory": "football play.n.01",
+                    "Members": [
+                        "audible"
+                    ]
+                },
+                {
+                    "Subcategory": "proportion.n.01",
+                    "Members": [
+                        "percent"
+                    ]
+                },
+                {
+                    "Subcategory": "part.n.02",
+                    "Members": [
+                        "piece"
+                    ]
+                },
+                {
+                    "Subcategory": "amount.n.02",
+                    "Members": [
+                        "number"
+                    ]
+                },
+                {
+                    "Subcategory": "digit.n.01",
+                    "Members": [
+                        "three"
+                    ]
+                },
+                {
+                    "Subcategory": "music.n.01",
+                    "Members": [
+                        "section"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "geometric shape",
+            "Subcategories": [
+                {
+                    "Subcategory": "polygon.n.01",
+                    "Members": [
+                        "heptagon",
+                        "octagon",
+                        "triangle",
+                        "decagon",
+                        "dodecagon",
+                        "hexagon",
+                        "nonagon"
+                    ]
+                },
+                {
+                    "Subcategory": "polyhedron.n.01",
+                    "Members": [
+                        "dodecahedron",
+                        "decahedron"
+                    ]
+                },
+                {
+                    "Subcategory": "quadrilateral.n.01",
+                    "Members": [
+                        "parallelogram",
+                        "trapezium"
+                    ]
+                },
+                {
+                    "Subcategory": "plane figure.n.01",
+                    "Members": [
+                        "semicircle",
+                        "oblong"
+                    ]
+                },
+                {
+                    "Subcategory": "conic section.n.01",
+                    "Members": [
+                        "oval"
+                    ]
+                },
+                {
+                    "Subcategory": "environment.n.01",
+                    "Members": [
+                        "sphere"
+                    ]
+                },
+                {
+                    "Subcategory": "jewel.n.01",
+                    "Members": [
+                        "diamond"
+                    ]
+                },
+                {
+                    "Subcategory": "whole.n.01",
+                    "Members": [
+                        "compound"
+                    ]
+                },
+                {
+                    "Subcategory": "ellipse.n.01",
+                    "Members": [
+                        "circle"
+                    ]
+                },
+                {
+                    "Subcategory": "celestial body.n.01",
+                    "Members": [
+                        "star"
+                    ]
+                },
+                {
+                    "Subcategory": "regular polyhedron.n.01",
+                    "Members": [
+                        "cube"
+                    ]
+                },
+                {
+                    "Subcategory": "solid.n.03",
+                    "Members": [
+                        "cylinder"
+                    ]
+                },
+                {
+                    "Subcategory": "parallelogram.n.01",
+                    "Members": [
+                        "rectangle"
+                    ]
+                },
+                {
+                    "Subcategory": "rectangle.n.01",
+                    "Members": [
+                        "square"
+                    ]
+                },
+                {
+                    "Subcategory": "swing.n.02",
+                    "Members": [
+                        "trapeze"
+                    ]
+                },
+                {
+                    "Subcategory": "check.n.01",
+                    "Members": [
+                        "kite"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "healthcare profession",
+            "Subcategories": [
+                {
+                    "Subcategory": "investigator.n.02",
+                    "Members": [
+                        "coroner"
+                    ]
+                },
+                {
+                    "Subcategory": "health professional.n.01",
+                    "Members": [
+                        "nurse",
+                        "pharmacist"
+                    ]
+                },
+                {
+                    "Subcategory": "medical practitioner.n.01",
+                    "Members": [
+                        "doctor",
+                        "dentist",
+                        "physician"
+                    ]
+                },
+                {
+                    "Subcategory": "authority.n.03",
+                    "Members": [
+                        "consultant"
+                    ]
+                },
+                {
+                    "Subcategory": "specialist.n.02",
+                    "Members": [
+                        "dermatologist",
+                        "gynaecologist",
+                        "oncologist",
+                        "psychiatrist",
+                        "radiologist",
+                        "radiographer",
+                        "chiropodist",
+                        "cardiologist",
+                        "paediatrician",
+                        "obstetrician",
+                        "geriatrician"
+                    ]
+                },
+                {
+                    "Subcategory": "scientist.n.01",
+                    "Members": [
+                        "psychologist"
+                    ]
+                },
+                {
+                    "Subcategory": "specialist.n.01",
+                    "Members": [
+                        "dietician",
+                        "optometrist"
+                    ]
+                },
+                {
+                    "Subcategory": "skilled worker.n.01",
+                    "Members": [
+                        "technician",
+                        "optician"
+                    ]
+                },
+                {
+                    "Subcategory": "biologist.n.01",
+                    "Members": [
+                        "physiologist"
+                    ]
+                },
+                {
+                    "Subcategory": "nurse.n.01",
+                    "Members": [
+                        "midwife"
+                    ]
+                },
+                {
+                    "Subcategory": "medicine.n.01",
+                    "Members": [
+                        "podiatry"
+                    ]
+                },
+                {
+                    "Subcategory": "therapist.n.01",
+                    "Members": [
+                        "chiropractor",
+                        "osteopath",
+                        "psychotherapist"
+                    ]
+                },
+                {
+                    "Subcategory": "surgeon.n.01",
+                    "Members": [
+                        "neurosurgeon"
+                    ]
+                },
+                {
+                    "Subcategory": "expert.n.01",
+                    "Members": [
+                        "therapist",
+                        "healer"
+                    ]
+                },
+                {
+                    "Subcategory": "consonant.n.01",
+                    "Members": [
+                        "dental"
+                    ]
+                },
+                {
+                    "Subcategory": "secretary.n.02",
+                    "Members": [
+                        "receptionist"
+                    ]
+                },
+                {
+                    "Subcategory": "doctor.n.01",
+                    "Members": [
+                        "gp",
+                        "surgeon"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "infectious disease",
+            "Subcategories": [
+                {
+                    "Subcategory": "infection.n.01",
+                    "Members": [
+                        "sty"
+                    ]
+                },
+                {
+                    "Subcategory": "symptom.n.01",
+                    "Members": [
+                        "fever"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "injury",
+            "Subcategories": [
+                {
+                    "Subcategory": "pain.n.01",
+                    "Members": [
+                        "burn"
+                    ]
+                },
+                {
+                    "Subcategory": "deformation.n.02",
+                    "Members": [
+                        "strain"
+                    ]
+                },
+                {
+                    "Subcategory": "noise.n.01",
+                    "Members": [
+                        "scrape"
+                    ]
+                },
+                {
+                    "Subcategory": "exhaust.v.05",
+                    "Members": [
+                        "bleed"
+                    ]
+                },
+                {
+                    "Subcategory": "share.n.01",
+                    "Members": [
+                        "cut"
+                    ]
+                },
+                {
+                    "Subcategory": "injure.v.01",
+                    "Members": [
+                        "stabbing"
+                    ]
+                },
+                {
+                    "Subcategory": "interruption.n.02",
+                    "Members": [
+                        "dislocation"
+                    ]
+                },
+                {
+                    "Subcategory": "ill health.n.01",
+                    "Members": [
+                        "hurt"
+                    ]
+                },
+                {
+                    "Subcategory": "symptom.n.01",
+                    "Members": [
+                        "scar",
+                        "pain"
+                    ]
+                },
+                {
+                    "Subcategory": "season.n.02",
+                    "Members": [
+                        "fall"
+                    ]
+                },
+                {
+                    "Subcategory": "discomfort.n.01",
+                    "Members": [
+                        "inconvenience"
+                    ]
+                },
+                {
+                    "Subcategory": "worker.n.01",
+                    "Members": [
+                        "scab"
+                    ]
+                },
+                {
+                    "Subcategory": "inactivate.v.02",
+                    "Members": [
+                        "paralysed"
+                    ]
+                },
+                {
+                    "Subcategory": "defect.n.03",
+                    "Members": [
+                        "blister"
+                    ]
+                },
+                {
+                    "Subcategory": "wrench.n.01",
+                    "Members": [
+                        "sprain"
+                    ]
+                },
+                {
+                    "Subcategory": "injury.n.01",
+                    "Members": [
+                        "wound",
+                        "bruise",
+                        "fracture",
+                        "whiplash"
+                    ]
+                },
+                {
+                    "Subcategory": "abrasion.n.01",
+                    "Members": [
+                        "graze"
+                    ]
+                },
+                {
+                    "Subcategory": "wound.n.01",
+                    "Members": [
+                        "bite"
+                    ]
+                },
+                {
+                    "Subcategory": "development.n.04",
+                    "Members": [
+                        "twist"
+                    ]
+                },
+                {
+                    "Subcategory": "injury.n.02",
+                    "Members": [
+                        "concussion"
+                    ]
+                },
+                {
+                    "Subcategory": "medical building.n.01",
+                    "Members": [
+                        "hospital"
+                    ]
+                },
+                {
+                    "Subcategory": "change.n.01",
+                    "Members": [
+                        "damage"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "legal profession",
+            "Subcategories": [
+                {
+                    "Subcategory": "judge.n.01",
+                    "Members": [
+                        "magistrate"
+                    ]
+                },
+                {
+                    "Subcategory": "petitioner.n.01",
+                    "Members": [
+                        "solicitor"
+                    ]
+                },
+                {
+                    "Subcategory": "employee.n.01",
+                    "Members": [
+                        "clerk"
+                    ]
+                },
+                {
+                    "Subcategory": "formulation.n.01",
+                    "Members": [
+                        "cleaner"
+                    ]
+                },
+                {
+                    "Subcategory": "lawyer.n.01",
+                    "Members": [
+                        "barrister",
+                        "prosecutor"
+                    ]
+                },
+                {
+                    "Subcategory": "official.n.01",
+                    "Members": [
+                        "bailiff"
+                    ]
+                },
+                {
+                    "Subcategory": "administrator.n.01",
+                    "Members": [
+                        "director"
+                    ]
+                },
+                {
+                    "Subcategory": "play.n.08",
+                    "Members": [
+                        "fireman"
+                    ]
+                },
+                {
+                    "Subcategory": "paraprofessional.n.01",
+                    "Members": [
+                        "paramedic",
+                        "paralegal"
+                    ]
+                },
+                {
+                    "Subcategory": "professional.n.01",
+                    "Members": [
+                        "attorney",
+                        "lawyer"
+                    ]
+                },
+                {
+                    "Subcategory": "deliveryman.n.01",
+                    "Members": [
+                        "postman"
+                    ]
+                },
+                {
+                    "Subcategory": "maker.n.01",
+                    "Members": [
+                        "producer"
+                    ]
+                },
+                {
+                    "Subcategory": "performer.n.01",
+                    "Members": [
+                        "actor"
+                    ]
+                },
+                {
+                    "Subcategory": "adjudicator.n.01",
+                    "Members": [
+                        "judge"
+                    ]
+                },
+                {
+                    "Subcategory": "communicator.n.01",
+                    "Members": [
+                        "writer"
+                    ]
+                },
+                {
+                    "Subcategory": "body.n.02",
+                    "Members": [
+                        "jury"
+                    ]
+                },
+                {
+                    "Subcategory": "lawman.n.01",
+                    "Members": [
+                        "policeman"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "medical specialty",
+            "Subcategories": [
+                {
+                    "Subcategory": "doctor.n.01",
+                    "Members": [
+                        "veterinary"
+                    ]
+                },
+                {
+                    "Subcategory": "specialist.n.02",
+                    "Members": [
+                        "anaesthetist"
+                    ]
+                },
+                {
+                    "Subcategory": "treatment.n.01",
+                    "Members": [
+                        "chiropractic"
+                    ]
+                },
+                {
+                    "Subcategory": "investigation.n.02",
+                    "Members": [
+                        "research"
+                    ]
+                },
+                {
+                    "Subcategory": "medicine.n.01",
+                    "Members": [
+                        "dermatology",
+                        "oncology"
+                    ]
+                },
+                {
+                    "Subcategory": "scientist.n.01",
+                    "Members": [
+                        "chemist"
+                    ]
+                },
+                {
+                    "Subcategory": "diagnostic procedure.n.01",
+                    "Members": [
+                        "cardiography"
+                    ]
+                },
+                {
+                    "Subcategory": "photography.n.02",
+                    "Members": [
+                        "radiography"
+                    ]
+                },
+                {
+                    "Subcategory": "vertebrate foot.n.01",
+                    "Members": [
+                        "foot"
+                    ]
+                },
+                {
+                    "Subcategory": "medical science.n.01",
+                    "Members": [
+                        "pathology",
+                        "radiology"
+                    ]
+                },
+                {
+                    "Subcategory": "dentist.n.01",
+                    "Members": [
+                        "orthodontist"
+                    ]
+                },
+                {
+                    "Subcategory": "therapist.n.01",
+                    "Members": [
+                        "physiotherapist"
+                    ]
+                },
+                {
+                    "Subcategory": "body part.n.01",
+                    "Members": [
+                        "back"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "military title",
+            "Subcategories": [
+                {
+                    "Subcategory": "serviceman.n.01",
+                    "Members": [
+                        "gunner",
+                        "officer"
+                    ]
+                },
+                {
+                    "Subcategory": "force.n.04",
+                    "Members": [
+                        "police"
+                    ]
+                },
+                {
+                    "Subcategory": "military officer.n.01",
+                    "Members": [
+                        "commander"
+                    ]
+                },
+                {
+                    "Subcategory": "general officer.n.01",
+                    "Members": [
+                        "brigadier",
+                        "general"
+                    ]
+                },
+                {
+                    "Subcategory": "noncommissioned officer.n.01",
+                    "Members": [
+                        "sergeant",
+                        "corporal"
+                    ]
+                },
+                {
+                    "Subcategory": "undergraduate.n.01",
+                    "Members": [
+                        "senior"
+                    ]
+                },
+                {
+                    "Subcategory": "commissioned military officer.n.01",
+                    "Members": [
+                        "colonel",
+                        "captain",
+                        "major",
+                        "lieutenant"
+                    ]
+                },
+                {
+                    "Subcategory": "leader.n.01",
+                    "Members": [
+                        "chief"
+                    ]
+                },
+                {
+                    "Subcategory": "flag officer.n.01",
+                    "Members": [
+                        "admiral"
+                    ]
+                },
+                {
+                    "Subcategory": "control.n.01",
+                    "Members": [
+                        "authority"
+                    ]
+                },
+                {
+                    "Subcategory": "bodyguard.n.01",
+                    "Members": [
+                        "yeoman"
+                    ]
+                },
+                {
+                    "Subcategory": "enlisted person.n.01",
+                    "Members": [
+                        "soldier"
+                    ]
+                },
+                {
+                    "Subcategory": "enlisted man.n.01",
+                    "Members": [
+                        "private"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "month",
+            "Subcategories": [
+                {
+                    "Subcategory": "gregorian calendar month.n.01",
+                    "Members": [
+                        "july",
+                        "january",
+                        "november",
+                        "december",
+                        "august",
+                        "september",
+                        "march",
+                        "october",
+                        "june",
+                        "may",
+                        "april",
+                        "february"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "negative emotion",
+            "Subcategories": [
+                {
+                    "Subcategory": "horse-drawn vehicle.n.01",
+                    "Members": [
+                        "sulky"
+                    ]
+                },
+                {
+                    "Subcategory": "envy.n.01",
+                    "Members": [
+                        "jealousy"
+                    ]
+                },
+                {
+                    "Subcategory": "polarity.n.02",
+                    "Members": [
+                        "negativity"
+                    ]
+                },
+                {
+                    "Subcategory": "intemperance.n.01",
+                    "Members": [
+                        "gluttony"
+                    ]
+                },
+                {
+                    "Subcategory": "sorrow.n.01",
+                    "Members": [
+                        "heartbreak"
+                    ]
+                },
+                {
+                    "Subcategory": "dissatisfaction.n.01",
+                    "Members": [
+                        "ennui"
+                    ]
+                },
+                {
+                    "Subcategory": "madden.v.01",
+                    "Members": [
+                        "deranged"
+                    ]
+                },
+                {
+                    "Subcategory": "sadness.n.01",
+                    "Members": [
+                        "sorrow"
+                    ]
+                },
+                {
+                    "Subcategory": "destroy.v.02",
+                    "Members": [
+                        "devastated"
+                    ]
+                },
+                {
+                    "Subcategory": "inclination.n.01",
+                    "Members": [
+                        "dislike"
+                    ]
+                },
+                {
+                    "Subcategory": "displease.v.01",
+                    "Members": [
+                        "irritated"
+                    ]
+                },
+                {
+                    "Subcategory": "sick person.n.01",
+                    "Members": [
+                        "psychotic"
+                    ]
+                },
+                {
+                    "Subcategory": "doubt.n.01",
+                    "Members": [
+                        "distrust"
+                    ]
+                },
+                {
+                    "Subcategory": "aggression.n.05",
+                    "Members": [
+                        "intimidation"
+                    ]
+                },
+                {
+                    "Subcategory": "ill humor.n.01",
+                    "Members": [
+                        "irritability"
+                    ]
+                },
+                {
+                    "Subcategory": "emotion.n.01",
+                    "Members": [
+                        "anger"
+                    ]
+                },
+                {
+                    "Subcategory": "bodily process.n.01",
+                    "Members": [
+                        "crying"
+                    ]
+                },
+                {
+                    "Subcategory": "disorder.n.03",
+                    "Members": [
+                        "confusion"
+                    ]
+                },
+                {
+                    "Subcategory": "dislike.n.02",
+                    "Members": [
+                        "disgust"
+                    ]
+                },
+                {
+                    "Subcategory": "desire.n.02",
+                    "Members": [
+                        "greed"
+                    ]
+                },
+                {
+                    "Subcategory": "fury.n.01",
+                    "Members": [
+                        "wrath"
+                    ]
+                },
+                {
+                    "Subcategory": "arouse.v.01",
+                    "Members": [
+                        "overwhelmed"
+                    ]
+                },
+                {
+                    "Subcategory": "separation.n.01",
+                    "Members": [
+                        "isolation"
+                    ]
+                },
+                {
+                    "Subcategory": "condition.n.01",
+                    "Members": [
+                        "despair"
+                    ]
+                },
+                {
+                    "Subcategory": "resentment.n.01",
+                    "Members": [
+                        "envy"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "negative personal quality",
+            "Subcategories": [
+                {
+                    "Subcategory": "average.n.01",
+                    "Members": [
+                        "mean"
+                    ]
+                },
+                {
+                    "Subcategory": "creating by removal.n.01",
+                    "Members": [
+                        "boring"
+                    ]
+                },
+                {
+                    "Subcategory": "mistreatment.n.01",
+                    "Members": [
+                        "annoying"
+                    ]
+                },
+                {
+                    "Subcategory": "contest.v.01",
+                    "Members": [
+                        "challenging"
+                    ]
+                },
+                {
+                    "Subcategory": "complain.v.01",
+                    "Members": [
+                        "nagging",
+                        "bitching"
+                    ]
+                },
+                {
+                    "Subcategory": "note.n.03",
+                    "Members": [
+                        "dominant"
+                    ]
+                },
+                {
+                    "Subcategory": "mood.n.03",
+                    "Members": [
+                        "imperative"
+                    ]
+                },
+                {
+                    "Subcategory": "order.v.01",
+                    "Members": [
+                        "direct"
+                    ]
+                },
+                {
+                    "Subcategory": "dominate.v.02",
+                    "Members": [
+                        "overbearing"
+                    ]
+                },
+                {
+                    "Subcategory": "comment.v.01",
+                    "Members": [
+                        "criticising"
+                    ]
+                },
+                {
+                    "Subcategory": "falsification.n.02",
+                    "Members": [
+                        "lying"
+                    ]
+                },
+                {
+                    "Subcategory": "boast.n.01",
+                    "Members": [
+                        "bragging"
+                    ]
+                },
+                {
+                    "Subcategory": "conflict.n.01",
+                    "Members": [
+                        "fighting"
+                    ]
+                },
+                {
+                    "Subcategory": "sick person.n.01",
+                    "Members": [
+                        "depressive"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "non-violent crime",
+            "Subcategories": [
+                {
+                    "Subcategory": "dishonesty.n.01",
+                    "Members": [
+                        "corruption"
+                    ]
+                },
+                {
+                    "Subcategory": "disagreement.n.03",
+                    "Members": [
+                        "dispute"
+                    ]
+                },
+                {
+                    "Subcategory": "influence.v.01",
+                    "Members": [
+                        "blackmailing"
+                    ]
+                },
+                {
+                    "Subcategory": "conversation.n.01",
+                    "Members": [
+                        "talking"
+                    ]
+                },
+                {
+                    "Subcategory": "spying.n.02",
+                    "Members": [
+                        "espionage"
+                    ]
+                },
+                {
+                    "Subcategory": "motion.n.06",
+                    "Members": [
+                        "speeding"
+                    ]
+                },
+                {
+                    "Subcategory": "danger.n.03",
+                    "Members": [
+                        "threat"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "personal quality",
+            "Subcategories": [
+                {
+                    "Subcategory": "advantage.n.01",
+                    "Members": [
+                        "good"
+                    ]
+                },
+                {
+                    "Subcategory": "change.v.01",
+                    "Members": [
+                        "humble"
+                    ]
+                },
+                {
+                    "Subcategory": "manner.n.01",
+                    "Members": [
+                        "wise"
+                    ]
+                },
+                {
+                    "Subcategory": "military personnel.n.01",
+                    "Members": [
+                        "friendly",
+                        "hostile"
+                    ]
+                },
+                {
+                    "Subcategory": "pain.n.01",
+                    "Members": [
+                        "smart"
+                    ]
+                },
+                {
+                    "Subcategory": "sensing.n.02",
+                    "Members": [
+                        "listening"
+                    ]
+                },
+                {
+                    "Subcategory": "operate.v.03",
+                    "Members": [
+                        "driven"
+                    ]
+                },
+                {
+                    "Subcategory": "lunatic.n.01",
+                    "Members": [
+                        "crazy"
+                    ]
+                },
+                {
+                    "Subcategory": "knowing.n.01",
+                    "Members": [
+                        "understanding"
+                    ]
+                },
+                {
+                    "Subcategory": "attract.v.02",
+                    "Members": [
+                        "charming"
+                    ]
+                },
+                {
+                    "Subcategory": "party.n.02",
+                    "Members": [
+                        "social"
+                    ]
+                },
+                {
+                    "Subcategory": "category.n.02",
+                    "Members": [
+                        "kind"
+                    ]
+                },
+                {
+                    "Subcategory": "warrior.n.01",
+                    "Members": [
+                        "brave"
+                    ]
+                },
+                {
+                    "Subcategory": "person.n.01",
+                    "Members": [
+                        "extrovert",
+                        "leader"
+                    ]
+                },
+                {
+                    "Subcategory": "anglo-saxon deity.n.01",
+                    "Members": [
+                        "weird"
+                    ]
+                },
+                {
+                    "Subcategory": "educator.n.01",
+                    "Members": [
+                        "academic"
+                    ]
+                },
+                {
+                    "Subcategory": "grieve.v.01",
+                    "Members": [
+                        "compassionate"
+                    ]
+                },
+                {
+                    "Subcategory": "child.n.01",
+                    "Members": [
+                        "silly"
+                    ]
+                },
+                {
+                    "Subcategory": "sparkling wine.n.01",
+                    "Members": [
+                        "bubbly"
+                    ]
+                },
+                {
+                    "Subcategory": "socialize.v.01",
+                    "Members": [
+                        "entertaining"
+                    ]
+                },
+                {
+                    "Subcategory": "psychological feature.n.01",
+                    "Members": [
+                        "knowledge"
+                    ]
+                },
+                {
+                    "Subcategory": "area.n.01",
+                    "Members": [
+                        "open"
+                    ]
+                },
+                {
+                    "Subcategory": "change.v.02",
+                    "Members": [
+                        "warm"
+                    ]
+                },
+                {
+                    "Subcategory": "transgression.n.01",
+                    "Members": [
+                        "evil"
+                    ]
+                },
+                {
+                    "Subcategory": "diversion.n.01",
+                    "Members": [
+                        "fun"
+                    ]
+                },
+                {
+                    "Subcategory": "mutuality.n.02",
+                    "Members": [
+                        "sharing"
+                    ]
+                },
+                {
+                    "Subcategory": "draw in.v.01",
+                    "Members": [
+                        "introverted"
+                    ]
+                },
+                {
+                    "Subcategory": "photographer's model.n.01",
+                    "Members": [
+                        "lovely"
+                    ]
+                },
+                {
+                    "Subcategory": "simpleton.n.01",
+                    "Members": [
+                        "stupid"
+                    ]
+                },
+                {
+                    "Subcategory": "love.n.01",
+                    "Members": [
+                        "caring"
+                    ]
+                },
+                {
+                    "Subcategory": "withhold.v.01",
+                    "Members": [
+                        "reserved"
+                    ]
+                },
+                {
+                    "Subcategory": "act.v.01",
+                    "Members": [
+                        "engaging"
+                    ]
+                },
+                {
+                    "Subcategory": "fidelity.n.02",
+                    "Members": [
+                        "loyalty"
+                    ]
+                },
+                {
+                    "Subcategory": "commercial enterprise.n.01",
+                    "Members": [
+                        "cooperative"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "political system",
+            "Subcategories": [
+                {
+                    "Subcategory": "adult.n.01",
+                    "Members": [
+                        "liberal",
+                        "conservative"
+                    ]
+                },
+                {
+                    "Subcategory": "disorder.n.03",
+                    "Members": [
+                        "anarchy"
+                    ]
+                },
+                {
+                    "Subcategory": "autocracy.n.01",
+                    "Members": [
+                        "monarchy",
+                        "dictatorship"
+                    ]
+                },
+                {
+                    "Subcategory": "political orientation.n.01",
+                    "Members": [
+                        "socialism",
+                        "democracy",
+                        "fascism"
+                    ]
+                },
+                {
+                    "Subcategory": "market economy.n.01",
+                    "Members": [
+                        "capitalism"
+                    ]
+                },
+                {
+                    "Subcategory": "domain.n.02",
+                    "Members": [
+                        "empire"
+                    ]
+                },
+                {
+                    "Subcategory": "political system.n.01",
+                    "Members": [
+                        "oligarchy",
+                        "technocracy",
+                        "autocracy"
+                    ]
+                },
+                {
+                    "Subcategory": "series.n.01",
+                    "Members": [
+                        "hierarchy"
+                    ]
+                },
+                {
+                    "Subcategory": "philosophical doctrine.n.01",
+                    "Members": [
+                        "idealism"
+                    ]
+                },
+                {
+                    "Subcategory": "consider.v.05",
+                    "Members": [
+                        "debating"
+                    ]
+                },
+                {
+                    "Subcategory": "politician.n.02",
+                    "Members": [
+                        "democrat",
+                        "republican"
+                    ]
+                },
+                {
+                    "Subcategory": "position.n.01",
+                    "Members": [
+                        "left"
+                    ]
+                },
+                {
+                    "Subcategory": "communism.n.02",
+                    "Members": [
+                        "marxism"
+                    ]
+                },
+                {
+                    "Subcategory": "chromatic color.n.01",
+                    "Members": [
+                        "green"
+                    ]
+                },
+                {
+                    "Subcategory": "corporate executive.n.01",
+                    "Members": [
+                        "president"
+                    ]
+                },
+                {
+                    "Subcategory": "follower.n.01",
+                    "Members": [
+                        "vassal"
+                    ]
+                },
+                {
+                    "Subcategory": "class.n.03",
+                    "Members": [
+                        "labour"
+                    ]
+                },
+                {
+                    "Subcategory": "gathering.n.01",
+                    "Members": [
+                        "meeting"
+                    ]
+                },
+                {
+                    "Subcategory": "vote.n.02",
+                    "Members": [
+                        "election"
+                    ]
+                },
+                {
+                    "Subcategory": "polity.n.02",
+                    "Members": [
+                        "government"
+                    ]
+                },
+                {
+                    "Subcategory": "socialism.n.02",
+                    "Members": [
+                        "communism"
+                    ]
+                },
+                {
+                    "Subcategory": "abstraction.n.01",
+                    "Members": [
+                        "right"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "positive emotion",
+            "Subcategories": [
+                {
+                    "Subcategory": "satisfy.v.02",
+                    "Members": [
+                        "delighted"
+                    ]
+                },
+                {
+                    "Subcategory": "gesture.n.02",
+                    "Members": [
+                        "waving"
+                    ]
+                },
+                {
+                    "Subcategory": "sharing.n.04",
+                    "Members": [
+                        "giving"
+                    ]
+                },
+                {
+                    "Subcategory": "arouse.v.01",
+                    "Members": [
+                        "interested"
+                    ]
+                },
+                {
+                    "Subcategory": "feeling.n.01",
+                    "Members": [
+                        "pleasure"
+                    ]
+                },
+                {
+                    "Subcategory": "facial expression.n.01",
+                    "Members": [
+                        "smiling"
+                    ]
+                },
+                {
+                    "Subcategory": "change state.v.01",
+                    "Members": [
+                        "relaxed"
+                    ]
+                },
+                {
+                    "Subcategory": "rise.n.04",
+                    "Members": [
+                        "uplifting"
+                    ]
+                },
+                {
+                    "Subcategory": "encouragement.n.01",
+                    "Members": [
+                        "cheering"
+                    ]
+                },
+                {
+                    "Subcategory": "pleasure.n.01",
+                    "Members": [
+                        "enjoyment"
+                    ]
+                },
+                {
+                    "Subcategory": "matter to.v.01",
+                    "Members": [
+                        "intrigued"
+                    ]
+                },
+                {
+                    "Subcategory": "applicant.n.01",
+                    "Members": [
+                        "hopeful"
+                    ]
+                },
+                {
+                    "Subcategory": "responsiveness.n.01",
+                    "Members": [
+                        "excitability"
+                    ]
+                },
+                {
+                    "Subcategory": "change.v.01",
+                    "Members": [
+                        "prepared"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "positive personal quality",
+            "Subcategories": [
+                {
+                    "Subcategory": "temperature change.n.01",
+                    "Members": [
+                        "warming"
+                    ]
+                },
+                {
+                    "Subcategory": "courage.n.01",
+                    "Members": [
+                        "fortitude"
+                    ]
+                },
+                {
+                    "Subcategory": "fidelity.n.02",
+                    "Members": [
+                        "dedication"
+                    ]
+                },
+                {
+                    "Subcategory": "state.n.02",
+                    "Members": [
+                        "integrity"
+                    ]
+                },
+                {
+                    "Subcategory": "calm.v.01",
+                    "Members": [
+                        "reassuring",
+                        "gentle"
+                    ]
+                },
+                {
+                    "Subcategory": "concede.v.02",
+                    "Members": [
+                        "forgiving"
+                    ]
+                },
+                {
+                    "Subcategory": "cause.v.01",
+                    "Members": [
+                        "motivated"
+                    ]
+                },
+                {
+                    "Subcategory": "meeting.n.04",
+                    "Members": [
+                        "socialising"
+                    ]
+                },
+                {
+                    "Subcategory": "seriousness.n.03",
+                    "Members": [
+                        "commitment"
+                    ]
+                },
+                {
+                    "Subcategory": "drive.n.05",
+                    "Members": [
+                        "initiative"
+                    ]
+                },
+                {
+                    "Subcategory": "arrange.v.01",
+                    "Members": [
+                        "organised"
+                    ]
+                },
+                {
+                    "Subcategory": "remember.v.01",
+                    "Members": [
+                        "refreshing"
+                    ]
+                },
+                {
+                    "Subcategory": "font.n.01",
+                    "Members": [
+                        "bold"
+                    ]
+                },
+                {
+                    "Subcategory": "sympathy.n.02",
+                    "Members": [
+                        "empathy"
+                    ]
+                },
+                {
+                    "Subcategory": "good weather.n.01",
+                    "Members": [
+                        "clemency"
+                    ]
+                },
+                {
+                    "Subcategory": "individualist.n.01",
+                    "Members": [
+                        "independent"
+                    ]
+                },
+                {
+                    "Subcategory": "case.n.06",
+                    "Members": [
+                        "patient"
+                    ]
+                },
+                {
+                    "Subcategory": "person.n.01",
+                    "Members": [
+                        "literate"
+                    ]
+                },
+                {
+                    "Subcategory": "trait.n.01",
+                    "Members": [
+                        "humility"
+                    ]
+                },
+                {
+                    "Subcategory": "appearance.n.01",
+                    "Members": [
+                        "beauty"
+                    ]
+                },
+                {
+                    "Subcategory": "intelligence.n.01",
+                    "Members": [
+                        "intellect"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "prime number",
+            "Subcategories": [
+                {
+                    "Subcategory": "digit.n.01",
+                    "Members": [
+                        "five",
+                        "two",
+                        "one",
+                        "nine",
+                        "seven"
+                    ]
+                },
+                {
+                    "Subcategory": "large integer.n.01",
+                    "Members": [
+                        "nineteen",
+                        "fifteen",
+                        "twenty-three",
+                        "thirteen",
+                        "twenty-seven",
+                        "twenty-nine",
+                        "seventeen",
+                        "eleven"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "profession",
+            "Subcategories": [
+                {
+                    "Subcategory": "maker.n.01",
+                    "Members": [
+                        "shoemaker"
+                    ]
+                },
+                {
+                    "Subcategory": "educator.n.01",
+                    "Members": [
+                        "lecturer",
+                        "teacher"
+                    ]
+                },
+                {
+                    "Subcategory": "landowner.n.01",
+                    "Members": [
+                        "landlord"
+                    ]
+                },
+                {
+                    "Subcategory": "musician.n.01",
+                    "Members": [
+                        "singer"
+                    ]
+                },
+                {
+                    "Subcategory": "communicator.n.01",
+                    "Members": [
+                        "author",
+                        "presenter"
+                    ]
+                },
+                {
+                    "Subcategory": "merchant.n.01",
+                    "Members": [
+                        "butcher",
+                        "baker"
+                    ]
+                },
+                {
+                    "Subcategory": "craftsman.n.03",
+                    "Members": [
+                        "plumber",
+                        "hairdresser"
+                    ]
+                },
+                {
+                    "Subcategory": "occupation.n.01",
+                    "Members": [
+                        "career"
+                    ]
+                },
+                {
+                    "Subcategory": "performer.n.01",
+                    "Members": [
+                        "dancer",
+                        "musician"
+                    ]
+                },
+                {
+                    "Subcategory": "garmentmaker.n.01",
+                    "Members": [
+                        "tailor"
+                    ]
+                },
+                {
+                    "Subcategory": "head.n.04",
+                    "Members": [
+                        "secretary"
+                    ]
+                },
+                {
+                    "Subcategory": "professional.n.01",
+                    "Members": [
+                        "librarian"
+                    ]
+                },
+                {
+                    "Subcategory": "operator.n.02",
+                    "Members": [
+                        "driver"
+                    ]
+                },
+                {
+                    "Subcategory": "corporate executive.n.01",
+                    "Members": [
+                        "ceo"
+                    ]
+                },
+                {
+                    "Subcategory": "writer.n.01",
+                    "Members": [
+                        "journalist"
+                    ]
+                },
+                {
+                    "Subcategory": "creator.n.02",
+                    "Members": [
+                        "farmer",
+                        "architect"
+                    ]
+                },
+                {
+                    "Subcategory": "businessperson.n.01",
+                    "Members": [
+                        "businessman",
+                        "accountant"
+                    ]
+                },
+                {
+                    "Subcategory": "woodworker.n.01",
+                    "Members": [
+                        "carpenter"
+                    ]
+                },
+                {
+                    "Subcategory": "scientist.n.01",
+                    "Members": [
+                        "researcher",
+                        "mathematician"
+                    ]
+                },
+                {
+                    "Subcategory": "leader.n.01",
+                    "Members": [
+                        "politician"
+                    ]
+                },
+                {
+                    "Subcategory": "supervisor.n.01",
+                    "Members": [
+                        "counsellor"
+                    ]
+                },
+                {
+                    "Subcategory": "accountant.n.01",
+                    "Members": [
+                        "bookkeeper"
+                    ]
+                },
+                {
+                    "Subcategory": "material.n.01",
+                    "Members": [
+                        "builder"
+                    ]
+                },
+                {
+                    "Subcategory": "creating from raw materials.n.01",
+                    "Members": [
+                        "construction"
+                    ]
+                },
+                {
+                    "Subcategory": "person.n.01",
+                    "Members": [
+                        "engineer",
+                        "scientist"
+                    ]
+                },
+                {
+                    "Subcategory": "policeman.n.01",
+                    "Members": [
+                        "detective"
+                    ]
+                },
+                {
+                    "Subcategory": "doctor.n.01",
+                    "Members": [
+                        "vet"
+                    ]
+                },
+                {
+                    "Subcategory": "employee.n.01",
+                    "Members": [
+                        "bartender"
+                    ]
+                },
+                {
+                    "Subcategory": "artist.n.01",
+                    "Members": [
+                        "painter"
+                    ]
+                },
+                {
+                    "Subcategory": "defender.n.01",
+                    "Members": [
+                        "firefighter"
+                    ]
+                },
+                {
+                    "Subcategory": "white goods.n.01",
+                    "Members": [
+                        "dishwasher"
+                    ]
+                },
+                {
+                    "Subcategory": "selling.n.01",
+                    "Members": [
+                        "sale"
+                    ]
+                },
+                {
+                    "Subcategory": "financier.n.01",
+                    "Members": [
+                        "banker"
+                    ]
+                },
+                {
+                    "Subcategory": "keeper.n.01",
+                    "Members": [
+                        "babysitter"
+                    ]
+                },
+                {
+                    "Subcategory": "mathematician.n.01",
+                    "Members": [
+                        "statistician"
+                    ]
+                },
+                {
+                    "Subcategory": "expert.n.01",
+                    "Members": [
+                        "analyst"
+                    ]
+                },
+                {
+                    "Subcategory": "skilled worker.n.01",
+                    "Members": [
+                        "electrician"
+                    ]
+                },
+                {
+                    "Subcategory": "academician.n.03",
+                    "Members": [
+                        "professor"
+                    ]
+                },
+                {
+                    "Subcategory": "enrollee.n.01",
+                    "Members": [
+                        "student"
+                    ]
+                },
+                {
+                    "Subcategory": "banker.n.01",
+                    "Members": [
+                        "cashier"
+                    ]
+                },
+                {
+                    "Subcategory": "supplier.n.01",
+                    "Members": [
+                        "caterer"
+                    ]
+                },
+                {
+                    "Subcategory": "practitioner.n.01",
+                    "Members": [
+                        "clinician"
+                    ]
+                },
+                {
+                    "Subcategory": "cook.n.01",
+                    "Members": [
+                        "chef"
+                    ]
+                },
+                {
+                    "Subcategory": "aviator.n.01",
+                    "Members": [
+                        "pilot"
+                    ]
+                },
+                {
+                    "Subcategory": "administrator.n.01",
+                    "Members": [
+                        "manager"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "psychological illness",
+            "Subcategories": [
+                {
+                    "Subcategory": "cognitive state.n.01",
+                    "Members": [
+                        "amnesia"
+                    ]
+                },
+                {
+                    "Subcategory": "brain disorder.n.01",
+                    "Members": [
+                        "epilepsy"
+                    ]
+                },
+                {
+                    "Subcategory": "syndrome.n.02",
+                    "Members": [
+                        "adhd",
+                        "autism"
+                    ]
+                },
+                {
+                    "Subcategory": "learning disorder.n.01",
+                    "Members": [
+                        "dyslexia"
+                    ]
+                },
+                {
+                    "Subcategory": "eating disorder.n.01",
+                    "Members": [
+                        "bulimia",
+                        "anorexia"
+                    ]
+                },
+                {
+                    "Subcategory": "psychosis.n.01",
+                    "Members": [
+                        "schizophrenia"
+                    ]
+                },
+                {
+                    "Subcategory": "irrational motive.n.01",
+                    "Members": [
+                        "mania"
+                    ]
+                },
+                {
+                    "Subcategory": "psychotic.n.01",
+                    "Members": [
+                        "paranoid"
+                    ]
+                },
+                {
+                    "Subcategory": "insanity.n.01",
+                    "Members": [
+                        "dementia"
+                    ]
+                },
+                {
+                    "Subcategory": "neurotic.n.01",
+                    "Members": [
+                        "sociopath",
+                        "psychopath"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "racket sport",
+            "Subcategories": [
+                {
+                    "Subcategory": "bat.n.05",
+                    "Members": [
+                        "paddle"
+                    ]
+                },
+                {
+                    "Subcategory": "vine.n.01",
+                    "Members": [
+                        "squash"
+                    ]
+                },
+                {
+                    "Subcategory": "field game.n.01",
+                    "Members": [
+                        "lacrosse",
+                        "hockey"
+                    ]
+                },
+                {
+                    "Subcategory": "court game.n.01",
+                    "Members": [
+                        "badminton"
+                    ]
+                },
+                {
+                    "Subcategory": "ball.n.01",
+                    "Members": [
+                        "racquetball"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "religion",
+            "Subcategories": [
+                {
+                    "Subcategory": "religion.n.01",
+                    "Members": [
+                        "christianity",
+                        "paganism",
+                        "sikhism"
+                    ]
+                },
+                {
+                    "Subcategory": "christian.n.01",
+                    "Members": [
+                        "quaker",
+                        "protestant"
+                    ]
+                },
+                {
+                    "Subcategory": "religion.n.02",
+                    "Members": [
+                        "hinduism",
+                        "judaism",
+                        "scientology",
+                        "buddhism"
+                    ]
+                },
+                {
+                    "Subcategory": "civilization.n.01",
+                    "Members": [
+                        "islam"
+                    ]
+                },
+                {
+                    "Subcategory": "protestantism.n.01",
+                    "Members": [
+                        "mormonism"
+                    ]
+                },
+                {
+                    "Subcategory": "christianity.n.01",
+                    "Members": [
+                        "catholicism"
+                    ]
+                },
+                {
+                    "Subcategory": "disbeliever.n.01",
+                    "Members": [
+                        "atheist"
+                    ]
+                },
+                {
+                    "Subcategory": "religious orientation.n.01",
+                    "Members": [
+                        "atheism"
+                    ]
+                },
+                {
+                    "Subcategory": "pagan.n.02",
+                    "Members": [
+                        "wiccan"
+                    ]
+                },
+                {
+                    "Subcategory": "doctrine.n.01",
+                    "Members": [
+                        "animism"
+                    ]
+                },
+                {
+                    "Subcategory": "sect.n.01",
+                    "Members": [
+                        "taoism",
+                        "jainism"
+                    ]
+                },
+                {
+                    "Subcategory": "psychic.n.01",
+                    "Members": [
+                        "spiritualist"
+                    ]
+                },
+                {
+                    "Subcategory": "necessitarian.n.01",
+                    "Members": [
+                        "calvinist"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "royal title",
+            "Subcategories": [
+                {
+                    "Subcategory": "determine.v.01",
+                    "Members": [
+                        "countes"
+                    ]
+                },
+                {
+                    "Subcategory": "peer.n.02",
+                    "Members": [
+                        "earl",
+                        "duke"
+                    ]
+                },
+                {
+                    "Subcategory": "insect.n.01",
+                    "Members": [
+                        "queen"
+                    ]
+                },
+                {
+                    "Subcategory": "head of state.n.01",
+                    "Members": [
+                        "monarch"
+                    ]
+                },
+                {
+                    "Subcategory": "emperor.n.01",
+                    "Members": [
+                        "kaiser"
+                    ]
+                },
+                {
+                    "Subcategory": "sovereign.n.01",
+                    "Members": [
+                        "king",
+                        "tsar"
+                    ]
+                },
+                {
+                    "Subcategory": "impressiveness.n.01",
+                    "Members": [
+                        "majesty"
+                    ]
+                },
+                {
+                    "Subcategory": "name.n.01",
+                    "Members": [
+                        "marques"
+                    ]
+                },
+                {
+                    "Subcategory": "male aristocrat.n.01",
+                    "Members": [
+                        "knight"
+                    ]
+                },
+                {
+                    "Subcategory": "payment.n.01",
+                    "Members": [
+                        "royalty"
+                    ]
+                },
+                {
+                    "Subcategory": "aristocrat.n.01",
+                    "Members": [
+                        "princes",
+                        "prince"
+                    ]
+                },
+                {
+                    "Subcategory": "man.n.01",
+                    "Members": [
+                        "sir"
+                    ]
+                },
+                {
+                    "Subcategory": "number.n.02",
+                    "Members": [
+                        "count"
+                    ]
+                },
+                {
+                    "Subcategory": "lord.n.03",
+                    "Members": [
+                        "baron"
+                    ]
+                },
+                {
+                    "Subcategory": "girl.n.01",
+                    "Members": [
+                        "dame"
+                    ]
+                },
+                {
+                    "Subcategory": "prince.n.01",
+                    "Members": [
+                        "archduke"
+                    ]
+                },
+                {
+                    "Subcategory": "woman.n.01",
+                    "Members": [
+                        "lady"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "science",
+            "Subcategories": [
+                {
+                    "Subcategory": "compound.n.02",
+                    "Members": [
+                        "acid",
+                        "alkali"
+                    ]
+                },
+                {
+                    "Subcategory": "neurobiology.n.01",
+                    "Members": [
+                        "neuroscience"
+                    ]
+                },
+                {
+                    "Subcategory": "substance.n.07",
+                    "Members": [
+                        "food"
+                    ]
+                },
+                {
+                    "Subcategory": "organic chemistry.n.01",
+                    "Members": [
+                        "biochemistry"
+                    ]
+                },
+                {
+                    "Subcategory": "scientific research.n.01",
+                    "Members": [
+                        "experiment"
+                    ]
+                },
+                {
+                    "Subcategory": "pseudoscience.n.01",
+                    "Members": [
+                        "astrology"
+                    ]
+                },
+                {
+                    "Subcategory": "substance.n.01",
+                    "Members": [
+                        "atom"
+                    ]
+                },
+                {
+                    "Subcategory": "anthropology.n.01",
+                    "Members": [
+                        "ethnography"
+                    ]
+                },
+                {
+                    "Subcategory": "mathematical statement.n.01",
+                    "Members": [
+                        "equation"
+                    ]
+                },
+                {
+                    "Subcategory": "metaphysics.n.01",
+                    "Members": [
+                        "cosmology"
+                    ]
+                },
+                {
+                    "Subcategory": "medicine.n.01",
+                    "Members": [
+                        "epidemiology"
+                    ]
+                },
+                {
+                    "Subcategory": "earth science.n.01",
+                    "Members": [
+                        "oceanography"
+                    ]
+                },
+                {
+                    "Subcategory": "compartment.n.01",
+                    "Members": [
+                        "cell"
+                    ]
+                },
+                {
+                    "Subcategory": "collection.n.01",
+                    "Members": [
+                        "botany"
+                    ]
+                },
+                {
+                    "Subcategory": "environment.n.01",
+                    "Members": [
+                        "ecology"
+                    ]
+                },
+                {
+                    "Subcategory": "physics.n.01",
+                    "Members": [
+                        "astronomy"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "season",
+            "Subcategories": [
+                {
+                    "Subcategory": "kitchen utensil.n.01",
+                    "Members": [
+                        "cookware"
+                    ]
+                },
+                {
+                    "Subcategory": "reformer.n.01",
+                    "Members": [
+                        "dry"
+                    ]
+                },
+                {
+                    "Subcategory": "true pepper.n.01",
+                    "Members": [
+                        "pepper"
+                    ]
+                },
+                {
+                    "Subcategory": "season.n.02",
+                    "Members": [
+                        "summer",
+                        "winter",
+                        "spring",
+                        "autumn"
+                    ]
+                },
+                {
+                    "Subcategory": "wetness.n.01",
+                    "Members": [
+                        "wet"
+                    ]
+                },
+                {
+                    "Subcategory": "geological phenomenon.n.01",
+                    "Members": [
+                        "flood"
+                    ]
+                },
+                {
+                    "Subcategory": "wind.n.01",
+                    "Members": [
+                        "monsoon"
+                    ]
+                },
+                {
+                    "Subcategory": "compound.n.02",
+                    "Members": [
+                        "salt"
+                    ]
+                },
+                {
+                    "Subcategory": "building material.n.01",
+                    "Members": [
+                        "timber"
+                    ]
+                },
+                {
+                    "Subcategory": "sexual activity.n.01",
+                    "Members": [
+                        "mating"
+                    ]
+                },
+                {
+                    "Subcategory": "function.n.01",
+                    "Members": [
+                        "operator"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "social gathering",
+            "Subcategories": [
+                {
+                    "Subcategory": "organization.n.01",
+                    "Members": [
+                        "party"
+                    ]
+                },
+                {
+                    "Subcategory": "social group.n.01",
+                    "Members": [
+                        "society",
+                        "gathering"
+                    ]
+                },
+                {
+                    "Subcategory": "violence.n.01",
+                    "Members": [
+                        "riot"
+                    ]
+                },
+                {
+                    "Subcategory": "party.n.02",
+                    "Members": [
+                        "soiree",
+                        "reunion",
+                        "housewarming"
+                    ]
+                },
+                {
+                    "Subcategory": "movable feast.n.01",
+                    "Members": [
+                        "easter"
+                    ]
+                },
+                {
+                    "Subcategory": "baptism.n.01",
+                    "Members": [
+                        "christening"
+                    ]
+                },
+                {
+                    "Subcategory": "ceremony.n.01",
+                    "Members": [
+                        "wedding",
+                        "funeral"
+                    ]
+                },
+                {
+                    "Subcategory": "mathematical relation.n.01",
+                    "Members": [
+                        "function"
+                    ]
+                },
+                {
+                    "Subcategory": "objection.n.02",
+                    "Members": [
+                        "protest"
+                    ]
+                },
+                {
+                    "Subcategory": "anniversary.n.01",
+                    "Members": [
+                        "birthday"
+                    ]
+                },
+                {
+                    "Subcategory": "marital status.n.01",
+                    "Members": [
+                        "marriage"
+                    ]
+                },
+                {
+                    "Subcategory": "helping.n.01",
+                    "Members": [
+                        "drink"
+                    ]
+                },
+                {
+                    "Subcategory": "room.n.01",
+                    "Members": [
+                        "bar"
+                    ]
+                },
+                {
+                    "Subcategory": "game equipment.n.01",
+                    "Members": [
+                        "ball"
+                    ]
+                },
+                {
+                    "Subcategory": "performance.n.01",
+                    "Members": [
+                        "concert"
+                    ]
+                },
+                {
+                    "Subcategory": "baseball team.n.01",
+                    "Members": [
+                        "club"
+                    ]
+                },
+                {
+                    "Subcategory": "abstraction.n.06",
+                    "Members": [
+                        "group"
+                    ]
+                },
+                {
+                    "Subcategory": "ball.n.09",
+                    "Members": [
+                        "prom"
+                    ]
+                },
+                {
+                    "Subcategory": "popular music.n.01",
+                    "Members": [
+                        "disco"
+                    ]
+                },
+                {
+                    "Subcategory": "meal.n.01",
+                    "Members": [
+                        "dinner",
+                        "lunch"
+                    ]
+                },
+                {
+                    "Subcategory": "tavern.n.01",
+                    "Members": [
+                        "pub"
+                    ]
+                },
+                {
+                    "Subcategory": "completion.n.02",
+                    "Members": [
+                        "graduation"
+                    ]
+                },
+                {
+                    "Subcategory": "affair.n.03",
+                    "Members": [
+                        "celebration"
+                    ]
+                },
+                {
+                    "Subcategory": "day.n.03",
+                    "Members": [
+                        "anniversary"
+                    ]
+                },
+                {
+                    "Subcategory": "spot.n.07",
+                    "Members": [
+                        "nightclub"
+                    ]
+                },
+                {
+                    "Subcategory": "psychological feature.n.01",
+                    "Members": [
+                        "event"
+                    ]
+                },
+                {
+                    "Subcategory": "nutriment.n.01",
+                    "Members": [
+                        "meal"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "social relationship",
+            "Subcategories": [
+                {
+                    "Subcategory": "worker.n.01",
+                    "Members": [
+                        "employee"
+                    ]
+                },
+                {
+                    "Subcategory": "person.n.01",
+                    "Members": [
+                        "lover",
+                        "friend",
+                        "married",
+                        "relative",
+                        "peer"
+                    ]
+                },
+                {
+                    "Subcategory": "novice.n.02",
+                    "Members": [
+                        "apprentice"
+                    ]
+                },
+                {
+                    "Subcategory": "unit.n.03",
+                    "Members": [
+                        "family"
+                    ]
+                },
+                {
+                    "Subcategory": "associate.n.01",
+                    "Members": [
+                        "teammate",
+                        "colleague"
+                    ]
+                },
+                {
+                    "Subcategory": "friend.n.01",
+                    "Members": [
+                        "girlfriend",
+                        "flatmate",
+                        "companion"
+                    ]
+                },
+                {
+                    "Subcategory": "adversary.n.01",
+                    "Members": [
+                        "foe"
+                    ]
+                },
+                {
+                    "Subcategory": "information.n.02",
+                    "Members": [
+                        "acquaintance"
+                    ]
+                },
+                {
+                    "Subcategory": "betrothed.n.01",
+                    "Members": [
+                        "fiance"
+                    ]
+                },
+                {
+                    "Subcategory": "relation.n.01",
+                    "Members": [
+                        "relationship"
+                    ]
+                },
+                {
+                    "Subcategory": "act.v.01",
+                    "Members": [
+                        "engaged"
+                    ]
+                },
+                {
+                    "Subcategory": "mammal genus.n.01",
+                    "Members": [
+                        "bos"
+                    ]
+                },
+                {
+                    "Subcategory": "writer.n.01",
+                    "Members": [
+                        "coauthor"
+                    ]
+                },
+                {
+                    "Subcategory": "contestant.n.01",
+                    "Members": [
+                        "rival",
+                        "competitor"
+                    ]
+                },
+                {
+                    "Subcategory": "adult.n.01",
+                    "Members": [
+                        "professional"
+                    ]
+                },
+                {
+                    "Subcategory": "peer.n.01",
+                    "Members": [
+                        "associate"
+                    ]
+                },
+                {
+                    "Subcategory": "excavation.n.03",
+                    "Members": [
+                        "working"
+                    ]
+                },
+                {
+                    "Subcategory": "domestic partner.n.01",
+                    "Members": [
+                        "partner"
+                    ]
+                },
+                {
+                    "Subcategory": "military unit.n.01",
+                    "Members": [
+                        "enemy"
+                    ]
+                },
+                {
+                    "Subcategory": "idealist.n.01",
+                    "Members": [
+                        "romantic"
+                    ]
+                },
+                {
+                    "Subcategory": "lover.n.01",
+                    "Members": [
+                        "boyfriend"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "sport",
+            "Subcategories": [
+                {
+                    "Subcategory": "propulsion.n.02",
+                    "Members": [
+                        "shooting"
+                    ]
+                },
+                {
+                    "Subcategory": "ball.n.01",
+                    "Members": [
+                        "handball"
+                    ]
+                },
+                {
+                    "Subcategory": "court game.n.01",
+                    "Members": [
+                        "netball",
+                        "basketball",
+                        "volleyball"
+                    ]
+                },
+                {
+                    "Subcategory": "equestrian sport.n.01",
+                    "Members": [
+                        "showjumping"
+                    ]
+                },
+                {
+                    "Subcategory": "projectile.n.01",
+                    "Members": [
+                        "dart"
+                    ]
+                },
+                {
+                    "Subcategory": "outdoor game.n.01",
+                    "Members": [
+                        "golf",
+                        "croquet"
+                    ]
+                },
+                {
+                    "Subcategory": "football play.n.01",
+                    "Members": [
+                        "running"
+                    ]
+                },
+                {
+                    "Subcategory": "bodybuilding.n.01",
+                    "Members": [
+                        "weightlifting"
+                    ]
+                },
+                {
+                    "Subcategory": "field event.n.01",
+                    "Members": [
+                        "javelin"
+                    ]
+                },
+                {
+                    "Subcategory": "water sport.n.01",
+                    "Members": [
+                        "surfing",
+                        "swimming"
+                    ]
+                },
+                {
+                    "Subcategory": "match.n.02",
+                    "Members": [
+                        "diving"
+                    ]
+                },
+                {
+                    "Subcategory": "martial art.n.01",
+                    "Members": [
+                        "judo",
+                        "taekwondo",
+                        "karate"
+                    ]
+                },
+                {
+                    "Subcategory": "sport.n.01",
+                    "Members": [
+                        "rowing",
+                        "sledding",
+                        "archery",
+                        "cycling",
+                        "skiing"
+                    ]
+                },
+                {
+                    "Subcategory": "barrier.n.01",
+                    "Members": [
+                        "hurdle",
+                        "fencing"
+                    ]
+                },
+                {
+                    "Subcategory": "ball game.n.01",
+                    "Members": [
+                        "baseball"
+                    ]
+                },
+                {
+                    "Subcategory": "game.n.01",
+                    "Members": [
+                        "curling"
+                    ]
+                },
+                {
+                    "Subcategory": "run.v.01",
+                    "Members": [
+                        "sprinting"
+                    ]
+                },
+                {
+                    "Subcategory": "struggle.n.03",
+                    "Members": [
+                        "wrestling"
+                    ]
+                },
+                {
+                    "Subcategory": "athletic facility.n.01",
+                    "Members": [
+                        "gym"
+                    ]
+                },
+                {
+                    "Subcategory": "boat.v.01",
+                    "Members": [
+                        "canoeing",
+                        "kayaking"
+                    ]
+                },
+                {
+                    "Subcategory": "bad person.n.01",
+                    "Members": [
+                        "rounder"
+                    ]
+                },
+                {
+                    "Subcategory": "football.n.01",
+                    "Members": [
+                        "rugby"
+                    ]
+                },
+                {
+                    "Subcategory": "pool.n.09",
+                    "Members": [
+                        "snooker"
+                    ]
+                },
+                {
+                    "Subcategory": "slide.n.05",
+                    "Members": [
+                        "snowboarding"
+                    ]
+                },
+                {
+                    "Subcategory": "minimum.n.01",
+                    "Members": [
+                        "skeleton"
+                    ]
+                },
+                {
+                    "Subcategory": "orthopterous insect.n.01",
+                    "Members": [
+                        "cricket"
+                    ]
+                },
+                {
+                    "Subcategory": "cheer.v.05",
+                    "Members": [
+                        "cheerleading"
+                    ]
+                },
+                {
+                    "Subcategory": "sledding.n.01",
+                    "Members": [
+                        "bobsledding"
+                    ]
+                },
+                {
+                    "Subcategory": "employment.n.02",
+                    "Members": [
+                        "sailing"
+                    ]
+                },
+                {
+                    "Subcategory": "sled.n.01",
+                    "Members": [
+                        "bobsleigh"
+                    ]
+                },
+                {
+                    "Subcategory": "contact sport.n.01",
+                    "Members": [
+                        "boxing",
+                        "football"
+                    ]
+                },
+                {
+                    "Subcategory": "walk.n.04",
+                    "Members": [
+                        "hiking"
+                    ]
+                },
+                {
+                    "Subcategory": "excavation.n.03",
+                    "Members": [
+                        "pool"
+                    ]
+                },
+                {
+                    "Subcategory": "rider.n.01",
+                    "Members": [
+                        "equestrian"
+                    ]
+                },
+                {
+                    "Subcategory": "cardiopulmonary exercise.n.01",
+                    "Members": [
+                        "jogging"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "statistical term",
+            "Subcategories": [
+                {
+                    "Subcategory": "recipient.n.01",
+                    "Members": [
+                        "dependent"
+                    ]
+                },
+                {
+                    "Subcategory": "reason.v.01",
+                    "Members": [
+                        "extrapolate"
+                    ]
+                },
+                {
+                    "Subcategory": "illustration.n.01",
+                    "Members": [
+                        "figure"
+                    ]
+                },
+                {
+                    "Subcategory": "calculate.v.01",
+                    "Members": [
+                        "interpolate"
+                    ]
+                },
+                {
+                    "Subcategory": "metallic element.n.01",
+                    "Members": [
+                        "y"
+                    ]
+                },
+                {
+                    "Subcategory": "pure mathematics.n.01",
+                    "Members": [
+                        "algebra"
+                    ]
+                },
+                {
+                    "Subcategory": "reciprocality.n.01",
+                    "Members": [
+                        "correlation"
+                    ]
+                },
+                {
+                    "Subcategory": "example.n.01",
+                    "Members": [
+                        "sample"
+                    ]
+                },
+                {
+                    "Subcategory": "resident.n.01",
+                    "Members": [
+                        "outlier"
+                    ]
+                },
+                {
+                    "Subcategory": "importance.n.01",
+                    "Members": [
+                        "significance"
+                    ]
+                },
+                {
+                    "Subcategory": "quality.n.01",
+                    "Members": [
+                        "power"
+                    ]
+                },
+                {
+                    "Subcategory": "ratio.n.01",
+                    "Members": [
+                        "proportionality"
+                    ]
+                },
+                {
+                    "Subcategory": "understand.v.01",
+                    "Members": [
+                        "interpret"
+                    ]
+                },
+                {
+                    "Subcategory": "large integer.n.01",
+                    "Members": [
+                        "x"
+                    ]
+                },
+                {
+                    "Subcategory": "measure.n.02",
+                    "Members": [
+                        "probability"
+                    ]
+                },
+                {
+                    "Subcategory": "statistic.n.01",
+                    "Members": [
+                        "average"
+                    ]
+                },
+                {
+                    "Subcategory": "information.n.02",
+                    "Members": [
+                        "datum"
+                    ]
+                },
+                {
+                    "Subcategory": "property.n.02",
+                    "Members": [
+                        "mode"
+                    ]
+                },
+                {
+                    "Subcategory": "extent.n.02",
+                    "Members": [
+                        "range"
+                    ]
+                },
+                {
+                    "Subcategory": "proportion.n.01",
+                    "Members": [
+                        "percentage"
+                    ]
+                },
+                {
+                    "Subcategory": "abnormality.n.01",
+                    "Members": [
+                        "regression",
+                        "anomaly"
+                    ]
+                },
+                {
+                    "Subcategory": "explanation.n.02",
+                    "Members": [
+                        "theory"
+                    ]
+                },
+                {
+                    "Subcategory": "disarrange.v.02",
+                    "Members": [
+                        "randomised"
+                    ]
+                },
+                {
+                    "Subcategory": "average.n.01",
+                    "Members": [
+                        "median"
+                    ]
+                },
+                {
+                    "Subcategory": "magnitude relation.n.01",
+                    "Members": [
+                        "ratio"
+                    ]
+                },
+                {
+                    "Subcategory": "arrangement.n.03",
+                    "Members": [
+                        "distribution"
+                    ]
+                },
+                {
+                    "Subcategory": "deviation.n.01",
+                    "Members": [
+                        "variance"
+                    ]
+                },
+                {
+                    "Subcategory": "chemical.n.01",
+                    "Members": [
+                        "fraction"
+                    ]
+                },
+                {
+                    "Subcategory": "variance.n.03",
+                    "Members": [
+                        "covariance"
+                    ]
+                },
+                {
+                    "Subcategory": "component.n.03",
+                    "Members": [
+                        "addition"
+                    ]
+                },
+                {
+                    "Subcategory": "bar chart.n.01",
+                    "Members": [
+                        "histogram"
+                    ]
+                },
+                {
+                    "Subcategory": "visual communication.n.01",
+                    "Members": [
+                        "graph"
+                    ]
+                },
+                {
+                    "Subcategory": "specify.v.02",
+                    "Members": [
+                        "quantify"
+                    ]
+                },
+                {
+                    "Subcategory": "radioactivity unit.n.01",
+                    "Members": [
+                        "r"
+                    ]
+                },
+                {
+                    "Subcategory": "thing.n.12",
+                    "Members": [
+                        "variable"
+                    ]
+                },
+                {
+                    "Subcategory": "edge tool.n.01",
+                    "Members": [
+                        "axe"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "supernatural being",
+            "Subcategories": [
+                {
+                    "Subcategory": "imaginary being.n.01",
+                    "Members": [
+                        "unicorn",
+                        "monster"
+                    ]
+                },
+                {
+                    "Subcategory": "traveler.n.01",
+                    "Members": [
+                        "alien"
+                    ]
+                },
+                {
+                    "Subcategory": "performer.n.01",
+                    "Members": [
+                        "magician"
+                    ]
+                },
+                {
+                    "Subcategory": "spiritual being.n.01",
+                    "Members": [
+                        "angel",
+                        "fairy"
+                    ]
+                },
+                {
+                    "Subcategory": "greco-roman deity.n.01",
+                    "Members": [
+                        "nymph"
+                    ]
+                },
+                {
+                    "Subcategory": "evil spirit.n.01",
+                    "Members": [
+                        "vampire",
+                        "goblin",
+                        "demon"
+                    ]
+                },
+                {
+                    "Subcategory": "agency.n.01",
+                    "Members": [
+                        "oni"
+                    ]
+                },
+                {
+                    "Subcategory": "mythical monster.n.01",
+                    "Members": [
+                        "dragon",
+                        "werewolf",
+                        "troll",
+                        "griffin",
+                        "minotaur"
+                    ]
+                },
+                {
+                    "Subcategory": "ghost.n.03",
+                    "Members": [
+                        "poltergeist"
+                    ]
+                },
+                {
+                    "Subcategory": "monocot genus.n.01",
+                    "Members": [
+                        "dracula"
+                    ]
+                },
+                {
+                    "Subcategory": "dead person.n.01",
+                    "Members": [
+                        "zombie"
+                    ]
+                },
+                {
+                    "Subcategory": "expert.n.01",
+                    "Members": [
+                        "wizard"
+                    ]
+                },
+                {
+                    "Subcategory": "agency.n.03",
+                    "Members": [
+                        "frankenstein"
+                    ]
+                },
+                {
+                    "Subcategory": "actinic radiation.n.01",
+                    "Members": [
+                        "light"
+                    ]
+                },
+                {
+                    "Subcategory": "occultist.n.01",
+                    "Members": [
+                        "psychic",
+                        "witch"
+                    ]
+                },
+                {
+                    "Subcategory": "leader.n.01",
+                    "Members": [
+                        "superman"
+                    ]
+                },
+                {
+                    "Subcategory": "apparition.n.03",
+                    "Members": [
+                        "ghost"
+                    ]
+                },
+                {
+                    "Subcategory": "attendant.n.01",
+                    "Members": [
+                        "batman"
+                    ]
+                },
+                {
+                    "Subcategory": "thief.n.01",
+                    "Members": [
+                        "ghoul"
+                    ]
+                },
+                {
+                    "Subcategory": "vital principle.n.01",
+                    "Members": [
+                        "spirit"
+                    ]
+                },
+                {
+                    "Subcategory": "capsule.n.05",
+                    "Members": [
+                        "orb"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "symptom of illness",
+            "Subcategories": [
+                {
+                    "Subcategory": "torpor.n.01",
+                    "Members": [
+                        "lethargy"
+                    ]
+                },
+                {
+                    "Subcategory": "people.n.01",
+                    "Members": [
+                        "sick"
+                    ]
+                },
+                {
+                    "Subcategory": "fundamental quantity.n.01",
+                    "Members": [
+                        "temperature"
+                    ]
+                },
+                {
+                    "Subcategory": "zonk out.v.01",
+                    "Members": [
+                        "fainting"
+                    ]
+                },
+                {
+                    "Subcategory": "injury.n.01",
+                    "Members": [
+                        "bleeding"
+                    ]
+                },
+                {
+                    "Subcategory": "inflammation.n.01",
+                    "Members": [
+                        "catarrh"
+                    ]
+                },
+                {
+                    "Subcategory": "reflex.n.01",
+                    "Members": [
+                        "sneezing"
+                    ]
+                },
+                {
+                    "Subcategory": "symptom.n.01",
+                    "Members": [
+                        "coughing",
+                        "inflammation",
+                        "cramp",
+                        "shivering",
+                        "nausea",
+                        "diarrhoea"
+                    ]
+                },
+                {
+                    "Subcategory": "enlargement.n.02",
+                    "Members": [
+                        "swelling"
+                    ]
+                },
+                {
+                    "Subcategory": "negative stimulus.n.01",
+                    "Members": [
+                        "headache"
+                    ]
+                },
+                {
+                    "Subcategory": "agitation.n.05",
+                    "Members": [
+                        "shaking"
+                    ]
+                },
+                {
+                    "Subcategory": "bodily process.n.01",
+                    "Members": [
+                        "sweating"
+                    ]
+                },
+                {
+                    "Subcategory": "liquid body substance.n.01",
+                    "Members": [
+                        "blood"
+                    ]
+                },
+                {
+                    "Subcategory": "eruption.n.02",
+                    "Members": [
+                        "rash"
+                    ]
+                },
+                {
+                    "Subcategory": "expulsion.n.03",
+                    "Members": [
+                        "vomiting"
+                    ]
+                },
+                {
+                    "Subcategory": "temporary state.n.01",
+                    "Members": [
+                        "fatigue"
+                    ]
+                },
+                {
+                    "Subcategory": "pain.n.01",
+                    "Members": [
+                        "aching"
+                    ]
+                },
+                {
+                    "Subcategory": "point.n.02",
+                    "Members": [
+                        "spot"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "team sport",
+            "Subcategories": [
+                {
+                    "Subcategory": "passage.n.10",
+                    "Members": [
+                        "relay"
+                    ]
+                },
+                {
+                    "Subcategory": "football.n.01",
+                    "Members": [
+                        "soccer"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "three-dimensional shape",
+            "Subcategories": [
+                {
+                    "Subcategory": "array.n.01",
+                    "Members": [
+                        "table"
+                    ]
+                },
+                {
+                    "Subcategory": "polyhedron.n.01",
+                    "Members": [
+                        "tetrahedron",
+                        "pyramid",
+                        "octahedron",
+                        "icosahedron",
+                        "prism"
+                    ]
+                },
+                {
+                    "Subcategory": "parallelepiped.n.01",
+                    "Members": [
+                        "cuboid"
+                    ]
+                },
+                {
+                    "Subcategory": "prism.n.01",
+                    "Members": [
+                        "parallelepiped"
+                    ]
+                },
+                {
+                    "Subcategory": "geographical area.n.01",
+                    "Members": [
+                        "hemisphere"
+                    ]
+                },
+                {
+                    "Subcategory": "container.n.01",
+                    "Members": [
+                        "box"
+                    ]
+                },
+                {
+                    "Subcategory": "vessel.n.03",
+                    "Members": [
+                        "bowl"
+                    ]
+                },
+                {
+                    "Subcategory": "artifact.n.01",
+                    "Members": [
+                        "cone"
+                    ]
+                },
+                {
+                    "Subcategory": "conduit.n.01",
+                    "Members": [
+                        "tube"
+                    ]
+                },
+                {
+                    "Subcategory": "solid.n.03",
+                    "Members": [
+                        "ovoid"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "time of day",
+            "Subcategories": [
+                {
+                    "Subcategory": "hour.n.02",
+                    "Members": [
+                        "noon",
+                        "dusk",
+                        "sunset",
+                        "midday",
+                        "midnight",
+                        "dawn",
+                        "bedtime",
+                        "sunrise"
+                    ]
+                },
+                {
+                    "Subcategory": "meal.n.01",
+                    "Members": [
+                        "teatime",
+                        "brunch",
+                        "breakfast"
+                    ]
+                },
+                {
+                    "Subcategory": "time period.n.01",
+                    "Members": [
+                        "nap",
+                        "night",
+                        "morning",
+                        "daytime"
+                    ]
+                },
+                {
+                    "Subcategory": "activity.n.01",
+                    "Members": [
+                        "work"
+                    ]
+                },
+                {
+                    "Subcategory": "mealtime.n.01",
+                    "Members": [
+                        "suppertime",
+                        "lunchtime"
+                    ]
+                },
+                {
+                    "Subcategory": "day.n.04",
+                    "Members": [
+                        "afternoon",
+                        "evening"
+                    ]
+                },
+                {
+                    "Subcategory": "residence.n.01",
+                    "Members": [
+                        "home"
+                    ]
+                },
+                {
+                    "Subcategory": "praise.v.01",
+                    "Members": [
+                        "laud"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "two-dimensional shape",
+            "Subcategories": [
+                {
+                    "Subcategory": "curve.n.01",
+                    "Members": [
+                        "crescent"
+                    ]
+                },
+                {
+                    "Subcategory": "plane figure.n.01",
+                    "Members": [
+                        "polygon"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "type of word",
+            "Subcategories": [
+                {
+                    "Subcategory": "word.n.01",
+                    "Members": [
+                        "palindrome"
+                    ]
+                },
+                {
+                    "Subcategory": "verbal noun.n.01",
+                    "Members": [
+                        "gerund"
+                    ]
+                },
+                {
+                    "Subcategory": "heading.n.01",
+                    "Members": [
+                        "title"
+                    ]
+                },
+                {
+                    "Subcategory": "function word.n.01",
+                    "Members": [
+                        "pronoun"
+                    ]
+                },
+                {
+                    "Subcategory": "modifier.n.01",
+                    "Members": [
+                        "adjective"
+                    ]
+                },
+                {
+                    "Subcategory": "major form class.n.01",
+                    "Members": [
+                        "verb",
+                        "adverb"
+                    ]
+                },
+                {
+                    "Subcategory": "speech act.n.01",
+                    "Members": [
+                        "command"
+                    ]
+                },
+                {
+                    "Subcategory": "grammatical category.n.01",
+                    "Members": [
+                        "tense"
+                    ]
+                },
+                {
+                    "Subcategory": "language unit.n.01",
+                    "Members": [
+                        "word",
+                        "name"
+                    ]
+                },
+                {
+                    "Subcategory": "verb.n.01",
+                    "Members": [
+                        "infinitive"
+                    ]
+                },
+                {
+                    "Subcategory": "content word.n.01",
+                    "Members": [
+                        "noun"
+                    ]
+                },
+                {
+                    "Subcategory": "form.n.01",
+                    "Members": [
+                        "plural"
+                    ]
+                },
+                {
+                    "Subcategory": "saying.n.01",
+                    "Members": [
+                        "proverb"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "unit of length",
+            "Subcategories": [
+                {
+                    "Subcategory": "metric linear unit.n.01",
+                    "Members": [
+                        "nanometre",
+                        "millimetre",
+                        "picometre",
+                        "metre",
+                        "micromillimetre",
+                        "kilometre",
+                        "centimetre"
+                    ]
+                },
+                {
+                    "Subcategory": "linear unit.n.01",
+                    "Members": [
+                        "fathom",
+                        "mile",
+                        "yard",
+                        "inch",
+                        "cubit"
+                    ]
+                },
+                {
+                    "Subcategory": "association.n.01",
+                    "Members": [
+                        "league"
+                    ]
+                },
+                {
+                    "Subcategory": "astronomy unit.n.01",
+                    "Members": [
+                        "parsec"
+                    ]
+                },
+                {
+                    "Subcategory": "time unit.n.01",
+                    "Members": [
+                        "second",
+                        "millisecond",
+                        "minute",
+                        "hour"
+                    ]
+                },
+                {
+                    "Subcategory": "extremity.n.05",
+                    "Members": [
+                        "hand"
+                    ]
+                },
+                {
+                    "Subcategory": "bunch.n.01",
+                    "Members": [
+                        "knot"
+                    ]
+                },
+                {
+                    "Subcategory": "metric capacity unit.n.01",
+                    "Members": [
+                        "centilitre"
+                    ]
+                },
+                {
+                    "Subcategory": "sound property.n.01",
+                    "Members": [
+                        "pitch"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "unit of time",
+            "Subcategories": [
+                {
+                    "Subcategory": "time period.n.01",
+                    "Members": [
+                        "month",
+                        "millennia",
+                        "century",
+                        "epoch",
+                        "fortnight",
+                        "decade",
+                        "era",
+                        "week",
+                        "year"
+                    ]
+                },
+                {
+                    "Subcategory": "time unit.n.01",
+                    "Members": [
+                        "nanosecond",
+                        "day",
+                        "microsecond"
+                    ]
+                },
+                {
+                    "Subcategory": "evaluation.n.02",
+                    "Members": [
+                        "score"
+                    ]
+                },
+                {
+                    "Subcategory": "point.n.06",
+                    "Members": [
+                        "moment"
+                    ]
+                },
+                {
+                    "Subcategory": "spiritual being.n.01",
+                    "Members": [
+                        "aeon"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "unit of weight",
+            "Subcategories": [
+                {
+                    "Subcategory": "containerful.n.01",
+                    "Members": [
+                        "teaspoon",
+                        "tablespoon"
+                    ]
+                },
+                {
+                    "Subcategory": "metric weight unit.n.01",
+                    "Members": [
+                        "kilogram",
+                        "microgram",
+                        "gram",
+                        "milligram"
+                    ]
+                },
+                {
+                    "Subcategory": "metric capacity unit.n.01",
+                    "Members": [
+                        "litre",
+                        "millilitre"
+                    ]
+                },
+                {
+                    "Subcategory": "measure.n.02",
+                    "Members": [
+                        "volume"
+                    ]
+                },
+                {
+                    "Subcategory": "container.n.01",
+                    "Members": [
+                        "cup"
+                    ]
+                },
+                {
+                    "Subcategory": "actor.n.01",
+                    "Members": [
+                        "heavy"
+                    ]
+                },
+                {
+                    "Subcategory": "natural object.n.01",
+                    "Members": [
+                        "stone"
+                    ]
+                },
+                {
+                    "Subcategory": "british capacity unit.n.01",
+                    "Members": [
+                        "pint"
+                    ]
+                },
+                {
+                    "Subcategory": "avoirdupois unit.n.01",
+                    "Members": [
+                        "pound",
+                        "ton"
+                    ]
+                },
+                {
+                    "Subcategory": "apothecaries' unit.n.01",
+                    "Members": [
+                        "ounce"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "violent crime",
+            "Subcategories": [
+                {
+                    "Subcategory": "distress.n.01",
+                    "Members": [
+                        "torture"
+                    ]
+                },
+                {
+                    "Subcategory": "hit.v.03",
+                    "Members": [
+                        "punching"
+                    ]
+                },
+                {
+                    "Subcategory": "extortion.n.03",
+                    "Members": [
+                        "blackmail"
+                    ]
+                },
+                {
+                    "Subcategory": "killing.n.02",
+                    "Members": [
+                        "genocide"
+                    ]
+                },
+                {
+                    "Subcategory": "grip.v.01",
+                    "Members": [
+                        "biting"
+                    ]
+                },
+                {
+                    "Subcategory": "capture.n.04",
+                    "Members": [
+                        "kidnapping"
+                    ]
+                },
+                {
+                    "Subcategory": "fight.n.02",
+                    "Members": [
+                        "beating"
+                    ]
+                },
+                {
+                    "Subcategory": "assault.n.02",
+                    "Members": [
+                        "mugging"
+                    ]
+                },
+                {
+                    "Subcategory": "noise.n.01",
+                    "Members": [
+                        "scratching"
+                    ]
+                },
+                {
+                    "Subcategory": "military action.n.01",
+                    "Members": [
+                        "war",
+                        "fight"
+                    ]
+                },
+                {
+                    "Subcategory": "fatality.n.01",
+                    "Members": [
+                        "killing"
+                    ]
+                },
+                {
+                    "Subcategory": "creating by removal.n.01",
+                    "Members": [
+                        "cutting"
+                    ]
+                },
+                {
+                    "Subcategory": "disability.n.01",
+                    "Members": [
+                        "amputation"
+                    ]
+                },
+                {
+                    "Subcategory": "attack.n.01",
+                    "Members": [
+                        "bombing"
+                    ]
+                },
+                {
+                    "Subcategory": "murderer.n.01",
+                    "Members": [
+                        "infanticide"
+                    ]
+                },
+                {
+                    "Subcategory": "weapon.n.01",
+                    "Members": [
+                        "gun"
+                    ]
+                },
+                {
+                    "Subcategory": "terror.n.04",
+                    "Members": [
+                        "terrorism"
+                    ]
+                },
+                {
+                    "Subcategory": "administration.n.03",
+                    "Members": [
+                        "drugging"
+                    ]
+                },
+                {
+                    "Subcategory": "practice.n.01",
+                    "Members": [
+                        "cannibalism"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "water sport",
+            "Subcategories": [
+                {
+                    "Subcategory": "boat.n.01",
+                    "Members": [
+                        "longboat"
+                    ]
+                },
+                {
+                    "Subcategory": "swimming stroke.n.01",
+                    "Members": [
+                        "backstroke"
+                    ]
+                },
+                {
+                    "Subcategory": "surfboard.v.01",
+                    "Members": [
+                        "windsurfing"
+                    ]
+                },
+                {
+                    "Subcategory": "water travel.n.01",
+                    "Members": [
+                        "boating",
+                        "yachting"
+                    ]
+                },
+                {
+                    "Subcategory": "outdoor sport.n.01",
+                    "Members": [
+                        "fishing"
+                    ]
+                },
+                {
+                    "Subcategory": "glide.n.03",
+                    "Members": [
+                        "paragliding"
+                    ]
+                }
+            ]
+        },
+        {
+            "Category": "winter sport",
+            "Subcategories": [
+                {
+                    "Subcategory": "ski race.n.01",
+                    "Members": [
+                        "slalom"
+                    ]
+                },
+                {
+                    "Subcategory": "sport.n.01",
+                    "Members": [
+                        "skating"
+                    ]
+                },
+                {
+                    "Subcategory": "transport.v.01",
+                    "Members": [
+                        "sledging"
+                    ]
+                },
+                {
+                    "Subcategory": "sledding.n.01",
+                    "Members": [
+                        "tobogganing"
+                    ]
+                },
+                {
+                    "Subcategory": "sled.n.01",
+                    "Members": [
+                        "luge"
+                    ]
+                }
+            ]
+        }
+    ]
+}
