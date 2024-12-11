@@ -1217,6 +1217,58 @@
       "parameters": "8B"
   },
   {
+      "model_name": "EuroLLM-9B-Instruct",
+      "backend": "huggingface_local",
+      "requires_api_key": true,
+      "huggingface_id": "utter-project/EuroLLM-9B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-11-28",
+      "open_weight": false,
+      "parameters": "9B"
+  },
+  {
+      "model_name": "QwQ-32B-Preview",
+      "backend": "huggingface_local",
+      "huggingface_id": "Qwen/QwQ-32B-Preview",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-11-27",
+      "open_weight": true,
+      "parameters": "32B"
+  },
+  {
+      "model_name": "aya-expanse-32b",
+      "backend": "huggingface_local",
+      "requires_api_key": true,
+      "huggingface_id": "CohereForAI/aya-expanse-32b",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>",
+      "release_date": "2024-10-23",
+      "open_weight": false,
+      "parameters": "32B"
+  },
+  {
+      "model_name": "Teuken-7B-instruct-research-v0.4",
+      "backend": "huggingface_local",
+      "huggingface_id": "openGPT-X/Teuken-7B-instruct-research-v0.4",
+      "premade_chat_template": true,
+      "eos_to_cull": "</s>",
+      "release_date": "2024-11-25",
+      "open_weight": true,
+      "parameters": "7B"
+  },
+  {
+      "model_name": "Teuken-7B-instruct-commercial-v0.4",
+      "backend": "huggingface_local",
+      "huggingface_id": "openGPT-X/Teuken-7B-instruct-commercial-v0.4",
+      "premade_chat_template": true,
+      "eos_to_cull": "</s>",
+      "release_date": "2024-10-25",
+      "open_weight": true,
+      "parameters": "7B"
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
