@@ -1224,7 +1224,7 @@
       "premade_chat_template": true,
       "eos_to_cull": "<\\|eot_id\\|>",
       "release_date": "2024-12-06",
-      "open_weight": false,
+      "open_weight": true,
       "parameters": "70B"
   },
   {
