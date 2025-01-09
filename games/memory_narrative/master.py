@@ -103,7 +103,7 @@ class MemoryScorer(GameScorer):
                 action = event["action"]
                 if action["type"] == "response0":
                     guess = action['content']
-                    guess = guess.replace('.', '').replace('"', '').split(' ')[-1] # the guess is always the last word in the complete sentence
+                    guess = guess.replace('.', '').replace('"', '').replace('*','').split(' ')[-1] # the guess is always the last word in the complete sentence
                 if action["type"] == "answer0":
                     gold = action['content']
 

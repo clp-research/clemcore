@@ -52,7 +52,7 @@ class MemoryTurns(DialogueGameMaster):
         self.game_id = self.game_instance['game_id']
         # Create the players
         self.question = self.question_pre_prompt.replace('$QUESTION$', self.game_instance['question'])
-        print('question', self.question)
+        # print('question', self.question)
         self.speaker = Speaker(self.question, self.game_instance['answer'])
         self.rememberer = Rememberer(self.player_models[0])
         if self.game_id == 0:
@@ -71,7 +71,7 @@ class MemoryTurns(DialogueGameMaster):
     def _on_before_game(self):
         # print('_on_before_game', self.initial_prompt)
         # Do something before the game start e.g. add the initial prompts to the message list for the players
-        self.add_user_message(self.rememberer, self.initial_prompt)
+        self.add_user_message(self.rememberer, self.current_prompt)
 
     def _does_game_proceed(self):
         # Determine if the game should proceed. This is also called once initially.
@@ -112,7 +112,7 @@ class MemoryTurnsScorer(GameScorer):
                 action = event["action"]
                 if action["type"] == "response1":
                     guess = action['content']
-                    guess = guess.replace('.', '').replace('"', '').split(' ')[-1] # the guess is always the last word in the complete sentence
+                    guess = guess.replace('.', '').replace('"', '').replace('*','').split(' ')[-1] # the guess is always the last word in the complete sentence
                 if action["type"] == "answer1":
                     gold = action['content']
 

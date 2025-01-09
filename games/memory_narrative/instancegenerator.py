@@ -1,16 +1,14 @@
-"""
-Generate instances for the memory game with narratives instead of structures.
-
-Creates files in ./in
-"""
 import random
+import sys
+import os
 
 from tqdm import tqdm
 
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 
-N_INSTANCES = 5  # how many different target words; zero means "all"
+N_INSTANCES = int(os.getenv('NINSTANCES')) or 5  
+
 attrs = ['firstnames',
          'lastnames',
          'companies',

@@ -7,7 +7,7 @@ from tqdm import tqdm
 import clemgame
 from clemgame.clemgame import GameInstanceGenerator
 
-N_INSTANCES = int(os.getenv('NINSTANCES')) or 5   
+N_INSTANCES = int(os.getenv('NINSTANCES')) or 5  
 
 attrs = ['firstnames',
          'lastnames',
@@ -21,9 +21,9 @@ attrs = ['firstnames',
 LANGUAGE = "en"
 
 logger = clemgame.get_logger(__name__)
-GAME_NAME = "memory_turns"
+GAME_NAME = "memory_narrative_turns"
 
-class MemoryTurnsGameInstaceGenerator(GameInstanceGenerator):
+class MemoryNarrativeTurnsGameInstaceGenerator(GameInstanceGenerator):
 
 
     def __init__(self):
@@ -84,9 +84,9 @@ class MemoryTurnsGameInstaceGenerator(GameInstanceGenerator):
         experiment["language"] = LANGUAGE  # experiment parameters
         experiment['initial_prompt'] = initial_prompt
 
-        prompts = []
         questions = []
         answers = []
+        prompts = []
         
         for game_id in tqdm(range(N_INSTANCES)):
             prompt = ''
@@ -98,11 +98,9 @@ class MemoryTurnsGameInstaceGenerator(GameInstanceGenerator):
             lastname = self.getrandom('lastnames')
             email = self.generate_email(firstname.lower(), lastname.lower())
             prompt += '\n\n'
-            prompt += f'First Name: {firstname}\n'
-            prompt += f'Last Name: {lastname}\n'
-            prompt += f'Email: {email}\n'
+            prompt += f'name is {firstname} {lastname}, email is {email},'
             work = self.getrandomremove('companies')
-            prompt += f'Work: {work}\n'
+            prompt += f' works for {work}'
             attr_map = {'first name': firstname, 
                         'last name':lastname
                         # 'full name': f'{firstname} {lastname}',
@@ -112,16 +110,17 @@ class MemoryTurnsGameInstaceGenerator(GameInstanceGenerator):
             # always include the hobby as a fallback
             hobby = self.getrandomremove('hobbies')
             target_seed_options['hobby'] = hobby
-            prompt += f'Hobby: {hobby}\n'
+            prompt += f', likes {hobby}'
             # also include clothing and trait at random
             if self.coin_toss(): 
                 clothing = self.getrandomremove('clothing')
                 target_seed_options['clothing'] = clothing
-                prompt += f'Clothing: {clothing}\n'
+                prompt += f', wears {clothing}'
             if self.coin_toss(): 
                 trait = self.getrandomremove('traits')
                 target_seed_options['trait'] = trait
-                prompt += f'Physical Traits: {trait}\n'
+                prompt += f', has {trait}'
+            prompt += '.\n'
             
             target_attr = random.choice(list(attr_map.keys()))
             target_seed = random.choice(list(target_seed_options.keys()))
@@ -145,4 +144,4 @@ class MemoryTurnsGameInstaceGenerator(GameInstanceGenerator):
             game_instance['qa_game_id'] = ask_id
 
 if __name__ == '__main__':
-    MemoryTurnsGameInstaceGenerator().generate()
+    MemoryNarrativeTurnsGameInstaceGenerator().generate()
