@@ -1262,7 +1262,7 @@
       "backend": "huggingface_local",
       "huggingface_id": "NovaSky-AI/Sky-T1-32B-Preview",
       "premade_chat_template": true,
-      "eos_to_cull": "<\\|end_of_text\\|>",
+      "eos_to_cull": "<\\|endoftext\\|>",
       "release_date": "2025-01-07",
       "open_weight": true,
       "parameters": "32B"
