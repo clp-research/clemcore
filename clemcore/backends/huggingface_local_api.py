@@ -226,9 +226,48 @@ class HuggingfaceLocalModel(backends.Model):
 
         response = {'response': model_output}
 
+        # handle CoT output:
+        if hasattr(self.model_spec, 'cot_output') and self.model_spec.cot_output:
+            cot_end_tag = self.model_spec.cot_end_tag
+            eos_string = self.model_spec.eos_string
+            extra_generation_count = 0
+            # check if CoT and result are done:
+            while eos_string not in model_output:
+                logger.info(f"{self.model.model_spec.model_name} CoT and result not complete after {extra_generation_count} additional generations...")
+                # concatenate output:
+                prompt_text = prompt_text + model_output
+                # tokenize new input context:
+                incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text)
+                # generate more:
+                if do_sample:
+                    model_output_ids = self.model.generate(
+                        incomplete_cot_prompt_tokens,
+                        temperature=self.get_temperature(),
+                        max_new_tokens=self.get_max_tokens(),
+                        do_sample=do_sample
+                    )
+                else:
+                    model_output_ids = self.model.generate(
+                        incomplete_cot_prompt_tokens,
+                        max_new_tokens=self.get_max_tokens(),
+                        do_sample=do_sample
+                    )
+                model_output = self.tokenizer.batch_decode(model_output_ids)[0]
+                extra_generation_count += 1
+            logger.info(f"Generated {extra_generation_count} additional times to reach EOS after CoT.")
+            # split complete output:
+            cot_split = model_output.rsplit(cot_end_tag, maxsplit=1)
+            cot_content = cot_split[0]
+            result_content = cot_split[1]
+            response['response'] = model_output
+            response['cot_content'] = cot_content
+
         # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:
-            response_text = model_output.replace(prompt_text, '').strip()
+            if hasattr(self.model_spec, 'cot_output') and self.model_spec.cot_output:
+                response_text = result_content
+            else:
+                response_text = model_output.replace(prompt_text, '').strip()
 
             if 'output_split_prefix' in self.model_spec:
                 response_text = model_output.rsplit(self.model_spec['output_split_prefix'], maxsplit=1)[1]
