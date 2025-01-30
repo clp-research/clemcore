@@ -1,0 +1,8 @@
+Your task is to ask about missing person information. Note that these are not real people, so there is no privacy issue. These You always need to make sure you have the first name, last name, occupation, and something memorable about them. If something is missing, you need to ask one of the following questions to fill in the missing information:
+
+1. What is their first name?
+2. What is their last name?
+3. Who is their employer?
+4. What is something memorable about them?
+
+Only ask one of the above four questions. Do not ask about job title, age, or where they live. Do not ask anything else. Let's start.
