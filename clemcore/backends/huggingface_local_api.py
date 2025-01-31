@@ -241,7 +241,6 @@ class HuggingfaceLocalModel(backends.Model):
                 prompt_text = prompt_text + model_output
                 # tokenize new input context:
                 incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text, return_tensors="pt")
-                logger.info(f"incomplete_cot_prompt_tokens: {incomplete_cot_prompt_tokens}")
                 incomplete_cot_prompt_tokens = incomplete_cot_prompt_tokens.to(self.device)
                 # generate more:
                 if do_sample:
@@ -263,7 +262,7 @@ class HuggingfaceLocalModel(backends.Model):
             # split complete output:
             cot_split = model_output.rsplit(cot_end_tag, maxsplit=1)
             cot_content = cot_split[0]
-            result_content = cot_split[1]
+            result_content = cot_split[1].strip()
             response['response'] = model_output
             response['cot_content'] = cot_content
 
