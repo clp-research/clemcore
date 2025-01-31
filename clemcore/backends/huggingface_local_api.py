@@ -240,7 +240,8 @@ class HuggingfaceLocalModel(backends.Model):
                 # concatenate output:
                 prompt_text = prompt_text + model_output
                 # tokenize new input context:
-                incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text)
+                incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text, return_tensors="pt")
+                logger.info(f"incomplete_cot_prompt_tokens: {incomplete_cot_prompt_tokens}")
                 incomplete_cot_prompt_tokens = incomplete_cot_prompt_tokens.to(self.device)
                 # generate more:
                 if do_sample:
