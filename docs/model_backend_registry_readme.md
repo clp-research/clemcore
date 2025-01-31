@@ -49,6 +49,14 @@ create the logged input prompt.
 `eos_string` (string): In case the model file does not contain a predefined EOS token, this string will be used to 
 create the logged input prompt.  
 `output_split_prefix`(string): The model's raw output will be rsplit using this string, and the remaining output following this string will be considered the model output. This is necessary for some models that decode tokens differently than they encode them, to assure that the prompt is properly removed from model responses. Example: `assistant\n`
+### CoT output model handling
+For models that produce CoT with variable length before producing their proper response, generation can be continued 
+until EOS is reached. The proper result is then split off from the CoT and passed as the response text for processing by 
+clemgames. The following keys are used for CoT output processing:  
+`eos_string` (string): Needed to detect finish of CoT and final output.  
+`cot_output` (bool): Must be `true` to allow for continued generation.  
+`cot_end_tag` (string): The CoT end tag string used to split CoT from proper result.  
+`cot_start_tag` (string): **Optional**, may be used for cleaning the CoT for later inspection.
 #### Advanced
 These key/values are recommended to only be used with a custom registry file:
 `execute_on` (string): Either `gpu`, to run the model with all layers loaded to GPU using VRAM, or `cpu` to run the model on CPU 

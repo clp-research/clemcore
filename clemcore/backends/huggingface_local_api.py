@@ -228,10 +228,11 @@ class HuggingfaceLocalModel(backends.Model):
 
         # handle CoT output:
         if hasattr(self.model_spec, 'cot_output') and self.model_spec.cot_output:
+            logger.info(f"{self.model.model_spec.model_name} is CoT output model, keep generating until EOS.")
             cot_end_tag = self.model_spec.cot_end_tag
             eos_string = self.model_spec.eos_string
             extra_generation_count = 0
-            # check if CoT and result are done:
+            # keep generating until EOS:
             while eos_string not in model_output:
                 logger.info(f"{self.model.model_spec.model_name} CoT and result not complete after {extra_generation_count} additional generations...")
                 # concatenate output:
