@@ -237,8 +237,8 @@ class HuggingfaceLocalModel(backends.Model):
                 logger.info(f"{self.model_spec.model_name} CoT and result not complete after {extra_generation_count} additional generations...")
                 if cot_end_tag in model_output:
                     logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
-                # concatenate output:
-                prompt_text = prompt_text + model_output
+                # re-encode output:
+                prompt_text = model_output
                 # tokenize new input context:
                 incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text, return_tensors="pt")
                 incomplete_cot_prompt_tokens = incomplete_cot_prompt_tokens.to(self.device)
