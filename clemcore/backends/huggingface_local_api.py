@@ -239,6 +239,7 @@ class HuggingfaceLocalModel(backends.Model):
                     logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
                 # re-encode output:
                 prompt_text = model_output
+                logger.info(f"Input context:\n{prompt_text}")
                 # tokenize new input context:
                 incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text, return_tensors="pt")
                 incomplete_cot_prompt_tokens = incomplete_cot_prompt_tokens.to(self.device)
@@ -257,6 +258,7 @@ class HuggingfaceLocalModel(backends.Model):
                         do_sample=do_sample
                     )
                 model_output = self.tokenizer.batch_decode(model_output_ids)[0]
+                logger.info(f"Model output:\n{model_output}")
                 extra_generation_count += 1
             logger.info(f"Generated {extra_generation_count} additional times to reach EOS after CoT.")
             # split complete output:
