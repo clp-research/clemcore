@@ -234,7 +234,7 @@ class HuggingfaceLocalModel(backends.Model):
             cot_end_tag = self.model_spec.cot_end_tag
             extra_generation_count = 0
             # keep generating until EOS:
-            while eos_string not in model_output:
+            while not model_output.endswith(eos_string):
                 logger.info(f"{self.model_spec.model_name} CoT and result not complete after {extra_generation_count} additional generations...")
                 if cot_end_tag in model_output:
                     logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
