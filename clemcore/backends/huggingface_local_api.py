@@ -228,6 +228,7 @@ class HuggingfaceLocalModel(backends.Model):
 
         # handle CoT output:
         if hasattr(self.model_spec, 'cot_output') and self.model_spec.cot_output:
+            logger.info(f"First model output: {model_output}")
             eos_string = self.model_spec.eos_string
             logger.info(f"{self.model_spec.model_name} is CoT output model, keep generating until EOS '{eos_string}'.")
             cot_end_tag = self.model_spec.cot_end_tag
@@ -238,7 +239,9 @@ class HuggingfaceLocalModel(backends.Model):
                 if cot_end_tag in model_output:
                     logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
                 # re-encode output:
-                prompt_text = model_output
+                # prompt_text = model_output
+                # remove leading BOS string to prevent BOS stacking:
+                prompt_text = model_output.replace("<｜begin▁of▁sentence｜>", "")
                 logger.info(f"Input context:\n{prompt_text}")
                 # tokenize new input context:
                 incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text, return_tensors="pt")
@@ -267,6 +270,7 @@ class HuggingfaceLocalModel(backends.Model):
             result_content = cot_split[1].strip()
             response['response'] = model_output
             response['cot_content'] = cot_content
+            logger.info(f"Stripped output: {result_content}")
 
         # cull input context; equivalent to transformers.pipeline method:
         if not return_full_text:
