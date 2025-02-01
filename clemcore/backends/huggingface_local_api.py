@@ -267,7 +267,7 @@ class HuggingfaceLocalModel(backends.Model):
             # split complete output:
             cot_split = model_output.rsplit(cot_end_tag, maxsplit=1)
             cot_content = cot_split[0]
-            result_content = cot_split[1].strip()
+            result_content = cot_split[1].strip().replace(eos_string, "")
             response['response'] = model_output
             response['cot_content'] = cot_content
             logger.info(f"Stripped output: {result_content}")
