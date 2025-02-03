@@ -232,11 +232,18 @@ class HuggingfaceLocalModel(backends.Model):
             eos_string = self.model_spec.eos_string
             logger.info(f"{self.model_spec.model_name} is CoT output model, keep generating until EOS '{eos_string}'.")
             cot_end_tag = self.model_spec.cot_end_tag
+            cot_done = False
             if cot_end_tag in model_output:
                 logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
+                cot_done = True
             extra_generation_count = 0
+            if hasattr(self.model_spec, 'cot_extra_generation_limit') and self.model_spec.cot_extra_generation_limit:
+                extra_generation_limit = self.model_spec.cot_extra_generation_limit
+            else:  # default to limit of 50 extra generations:
+                extra_generation_limit = 50
+            eos_generated = False
             # keep generating until EOS:
-            while not model_output.endswith(eos_string):
+            while not model_output.endswith(eos_string) and extra_generation_count <= extra_generation_limit:
                 logger.info(f"{self.model_spec.model_name} CoT and result not complete after {extra_generation_count} additional generations...")
                 # re-encode output:
                 # prompt_text = model_output
@@ -245,7 +252,7 @@ class HuggingfaceLocalModel(backends.Model):
                 # logger.info(f"Extra generation {extra_generation_count} input context:\n{prompt_text}")
                 # tokenize new input context:
                 incomplete_cot_prompt_tokens = self.tokenizer.encode(prompt_text, return_tensors="pt")
-                logger.info(f"Extra generation {extra_generation_count} input context token count: {incomplete_cot_prompt_tokens.size()}")
+                # logger.info(f"Extra generation {extra_generation_count} input context token count: {incomplete_cot_prompt_tokens.size()[1]}")
                 incomplete_cot_prompt_tokens = incomplete_cot_prompt_tokens.to(self.device)
                 # generate more:
                 if do_sample:
@@ -265,8 +272,15 @@ class HuggingfaceLocalModel(backends.Model):
                 # logger.info(f"Extra generation {extra_generation_count} model output:\n{model_output}")
                 if cot_end_tag in model_output:
                     logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
+                    cot_done = True
                 extra_generation_count += 1
-            logger.info(f"Generated {extra_generation_count} additional times to reach EOS after CoT.")
+                if eos_string in model_output:
+                    logger.info(f"EOS in model output, extra generations done.")
+                    eos_generated = True
+            if eos_generated:
+                logger.info(f"Generated {extra_generation_count} additional times to reach EOS after CoT.")
+            else:
+                logger.info(f"Generated {extra_generation_count} additional times without reaching EOS - extra generation limit reached.")
             # split complete output:
             cot_split = model_output.rsplit(cot_end_tag, maxsplit=1)
             cot_content = cot_split[0]
