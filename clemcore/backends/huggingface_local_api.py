@@ -274,8 +274,8 @@ class HuggingfaceLocalModel(backends.Model):
                     logger.info(f"CoT end tag {cot_end_tag} in model output, CoT done.")
                     cot_done = True
                 extra_generation_count += 1
-                if eos_string in model_output:
-                    logger.info(f"EOS in model output, extra generations done.")
+                if model_output.endswith(eos_string):
+                    logger.info(f"Model output ends with EOS, extra generations done.")
                     eos_generated = True
             if eos_generated:
                 logger.info(f"Generated {extra_generation_count} additional times to reach EOS after CoT.")
