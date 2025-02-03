@@ -57,6 +57,8 @@ output processing:
 `eos_string` (string): Needed to detect finish of CoT and final output.  
 `cot_output` (bool): Must be `true` to allow for continued generation.  
 `cot_end_tag` (string): The CoT end tag string used to split CoT from proper result.  
+`cot_extra_generation_limit` (int): **Optional** Maximum number of extra generations, to prevent endless loops. If the 
+key is not present or its value is falsy, the limit defaults to 50 extra generations.
 `cot_start_tag` (string): **Optional**, may be used for cleaning the CoT for later inspection.
 #### Advanced
 These key/values are recommended to only be used with a custom registry file:
