@@ -113,18 +113,19 @@ def score(game_name: str, experiment_name: str = None, results_dir: str = None):
 
     if experiment_name:
         logger.info("Only scoring experiment: %s", experiment_name)
-    game_spec = clemgame.select_game(game_name)
-    try:
-        game = clemgame.load_game(game_spec, do_setup=False)
-        if experiment_name:
-            game.filter_experiment.append(experiment_name)
-        time_start = datetime.now()
-        game.compute_scores(results_dir)
-        time_end = datetime.now()
-        logger.info(f"Scoring {game.game_name} took {str(time_end - time_start)}")
-    except Exception as e:
-        stdout_logger.exception(e)
-        logger.error(e, exc_info=True)
+    game_specs = clemgame.select_game(game_name)
+    for game_spec in game_specs:
+        try:
+            game = clemgame.load_game(game_spec, do_setup=False)
+            if experiment_name:
+                game.filter_experiment.append(experiment_name)
+            time_start = datetime.now()
+            game.compute_scores(results_dir)
+            time_end = datetime.now()
+            logger.info(f"Scoring {game.game_name} took {str(time_end - time_start)}")
+        except Exception as e:
+            stdout_logger.exception(e)
+            logger.error(e, exc_info=True)
 
 
 def transcripts(game_name: str, experiment_name: str = None, results_dir: str = None):
@@ -139,17 +140,16 @@ def transcripts(game_name: str, experiment_name: str = None, results_dir: str = 
     stdout_logger.info(f"Transcribing game {game_name}")
     if experiment_name:
         logger.info("Only transcribing experiment: %s", experiment_name)
-    game_spec = clemgame.select_game(game_name)
-    try:
-        game = clemgame.load_game(game_spec, do_setup=False)
-        if experiment_name:
-            game.filter_experiment.append(experiment_name)
-        time_start = datetime.now()
-        game.build_transcripts(results_dir)
-        time_end = datetime.now()
-        logger.info(f"Building transcripts for {game.game_name} took {str(time_end - time_start)}")
-    except Exception as e:
-        stdout_logger.exception(e)
-        logger.error(e, exc_info=True)
-
-
+    game_specs = clemgame.select_game(game_name)
+    for game_spec in game_specs:
+        try:
+            game = clemgame.load_game(game_spec, do_setup=False)
+            if experiment_name:
+                game.filter_experiment.append(experiment_name)
+            time_start = datetime.now()
+            game.build_transcripts(results_dir)
+            time_end = datetime.now()
+            logger.info(f"Building transcripts for {game.game_name} took {str(time_end - time_start)}")
+        except Exception as e:
+            stdout_logger.exception(e)
+            logger.error(e, exc_info=True)
