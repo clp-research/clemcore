@@ -3,6 +3,7 @@ import inspect
 import logging
 import os
 import sys
+from contextlib import contextmanager
 from datetime import datetime
 from typing import List, Dict
 from tqdm import tqdm
@@ -197,7 +198,7 @@ class GameBenchmark(GameResourceLocator):
             dialogue_partners: List[List[backends.Model]] = []
 
             if player_models:  # favor runtime argument over experiment config
-                dialogue_partners = [player_models]
+                dialogue_partners = [list([m for m in player_models])]  # shallow copy
             elif "dialogue_partners" in experiment:  # edge-case when names are given in experiment config
                 for dialogue_pair_names in experiment["dialogue_partners"]:
                     player_models = []
@@ -206,7 +207,7 @@ class GameBenchmark(GameResourceLocator):
                         player_models.append(player_model)
                     dialogue_partners.append(player_models)
                 module_logger.info(f"{self.game_name}: Detected 'dialogue_partners' in experiment config. "
-                                 f"Will run with: {dialogue_partners}")
+                                   f"Will run with: {dialogue_partners}")
 
             if not dialogue_partners:
                 message = (f"{self.game_name}: Neither 'dialogue_partners' set in experiment instance"
@@ -239,7 +240,7 @@ class GameBenchmark(GameResourceLocator):
                 episode_counter = 0
 
                 module_logger.info("Activity: %s Experiment: %s Partners: %s Episode: %d",
-                                 self.game_name, experiment_name, dialogue_pair_desc, episode_counter)
+                                   self.game_name, experiment_name, dialogue_pair_desc, episode_counter)
 
                 experiment_record_dir = f"{experiment_idx}_{experiment_name}"
                 experiment_config = {k: experiment[k] for k in experiment if k != 'game_instances'}
@@ -260,7 +261,7 @@ class GameBenchmark(GameResourceLocator):
                 for game_instance in tqdm(game_instances, desc="Playing games"):
                     game_id = game_instance["game_id"]
                     module_logger.info("Activity: %s Experiment: %s Episode: %d Game: %s",
-                                     self.game_name, experiment_name, episode_counter, game_id)
+                                       self.game_name, experiment_name, episode_counter, game_id)
                     episode_dir = experiment_record_dir + f"/episode_{episode_counter}"
                     self.store_results_file(game_instance,
                                             f"instance.json",
@@ -310,35 +311,61 @@ class GameBenchmark(GameResourceLocator):
         """
         raise NotImplementedError()
 
-    @staticmethod
-    def is_game_benchmark(obj):
-        """Check whether a class inherited from GameBenchmark.
-        Args:
-            obj: The object instance to check.
-        Returns:
-            True if the passed object is a subclass of GameBenchmark, False otherwise.
-        """
-        if inspect.isclass(obj) and issubclass(obj, GameBenchmark) and obj is not GameBenchmark:
-            return True
-        return False
 
-    @staticmethod
-    def load_from_spec(game_spec: GameSpec, do_setup: bool = True, instances_name: str = None) -> "GameBenchmark":
-        """Load a clemgame using a GameSpec.
-        Args:
-            game_spec: A GameSpec instance holding specific clemgame data.
-            do_setup: Determines if the clemgame's setup method will be executed upon loading.
-            instances_name: The name of the instances file to be used for the clemgame's setup if do_setup is True.
-        """
-        # append game directory to system path for loading game specific dependencies
-        sys.path.insert(0, game_spec.game_path)
-        # load game module from this master file
-        spec = importlib.util.spec_from_file_location(game_spec.game_name, game_spec.get_game_file())
-        game_module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(game_module)
+def is_game_benchmark(obj):
+    """Check whether a class inherited from GameBenchmark.
+    Args:
+        obj: The object instance to check.
+    Returns:
+        True if the passed object is a subclass of GameBenchmark, False otherwise.
+    """
+    if inspect.isclass(obj) and issubclass(obj, GameBenchmark) and obj is not GameBenchmark:
+        return True
+    return False
 
+
+@contextmanager
+def load_from_spec(game_spec: GameSpec, do_setup: bool = True, instances_name: str = None) -> GameBenchmark:
+    """Load a clemgame using a GameSpec.
+    Args:
+        game_spec: A GameSpec instance holding specific clemgame data.
+        do_setup: Determines if the clemgame's setup method will be executed upon loading.
+        instances_name: The name of the instances file to be used for the clemgame's setup if do_setup is True.
+    """
+    stdout_logger.info("Loading game benchmark for %s", game_spec.game_name)
+    # add parent directory to python path if matching naming convention to load additional files if necessary
+    parent_path = os.path.dirname(os.path.abspath(game_spec.game_path))
+    parent_dir_name = os.path.basename(os.path.normpath(parent_path))
+    game_dir_name = os.path.basename(os.path.normpath(game_spec.game_path))
+    if game_dir_name.startswith(parent_dir_name):
+        stdout_logger.debug("Temporarily added game parent directory to python path: %s", parent_path)
+        sys.path.insert(0, parent_path)
+
+    # append game directory to system path for loading game specific dependencies
+    sys.path.insert(0, game_spec.game_path)
+
+    # keep track of potentially additional modules which must be unloaded after the run
+    before_load = set(sys.modules.keys())
+
+    # load game module from this master file
+    spec = importlib.util.spec_from_file_location(game_spec.game_name, game_spec.get_game_file())
+    game_module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(game_module)
+
+    # cleanup python path again
+    if game_dir_name.startswith(parent_dir_name):
+        sys.path.remove(parent_path)
+    sys.path.remove(game_spec.game_path)
+    stdout_logger.info("Removed temporarily added python paths")
+
+    after_load = set(sys.modules.keys())
+    extra_modules = after_load - before_load
+    if extra_modules:
+        stdout_logger.info("Temporarily loaded additional game modules: %s", extra_modules)
+
+    try:
         # extract game class from master.py (is_game checks inheritance from GameBenchmark)
-        game_subclasses = inspect.getmembers(game_module, predicate=GameBenchmark.is_game_benchmark)
+        game_subclasses = inspect.getmembers(game_module, predicate=is_game_benchmark)
         if len(game_subclasses) == 0:
             raise LookupError(f"There is no GameBenchmark defined in {game_module}. "
                               f"Create such a class and try again.")
@@ -350,4 +377,8 @@ class GameBenchmark(GameResourceLocator):
         if do_setup:
             game_cls.setup(instances_name)
 
-        return game_cls
+        yield game_cls
+    finally:
+        for mod in extra_modules:
+            del sys.modules[mod]
+        stdout_logger.info("Removed temporarily loaded additional game modules")

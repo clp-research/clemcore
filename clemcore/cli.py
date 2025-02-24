@@ -6,7 +6,8 @@ from typing import List, Dict, Union
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
-from clemcore.clemgame import GameBenchmark, GameRegistry, GameSpec
+from clemcore.clemgame import GameRegistry, GameSpec
+from clemcore.clemgame import benchmark
 
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
@@ -114,18 +115,18 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
             player_models.append(model)
 
         for game_spec in game_specs:
-            game_benchmark = GameBenchmark.load_from_spec(game_spec, instances_name=instances_name)
-            logger.info(
-                f'Running {game_spec["game_name"]} '
-                f'(models={player_models if player_models is not None else "see experiment configs"})')
-            stdout_logger.info(f"Running game {game_spec['game_name']}")
-            if experiment_name:  # leaving this as-is for now, needs discussion conclusions
-                logger.info("Only running experiment: %s", experiment_name)
-                game_benchmark.filter_experiment.append(experiment_name)
-            time_start = datetime.now()
-            game_benchmark.run(player_models=player_models, results_dir=results_dir)
-            time_end = datetime.now()
-            logger.info(f'Running {game_spec["game_name"]} took {str(time_end - time_start)}')
+            with benchmark.load_from_spec(game_spec, instances_name=instances_name) as game_benchmark:
+                logger.info(
+                    f'Running {game_spec["game_name"]} '
+                    f'(models={player_models if player_models is not None else "see experiment configs"})')
+                stdout_logger.info(f"Running game {game_spec['game_name']}")
+                if experiment_name:  # leaving this as-is for now, needs discussion conclusions
+                    logger.info("Only running experiment: %s", experiment_name)
+                    game_benchmark.filter_experiment.append(experiment_name)
+                time_start = datetime.now()
+                game_benchmark.run(player_models=player_models, results_dir=results_dir)
+                time_end = datetime.now()
+                logger.info(f'Running {game_spec["game_name"]} took {str(time_end - time_start)}')
 
     except Exception as e:
         stdout_logger.exception(e)
@@ -150,13 +151,13 @@ def score(game_selector: Union[str, Dict, GameSpec], experiment_name: str = None
     game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
     for game_spec in game_specs:
         try:
-            game_selector = GameBenchmark.load_from_spec(game_spec, do_setup=False)
-            if experiment_name:
-                game_selector.filter_experiment.append(experiment_name)
-            time_start = datetime.now()
-            game_selector.compute_scores(results_dir)
-            time_end = datetime.now()
-            logger.info(f"Scoring {game_selector.game_name} took {str(time_end - time_start)}")
+            with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
+                if experiment_name:
+                    game_benchmark.filter_experiment.append(experiment_name)
+                time_start = datetime.now()
+                game_benchmark.compute_scores(results_dir)
+                time_end = datetime.now()
+                logger.info(f"Scoring {game_benchmark.game_name} took {str(time_end - time_start)}")
         except Exception as e:
             stdout_logger.exception(e)
             logger.error(e, exc_info=True)
@@ -179,13 +180,13 @@ def transcripts(game_selector: Union[str, Dict, GameSpec], experiment_name: str 
     game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
     for game_spec in game_specs:
         try:
-            game_selector = GameBenchmark.load_from_spec(game_spec, do_setup=False)
-            if experiment_name:
-                game_selector.filter_experiment.append(experiment_name)
-            time_start = datetime.now()
-            game_selector.build_transcripts(results_dir)
-            time_end = datetime.now()
-            logger.info(f"Building transcripts for {game_selector.game_name} took {str(time_end - time_start)}")
+            with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
+                if experiment_name:
+                    game_benchmark.filter_experiment.append(experiment_name)
+                time_start = datetime.now()
+                game_benchmark.build_transcripts(results_dir)
+                time_end = datetime.now()
+                logger.info(f"Building transcripts for {game_benchmark.game_name} took {str(time_end - time_start)}")
         except Exception as e:
             stdout_logger.exception(e)
             logger.error(e, exc_info=True)
