@@ -4,6 +4,8 @@ from retry import retry
 import json
 import openai
 import backends
+import base64
+import imghdr
 import httpx
 
 from backends.utils import ensure_messages_format
@@ -42,6 +44,50 @@ class GenericOpenAIModel(backends.Model):
         super().__init__(model_spec)
         self.client = client
 
+    def encode_image(self, image_path):
+        if image_path.startswith('http'):
+            image_bytes = httpx.get(image_path).content
+            image_type = imghdr.what(None, image_bytes)
+            return True, image_path, image_type
+        with open(image_path, "rb") as image_file:
+            image_type = imghdr.what(image_path)
+            return False, base64.b64encode(image_file.read()).decode('utf-8'), 'image/'+str(image_type)
+    def encode_messages(self, messages):
+        encoded_messages = []
+
+        for message in messages:
+            if "image" not in message.keys():
+                encoded_messages.append(message)
+            else:
+                this = {"role": message["role"],
+                        "content": [
+                            {
+                                "type": "text",
+                                "text": message["content"].replace(" <image> ", " ")
+                            }
+                        ]}
+
+                if self.model_spec.has_attr('supports_images'):
+                    if "image" in message.keys():
+
+                        if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
+                            logger.info(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                            raise Exception(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                        else:
+                            # encode each image
+                            for image in message['image']:
+                                is_url, loaded, image_type = self.encode_image(image)
+                                if is_url:
+                                    this["content"].append(dict(type="image_url", image_url={
+                                        "url": loaded
+                                    }))
+                                else:
+                                    this["content"].append(dict(type="image_url", image_url={
+                                        "url": f"data:{image_type};base64,{loaded}"
+                                    }))
+                encoded_messages.append(this)
+        return encoded_messages
+
     @retry(tries=3, delay=0, logger=logger)
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
@@ -55,7 +101,8 @@ class GenericOpenAIModel(backends.Model):
                 ]
         :return: the continuation
         """
-        prompt = messages
+        prompt = self.encode_messages(messages)
+
         api_response = self.client.chat.completions.create(model=self.model_spec.model_id, messages=prompt,
                                                            temperature=self.get_temperature(),
                                                            max_tokens=self.get_max_tokens())

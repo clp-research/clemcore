@@ -156,6 +156,15 @@
       "parameters": "1.76T"
   },
   {
+      "model_name": "o1-2024-12-17",
+      "model_id": "o1-2024-12-17",
+      "backend": "openai",
+      "release_date": "2024-12-17",
+      "open_weight": false,
+      "parameters": "",
+      "o1_model": true
+  },
+  {
       "model_name": "o1-preview-2024-09-12",
       "model_id": "o1-preview-2024-09-12",
       "backend": "openai",
@@ -367,6 +376,28 @@
       "estimated_parameters": ""
   },
   {
+      "model_name": "claude-3-5-haiku-20241022",
+      "model_id": "claude-3-5-haiku-20241022",
+      "backend": "anthropic",
+      "supports_images": false,
+      "support_multiple_images": false,
+      "release_date": "2024-10-22",
+      "open_weight": false,
+      "parameters": "",
+      "estimated_parameters": ""
+  },
+  {
+      "model_name": "claude-3-5-sonnet-20241022",
+      "model_id": "claude-3-5-sonnet-20241022",
+      "backend": "anthropic",
+      "supports_images": true,
+      "support_multiple_images": true,
+      "release_date": "2024-10-22",
+      "open_weight": false,
+      "parameters": "",
+      "estimated_parameters": ""
+  },
+  {
       "model_name": "gemini-1.0-pro-001",
       "model_id": "gemini-1.0-pro-001",
       "backend": "google",
@@ -446,6 +477,16 @@
       "release_date": "2024-10-03",
       "open_weight": false,
       "parameters": "8B"
+  },
+    {
+      "model_name": "gemini-2.0-flash-exp",
+      "model_id": "gemini-2.0-flash-exp",
+      "backend": "google",
+      "supports_images": true,
+      "support_multiple_images": true,
+      "release_date": "2024-12-11",
+      "open_weight": false,
+      "parameters": ""
   },
   {
       "model_name": "luminous-supreme-control",
@@ -1226,6 +1267,16 @@
       "release_date": "2024-12-06",
       "open_weight": true,
       "parameters": "70B"
+  },
+  {
+      "model_name": "Sky-T1-32B-Preview",
+      "backend": "huggingface_local",
+      "huggingface_id": "NovaSky-AI/Sky-T1-32B-Preview",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|endoftext\\|>",
+      "release_date": "2025-01-07",
+      "open_weight": true,
+      "parameters": "32B"
   },
   {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
