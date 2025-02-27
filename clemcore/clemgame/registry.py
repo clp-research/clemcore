@@ -59,12 +59,19 @@ class GameSpec(SimpleNamespace):
         return json.dumps(self.__dict__, indent=2)
 
     @classmethod
-    def from_directory(cls, dir_path: str):
+    def from_directory(cls, dir_path: str) -> List["GameSpec"]:
         file_path = os.path.join(dir_path, "clemgame.json")
         with open(file_path, encoding='utf-8') as f:
             game_spec = json.load(f)
+        game_specs = []
+        if isinstance(game_spec, dict):
             game_spec["game_path"] = dir_path
-        return cls.from_dict(game_spec)
+            game_specs.append(cls.from_dict(game_spec))
+        elif isinstance(game_spec, list):
+            for _spec in game_spec:
+                _spec["game_path"] = dir_path
+                game_specs.append(cls.from_dict(_spec))
+        return game_specs
 
     @classmethod
     def from_dict(cls, spec: Dict, allow_underspecified: bool = False):
@@ -185,8 +192,8 @@ class GameRegistry:
         candidate_file_path = os.path.join(current_directory, "clemgame.json")
         try:
             if os.path.exists(candidate_file_path):
-                game_spec = GameSpec.from_directory(current_directory)
-                self._game_specs.append(game_spec)
+                game_specs = GameSpec.from_directory(current_directory)
+                self._game_specs.extend(game_specs)
                 return
             for current_file in sorted(os.listdir(current_directory)):
                 file_path = os.path.join(current_directory, current_file)
