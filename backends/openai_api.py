@@ -99,7 +99,7 @@ class OpenAIModel(backends.Model):
         """
         prompt = self.encode_messages(messages)
 
-        if self.model_spec.has_attr('o1_model'):
+        if self.model_spec.has_attr('reasoning_model'):
             api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
                                                                messages=prompt,
                                                                temperature=1)

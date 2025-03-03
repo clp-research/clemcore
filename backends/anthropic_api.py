@@ -98,16 +98,36 @@ class AnthropicModel(backends.Model):
         """
         prompt, system_message = self.encode_messages(messages)
 
-        completion = self.client.messages.create(
-            messages=prompt,
-            system=system_message,
-            model=self.model_spec.model_id,
-            temperature=self.get_temperature(),
-            max_tokens=self.get_max_tokens()
-        )
+        if not self.model_spec.thinking_mode:
 
-        json_output = completion.model_dump_json()
-        response = json.loads(json_output)
-        response_text = completion.content[0].text
+            completion = self.client.messages.create(
+                messages=prompt,
+                system=system_message,
+                model=self.model_spec.model_id,
+                temperature=self.get_temperature(),
+                max_tokens=self.get_max_tokens()
+            )
+
+            json_output = completion.model_dump_json()
+            response = json.loads(json_output)
+            response_text = completion.content[0].text
+
+        else:
+            # set thinking token budget to 4K
+            # max_tokens should be higher than 4K -> so we set to 4K + get_max_tokens()
+            completion = self.client.messages.create(
+                messages=prompt,
+                system=system_message,
+                model=self.model_spec.model_id,
+                max_tokens=4000 + self.get_max_tokens(),
+                thinking={
+                    "type": "enabled",
+                    "budget_tokens": 4000
+                },
+            )
+
+            json_output = completion.model_dump_json()
+            response = json.loads(json_output)
+            response_text = completion.content[1].text
 
         return prompt, response, response_text

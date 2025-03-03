@@ -32,12 +32,38 @@
       "parameters": "70B"
   },
   {
-      "model_name": "Llama-3-8B-Together.ai",
-      "model_id": "meta-llama/Llama-3-8b-chat-hf",
+      "model_name": "mistral-large-2411",
+      "model_id": "mistralai/mistral-large-2411",
       "backend": "openai_compatible",
-      "release_date": "2024-04-18",
+      "release_date": "2024-11-01",
+      "open_weight": false,
+      "parameters": ""
+  },
+  {
+    
+    "model_name": "deepseek-v3",
+      "model_id": "deepseek/deepseek-chat",
+      "backend": "openai_compatible",
+      "release_date": "2024-12-01",
       "open_weight": true,
-      "parameters": "8B"
+      "parameters": "671B"
+  },
+  {
+    
+    "model_name": "deepseek-r1",
+      "model_id": "deepseek/deepseek-r1",
+      "backend": "openai_compatible",
+      "release_date": "2025-01-20",
+      "open_weight": true,
+      "parameters": "671B"
+  },
+  {
+    "model_name": "qwen-max",
+      "model_id": "qwen/qwen-max",
+      "backend": "openai_compatible",
+      "release_date": "2025-02-01",
+      "open_weight": false,
+      "parameters": ""
   },
   {
       "model_name": "Llama-3-8B-Instruct-Anyscale",
@@ -162,7 +188,7 @@
       "release_date": "2024-12-17",
       "open_weight": false,
       "parameters": "",
-      "o1_model": true
+      "reasoning_model": true
   },
   {
       "model_name": "o1-preview-2024-09-12",
@@ -171,7 +197,7 @@
       "release_date": "2024-09-12",
       "open_weight": false,
       "parameters": "",
-      "o1_model": true
+      "reasoning_model": true
   },
   {
       "model_name": "o1-mini-2024-09-12",
@@ -180,7 +206,16 @@
       "release_date": "2024-09-12",
       "open_weight": false,
       "parameters": "",
-      "o1_model": true
+      "reasoning_model": true
+  },
+  {
+    "model_name": "o3-mini-2025-01-31",
+    "model_id": "o3-mini-2025-01-31",
+    "backend": "openai",
+    "release_date": "2025-01-31",
+    "open_weight": false,
+    "parameters": "",
+    "reasoning_model": true
   },
   {
       "model_name": "gpt-3.5-turbo-0125",
@@ -398,6 +433,18 @@
       "estimated_parameters": ""
   },
   {
+      "model_name": "claude-3-7-sonnet-20250219",
+      "model_id": "claude-3-7-sonnet-20250219",
+      "backend": "anthropic",
+      "supports_images": true,
+      "support_multiple_images": true,
+      "thinking_mode": true,
+      "release_date": "2025-02-19",
+      "open_weight": false,
+      "parameters": "",
+      "estimated_parameters": ""
+  },
+  {
       "model_name": "gemini-1.0-pro-001",
       "model_id": "gemini-1.0-pro-001",
       "backend": "google",
@@ -485,6 +532,16 @@
       "supports_images": true,
       "support_multiple_images": true,
       "release_date": "2024-12-11",
+      "open_weight": false,
+      "parameters": ""
+  },
+  {
+      "model_name": "gemini-2.0-flash-thinking-exp",
+      "model_id": "gemini-2.0-flash-thinking-exp",
+      "backend": "google",
+      "supports_images": true,
+      "support_multiple_images": true,
+      "release_date": "2025-02-01",
       "open_weight": false,
       "parameters": ""
   },
@@ -1212,7 +1269,7 @@
       "backend": "huggingface_local",
       "huggingface_id": "BSC-LT/salamandra-7b-instruct",
       "premade_chat_template": true,
-      "eos_to_cull": "</s>",
+      "eos_to_cull": "<\\|im_end\\|>",
       "release_date": "2024-09-30",
       "open_weight": true,
       "parameters": "7B"
@@ -1287,6 +1344,60 @@
     "release_date": "2024-12-11",
     "open_weight": true,
     "parameters": "14B"
+    },
+  {
+      "model_name": "EuroLLM-9B-Instruct",
+      "backend": "huggingface_local",
+      "requires_api_key": true,
+      "huggingface_id": "utter-project/EuroLLM-9B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-11-28",
+      "open_weight": false,
+      "parameters": "9B"
+  },
+  {
+      "model_name": "QwQ-32B-Preview",
+      "backend": "huggingface_local",
+      "huggingface_id": "Qwen/QwQ-32B-Preview",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|im_end\\|>",
+      "release_date": "2024-11-27",
+      "open_weight": true,
+      "parameters": "32B"
+  },
+  {
+      "model_name": "aya-expanse-32b",
+      "backend": "huggingface_local",
+      "requires_api_key": true,
+      "huggingface_id": "CohereForAI/aya-expanse-32b",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>",
+      "release_date": "2024-10-23",
+      "open_weight": true,
+      "parameters": "32B"
+
+  },
+  {
+      "model_name": "Llama-3.3-70B-Instruct",
+      "backend": "huggingface_local",
+      "requires_api_key": true,
+      "huggingface_id": "meta-llama/Llama-3.3-70B-Instruct",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|eot_id\\|>",
+      "release_date": "2024-12-06",
+      "open_weight": true,
+      "parameters": "70B"
+  },
+  {
+      "model_name": "Sky-T1-32B-Preview",
+      "backend": "huggingface_local",
+      "huggingface_id": "NovaSky-AI/Sky-T1-32B-Preview",
+      "premade_chat_template": true,
+      "eos_to_cull": "<\\|endoftext\\|>",
+      "release_date": "2025-01-07",
+      "open_weight": true,
+      "parameters": "32B"
   },
   {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",

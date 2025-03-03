@@ -1,4 +1,6 @@
 ### Updates
+(March 2025): Version 2.0 of the benchmark has been released (see <https://clembench.github.io/> ). And some major refactorings are underway and will be released very soon. (Preview: The framework will become pip-installable, and the games that make the benchmark will get their own repo. (In fact, the code used for running 2.0 already lives in a separate repo: <https://github.com/clp-research/clemgames> .) Everything will become easier. Hopefully.)
+
 (February 2024): We have updated the framework code. If you have written games using the initial release version, see [this guide](docs/howto_update_to_v1.md) on how to update your game.
 
 # clembench: A Framework for the Systematic Evaluation of Chat-Optimized Language Models as Conversational Agents
