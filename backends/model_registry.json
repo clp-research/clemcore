@@ -1258,6 +1258,37 @@
       "parameters": "8B"
   },
   {
+    "model_name": "Mistral-Small-24B-Instruct-2501",
+    "backend": "huggingface_local",
+    "huggingface_id": "mistralai/Mistral-Small-24B-Instruct-2501",
+    "requires_api_key": true,
+    "premade_chat_template": true,
+    "eos_to_cull": "</s>",
+    "release_date": "2025-01-30",
+    "open_weight": true,
+    "parameters": "24B"
+  },
+  {
+    "model_name": "OLMo-2-1124-13B-Instruct",
+    "backend": "huggingface_local",
+    "huggingface_id": "allenai/OLMo-2-1124-13B-Instruct",
+    "premade_chat_template": true,
+    "eos_to_cull": "<\\|endoftext\\|>",
+    "release_date": "2024-12-18",
+    "open_weight": true,
+    "parameters": "13B"
+  },
+  {
+    "model_name": "phi-4",
+    "backend": "huggingface_local",
+    "huggingface_id": "microsoft/phi-4",
+    "premade_chat_template": true,
+    "eos_to_cull": "<\\|endoftext\\|>",
+    "release_date": "2024-12-11",
+    "open_weight": true,
+    "parameters": "14B"
+  },
+  {
       "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
       "backend": "llamacpp",
       "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
