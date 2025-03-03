@@ -48,7 +48,7 @@ def list_models(verbose: bool):
             print(wrapper.fill("\nModelSpec: " + model_spec.to_string()))
 
 
-def list_games(verbose: bool):
+def list_games(game_selector: str, verbose: bool):
     """List all games specified in the game registries.
     Only loads those for which master.py can be found in the specified path.
     See game registry doc for more infos (TODO: add link)
@@ -59,9 +59,12 @@ def list_games(verbose: bool):
     if not game_registry:
         print("No clemgames found.")
         return
-    print(f"Found '{len(game_registry)}' game specs:")
+    if game_selector != "all":
+        game_selector = GameSpec.from_string(game_selector)
+    game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
+    print(f"Found '{len(game_specs)}' game specs that match the game_selector='{game_selector}'")
     wrapper = textwrap.TextWrapper(initial_indent="\t", width=70, subsequent_indent="\t")
-    for game_spec in game_registry:
+    for game_spec in game_specs:
         game_name = f'{game_spec["game_name"]}:\n'
         if verbose:
             print(game_name,
@@ -206,7 +209,7 @@ def read_gen_args(args: argparse.Namespace):
 def cli(args: argparse.Namespace):
     if args.command_name == "list":
         if args.mode == "games":
-            list_games(args.verbose)
+            list_games(args.selector, args.verbose)
         elif args.mode == "models":
             list_models(args.verbose)
         elif args.mode == "backends":
@@ -230,31 +233,34 @@ def cli(args: argparse.Namespace):
     Use good old argparse to run the commands.
 
     To list available games: 
-    $> python3 scripts/cli.py list games
+    $> clem list [games]
 
+    To list available models: 
+    $> clem list models
+    
     To list available backends: 
-    $> python3 scripts/cli.py list backends
+    $> clem list backends
 
     To run a specific game with a single player:
-    $> python3 scripts/cli.py run -g privateshared -m mock
+    $> clem run -g privateshared -m mock
 
-    To run a specific game with a two players:
-    $> python3 scripts/cli.py run -g taboo -m mock mock
+    To run a specific game with two players:
+    $> clem run -g taboo -m mock mock
 
     If the game supports model expansion (using the single specified model for all players):
-    $> python3 scripts/cli.py run -g taboo -m mock
+    $> clem run -g taboo -m mock
 
     To score all games:
-    $> python3 scripts/cli.py score
+    $> clem score
 
     To score a specific game:
-    $> python3 scripts/cli.py score -g privateshared
+    $> clem score -g privateshared
 
-    To score all games:
-    $> python3 scripts/cli.py transcribe
+    To transcribe all games:
+    $> clem transcribe
 
-    To score a specific game:
-    $> python3 scripts/cli.py transcribe -g privateshared
+    To transcribe a specific game:
+    $> clem transcribe -g privateshared
 """
 
 
@@ -281,6 +287,7 @@ def main():
                              default="games", nargs="?", type=str,
                              help="Choose to list available games, models or backends. Default: games")
     list_parser.add_argument("-v", "--verbose", action="store_true")
+    list_parser.add_argument("-s", "--selector", type=str, default="all")
 
     run_parser = sub_parsers.add_parser("run", formatter_class=argparse.RawTextHelpFormatter)
     run_parser.add_argument("-m", "--models", type=str, nargs="*",

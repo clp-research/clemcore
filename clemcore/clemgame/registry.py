@@ -59,6 +59,34 @@ class GameSpec(SimpleNamespace):
         return json.dumps(self.__dict__, indent=2)
 
     @classmethod
+    def from_name(cls, game_name: str):
+        """Create a GameSpec instance based on a game name.
+        Args:
+            game_name: The game name as string.
+        """
+        assert game_name is not None
+        return cls(game_name=game_name, allow_underspecified=True)
+
+    @classmethod
+    def from_string(cls, game_spec: str):
+        """Get a GameSpec instances for the passed string. This is rather intended to convert a game selector
+        into a GameSpec. Hence, it must not be required to actually set a game_path or anything else.
+        Takes both simple game names and (partially or fully specified) game specification data as JSON strings.
+        Args:
+            game_spec: A string to return a GameSpec instances for. Game name strings
+                correspond to the 'game_name' key value of a game in the game registry. May also be partially or fully
+                specified game specification data as JSON strings.
+        Returns:
+            A GameSpec instance
+        """
+        game_string = game_spec.replace("'", "\"")  # make this a proper json
+        try:
+            game_dict = json.loads(game_string)
+            return GameSpec.from_dict(game_dict, allow_underspecified=True)
+        except Exception as e:  # likely not a json
+            return GameSpec.from_name(game_string, allow_underspecified=True)
+
+    @classmethod
     def from_directory(cls, dir_path: str) -> List["GameSpec"]:
         file_path = os.path.join(dir_path, "clemgame.json")
         with open(file_path, encoding='utf-8') as f:
