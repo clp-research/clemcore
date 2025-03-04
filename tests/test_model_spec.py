@@ -1,6 +1,6 @@
 import unittest
 
-from backends import ModelSpec
+from clemcore.backends import ModelSpec
 
 
 class ModelSpecTestCase(unittest.TestCase):

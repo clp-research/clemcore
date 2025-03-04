@@ -1,7 +1,7 @@
 import unittest
 
-import backends
-from backends.huggingface_local_api import check_messages, check_context_limit
+from clemcore import backends
+from clemcore.backends.huggingface_local_api import check_messages, check_context_limit
 
 MODEL_SPEC = backends.ModelSpec(**{
     "model_name": "Mistral-7B-Instruct-v0.1",

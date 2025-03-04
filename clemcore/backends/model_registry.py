@@ -191,6 +191,12 @@ class ModelRegistry:
             ValueError: Will be raised if the model specification does not contain fitting backend information - after
                 unification with registered model specifications.
         """
+
+        if isinstance(model_selector, str):
+            model_selector = ModelSpec.from_name(model_selector)
+        if isinstance(model_selector, dict):
+            model_selector = ModelSpec.from_dict(model_selector)
+
         # for now, special handling of mock and terminal inputs (should be rather integrated via backends)
         if model_selector.is_human() or model_selector.is_programmatic():
             if model_selector.is_human():
@@ -202,11 +208,6 @@ class ModelRegistry:
 
         if not self._model_specs:
             raise AttributeError("Model registry is empty. Load a model registry and try again.")
-
-        if isinstance(model_selector, str):
-            model_selector = ModelSpec.from_name(model_selector)
-        if isinstance(model_selector, dict):
-            model_selector = ModelSpec.from_dict(model_selector)
 
         selected_model_specs = []
         for registered_spec in self._model_specs:

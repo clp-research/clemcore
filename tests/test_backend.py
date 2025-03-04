@@ -1,7 +1,7 @@
 import unittest
 
-from backends import get_model_for, load_model_registry
-from backends.utils import ensure_alternating_roles
+from clemcore.backends import ModelRegistry, BackendRegistry
+from clemcore.backends.utils import ensure_alternating_roles
 
 
 class UtilsTestCase(unittest.TestCase):
@@ -98,21 +98,44 @@ class UtilsTestCase(unittest.TestCase):
                          )
 
 
+MODELS_LIST = [
+    {
+        "model_name": "model1",
+        "backend": "huggingface_local",
+        "model_id": "model_id1",
+        "custom_chat_template": "custom_chat_template",
+        "eos_to_cull": "<|end_of_turn|>"
+    }, {
+        "model_name": "model2",
+        "backend": "huggingface_local",
+        "model_id": "model_id2",
+        "custom_chat_template": "custom_chat_template",
+        "eos_to_cull": "<|end_of_turn|>"
+    }, {
+        "model_name": "model1",
+        "backend": "openai",
+        "model_id": "model_id3",
+        "custom_chat_template": "custom_chat_template",
+        "eos_to_cull": "<|end_of_turn|>"
+    }
+]
+
+
 class ModelTestCase(unittest.TestCase):
     def test_get_backend_for_model1(self):
-        load_model_registry("test-registry.json")
-        model = get_model_for("model1")
-        assert model.model_spec.backend == "huggingface_local"
+        model_registry = ModelRegistry().register_from_list(MODELS_LIST)
+        model_spec = model_registry.get_first_model_spec_that_unify_with("model1")
+        assert model_spec.backend == "huggingface_local"
 
     def test_get_backend_for_model2(self):
-        load_model_registry("test-registry.json")
-        model = get_model_for("model2")
-        assert model.model_spec.backend == "huggingface_local"
+        model_registry = ModelRegistry().register_from_list(MODELS_LIST)
+        model_spec = model_registry.get_first_model_spec_that_unify_with("model2")
+        assert model_spec.backend == "huggingface_local"
 
     def test_get_backend_for_model1_other(self):
-        load_model_registry("test-registry.json")
-        model = get_model_for(dict(model_name="model1", backend="openai"))
-        assert model.model_spec.backend == "openai"
+        model_registry = ModelRegistry().register_from_list(MODELS_LIST)
+        model_spec = model_registry.get_first_model_spec_that_unify_with(dict(model_name="model1", backend="openai"))
+        assert model_spec.backend == "openai"
 
 
 if __name__ == '__main__':
