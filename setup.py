@@ -15,16 +15,16 @@ setup(
         "backends": [
             "aleph-alpha-client==7.0.1",
             "openai==1.12.0",
-            "anthropic==0.16.0",
+            "anthropic==0.47.1",
             "cohere==4.48",
-            "google-generativeai==0.5.3",
+            "google-generativeai==0.8.4",
             "mistralai==0.0.12"
         ],
         "huggingface": [
             "torch==2.1.1",  # fix pytorch version
-            "transformers==4.43.1",  # Huggingface
+            "transformers==4.47.0",  # Huggingface
             "sentencepiece==0.1.99",  # FLAN model
-            "accelerate==0.25.0",  # FLAN model
+            "accelerate==1.2.1",  # FLAN model
             "einops==0.6.1",  # FALCON model
             "protobuf==4.21.6",
             "bitsandbytes==0.39.0"
