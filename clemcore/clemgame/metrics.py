@@ -137,9 +137,9 @@ class GameScorer(GameResourceLocator):
             score_value: The value to be recorded for the episode-level score.
         """
         if score_name in self.scores["episode scores"]:
-            self.logger.warning(f"{self.game_name}: Episode score {score_name} overwritten!")
+            module_logger.warning(f"{self.game_name}: Episode score {score_name} overwritten!")
         self.scores["episode scores"][score_name] = score_value
-        self.logger.info(f"{self.game_name}: Logged episode score {score_name}={score_value}.")
+        module_logger.info(f"{self.game_name}: Logged episode score {score_name}={score_value}.")
 
     def compute_scores(self, episode_interactions: Dict) -> None:
         """Compute and log scores for a game episode.
