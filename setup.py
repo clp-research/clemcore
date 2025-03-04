@@ -35,6 +35,7 @@ setup(
         ],
         "eval": [
             "scikit-learn==1.2.2",
+            "numpy==1.26.0",
             "matplotlib==3.7.1",
             "pandas==2.0.1",
             "seaborn==0.12.2",

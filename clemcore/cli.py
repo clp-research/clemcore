@@ -6,6 +6,7 @@ from typing import List, Dict, Union
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
+from clemcore.clemeval.bencheval import perform_evaluation
 from clemcore.clemgame import GameRegistry, GameSpec
 from clemcore.clemgame import benchmark
 
@@ -239,7 +240,8 @@ def cli(args: argparse.Namespace):
         score(args.game, experiment_name=args.experiment_name, results_dir=args.results_dir)
     if args.command_name == "transcribe":
         transcripts(args.game, experiment_name=args.experiment_name, results_dir=args.results_dir)
-
+    if args.command_name == "eval":
+        perform_evaluation(args.results_dir)
 
 """
     Use good old argparse to run the commands.
@@ -354,6 +356,13 @@ def main():
                                    help="A relative or absolute path to the results root directory. "
                                         "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
                                         "When not specified, then the results will be located in 'results'")
+
+    eval_parser = sub_parsers.add_parser("eval")
+    eval_parser.add_argument("-r", "--results_dir", type=str, default="results",
+                             help="A relative or absolute path to the results root directory. "
+                                  "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
+                                  "When not specified, then the results will be located in 'results'."
+                                  "For evaluation, the directory must already contain the scores.")
 
     cli(parser.parse_args())
 

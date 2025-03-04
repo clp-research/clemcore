@@ -24,16 +24,13 @@ additional directory called results_eval containing two directories
 """
 
 import argparse
-import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 import seaborn as sns
-import sklearn.metrics as metrics
 from tqdm import tqdm
 
-import evaluation.evalutils as utils
-import evaluation.plotting as plotting
-import evaluation.makingtables as tables
+import clemcore.clemeval.evalutils as utils
+import clemcore.clemeval.plotting as plotting
+import clemcore.clemeval.makingtables as tables
 import clemcore.clemgame.metrics as clemmetrics
 
 sns.set(font='Futura', style="white")

@@ -10,7 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 
-import evaluation.evalutils as utils
+import clemcore.clemeval.evalutils as utils
 import clemcore.clemgame.metrics as clemmetrics
 
 TABLE_NAME = 'results'
@@ -93,16 +93,9 @@ def save_clem_table(df: pd.DataFrame, path: str) -> None:
     print(f'\n Saved results into {path}/{TABLE_NAME}.csv and .html')
 
 
-if __name__ == '__main__':
-    parser = ArgumentParser()
-    parser.add_argument("-p", "--results_path",
-                        type=str,
-                        default='./results',
-                        help="Path to the results folder containing scores.")
-    args = parser.parse_args()
-
+def perform_evaluation(results_path: str):
     # Get all episode scores as a pandas dataframe
-    scores = utils.load_scores(path=args.results_path)
+    scores = utils.load_scores(path=results_path)
     df_episode_scores = utils.build_df_episode_scores(scores)
 
     # Create the PLAYED variable, inferring it from ABORTED
@@ -115,8 +108,8 @@ if __name__ == '__main__':
     df_episode_scores = pd.concat([df_episode_scores, aux], ignore_index=True)
 
     # save raw scores
-    df_episode_scores.to_csv(Path(args.results_path) / f'raw.csv')
-    print(f'\n Saved raw scores into {args.results_path}/raw.csv')
+    df_episode_scores.to_csv(Path(results_path) / f'raw.csv')
+    print(f'\n Saved raw scores into {results_path}/raw.csv')
 
     # save main table
-    save_clem_table(df_episode_scores, args.results_path)
+    save_clem_table(df_episode_scores, results_path)

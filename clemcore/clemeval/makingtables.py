@@ -5,7 +5,7 @@ Functions that create tables with results.
 import numpy as np
 import pandas as pd
 
-import evaluation.evalutils as utils
+import clemcore.clemeval.evalutils as utils
 import clemcore.clemgame.metrics as clemmetrics
 
 
