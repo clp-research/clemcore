@@ -20,6 +20,10 @@ setup(
             "google-generativeai==0.8.4",
             "mistralai==0.0.12"
         ],
+        "vllm": [
+          "vllm==0.5.4", # get compiled
+          "transformers==4.47.0",  # Huggingface
+        ],
         "huggingface": [
             "torch==2.1.1",  # fix pytorch version
             "transformers==4.47.0",  # Huggingface

@@ -2,9 +2,8 @@
 Util functions for multimodal models.
 """
 
-from typing import List, Dict, Tuple, Any
+from typing import List, Tuple
 import math
-import numpy as np
 import torch
 import torchvision.transforms as T
 from PIL import Image
@@ -12,9 +11,6 @@ from torchvision.transforms.functional import InterpolationMode
 from transformers.image_utils import load_image
 import requests
 from io import BytesIO
-import logging
-
-logger = logging.getLogger(__name__)
 
 """
 ##### INTERNVL2 TYPE MODELS #####
@@ -23,7 +19,7 @@ logger = logging.getLogger(__name__)
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
- 
+
 def generate_history_internvl2(messages: List[str]) -> Tuple[List[Tuple], str]:
     """
     Separates the history and query from the list of messages in the current game instance.
@@ -31,7 +27,7 @@ def generate_history_internvl2(messages: List[str]) -> Tuple[List[Tuple], str]:
 
     Args:
         messages: A list containing user messages, system messages or assistant responses.
-    
+
     Returns:
         A list of tuples containing the history and a user message string, passed to the model in the current game instance.
 
@@ -42,10 +38,10 @@ def generate_history_internvl2(messages: List[str]) -> Tuple[List[Tuple], str]:
     history = []
     for msg in messages:
         if msg['role'] == 'system':
-            continue # Skip the system message, Not passed to the model. Ref - https://huggingface.co/OpenGVLab/InternVL2-40B 
+            continue # Skip the system message, Not passed to the model. Ref - https://huggingface.co/OpenGVLab/InternVL2-40B
         elif msg['role'] == 'user':
             if 'image' in msg:
-                user_message = f"<image>\n{msg['content']}" # Add <image> token if image is passed in this instance.
+                user_message = f"</image>\n{msg['content']}" # Add <image> token if image is passed in this instance.
             else:
                 user_message = msg['content']
         elif msg['role'] == 'assistant':
@@ -61,9 +57,9 @@ def split_model(model_name):
     Splits the model across available GPUs based on the model name.
 
     Args:
-        model_name (str): The name of the model to be split. 
-                          Expected values include 'InternVL2-1B', 'InternVL2-2B', 
-                          'InternVL2-4B', 'InternVL2-8B', 'InternVL2-26B', 
+        model_name (str): The name of the model to be split.
+                          Expected values include 'InternVL2-1B', 'InternVL2-2B',
+                          'InternVL2-4B', 'InternVL2-8B', 'InternVL2-26B',
                           'InternVL2-40B', 'InternVL2-Llama3-76B'.
 
     Returns:
@@ -227,23 +223,23 @@ def get_internvl2_image(messages: List[str], device: str):
         ValueError: If no user message is found.
     """
     # Get last user message
-    last_user_message = next((msg for msg in reversed(messages) if msg['role'] == 'user'), None)
+    last_user_message = None
+    for i in range(len(messages)):
+        index = len(messages) - i - 1
+        # Find last user message
+        if messages[index]['role'] == 'user':
+            last_user_message = messages[index]
 
     if last_user_message is None:
         raise ValueError("No user message found in the provided messages.")
-
-    logger.info("*" * 50 + "  Last User Message  " + "*" * 50)
-    logger.info(f"\n : {last_user_message} \n")
-
-    if 'image' in last_user_message:
-        logger.info("*" * 50 + " Images Number  " + str(len(last_user_message['image'])) + "*" * 50)
-        # Load all images and concatenate them into a single tensor
-        pixel_values = torch.cat(
-            [load_internvl2_image(img, max_num=12).to(torch.bfloat16).to(device) for img in last_user_message['image']]
-        , dim=0)
     else:
-        pixel_values = None
-        logger.info("*" * 50 + "  Pixel Values not found  " + "*" * 50)
+        if len(last_user_message['image']) > 1:
+            pixel_values = load_internvl2_image(last_user_message['image'][0], max_num=12).to(torch.bfloat16).to(device)
+            for i in range(1, len(last_user_message['image'])):
+                pixel_values1 = load_internvl2_image(last_user_message['image'][i], max_num=12).to(torch.bfloat16).to(device)
+                pixel_values = torch.cat((pixel_values, pixel_values1), dim=0)
+        else:
+            pixel_values = load_internvl2_image(last_user_message['image'][0], max_num=12).to(torch.bfloat16).to(device)
 
     return pixel_values
 
@@ -277,37 +273,20 @@ def generate_internvl2_response(**response_kwargs) -> str:
 
     Returns:
         str: The generated response from the model.
-
-    Raises:
-        RuntimeError: If the model fails to generate a response.
     """
     messages = response_kwargs['messages']
     device = response_kwargs['device']
     max_tokens = response_kwargs['max_tokens']
     model = response_kwargs['model']
     processor = response_kwargs['processor']
-    do_sample = response_kwargs['do_sample']
 
     images = get_internvl2_image(messages=messages, device=device)
     history, question = generate_history_internvl2(messages=messages)
-    
-    logger.info("*" * 50 + " Question  " + "*" * 50)
-    logger.info(f"\n : {question} \n")
-
-    logger.info("*" * 50 + " History  " + "*" * 50)
-    logger.info(f"\n : {history} \n")
-
     if not history:
         history = None
-    generation_config = dict(max_new_tokens=max_tokens, do_sample=do_sample)
-    try:
-        generated_response, _ = model.chat(processor, images, question, generation_config, 
+    generation_config = dict(max_new_tokens=max_tokens, do_sample=True)
+    generated_response, _ = model.chat(processor, images, question, generation_config,
                                                      history=history, return_history=True)
-
-    except Exception as e:
-        raise RuntimeError("Failed to generate response from the model.") from e
-
-    
 
     return generated_response
 
@@ -362,7 +341,7 @@ def generate_llava_messages(messages: List[str]) -> Tuple[List, List]:
             continue # Skip System message
         else:
             raise ValueError(f"Invalid role: {message_dict['role']}. Expected 'user', 'system', or 'assistant'.")
-        
+
     last_user_message = llava_messages[-1]
     if last_user_message['role'] == 'user':
         content = last_user_message['content']
@@ -371,7 +350,7 @@ def generate_llava_messages(messages: List[str]) -> Tuple[List, List]:
             if val["type"] == "image":
                 contains_image = True
 
-        if not contains_image: # Pass a blank image 
+        if not contains_image: # Pass a blank image
             blank_image = Image.new('RGB', (128, 128), color='white')
             image_paths.append(blank_image)
             llava_messages[-1]['content'].append({"type": "image"})
@@ -407,9 +386,6 @@ def generate_llava_response(**response_kwargs) -> str:
 
     Returns:
         str: The generated response from the LLAVA model.
-
-    Raises:
-        RuntimeError: If the model fails to generate a response.
     """
     messages = response_kwargs['messages']
     device = response_kwargs['device']
@@ -431,11 +407,8 @@ def generate_llava_response(**response_kwargs) -> str:
 
     inputs = processor(images=processed_images, text=prompt, return_tensors='pt').to(device)
 
-    try:
-        output = model.generate(**inputs, max_new_tokens=max_tokens, do_sample=do_sample)
-        response = processor.decode(output[0], skip_special_tokens=True)
-    except Exception as e:
-        raise RuntimeError("Failed to generate response from the LLAVA model.") from e
+    output = model.generate(**inputs, max_new_tokens=max_tokens, do_sample=do_sample)
+    response = processor.decode(output[0], skip_special_tokens=True)
 
     return response
 
@@ -466,12 +439,12 @@ def generate_idefics_prompt_text(messages: List[str], **prompt_kwargs) -> str:
                         prompt_text += img
                 else:
                     prompt_text += msg['image'][0]
-            prompt_text += "<end_of_utterance>"          
+            prompt_text += "<end_of_utterance>"
         elif msg['role'] == 'assistant':
             prompt_text += f" Assistant: {msg['content']} <end_of_utterance>"
         else:
             raise ValueError(f"Invalid role: {msg['role']}. Expected 'user', 'system', or 'assistant'.")
-            
+
     return prompt_text
 
 def generate_idefics_response(**response_kwargs) -> str:
@@ -487,9 +460,6 @@ def generate_idefics_response(**response_kwargs) -> str:
 
     Returns:
         str: The generated response from the IDEFICS model.
-
-    Raises:
-        RuntimeError: If the model fails to generate a response.
     """
     messages = response_kwargs['messages']
     device = response_kwargs['device']
@@ -510,8 +480,8 @@ def generate_idefics_response(**response_kwargs) -> str:
                         input_messages.append(loaded_image)
                 else:
                     loaded_image = load_image(msg['image'][0])
-                    input_messages.append(loaded_image)      
-            input_messages.append("<end_of_utterance>")         
+                    input_messages.append(loaded_image)
+            input_messages.append("<end_of_utterance>")
         elif msg['role'] == 'assistant':
             input_messages.append(f"\nAssistant: {msg['content']} <end_of_utterance>")
         else:
@@ -524,10 +494,7 @@ def generate_idefics_response(**response_kwargs) -> str:
     exit_condition = processor.tokenizer("<end_of_utterance>", add_special_tokens=False).input_ids
     bad_words_ids = processor.tokenizer(["<image>", "<fake_token_around_image>"], add_special_tokens=False).input_ids
 
-    try:
-        generated_ids = model.generate(**inputs, eos_token_id=exit_condition, bad_words_ids=bad_words_ids, max_length=max_tokens)
-        generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
-    except Exception as e:
-        raise RuntimeError("Failed to generate response from the IDEFICS model.") from e
-    
+    generated_ids = model.generate(**inputs, eos_token_id=exit_condition, bad_words_ids=bad_words_ids, max_length=max_tokens)
+    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=True)
+
     return generated_text[0]
