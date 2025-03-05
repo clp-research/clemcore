@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='clembench',
-    version='0.1',
+    name='clemcore',
+    version='0.1.0',
     packages=find_packages(),
     install_requires=[
         "pyyaml>=6.0",  # Logging
