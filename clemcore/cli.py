@@ -134,12 +134,6 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
                 except Exception as e:
                     stdout_logger.info(f"There was a problem during scoring. See clembench.log for details.")
                     logger.error(e, exc_info=True)
-                try:
-                    stdout_logger.info(f"Transcribe game {game_spec['game_name']}")
-                    game_benchmark.build_transcripts(results_dir)
-                except Exception as e:
-                    stdout_logger.info(f"There was a problem during transcribe. See clembench.log for details.")
-                    logger.error(e, exc_info=True)
                 time_end = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} took {str(time_end - time_start)}')
 
