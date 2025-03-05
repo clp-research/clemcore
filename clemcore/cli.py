@@ -6,7 +6,7 @@ from typing import List, Dict, Union
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
-from clemcore.clemeval.bencheval import perform_evaluation
+from clemcore.clemeval import perform_evaluation
 from clemcore.clemgame import GameRegistry, GameSpec
 from clemcore.clemgame import benchmark
 
