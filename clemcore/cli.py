@@ -6,9 +6,9 @@ from typing import List, Dict, Union
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
-from clemcore.clemeval import perform_evaluation
 from clemcore.clemgame import GameRegistry, GameSpec
 from clemcore.clemgame import benchmark
+from clemcore import clemeval
 
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
@@ -22,7 +22,6 @@ def list_backends(verbose: bool):
         print("No registered backends found")
         return
     print(f"Found '{len(backend_registry)}' supported backends.")
-    print("Make sure you have the requirements installed for these backends to function properly.")
     print("Then you can use models that specify one of the following backends:")
     wrapper = textwrap.TextWrapper(initial_indent="\t", width=70, subsequent_indent="\t")
     for backend_file in backend_registry:
@@ -62,7 +61,7 @@ def list_games(game_selector: str, verbose: bool):
         return
     if game_selector != "all":
         game_selector = GameSpec.from_string(game_selector)
-    game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
+    game_specs = game_registry.get_game_specs_that_unify_with(game_selector, verbose=False)
     print(f"Found '{len(game_specs)}' game specs that match the game_selector='{game_selector}'")
     wrapper = textwrap.TextWrapper(initial_indent="\t", width=70, subsequent_indent="\t")
     for game_spec in game_specs:
@@ -241,7 +240,8 @@ def cli(args: argparse.Namespace):
     if args.command_name == "transcribe":
         transcripts(args.game, experiment_name=args.experiment_name, results_dir=args.results_dir)
     if args.command_name == "eval":
-        perform_evaluation(args.results_dir)
+        clemeval.perform_evaluation(args.results_dir)
+
 
 """
     Use good old argparse to run the commands.

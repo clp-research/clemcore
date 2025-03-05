@@ -6,20 +6,21 @@ setup(
     packages=find_packages(),
     install_requires=[
         "pyyaml>=6.0",  # Logging
-        "numpy>=1.24.3",  # Score computation
+        "numpy>=1.24.3,<2.0.0",  # Score computation; >2.x causes incompatibility with pandas <2.2.2
         "retry>=0.9.2",  # API call utility
         "tqdm>=4.65.0",
-        "nltk>=3.8.1"
+        "nltk>=3.8.1", # unification mechanism for registries
+        "aleph-alpha-client==7.0.1", # backend
+        "openai==1.12.0", # backend
+        "anthropic==0.47.1", # backend
+        "cohere==4.48", # backend
+        "google-generativeai==0.8.4", # backend
+        "mistralai==0.0.12", # backend
+        "matplotlib==3.7.1", # eval
+        "pandas==2.0.1", # eval
+        "seaborn==0.12.2" # eval
     ],  # tbd
     extras_require={
-        "backends": [
-            "aleph-alpha-client==7.0.1",
-            "openai==1.12.0",
-            "anthropic==0.47.1",
-            "cohere==4.48",
-            "google-generativeai==0.8.4",
-            "mistralai==0.0.12"
-        ],
         "vllm": [
           "vllm==0.5.4", # get compiled
           "transformers==4.47.0",  # Huggingface
@@ -32,14 +33,6 @@ setup(
             "einops==0.6.1",  # FALCON model
             "protobuf==4.21.6",
             "bitsandbytes==0.39.0"
-        ],
-        "eval": [
-            "scikit-learn==1.2.2",
-            "numpy==1.26.0",
-            "matplotlib==3.7.1",
-            "pandas==2.0.1",
-            "seaborn==0.12.2",
-            "jupyter==1.0.0",
         ],
         "slurk": [
             "python-engineio==4.4.0",

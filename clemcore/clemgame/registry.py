@@ -24,6 +24,8 @@ class GameSpec(SimpleNamespace):
                 raise KeyError(f"No game name specified in entry {kwargs}")
             if "game_path" not in self:
                 raise KeyError(f"No game path specified in {kwargs}")
+            if "players" not in self:
+                raise KeyError(f"No players specified in {kwargs}")
 
     def __repr__(self):
         """Returns string representation of this GameSpec."""
@@ -232,7 +234,8 @@ class GameRegistry:
         except Exception as e:  # most likely a problem with the json file
             stdout_logger.warning("Lookup failed at '%s' with exception: %s", candidate_file_path, e)
 
-    def get_game_specs_that_unify_with(self, game_selector: Union[str, Dict, GameSpec]) -> List[GameSpec]:
+    def get_game_specs_that_unify_with(self, game_selector: Union[str, Dict, GameSpec], verbose: bool = True) -> List[
+        GameSpec]:
         """Select a list of GameSpecs from the game registry by unifying game spec dict or game name.
         Args:
             game_selector: String name of the game matching the 'game_name' value of the game registry entry to select, OR a
@@ -298,21 +301,20 @@ class GameRegistry:
                     selected_game_specs = [registered_game_spec]
                     break
         if selected_game_specs:
-            if game_is_gamespec:
-                stdout_logger.info(f"Found '{len(selected_game_specs)}' game matching the game_selector="
-                                   f"{game_selector.to_string()}")
-            else:
-                stdout_logger.info(f"Found '{len(selected_game_specs)}' game matching the game_selector="
-                                   f"{json.dumps(game_selector, separators=(',', ':'), indent=None)}")
-            if len(selected_game_specs) == 1:
-                stdout_logger.info(selected_game_specs[0].to_pretty_string())
-            else:
-                for game_spec in selected_game_specs:
-                    stdout_logger.info(game_spec.to_string())
-        else:
-            raise ValueError(f"No games found matching the given specification '{game_selector}'. "
-                             "Make sure the game name matches the name in clemcore/clemgame/game_registry.json (or game_registry_custom.json)")
-        return selected_game_specs
+            if verbose:
+                if game_is_gamespec:
+                    stdout_logger.info(f"Found '{len(selected_game_specs)}' game matching the game_selector="
+                                       f"{game_selector.to_string()}")
+                else:
+                    stdout_logger.info(f"Found '{len(selected_game_specs)}' game matching the game_selector="
+                                       f"{json.dumps(game_selector, separators=(',', ':'), indent=None)}")
+                if len(selected_game_specs) == 1:
+                    stdout_logger.info(selected_game_specs[0].to_pretty_string())
+                else:
+                    for game_spec in selected_game_specs:
+                        stdout_logger.info(game_spec.to_string())
+            return selected_game_specs
+        raise ValueError(f"No games found matching the game selector='{game_selector}'.")
         # extension to select subset of games
         # (postponed because it introduces more complexity
         # on things like how to specify specific episodes (which could, however be integrated into the game spec
