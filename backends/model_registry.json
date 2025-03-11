@@ -15,7 +15,7 @@
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         "model_config": {}
-    }, 
+    },
     {
         "model_name": "codellama-34b",
         "model_id": "codellama-34b-instruct",
@@ -49,7 +49,7 @@
             "url": "https://www.llama.com/llama3/license/"
         },
         "model_config": {}
-    }, 
+    },
     {
         "model_name": "Llama-3-70B-Together.ai",
         "model_id": "meta-llama/Llama-3-70b-chat-hf",
@@ -66,21 +66,83 @@
             "url": "https://www.llama.com/llama3/license/"
         },
         "model_config": {}
-    }, 
+    },
     {
-        "model_name": "Llama-3-8B-Together.ai",
-        "model_id": "meta-llama/Llama-3-8b-chat-hf",
+        "model_name": "mistral-large-2411",
+        "model_id": "mistralai/mistral-large-2411",
         "backend": "openai_compatible",
-        "release_date": "2024-04-18",
+        "release_date": "2024-11-01",
+        "open_weight": false,
+        "parameters": "123B",
+        "languages": [
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "zh",
+            "ja",
+            "ru",
+            "ko"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Mistral",
+            "url": "https://mistral.ai/static/licenses/MRL-0.1.md"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "deepseek-v3",
+        "model_id": "deepseek/deepseek-chat",
+        "backend": "openai_compatible",
+        "release_date": "2024-12-01",
         "open_weight": true,
-        "parameters": "8B",
+        "parameters": "671B",
+        "languages": [
+            "en",
+            "zh"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Deepseek",
+            "url": "https://github.com/deepseek-ai/DeepSeek-V3/blob/main/LICENSE-MODEL"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "deepseek-r1",
+        "model_id": "deepseek/deepseek-r1",
+        "backend": "openai_compatible",
+        "release_date": "2025-01-20",
+        "open_weight": true,
+        "parameters": "671B",
+        "languages": [
+            "en",
+            "zh"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Deepseek",
+            "url": "https://github.com/deepseek-ai/DeepSeek-R1/blob/main/LICENSE"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "qwen-max",
+        "model_id": "qwen/qwen-max",
+        "backend": "openai_compatible",
+        "release_date": "2025-02-01",
+        "open_weight": false,
+        "parameters": "",
         "languages": [
             "en"
         ],
-        "context_size": "8k",
+        "context_size": "32k",
         "license": {
-            "name": "Meta",
-            "url": "https://www.llama.com/llama3/license/"
+            "name": "Qwen-max",
+            "url": "https://www.alibabacloud.com/en/solutions/generative-ai/qwen"
         },
         "model_config": {}
     },
@@ -100,7 +162,7 @@
             "url": "https://www.llama.com/llama3/license/"
         },
         "model_config": {}
-    }, 
+    },
     {
         "model_name": "Meta-Llama-3.1-405B-Instruct-Turbo",
         "model_id": "meta-llama/Meta-Llama-3.1-405B-Instruct-Turbo",
@@ -109,7 +171,14 @@
         "open_weight": true,
         "parameters": "405B",
         "languages": [
-            "en", "de", "fr", "it", "pt", "hi", "es", "th"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
         "context_size": "128k",
         "license": {
@@ -117,7 +186,7 @@
             "url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE"
         },
         "model_config": {}
-    }, 
+    },
     {
         "model_name": "Mixtral-8x22B-Instruct-v0.1",
         "model_id": "mistralai/Mixtral-8x22B-Instruct-v0.1",
@@ -126,7 +195,11 @@
         "open_weight": true,
         "parameters": "141B",
         "languages": [
-            "en", "fr", "de", "it", "es"
+            "en",
+            "fr",
+            "de",
+            "it",
+            "es"
         ],
         "context_size": "64k",
         "license": {
@@ -134,7 +207,7 @@
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         "model_config": {}
-    }, 
+    },
     {
         "model_name": "Mixtral-8x7B-Instruct-v0.1",
         "model_id": "mistralai/Mixtral-8x7B-Instruct-v0.1",
@@ -143,7 +216,11 @@
         "open_weight": true,
         "parameters": "46.7B",
         "languages": [
-            "en", "fr", "de", "it", "es"
+            "en",
+            "fr",
+            "de",
+            "it",
+            "es"
         ],
         "context_size": "16k",
         "license": {
@@ -151,7 +228,7 @@
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         "model_config": {}
-    }, 
+    },
     {
         "model_name": "fsc-openchat-3.5-0106",
         "model_id": "openchat-3.5-0106",
@@ -787,6 +864,39 @@
         }
     },
     {
+        "model_name": "o3-mini-2025-01-31",
+        "model_id": "o3-mini-2025-01-31",
+        "backend": "openai",
+        "release_date": "2025-01-31",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true
+        }
+    },
+    {
         "model_name": "gpt-3.5-turbo-0125",
         "model_id": "gpt-3.5-turbo-0125",
         "backend": "openai",
@@ -1274,7 +1384,10 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "en", "es", "fr", "ja"
+            "en",
+            "es",
+            "fr",
+            "ja"
         ],
         "context_size": "200k",
         "license": {
@@ -1299,7 +1412,10 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "en", "es", "fr", "ja"
+            "en",
+            "es",
+            "fr",
+            "ja"
         ],
         "context_size": "200k",
         "license": {
@@ -1324,7 +1440,10 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "en", "es", "fr", "ja"
+            "en",
+            "es",
+            "fr",
+            "ja"
         ],
         "context_size": "200k",
         "license": {
@@ -1341,7 +1460,6 @@
             "estimated_parameters": "20B"
         }
     },
-
     {
         "model_name": "claude-3-5-sonnet-20240620",
         "model_id": "claude-3-5-sonnet-20240620",
@@ -1350,7 +1468,10 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "en", "es", "fr", "ja"
+            "en",
+            "es",
+            "fr",
+            "ja"
         ],
         "context_size": "200k",
         "license": {
@@ -1375,7 +1496,10 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "en", "es", "fr", "ja"
+            "en",
+            "es",
+            "fr",
+            "ja"
         ],
         "context_size": "200k",
         "license": {
@@ -1400,7 +1524,10 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "en", "es", "fr", "ja"
+            "en",
+            "es",
+            "fr",
+            "ja"
         ],
         "context_size": "200k",
         "license": {
@@ -1418,6 +1545,32 @@
         }
     },
     {
+        "model_name": "claude-3-7-sonnet-20250219",
+        "model_id": "claude-3-7-sonnet-20250219",
+        "backend": "anthropic",
+        "release_date": "2025-02-19",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "single_image": true,
+            "multiple_images": true,
+            "audio": false,
+            "video": false,
+            "thinking_mode": true
+        }
+    },
+    {
         "model_name": "gemini-1.0-pro-001",
         "model_id": "gemini-1.0-pro-001",
         "backend": "google",
@@ -1425,18 +1578,51 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "ar", "bn", "bg", "zh", "hr", "cs", "da", "nl", "en", "et", "fi", "fr", 
-            "de", "el", "iw", "hi", "hu", "id", "it", "ja", "ko", "lv", "lt", "no", 
-            "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "th", "tr", 
-            "uk", "vi"
+            "ar",
+            "bn",
+            "bg",
+            "zh",
+            "hr",
+            "cs",
+            "da",
+            "nl",
+            "en",
+            "et",
+            "fi",
+            "fr",
+            "de",
+            "el",
+            "iw",
+            "hi",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lv",
+            "lt",
+            "no",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sr",
+            "sk",
+            "sl",
+            "es",
+            "sw",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi"
         ],
         "context_size": "32k",
         "license": {
             "name": "Apache 2.0",
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
-        "model_config": {
-        }
+        "model_config": {}
     },
     {
         "model_name": "gemini-1.0-pro-002",
@@ -1446,18 +1632,51 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "ar", "bn", "bg", "zh", "hr", "cs", "da", "nl", "en", "et", "fi", "fr", 
-            "de", "el", "iw", "hi", "hu", "id", "it", "ja", "ko", "lv", "lt", "no", 
-            "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "th", "tr", 
-            "uk", "vi"
+            "ar",
+            "bn",
+            "bg",
+            "zh",
+            "hr",
+            "cs",
+            "da",
+            "nl",
+            "en",
+            "et",
+            "fi",
+            "fr",
+            "de",
+            "el",
+            "iw",
+            "hi",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lv",
+            "lt",
+            "no",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sr",
+            "sk",
+            "sl",
+            "es",
+            "sw",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi"
         ],
         "context_size": "32k",
         "license": {
             "name": "Gemini",
             "url": "https://ai.google.dev/gemini-api/terms"
         },
-        "model_config": {
-        }
+        "model_config": {}
     },
     {
         "model_name": "gemini-1.0-pro-vision-001",
@@ -1467,10 +1686,44 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "ar", "bn", "bg", "zh", "hr", "cs", "da", "nl", "en", "et", "fi", "fr", 
-            "de", "el", "iw", "hi", "hu", "id", "it", "ja", "ko", "lv", "lt", "no", 
-            "pl", "pt", "ro", "ru", "sr", "sk", "sl", "es", "sw", "sv", "th", "tr", 
-            "uk", "vi"
+            "ar",
+            "bn",
+            "bg",
+            "zh",
+            "hr",
+            "cs",
+            "da",
+            "nl",
+            "en",
+            "et",
+            "fi",
+            "fr",
+            "de",
+            "el",
+            "iw",
+            "hi",
+            "hu",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "lv",
+            "lt",
+            "no",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sr",
+            "sk",
+            "sl",
+            "es",
+            "sw",
+            "sv",
+            "th",
+            "tr",
+            "uk",
+            "vi"
         ],
         "context_size": "16k",
         "license": {
@@ -1494,12 +1747,77 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "af", "am", "as", "az", "be", "bs", "ca", "ceb", "co", "cy", "dv", "eo", 
-            "eu", "fa", "fil", "fy", "ga", "gd", "gl", "gu", "ha", "haw", "hmn", "ht", 
-            "hy", "ig", "is", "jv", "ka", "kk", "km", "kn", "kri", "ku", "ky", "la", 
-            "lb", "lo", "mg", "mi", "mk", "ml", "mn", "mni-Mtei", "mr", "ms", "mt", 
-            "my", "ne", "ny", "or", "pa", "ps", "sd", "si", "sm", "sn", "so", "sq", 
-            "st", "su", "ta", "te", "tg", "ug", "ur", "uz", "xh", "yi", "yo", "zu"
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
         ],
         "context_size": "1000k",
         "license": {
@@ -1523,13 +1841,78 @@
         "release_date": "2024-05-24",
         "open_weight": false,
         "parameters": "",
-       "languages": [
-            "af", "am", "as", "az", "be", "bs", "ca", "ceb", "co", "cy", "dv", "eo", 
-            "eu", "fa", "fil", "fy", "ga", "gd", "gl", "gu", "ha", "haw", "hmn", "ht", 
-            "hy", "ig", "is", "jv", "ka", "kk", "km", "kn", "kri", "ku", "ky", "la", 
-            "lb", "lo", "mg", "mi", "mk", "ml", "mn", "mni-Mtei", "mr", "ms", "mt", 
-            "my", "ne", "ny", "or", "pa", "ps", "sd", "si", "sm", "sn", "so", "sq", 
-            "st", "su", "ta", "te", "tg", "ug", "ur", "uz", "xh", "yi", "yo", "zu"
+        "languages": [
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
         ],
         "context_size": "2000k",
         "license": {
@@ -1553,12 +1936,77 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "af", "am", "as", "az", "be", "bs", "ca", "ceb", "co", "cy", "dv", "eo", 
-            "eu", "fa", "fil", "fy", "ga", "gd", "gl", "gu", "ha", "haw", "hmn", "ht", 
-            "hy", "ig", "is", "jv", "ka", "kk", "km", "kn", "kri", "ku", "ky", "la", 
-            "lb", "lo", "mg", "mi", "mk", "ml", "mn", "mni-Mtei", "mr", "ms", "mt", 
-            "my", "ne", "ny", "or", "pa", "ps", "sd", "si", "sm", "sn", "so", "sq", 
-            "st", "su", "ta", "te", "tg", "ug", "ur", "uz", "xh", "yi", "yo", "zu"
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
         ],
         "context_size": "2000k",
         "license": {
@@ -1582,12 +2030,77 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "af", "am", "as", "az", "be", "bs", "ca", "ceb", "co", "cy", "dv", "eo", 
-            "eu", "fa", "fil", "fy", "ga", "gd", "gl", "gu", "ha", "haw", "hmn", "ht", 
-            "hy", "ig", "is", "jv", "ka", "kk", "km", "kn", "kri", "ku", "ky", "la", 
-            "lb", "lo", "mg", "mi", "mk", "ml", "mn", "mni-Mtei", "mr", "ms", "mt", 
-            "my", "ne", "ny", "or", "pa", "ps", "sd", "si", "sm", "sn", "so", "sq", 
-            "st", "su", "ta", "te", "tg", "ug", "ur", "uz", "xh", "yi", "yo", "zu"
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
         ],
         "context_size": "1000k",
         "license": {
@@ -1612,12 +2125,77 @@
         "open_weight": false,
         "parameters": "8B",
         "languages": [
-            "af", "am", "as", "az", "be", "bs", "ca", "ceb", "co", "cy", "dv", "eo", 
-            "eu", "fa", "fil", "fy", "ga", "gd", "gl", "gu", "ha", "haw", "hmn", "ht", 
-            "hy", "ig", "is", "jv", "ka", "kk", "km", "kn", "kri", "ku", "ky", "la", 
-            "lb", "lo", "mg", "mi", "mk", "ml", "mn", "mni-Mtei", "mr", "ms", "mt", 
-            "my", "ne", "ny", "or", "pa", "ps", "sd", "si", "sm", "sn", "so", "sq", 
-            "st", "su", "ta", "te", "tg", "ug", "ur", "uz", "xh", "yi", "yo", "zu"
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
         ],
         "context_size": "1000k",
         "license": {
@@ -1641,12 +2219,77 @@
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "af", "am", "as", "az", "be", "bs", "ca", "ceb", "co", "cy", "dv", "eo", 
-            "eu", "fa", "fil", "fy", "ga", "gd", "gl", "gu", "ha", "haw", "hmn", "ht", 
-            "hy", "ig", "is", "jv", "ka", "kk", "km", "kn", "kri", "ku", "ky", "la", 
-            "lb", "lo", "mg", "mi", "mk", "ml", "mn", "mni-Mtei", "mr", "ms", "mt", 
-            "my", "ne", "ny", "or", "pa", "ps", "sd", "si", "sm", "sn", "so", "sq", 
-            "st", "su", "ta", "te", "tg", "ug", "ur", "uz", "xh", "yi", "yo", "zu"
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
         ],
         "context_size": "1000k",
         "license": {
@@ -1657,8 +2300,102 @@
             "multimodality": {
                 "single_image": true,
                 "multiple_images": true,
-                "audio": false,
-                "video": false
+                "audio": true,
+                "video": true
+            }
+        }
+    },
+    {
+        "model_name": "gemini-2.0-flash-thinking-exp",
+        "model_id": "gemini-2.0-flash-thinking-exp",
+        "backend": "google",
+        "release_date": "2025-02-01",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "af",
+            "am",
+            "as",
+            "az",
+            "be",
+            "bs",
+            "ca",
+            "ceb",
+            "co",
+            "cy",
+            "dv",
+            "eo",
+            "eu",
+            "fa",
+            "fil",
+            "fy",
+            "ga",
+            "gd",
+            "gl",
+            "gu",
+            "ha",
+            "haw",
+            "hmn",
+            "ht",
+            "hy",
+            "ig",
+            "is",
+            "jv",
+            "ka",
+            "kk",
+            "km",
+            "kn",
+            "kri",
+            "ku",
+            "ky",
+            "la",
+            "lb",
+            "lo",
+            "mg",
+            "mi",
+            "mk",
+            "ml",
+            "mn",
+            "mni-Mtei",
+            "mr",
+            "ms",
+            "mt",
+            "my",
+            "ne",
+            "ny",
+            "or",
+            "pa",
+            "ps",
+            "sd",
+            "si",
+            "sm",
+            "sn",
+            "so",
+            "sq",
+            "st",
+            "su",
+            "ta",
+            "te",
+            "tg",
+            "ug",
+            "ur",
+            "uz",
+            "xh",
+            "yi",
+            "yo",
+            "zu"
+        ],
+        "context_size": "1000k",
+        "license": {
+            "name": "Gemini",
+            "url": "https://ai.google.dev/gemini-api/terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": true,
+                "video": true
             }
         }
     },
@@ -2111,7 +2848,8 @@
         "open_weight": true,
         "parameters": "34B",
         "languages": [
-            "en", "zh"
+            "en",
+            "zh"
         ],
         "context_size": "4k",
         "license": {
@@ -2215,7 +2953,11 @@
         "open_weight": true,
         "parameters": "46.7B",
         "languages": [
-            "en", "fr", "de", "it", "es"
+            "en",
+            "fr",
+            "de",
+            "it",
+            "es"
         ],
         "context_size": "16k",
         "license": {
@@ -2235,7 +2977,8 @@
         "open_weight": true,
         "parameters": "34B",
         "languages": [
-            "en", "zh"
+            "en",
+            "zh"
         ],
         "context_size": "8k",
         "license": {
@@ -2317,7 +3060,11 @@
         "open_weight": true,
         "parameters": "46.7B",
         "languages": [
-            "en", "fr", "de", "it", "es"
+            "en",
+            "fr",
+            "de",
+            "it",
+            "es"
         ],
         "context_size": "16k",
         "license": {
@@ -2337,7 +3084,8 @@
         "open_weight": true,
         "parameters": "72B",
         "languages": [
-            "en", "zh"
+            "en",
+            "zh"
         ],
         "context_size": "32k",
         "license": {
@@ -2358,7 +3106,8 @@
         "open_weight": true,
         "parameters": "34B",
         "languages": [
-            "en", "zh"
+            "en",
+            "zh"
         ],
         "context_size": "200k",
         "license": {
@@ -2379,7 +3128,20 @@
         "open_weight": true,
         "parameters": "7B",
         "languages": [
-            "ar", "es", "fr", "pt", "de", "it", "ru", "ja", "ko", "vi", "th", "id", "en", "zh"
+            "ar",
+            "es",
+            "fr",
+            "pt",
+            "de",
+            "it",
+            "ru",
+            "ja",
+            "ko",
+            "vi",
+            "th",
+            "id",
+            "en",
+            "zh"
         ],
         "context_size": "32k",
         "license": {
@@ -2399,7 +3161,20 @@
         "open_weight": true,
         "parameters": "72B",
         "languages": [
-            "ar", "es", "fr", "pt", "de", "it", "ru", "ja", "ko", "vi", "th", "id", "en", "zh"
+            "ar",
+            "es",
+            "fr",
+            "pt",
+            "de",
+            "it",
+            "ru",
+            "ja",
+            "ko",
+            "vi",
+            "th",
+            "id",
+            "en",
+            "zh"
         ],
         "context_size": "32k",
         "license": {
@@ -2539,8 +3314,29 @@
         "open_weight": true,
         "parameters": "8B",
         "languages": [
-            "en", "fr", "de", "es", "it", "pt", "ja", "ko", "zh", "ar", "el", "fa", 
-            "pl", "id", "cs", "iw", "hi", "nl", "ro", "ru", "tr", "uk", "vi"
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh",
+            "ar",
+            "el",
+            "fa",
+            "pl",
+            "id",
+            "cs",
+            "iw",
+            "hi",
+            "nl",
+            "ro",
+            "ru",
+            "tr",
+            "uk",
+            "vi"
         ],
         "context_size": "8k",
         "license": {
@@ -2561,8 +3357,29 @@
         "open_weight": true,
         "parameters": "35B",
         "languages": [
-            "en", "fr", "de", "es", "it", "pt", "ja", "ko", "zh", "ar", "el", "fa", 
-            "pl", "id", "cs", "iw", "hi", "nl", "ro", "ru", "tr", "uk", "vi"
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh",
+            "ar",
+            "el",
+            "fa",
+            "pl",
+            "id",
+            "cs",
+            "iw",
+            "hi",
+            "nl",
+            "ro",
+            "ru",
+            "tr",
+            "uk",
+            "vi"
         ],
         "context_size": "8k",
         "license": {
@@ -2814,7 +3631,14 @@
         "open_weight": true,
         "parameters": "8B",
         "languages": [
-            "en", "de", "fr", "it", "pt", "hi", "es", "th"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
         "context_size": "128k",
         "license": {
@@ -2835,7 +3659,14 @@
         "open_weight": true,
         "parameters": "70B",
         "languages": [
-            "en", "de", "fr", "it", "pt", "hi", "es", "th"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
         "context_size": "128k",
         "license": {
@@ -2856,7 +3687,16 @@
         "open_weight": true,
         "parameters": "123B",
         "languages": [
-            "en", "fr", "de", "es", "it", "pt", "zh", "ja", "ru", "ko"
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "zh",
+            "ja",
+            "ru",
+            "ko"
         ],
         "context_size": "128k",
         "license": {
@@ -2957,7 +3797,14 @@
         "open_weight": false,
         "parameters": "1B",
         "languages": [
-            "en", "de", "fr", "it", "pt", "hi", "es", "th"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
         "context_size": "128k",
         "license": {
@@ -2977,7 +3824,14 @@
         "open_weight": false,
         "parameters": "3B",
         "languages": [
-            "en", "de", "fr", "it", "pt", "hi", "es", "th"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
         "context_size": "128k",
         "license": {
@@ -3077,9 +3931,40 @@
         "open_weight": true,
         "parameters": "7B",
         "languages": [
-            "bg", "ca", "cs", "cy", "da", "de", "el", "en", "es", "et", "eu", "fi", 
-            "fr", "ga", "gl", "hr", "hu", "it", "lt", "lv", "mt", "nl", "nn", "oc", 
-            "pl", "pt", "ro", "ru", "sh", "sk", "sl", "sr", "sv", "uk"
+            "bg",
+            "ca",
+            "cs",
+            "cy",
+            "da",
+            "de",
+            "el",
+            "en",
+            "es",
+            "et",
+            "eu",
+            "fi",
+            "fr",
+            "ga",
+            "gl",
+            "hr",
+            "hu",
+            "it",
+            "lt",
+            "lv",
+            "mt",
+            "nl",
+            "nn",
+            "oc",
+            "pl",
+            "pt",
+            "ro",
+            "ru",
+            "sh",
+            "sk",
+            "sl",
+            "sr",
+            "sv",
+            "uk"
         ],
         "context_size": "8k",
         "license": {
@@ -3169,6 +4054,241 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|end_of_text\\|>"
+        }
+    },
+    {
+        "model_name": "Mistral-Small-24B-Instruct-2501",
+        "huggingface_id": "mistralai/Mistral-Small-24B-Instruct-2501",
+        "backend": "huggingface_local",
+        "release_date": "2025-01-30",
+        "open_weight": true,
+        "parameters": "24B",
+        "languages": [
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "zh",
+            "ja",
+            "ru",
+            "ko"
+        ],
+        "context_size": "32k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "requires_api_key": true,
+            "premade_chat_template": true,
+            "eos_to_cull": "</s>"
+        }
+    },
+    {
+        "model_name": "OLMo-2-1124-13B-Instruct",
+        "huggingface_id": "allenai/OLMo-2-1124-13B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2024-12-18",
+        "open_weight": true,
+        "parameters": "13B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>"
+        }
+    },
+    {
+        "model_name": "phi-4",
+        "huggingface_id": "microsoft/phi-4",
+        "backend": "huggingface_local",
+        "release_date": "2024-12-11",
+        "open_weight": true,
+        "parameters": "14B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "16k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>"
+        }
+    },
+    {
+        "model_name": "EuroLLM-9B-Instruct",
+        "huggingface_id": "utter-project/EuroLLM-9B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2024-11-28",
+        "open_weight": false,
+        "parameters": "9B",
+        "languages": [
+            "en",
+            "de",
+            "es",
+            "fr",
+            "it",
+            "pt",
+            "pl",
+            "nl",
+            "tr",
+            "sv",
+            "cs",
+            "el",
+            "hu",
+            "ro",
+            "fi",
+            "uk",
+            "sl",
+            "sk",
+            "da",
+            "lt",
+            "lv",
+            "et",
+            "bg",
+            "no",
+            "ca",
+            "hr",
+            "ga",
+            "mt",
+            "gl",
+            "zh",
+            "ru",
+            "ko",
+            "ja",
+            "ar",
+            "hi"
+        ],
+        "context_size": "4k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "requires_api_key": true,
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "QwQ-32B-Preview",
+        "huggingface_id": "Qwen/QwQ-32B-Preview",
+        "backend": "huggingface_local",
+        "release_date": "2024-11-27",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "32k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "aya-expanse-32b",
+        "huggingface_id": "CohereForAI/aya-expanse-32b",
+        "backend": "huggingface_local",
+        "release_date": "2024-10-23",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh",
+            "ar",
+            "el",
+            "fa",
+            "pl",
+            "id",
+            "cs",
+            "he",
+            "hi",
+            "nl",
+            "ro",
+            "ru",
+            "tr",
+            "uk",
+            "vi"],
+        "context_size": "128k",
+        "license": {
+            "name": "CC-BY-NC",
+            "url": "https://spdx.org/licenses/CC-BY-NC-4.0"
+        },
+        "model_config": {
+            "requires_api_key": true,
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|END_OF_TURN_TOKEN\\|>"
+        }
+    },
+    {
+        "model_name": "Llama-3.3-70B-Instruct",
+        "huggingface_id": "meta-llama/Llama-3.3-70B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2024-12-06",
+        "open_weight": true,
+        "parameters": "70B",
+        "languages": [
+            "en",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th",
+            "de"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Meta",
+            "url": "https://huggingface.co/meta-llama/Llama-3.3-70B-Instruct/blob/main/LICENSE"
+        },
+        "model_config": {
+            "requires_api_key": true,
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|eot_id\\|>"
+        }
+    },
+    {
+        "model_name": "Sky-T1-32B-Preview",
+        "huggingface_id": "NovaSky-AI/Sky-T1-32B-Preview",
+        "backend": "huggingface_local",
+        "release_date": "2025-01-07",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "32k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>"
         }
     },
     {
@@ -4238,7 +5358,15 @@
         "open_weight": true,
         "parameters": "12B",
         "languages": [
-            "en", "fr", "de", "es", "it", "pt", "ru", "zh", "ja"
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "ru",
+            "zh",
+            "ja"
         ],
         "context_size": "128k",
         "license": {
