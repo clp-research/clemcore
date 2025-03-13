@@ -231,11 +231,7 @@ def get_internvl2_image(messages: List[str], device: str):
     if last_user_message is None:
         raise ValueError("No user message found in the provided messages.")
 
-    logger.info("*" * 50 + "  Last User Message  " + "*" * 50)
-    logger.info(f"\n : {last_user_message} \n")
-
     if 'image' in last_user_message:
-        logger.info("*" * 50 + " Images Number  " + str(len(last_user_message['image'])) + "*" * 50)
         # Load all images and concatenate them into a single tensor
         pixel_values = torch.cat(
             [load_internvl2_image(img, max_num=12).to(torch.bfloat16).to(device) for img in last_user_message['image']]
@@ -289,12 +285,6 @@ def generate_internvl2_response(**response_kwargs) -> str:
 
     images = get_internvl2_image(messages=messages, device=device)
     history, question = generate_history_internvl2(messages=messages)
-
-    logger.info("*" * 50 + " Question  " + "*" * 50)
-    logger.info(f"\n : {question} \n")
-
-    logger.info("*" * 50 + " History  " + "*" * 50)
-    logger.info(f"\n : {history} \n")
 
     if not history:
         history = None
