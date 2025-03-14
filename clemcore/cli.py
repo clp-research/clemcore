@@ -74,6 +74,39 @@ def list_games(game_selector: str, verbose: bool):
         else:
             print(game_name, wrapper.fill(game_spec["description"]))
 
+def learn(learner: backends.ModelSpec, teacher: backends.ModelSpec):
+    game_registry = GameRegistry.from_directories_and_cwd_files()
+    model_registry = ModelRegistry.from_packaged_and_cwd_files()
+
+    learner_spec = model_registry.get_first_model_spec_that_unify_with(learner)
+    logger.info(f"Found registered model spec that unifies with {learner.to_string()} -> {learner_spec}")
+
+    teacher_spec = model_registry.get_first_model_spec_that_unify_with(learner)
+    logger.info(f"Found registered model spec that unifies with {teacher.to_string()} -> {teacher_spec}")
+
+    backend_registry = BackendRegistry.from_packaged_and_cwd_files()
+    for model_spec in [learner_spec, teacher_spec]:
+        backend_selector = model_spec.backend
+        if not backend_registry.is_supported(backend_selector):
+            raise ValueError(f"Specified model backend '{backend_selector}' not found in backend registry.")
+        logger.info(f"Found registry entry for backend {backend_selector} "
+                    f"-> {backend_registry.get_first_file_matching(backend_selector)}")
+
+    logger.info(f"Dynamically import backend {learner_spec.backend}")
+    backend = backend_registry.get_backend_for(learner_spec.backend)
+    learner_model = backend.get_model_for(learner_spec)
+    learner_model.set_gen_args(max_tokens=100, temperature=0.0)
+    logger.info(f"Successfully loaded {learner_spec.model_name} model")
+
+    logger.info(f"Dynamically import backend {teacher_spec.backend}")
+    backend = backend_registry.get_backend_for(teacher_spec.backend)
+    teacher_model = backend.get_model_for(teacher_spec)
+    teacher_model.set_gen_args(max_tokens=100, temperature=0.0)
+    logger.info(f"Successfully loaded {teacher_spec.model_name} model")
+
+    # todo.. lookup trainer.py and load Trainer from there
+    Trainer(learner_model, teacher_model).train_interactive(game_registry)
+
 
 def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backends.ModelSpec],
         gen_args: Dict, experiment_name: str = None, instances_name: str = None, results_dir: str = None):
@@ -222,6 +255,8 @@ def cli(args: argparse.Namespace):
             list_backends(args.verbose)
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
+    if args.command_name == "learn":
+        learn(backends.ModelSpec.from_string(args.learner), backends.ModelSpec.from_string(args.teacher))
     if args.command_name == "run":
         run(args.game,
             model_selectors=backends.ModelSpec.from_strings(args.models),
@@ -296,6 +331,10 @@ def main():
                              help="Choose to list available games, models or backends. Default: games")
     list_parser.add_argument("-v", "--verbose", action="store_true")
     list_parser.add_argument("-s", "--selector", type=str, default="all")
+
+    learn_parser = sub_parsers.add_parser("learn")
+    learn_parser.add_argument("-l", "--learner", type=str)
+    learn_parser.add_argument("-t", "--teacher", type=str)
 
     run_parser = sub_parsers.add_parser("run", formatter_class=argparse.RawTextHelpFormatter)
     run_parser.add_argument("-m", "--models", type=str, nargs="*",
