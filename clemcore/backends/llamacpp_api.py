@@ -25,25 +25,25 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     logger.info(f'Start loading llama.cpp model weights from HuggingFace: {model_spec.model_name}')
 
     hf_repo_id = model_spec['huggingface_id']
-    hf_model_file = model_spec['filename']
+    hf_model_file = model_spec['model_config']['filename']
 
     # default to GPU offload:
     gpu_layers_offloaded = -1  # -1 = offload all model layers to GPU
     # check for optional execute_on flag:
-    if hasattr(model_spec, 'execute_on'):
-        if model_spec.execute_on == "gpu":
+    if hasattr(model_spec['model_config'], 'execute_on'):
+        if model_spec.model_config['execute_on'] == "gpu":
             gpu_layers_offloaded = -1
-        elif model_spec.execute_on == "cpu":
+        elif model_spec.model_config['execute_on'] == "cpu":
             gpu_layers_offloaded = 0
     # check for optional gpu_layers_offloaded value:
-    elif hasattr(model_spec, 'gpu_layers_offloaded'):
-        gpu_layers_offloaded = model_spec.gpu_layers_offloaded
+    elif hasattr(model_spec.model_config, 'gpu_layers_offloaded'):
+        gpu_layers_offloaded = model_spec.model_config['gpu_layers_offloaded']
 
     additional_files = []
-    if hasattr(model_spec, 'additional_files'):
-        additional_files = model_spec.additional_files
+    if hasattr(model_spec['model_config'], 'additional_files'):
+        additional_files = model_spec.model_config['additional_files']
 
-    if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
+    if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
         # load HF API key:
         creds = backends.load_credentials("huggingface")
         api_key = creds["huggingface"]["api_key"]
@@ -82,11 +82,11 @@ def get_chat_formatter(model: Llama, model_spec: backends.ModelSpec) -> llama_cp
     eos_string = None
 
     # check chat template:
-    if model_spec.premade_chat_template:
+    if model_spec.model_config['premade_chat_template']:
         # jinja chat template available in metadata
         chat_template = model.metadata['tokenizer.chat_template']
     else:
-        chat_template = model_spec.custom_chat_template
+        chat_template = model_spec.model_config['custom_chat_template']
 
     if hasattr(model, 'chat_format'):
         if not model.chat_format:
@@ -111,9 +111,9 @@ def get_chat_formatter(model: Llama, model_spec: backends.ModelSpec) -> llama_cp
 
     # get BOS/EOS strings for template from registry if not available from model file:
     if not bos_string:
-        bos_string = model_spec.bos_string
+        bos_string = model_spec.model_config['bos_string']
     if not eos_string:
-        eos_string = model_spec.eos_string
+        eos_string = model_spec.model_config['eos_string']
 
     # init llama-cpp-python jinja chat formatter:
     chat_formatter = llama_cpp.llama_chat_format.Jinja2ChatFormatter(
@@ -212,11 +212,11 @@ class LlamaCPPLocalModel(backends.Model):
         if not return_full_text:
             response_text = model_output['choices'][0]['text'].strip()
 
-            if 'output_split_prefix' in self.model_spec:
-                response_text = response_text.rsplit(self.model_spec['output_split_prefix'], maxsplit=1)[1]
+            if 'output_split_prefix' in self.model_spec.model_config:
+                response_text = response_text.rsplit(self.model_spec['model_config']['output_split_prefix'], maxsplit=1)[1]
 
             # remove eos token string:
-            eos_to_cull = self.model_spec['eos_to_cull']
+            eos_to_cull = self.model_spec.model_config['eos_to_cull']
             response_text = re.sub(eos_to_cull, "", response_text)
 
         else:
