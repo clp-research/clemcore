@@ -12,6 +12,7 @@ import logging
 FALLBACK_CONTEXT_SIZE = 256
 
 logger = logging.getLogger(__name__)
+stdout_logger = logging.getLogger("huggingface.multimodal.api")
 
 
 def check_context_limit(context_size: int, prompt_tokens: list, max_new_tokens: int = 100) -> Tuple[
@@ -83,7 +84,7 @@ def load_processor(model_spec: backends.ModelSpec):
     else:
         processor = processor_class.from_pretrained(hf_model_str, **processor_config) # Load the processor with defined args
 
-    logger.info(f'Loading Processor for model : {model_spec.model_name}')
+    stdout_logger.info(f'Loading Processor for model : {model_spec.model_name}')
 
     return processor
 
@@ -101,7 +102,7 @@ def load_model(model_spec: backends.ModelSpec):
     Raises:
         ImportError: If the model class or device map (if custom) cannot be imported.
     """
-    logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
+    stdout_logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
     hf_model_str = model_spec['huggingface_id']  # Get the model name
     model_class_str = model_spec['model_config']['model_class']  # Model Loader Class
     model_config = model_spec['model_config']['mm_model_config']  # Model kwargs
@@ -110,7 +111,7 @@ def load_model(model_spec: backends.ModelSpec):
 
     # Check if a custom device_map split is provided and adjust device_map accordingly
     if 'device_map' in model_config and not model_config['device_map'] == 'auto':
-        logger.info(f"Loading Custom device map for model: {hf_model_str}")
+        stdout_logger.info(f"Loading Custom device map for model: {hf_model_str}")
         split_model = import_method(model_config['device_map'])
         device_map = split_model(model_spec['model_name'])
         model_config['device_map'] = device_map
@@ -122,11 +123,12 @@ def load_model(model_spec: backends.ModelSpec):
 
     # Check if model's generation_config has pad_token_id set:
     if not model.generation_config.pad_token_id:
-        # Set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
-        model.generation_config.pad_token_id = model.generation_config.eos_token_id  # Same as processor.tokenizer.pad_token_id
+        if model.generation_config.pad_token_id != 0: # Additional check for models that have preset pad_token_id = 0, example Gemma
+            # Set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
+            model.generation_config.pad_token_id = model.generation_config.eos_token_id  # Same as processor.tokenizer.pad_token_id
 
-    logger.info(f"Finished loading huggingface model: {model_spec.model_name}")
-    logger.info(f"Device Map: {model.hf_device_map}")
+    stdout_logger.info(f"Finished loading huggingface model: {model_spec.model_name}")
+    stdout_logger.info(f"Device Map: {model.hf_device_map}")
 
     return model
 
@@ -250,6 +252,7 @@ class HuggingfaceMultimodalModel(backends.Model):
 
         prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(), "temperature": self.get_temperature()}
 
+        stdout_logger.info(f" INPUT PROMPT : \n\n{prompt_text} \n\n")
         response_method = import_method(self.response_method)
         response_kwargs = {
             'model': self.multimodal_model,
@@ -262,8 +265,6 @@ class HuggingfaceMultimodalModel(backends.Model):
         }
         generated_response = response_method(**response_kwargs)
 
-        logger.info("*" * 50 + "  Generated Response  " + "*" * 50)
-        logger.info(f"\n : {generated_response} \n")
         # Store generated text
         response = {"response": generated_response}
 
@@ -276,5 +277,5 @@ class HuggingfaceMultimodalModel(backends.Model):
             response_text = rt_split[0]
         response_text = response_text.strip()
 
-
+        stdout_logger.info(f" RESPONSE TEXT : \n\n{response_text} \n\n")
         return prompt, response, response_text

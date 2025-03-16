@@ -4989,7 +4989,7 @@
                 "single_image": true,
                 "multiple_images": true,
                 "audio": false,
-                "video": false
+                "video": true
             },
             "mm_model_config": {
                 "torch_dtype": "auto",
@@ -5030,7 +5030,7 @@
                 "single_image": true,
                 "multiple_images": true,
                 "audio": false,
-                "video": false
+                "video": true
             },
             "mm_model_config": {
                 "torch_dtype": "auto",
@@ -5071,7 +5071,7 @@
                 "single_image": true,
                 "multiple_images": true,
                 "audio": false,
-                "video": false
+                "video": true
             },
             "mm_model_config": {
                 "torch_dtype": "auto",
@@ -5112,7 +5112,7 @@
                 "single_image": true,
                 "multiple_images": true,
                 "audio": false,
-                "video": false
+                "video": true
             },
             "mm_model_config": {
                 "torch_dtype": "auto",
@@ -5287,6 +5287,87 @@
                 "multiple_images": true,
                 "audio": false,
                 "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gemma-3-27b-it",
+        "backend": "huggingface_multimodal",
+        "huggingface_id": "google/gemma-3-27b-it",
+        "release_date": "2025-03-12",
+        "open_weight": true,
+        "parameters": "27B",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "zh",
+            "ja",
+            "ko",
+            "ar",
+            "hi",
+            "bn",
+            "te",
+            "ta",
+            "ml",
+            "kn",
+            "gu",
+            "mr",
+            "pa",
+            "ur",
+            "vi",
+            "th",
+            "id",
+            "ms",
+            "tl",
+            "sw",
+            "yo",
+            "zu",
+            "tr",
+            "he",
+            "fa",
+            "uk",
+            "pl",
+            "cs",
+            "hu",
+            "ro",
+            "nl",
+            "sv",
+            "no",
+            "da",
+            "fi",
+            "el",
+            "bg",
+            "sr",
+            "hr",
+            "sk",
+            "is"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Gemma",
+            "url": "https://ai.google.dev/gemma/terms"
+        },
+        "model_config": {
+            "model_class": "transformers.Gemma3ForConditionalGeneration",
+            "processor_class": "transformers.AutoProcessor",
+            "processor_config": {},
+            "prompt": "clemcore.backends.multimodal_utils.generate_gemma_prompt_text",
+            "response": "clemcore.backends.multimodal_utils.generate_gemma_response",
+            "output_split_prefix": "",
+            "do_sample": false,
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "mm_model_config": {
+                "device_map": "auto"
             }
         }
     },
