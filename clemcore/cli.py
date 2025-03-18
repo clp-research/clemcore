@@ -1,4 +1,6 @@
 import argparse
+import inspect
+import os
 import textwrap
 import logging
 from datetime import datetime
@@ -9,6 +11,7 @@ from clemcore.backends import ModelRegistry, BackendRegistry
 from clemcore.clemgame import GameRegistry, GameSpec
 from clemcore.clemgame import benchmark
 from clemcore import clemeval
+from clemcore.playpen import BasePlayPen
 
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
@@ -74,7 +77,26 @@ def list_games(game_selector: str, verbose: bool):
         else:
             print(game_name, wrapper.fill(game_spec["description"]))
 
-def learn(learner: backends.ModelSpec, teacher: backends.ModelSpec):
+
+def train(learner: backends.ModelSpec, teacher: backends.ModelSpec, prefix: str = None):
+    import importlib.util as importlib_util
+    lookup_name = "trainer.py"
+    if prefix:
+        lookup_name = f"{prefix}_trainer.py"
+
+    playpen_cls = None
+    for file_name in os.listdir():
+        if file_name == lookup_name:
+            module_path = os.path.join(os.getcwd(), file_name)
+            spec = importlib_util.spec_from_file_location(lookup_name, module_path)
+            module = importlib_util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            playpen_subclasses = inspect.getmembers(BasePlayPen)
+            _, playpen_cls = playpen_subclasses[0]
+
+    if playpen_cls is None:
+        raise RuntimeError(f"No playpen trainer found in file '{lookup_name}'")
+
     game_registry = GameRegistry.from_directories_and_cwd_files()
     model_registry = ModelRegistry.from_packaged_and_cwd_files()
 
@@ -104,8 +126,7 @@ def learn(learner: backends.ModelSpec, teacher: backends.ModelSpec):
     teacher_model.set_gen_args(max_tokens=100, temperature=0.0)
     logger.info(f"Successfully loaded {teacher_spec.model_name} model")
 
-    # todo.. lookup trainer.py and load Trainer from there
-    Trainer(learner_model, teacher_model).train_interactive(game_registry)
+    playpen_cls(learner_model, teacher_model).learn_interactive(game_registry)
 
 
 def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backends.ModelSpec],
@@ -255,8 +276,9 @@ def cli(args: argparse.Namespace):
             list_backends(args.verbose)
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
-    if args.command_name == "learn":
-        learn(backends.ModelSpec.from_string(args.learner), backends.ModelSpec.from_string(args.teacher))
+    if args.command_name == "train":
+        train(backends.ModelSpec.from_string(args.learner),
+              backends.ModelSpec.from_string(args.teacher))
     if args.command_name == "run":
         run(args.game,
             model_selectors=backends.ModelSpec.from_strings(args.models),
@@ -332,9 +354,9 @@ def main():
     list_parser.add_argument("-v", "--verbose", action="store_true")
     list_parser.add_argument("-s", "--selector", type=str, default="all")
 
-    learn_parser = sub_parsers.add_parser("learn")
-    learn_parser.add_argument("-l", "--learner", type=str)
-    learn_parser.add_argument("-t", "--teacher", type=str)
+    train_parser = sub_parsers.add_parser("train")
+    train_parser.add_argument("-l", "--learner", type=str)
+    train_parser.add_argument("-t", "--teacher", type=str)
 
     run_parser = sub_parsers.add_parser("run", formatter_class=argparse.RawTextHelpFormatter)
     run_parser.add_argument("-m", "--models", type=str, nargs="*",
