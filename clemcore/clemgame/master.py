@@ -2,7 +2,7 @@ import abc
 import collections
 import logging
 from datetime import datetime
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Iterator
 
 from clemcore import backends
 from clemcore.clemgame.recorder import GameRecorder
@@ -149,7 +149,12 @@ class DialogueGameMaster(GameMaster):
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.messages_by_names: Dict[str, List] = dict()
+        self.player_iter: Iterator[Player] = iter([])
         self.current_turn: int = 0
+        self.current_player: Player = None
+        self.is_new_turn: bool = True
+        self.is_new_game: bool = True
+        self.info = {}
 
     def get_players(self) -> List[Player]:
         """Get a list of the players.
@@ -186,6 +191,8 @@ class DialogueGameMaster(GameMaster):
             players_descriptions[name] = player.get_description()
         # log player ID and description dcit:
         self.log_players(players_descriptions)
+        self.player_iter = iter(self.get_players())
+        self.current_player = next(self.player_iter)
 
     def _on_setup(self, **kwargs):
         """Method executed at the start of the default setup method.
@@ -197,6 +204,70 @@ class DialogueGameMaster(GameMaster):
         """
         raise NotImplementedError()
 
+    def step(self):
+        if self.is_new_game:
+            self.is_new_game = False
+            self._on_before_game()
+        if self.is_new_turn:
+            self.is_new_turn = False
+            self.log_next_turn()  # not sure if we want to do this always here (or add to _on_before_turn)
+            self._on_before_turn(self.current_turn)
+            module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
+
+        player = self.current_player
+        messages = self.messages_by_names[player.descriptor]
+        assert messages, f"messages history must not be empty for {player.descriptor}"
+        context, response = self.__prompt(player, messages)
+        self.__validate_parse_and_add_player_response(player, response)
+        while self._should_reprompt(player):
+            self._on_before_reprompt(player)
+            context, response = self.__prompt(player, messages, is_reprompt=True)
+            self.__validate_parse_and_add_player_response(player, response)
+
+        try:
+            # check already here for next player to increment turn and to check end condition properly
+            self.current_player = next(self.player_iter)
+        except StopIteration:
+            self._on_after_turn(self.current_turn)
+            self.current_turn += 1
+            self.player_iter = iter(self.get_players())
+            self.current_player = next(self.player_iter)
+            self.is_new_turn = True
+
+        done = not self._does_game_proceed()
+        feedback = {
+            "turn_score": self.compute_turn_score(),
+            "turn_feedback": self.get_turn_feedback(),
+            "episode_score": 0
+        }
+        if done:
+            self._on_after_game()
+            feedback["episode_score"] = self.compute_episode_score()
+        return player, context, response, feedback, done, self.info
+
+    def get_turn_feedback(self):
+        """
+        Optional.
+        :return: a verbal feedback about the agent's decision-making at a turn
+        """
+        return None
+
+    @abc.abstractmethod
+    def compute_turn_score(self):
+        """
+        Mandatory.
+        :return: the performance score for an agent's turn
+        """
+        pass
+
+    @abc.abstractmethod
+    def compute_episode_score(self):
+        """
+        Mandatory.
+        :return: the performance of the agent over the whole episode
+        """
+        pass
+
     def play(self) -> None:
         """Main play loop method.
         This method is called to run the game for benchmarking.
@@ -204,25 +275,11 @@ class DialogueGameMaster(GameMaster):
         _on_before_game, _does_game_proceed, _on_before_turn, _should_reprompt, _on_before_reprompt, _on_after_turn and
         _on_after_game methods.
         """
-        self._on_before_game()
-        inner_break = False
-        while not inner_break and self._does_game_proceed():
-            self.log_next_turn()  # not sure if we want to do this always here (or add to _on_before_turn)
-            self._on_before_turn(self.current_turn)
-            module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
-            for player in self.__player_sequence():
-                if not self._does_game_proceed():
-                    inner_break = True  # break outer loop without calling _does_game_proceed again
-                    break  # potentially stop in between player turns
-                self.prompt(player)
-                while self._should_reprompt(player):
-                    self._on_before_reprompt(player)
-                    self.prompt(player, is_reprompt=True)
-            self._on_after_turn(self.current_turn)
-            self.current_turn += 1
-        self._on_after_game()
+        done = False
+        while not done:
+            _, _, _, _, done, _ = self.step()
 
-    def prompt(self, player: Player, is_reprompt=False):
+    def __prompt(self, player: Player, history: List[Dict], is_reprompt=False) -> Tuple[Dict, str]:
         """Prompt a player model.
         Includes logging of 'send message' and 'get message' actions.
         Intended to be left as-is by inheriting classes. Implement game-specific functionality in the
@@ -233,13 +290,10 @@ class DialogueGameMaster(GameMaster):
             is_reprompt: If this is a reprompt attempt. This is intended for re-prompting with modified prompts.
         """
         # GM -> Player
-        history = self.messages_by_names[player.descriptor]
-        assert history, f"messages history must not be empty for {player.descriptor}"
-
-        last_entry = history[-1]
-        assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
-                                                  "b.c. this would be the role of the current player"
-        message = last_entry["content"]
+        context = history[-1]
+        assert context["role"] != "assistant", "Last entry should not be assistant " \
+                                               "b.c. this would be the role of the current player"
+        message = context["content"]
 
         action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
         action = {'type': action_type, 'content': message}
@@ -252,8 +306,7 @@ class DialogueGameMaster(GameMaster):
         # log 'get message' event including backend/API call:
         self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
 
-        # GM -> GM
-        self.__validate_parse_and_add_player_response(player, response_message)
+        return context, response_message
 
     def _should_reprompt(self, player: Player):
         """Method to check if a Player should be re-prompted.
@@ -425,13 +478,6 @@ class DialogueGameMaster(GameMaster):
             turn_idx: The current turn index.
         """
         pass
-
-    def __player_sequence(self) -> List[Player]:
-        """Return players in the order they are added.
-        Returns:
-            List of Player instances in the order they are added.
-        """
-        return self.get_players()
 
     def _does_game_proceed(self) -> bool:
         """Check if game should proceed.
