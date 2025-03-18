@@ -29,8 +29,8 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[AutoToken
 
     use_api_key = False
     api_key = None
-    if 'requires_api_key' in model_spec:
-        if model_spec['requires_api_key']:
+    if 'requires_api_key' in model_spec.model_config:
+        if model_spec['model_config']['requires_api_key']:
             # load HF API key:
             creds = backends.load_credentials("huggingface")
             api_key = creds["huggingface"]["api_key"]
@@ -44,8 +44,8 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[AutoToken
     hf_model_str = model_spec['huggingface_id']
 
     # use 'slow' tokenizer for models that require it:
-    if 'slow_tokenizer' in model_spec:
-        if model_spec['slow_tokenizer']:
+    if 'slow_tokenizer' in model_spec.model_config:
+        if model_spec['model_config']['slow_tokenizer']:
             tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto",
                                                       verbose=False, use_fast=False)
         else:
@@ -62,9 +62,9 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[AutoToken
                                                   verbose=False)
 
     # apply proper chat template:
-    if not model_spec['premade_chat_template']:
-        if 'custom_chat_template' in model_spec:
-            tokenizer.chat_template = model_spec['custom_chat_template']
+    if not model_spec['model_config']['premade_chat_template']:
+        if 'custom_chat_template' in model_spec.model_config:
+            tokenizer.chat_template = model_spec['model_config']['custom_chat_template']
         else:
             logger.info(
                 f"No custom chat template for {model_spec.model_name} found in model settings from model registry "
@@ -105,7 +105,7 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
 
     hf_model_str = model_spec['huggingface_id']
-    if 'requires_api_key' in model_spec and model_spec['requires_api_key']:
+    if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
         # load HF API key:
         creds = backends.load_credentials("huggingface")
         api_key = creds["huggingface"]["api_key"]
@@ -230,11 +230,11 @@ class HuggingfaceLocalModel(backends.Model):
         if not return_full_text:
             response_text = model_output.replace(prompt_text, '').strip()
 
-            if 'output_split_prefix' in self.model_spec:
-                response_text = model_output.rsplit(self.model_spec['output_split_prefix'], maxsplit=1)[1]
+            if 'output_split_prefix' in self.model_spec.model_config:
+                response_text = model_output.rsplit(self.model_spec['model_config']['output_split_prefix'], maxsplit=1)[1]
 
             # remove eos token string:
-            eos_to_cull = self.model_spec['eos_to_cull']
+            eos_to_cull = self.model_spec['model_config']['eos_to_cull']
             response_text = re.sub(eos_to_cull, "", response_text)
         else:
             response_text = model_output.strip()

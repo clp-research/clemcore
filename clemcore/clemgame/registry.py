@@ -230,8 +230,14 @@ class GameRegistry:
                 return
             for current_file in sorted(os.listdir(current_directory)):
                 file_path = os.path.join(current_directory, current_file)
-                if os.path.isdir(file_path) and not file_path.startswith("."):
-                    self.register_from_directories(file_path, depth + 1, max_depth)
+                if not os.path.isdir(file_path):
+                    continue
+                if current_file.startswith("."):
+                    continue
+                if current_file in ["venv", "__pycache__", "docs",
+                                    "in", "resources", "utils", "evaluation", "files"]:
+                    continue
+                self.register_from_directories(file_path, depth + 1, max_depth)
         except PermissionError:
             pass  # ignore
         except Exception as e:  # most likely a problem with the json file

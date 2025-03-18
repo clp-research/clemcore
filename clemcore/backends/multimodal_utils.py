@@ -231,11 +231,7 @@ def get_internvl2_image(messages: List[str], device: str):
     if last_user_message is None:
         raise ValueError("No user message found in the provided messages.")
 
-    logger.info("*" * 50 + "  Last User Message  " + "*" * 50)
-    logger.info(f"\n : {last_user_message} \n")
-
     if 'image' in last_user_message:
-        logger.info("*" * 50 + " Images Number  " + str(len(last_user_message['image'])) + "*" * 50)
         # Load all images and concatenate them into a single tensor
         pixel_values = torch.cat(
             [load_internvl2_image(img, max_num=12).to(torch.bfloat16).to(device) for img in last_user_message['image']]
@@ -289,12 +285,6 @@ def generate_internvl2_response(**response_kwargs) -> str:
 
     images = get_internvl2_image(messages=messages, device=device)
     history, question = generate_history_internvl2(messages=messages)
-
-    logger.info("*" * 50 + " Question  " + "*" * 50)
-    logger.info(f"\n : {question} \n")
-
-    logger.info("*" * 50 + " History  " + "*" * 50)
-    logger.info(f"\n : {history} \n")
 
     if not history:
         history = None
@@ -438,6 +428,90 @@ def generate_llava_response(**response_kwargs) -> str:
 
     return response
 
+"""
+##### GEMMA TYPE MODELS #####
+"""
+
+def generate_gemma_messages(messages: List[str]) -> Tuple[List, List]:
+
+    gemma_message = []
+    for msg in messages:
+        gemma_msg = {"role": msg['role']}
+        content_list = [{"type": "text", "text": msg['content']}]
+        if 'image' in msg:
+            if isinstance(msg['image'], str):
+                # Single image
+                content_list.append({"type": "image", "image": msg['image']})
+            elif isinstance(msg['image'], list):
+                # List of images
+                for img in msg['image']:
+                    content_list.append({"type": "image", "image": img})
+            else:
+                raise ValueError("Invalid image type in message - should be str or List[str]")
+        gemma_msg['content'] = content_list
+
+
+        gemma_message.append(gemma_msg)
+
+    return gemma_message
+
+def generate_gemma_prompt_text(messages: List[str], **prompt_kwargs) -> str:
+
+    gemma_message = generate_gemma_messages(messages)
+
+    processor = prompt_kwargs['processor']
+
+    prompt_text = processor.apply_chat_template(
+                gemma_message, add_generation_prompt=True, tokenize=False,
+                return_dict=True, return_tensors="pt"
+            )
+
+    return prompt_text
+
+
+def generate_gemma_response(**response_kwargs) -> str:
+    """Generates a response from the LLAVA model based on the provided messages and configuration.
+
+    Args:
+        **response_kwargs: A dictionary containing the following keys:
+            - messages (List[str]): A list of message dictionaries.
+            - device (str): The device to which the image tensors will be moved (e.g., 'cuda' or 'cpu').
+            - max_tokens (int): The maximum number of tokens to generate.
+            - model: The model instance used for generating responses.
+            - processor: The processor instance used for processing images.
+
+    Returns:
+        str: The generated response from the LLAVA model.
+
+    Raises:
+        RuntimeError: If the model fails to generate a response.
+    """
+
+    
+    messages = response_kwargs['messages']
+    device = response_kwargs['device']
+    max_tokens = response_kwargs['max_tokens']
+    model = response_kwargs['model']
+    processor = response_kwargs['processor']
+    do_sample = response_kwargs['do_sample']
+
+    gemma_messages = generate_gemma_messages(messages)
+
+    
+    inputs = processor.apply_chat_template(
+                gemma_messages, add_generation_prompt=True, tokenize=True,
+                return_dict=True, return_tensors="pt"
+            ).to(model.device, dtype=torch.bfloat16)
+
+    input_len = inputs["input_ids"].shape[-1]
+
+    with torch.inference_mode():
+        generation = model.generate(**inputs, max_new_tokens=max_tokens, do_sample=do_sample)
+        generation = generation[0][input_len:]
+
+    decoded = processor.decode(generation, skip_special_tokens=True)
+
+    return decoded
 
 """
 ##### IDEFICS TYPE MODELS #####
@@ -530,3 +604,5 @@ def generate_idefics_response(**response_kwargs) -> str:
         raise RuntimeError("Failed to generate response from the IDEFICS model.") from e
 
     return generated_text[0]
+
+

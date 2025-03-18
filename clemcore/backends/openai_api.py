@@ -98,10 +98,16 @@ class OpenAIModel(backends.Model):
                             }
                         ]}
 
-                if self.model_spec.has_attr('supports_images'):
+                if "image" in message.keys() and 'multimodality' not in self.model_spec.model_config:
+                    logger.info(
+                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
+                    raise Exception(
+                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
+
+                if 'multimodality' in self.model_spec.model_config:
                     if "image" in message.keys():
 
-                        if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
+                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(message['image']) > 1:
                             logger.info(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
                             raise Exception(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
                         else:
@@ -136,7 +142,7 @@ class OpenAIModel(backends.Model):
         """
         prompt = self.encode_messages(messages)
 
-        if self.model_spec.has_attr('reasoning_model'):
+        if 'reasoning_model' in self.model_spec.model_config:
             api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
                                                                messages=prompt,
                                                                temperature=1)

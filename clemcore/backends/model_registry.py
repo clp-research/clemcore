@@ -99,6 +99,24 @@ class ModelSpec(SimpleNamespace):
         return json.dumps(self.__dict__, separators=(",", ":"), indent=None)
 
     @classmethod
+    def from_string(cls, model_string: str):
+        """
+            Get a ModelSpec instance for the passed model string.
+            Takes both simple model names and (partially or fully specified) model specification data as JSON strings.
+            Args:
+                model_string: Model name strings correspond to the 'model_name' key value of a model in the model
+                              registry. May also be partially or fully specified model specification as JSON.
+            Returns:
+                A ModelSpec instance
+        """
+        try:
+            model_string = model_string.replace("'", "\"")  # make this a proper json
+            model_dict = json.loads(model_string)
+            return cls.from_dict(model_dict)
+        except Exception as e:  # likely not a json
+            return cls.from_name(model_string)
+
+    @classmethod
     def from_strings(cls, model_strings: List[str]):
         """Get ModelSpec instances for the passed list of models.
         Takes both simple model names and (partially or fully specified) model specification data as JSON strings.
@@ -111,12 +129,7 @@ class ModelSpec(SimpleNamespace):
         """
         model_specs = []
         for model_string in model_strings:
-            try:
-                model_string = model_string.replace("'", "\"")  # make this a proper json
-                model_dict = json.loads(model_string)
-                model_spec = ModelSpec.from_dict(model_dict)
-            except Exception as e:  # likely not a json
-                model_spec = ModelSpec.from_name(model_string)
+            model_spec = cls.from_string(model_string)
             model_specs.append(model_spec)
         return model_specs
 

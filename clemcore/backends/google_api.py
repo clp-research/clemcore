@@ -73,7 +73,7 @@ class GoogleModel(backends.Model):
             print(f"Failed to download {image_url}: {e}")
             return None
 
-    def upload_file(self, file_path, mime_type) -> genai.File:
+    def upload_file(self, file_path, mime_type):
         """Uploads the given file to Gemini.
         See https://ai.google.dev/gemini-api/docs/prompting_with_media
         Args:
@@ -85,7 +85,7 @@ class GoogleModel(backends.Model):
         file_url = genai.upload_file(file_path, mime_type=mime_type)
         return file_url
 
-    def encode_images(self, images) -> List[genai.File]:
+    def encode_images(self, images):
         """Encode images and upload them to Gemini allow sending them to the Google remote API.
         Args:
             images: Paths to the images to be encoded.
@@ -128,10 +128,16 @@ class GoogleModel(backends.Model):
                 m = {"role": "user", "parts": [message["content"]]}
                 m_for_logging = {"role": "model", "parts": [message["content"]]}
 
-                if self.model_spec.has_attr('supports_images'):
+                if "image" in message.keys() and 'multimodality' not in self.model_spec.model_config:
+                    logger.info(
+                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
+                    raise Exception(
+                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
+
+                if 'multimodality' in self.model_spec.model_config:
                     if "image" in message.keys():
 
-                        if not self.model_spec.has_attr('support_multiple_images') and len(message['image']) > 1:
+                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(message['image']) > 1:
                             logger.info(
                                 f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
                             raise Exception(
