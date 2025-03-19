@@ -22,10 +22,11 @@ class BasePlayPen(abc.ABC):
         self.callbacks.on_rollout_start(game_env, self.num_timesteps)
         num_rollout_steps = 0
         while num_rollout_steps < rollout_steps:
-            # like: agent, observation, action, reward, done, info
-            player, context, response, feedback, done, info = game_env.step()
+            player, observation, state = game_env.get_observation()
+            action = player(observation)
+            done, info = game_env.step(action)
             if self.is_learning_player(player):
-                self.rollout_buffer.append((context, response, feedback, done, info))
+                self.rollout_buffer.append((state, observation, action, done, info))
                 num_rollout_steps += 1
                 self.num_timesteps += 1
             self.callbacks.update_locals(locals())

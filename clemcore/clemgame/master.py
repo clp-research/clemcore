@@ -1,6 +1,7 @@
 import abc
 import collections
 import logging
+from copy import deepcopy
 from datetime import datetime
 from typing import List, Dict, Tuple, Any, Iterator
 
@@ -20,13 +21,18 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, model: backends.Model):
+    def __init__(self, model: backends.Model, game_recorder: GameRecorder):
         """
         Args:
             model: A backends.Model instance to be used by this Player instance.
         """
         self.model = model
-        self.descriptor: str = None
+        self.game_recorder = game_recorder
+        self.messages: List[Dict] = []
+        self.descriptor: str = "<missing-description>"
+        self.turns: int = 0
+        self.prompt = None
+        self.response_object = None
         module_logger.info("Player %s", self.get_description())
 
     def get_description(self) -> str:
@@ -36,35 +42,55 @@ class Player(abc.ABC):
         """
         return f"{self.__class__.__name__}, {self.model}"
 
-    def __call__(self, messages: List[Dict], turn_idx) -> Tuple[Any, Any, str]:
-        """Get a response from this Player instance's model.
-        Passes a messages list and turn index to the model, creates a response dict for record logging, including
-        timestamps and call duration, and returns a Player response tuple.
-        Args:
-            messages: A list of message dicts, containing the current conversation history to prompt the model with.
-            turn_idx: The current turn index.
-        Returns:
-            A Player response tuple consisting of: The prompt as converted by the model backend; the full response dict
-            to be used for recording/logging; the response text produced by the model, as post-processed by the model
-            backend.
-        """
+    def __log_send_context_event(self, context, is_reprompt: bool = False):
+        action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
+        action = {'type': action_type, 'content': context}
+        self.game_recorder.log_event(from_='GM', to=self.descriptor, action=action)
+
+    def __log_response_received_event(self, response):
+        # Player -> GM
+        action = {'type': 'get message', 'content': response}
+        # log 'get message' event including backend/API call:
+        _prompt, _response = self.get_last_call_info()
+        self.game_recorder.log_event(from_=self.descriptor, to="GM", action=action, call=(_prompt, _response))
+
+    def get_last_call_info(self):
+        return self.prompt, self.response_object
+
+    def __call__(self, context: Dict) -> str:
+        assert context["role"] != "assistant", "Last entry should not be assistant " \
+                                               "b.c. this would be the role of the current player"
+        last_message = self.messages[-1]
+        is_reprompt = last_message == context
+        if not is_reprompt:
+            self.turns += 1
+            self.messages.append(context)
+
+        self.__log_send_context_event(context, is_reprompt)
         call_start = datetime.now()
-        prompt = messages
-        response = dict()
-        if isinstance(self.model, backends.CustomResponseModel):
-            response_text = self._custom_response(messages, turn_idx)
-        elif isinstance(self.model, backends.HumanModel):
-            response_text = self._terminal_response(messages, turn_idx)
-        else:
-            prompt, response, response_text = self.model.generate_response(messages)
+        self.prompt, self.response_object, response_text = self.__call_model()
         call_duration = datetime.now() - call_start
-        response["clem_player"] = {
+        self.__log_response_received_event(response_text)
+
+        self.response_object["clem_player"] = {
             "call_start": str(call_start),
             "call_duration": str(call_duration),
             "response": response_text,
             "model_name": self.model.get_name()
         }
-        return prompt, response, response_text
+
+        return response_text
+
+    def __call_model(self):
+        prompt = self.messages
+        response_object = dict()
+        if isinstance(self.model, backends.CustomResponseModel):
+            response_text = self._custom_response(self.messages)
+        elif isinstance(self.model, backends.HumanModel):
+            response_text = self._terminal_response(self.messages)
+        else:
+            prompt, response_object, response_text = self.model.generate_response(self.messages)
+        return prompt, response_object, response_text
 
     def _terminal_response(self, messages, turn_idx) -> str:
         """Response for human interaction via terminal.
@@ -204,7 +230,17 @@ class DialogueGameMaster(GameMaster):
         """
         raise NotImplementedError()
 
-    def step(self):
+    def get_game_state(self):
+        return None
+
+    def get_current_player(self):
+        return self.current_player
+
+    def get_context_for(self, player):
+        messages = self.messages_by_names[player.descriptor]
+        return messages[-1]
+
+    def step(self, response: str, auto_reprompt: bool = False):
         if self.is_new_game:
             self.is_new_game = False
             self._on_before_game()
@@ -214,15 +250,13 @@ class DialogueGameMaster(GameMaster):
             self._on_before_turn(self.current_turn)
             module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
 
-        player = self.current_player
-        messages = self.messages_by_names[player.descriptor]
-        assert messages, f"messages history must not be empty for {player.descriptor}"
-        context, response = self.__prompt(player, messages)
-        self.__validate_parse_and_add_player_response(player, response)
-        while self._should_reprompt(player):
-            self._on_before_reprompt(player)
-            context, response = self.__prompt(player, messages, is_reprompt=True)
-            self.__validate_parse_and_add_player_response(player, response)
+        self.__validate_parse_and_add_player_response(self.current_player, response)
+        if auto_reprompt:
+            while self._should_reprompt(self.current_player):
+                self._on_before_reprompt(self.current_player)
+                context = self.get_context_for(self.current_player)
+                response = self.current_player(context, is_reprompt=True)
+                self.__validate_parse_and_add_player_response(self.current_player, response)
 
         try:
             # check already here for next player to increment turn and to check end condition properly
@@ -235,15 +269,13 @@ class DialogueGameMaster(GameMaster):
             self.is_new_turn = True
 
         done = not self._does_game_proceed()
-        feedback = {
-            "turn_score": self.compute_turn_score(),
-            "turn_feedback": self.get_turn_feedback(),
-            "episode_score": 0
-        }
+        self.info["turn_score"] = self.compute_turn_score()
+        self.info["turn_feedback"] = self.get_turn_feedback()
+        self.info["episode_score"] = 0
         if done:
             self._on_after_game()
-            feedback["episode_score"] = self.compute_episode_score()
-        return player, context, response, feedback, done, self.info
+            self.info["episode_score"] = self.compute_episode_score()
+        return done, deepcopy(self.info)
 
     def get_turn_feedback(self):
         """
@@ -277,36 +309,9 @@ class DialogueGameMaster(GameMaster):
         """
         done = False
         while not done:
-            _, _, _, _, done, _ = self.step()
-
-    def __prompt(self, player: Player, history: List[Dict], is_reprompt=False) -> Tuple[Dict, str]:
-        """Prompt a player model.
-        Includes logging of 'send message' and 'get message' actions.
-        Intended to be left as-is by inheriting classes. Implement game-specific functionality in the
-        _should_reprompt, _on_before_reprompt, _after_add_player_response, _validate_player_response and
-        _on_parse_response methods.
-        Args:
-            player: The Player instance to be prompted.
-            is_reprompt: If this is a reprompt attempt. This is intended for re-prompting with modified prompts.
-        """
-        # GM -> Player
-        context = history[-1]
-        assert context["role"] != "assistant", "Last entry should not be assistant " \
-                                               "b.c. this would be the role of the current player"
-        message = context["content"]
-
-        action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
-        action = {'type': action_type, 'content': message}
-        self.log_event(from_='GM', to=player.descriptor, action=action)
-
-        _prompt, _response, response_message = player(history, self.current_turn)
-
-        # Player -> GM
-        action = {'type': 'get message', 'content': response_message}
-        # log 'get message' event including backend/API call:
-        self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
-
-        return context, response_message
+            context = self.get_context_for(self.current_player)
+            response = self.current_player(context)
+            done, _ = self.step(response, auto_reprompt=True)
 
     def _should_reprompt(self, player: Player):
         """Method to check if a Player should be re-prompted.

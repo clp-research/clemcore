@@ -1,8 +1,8 @@
 from contextlib import contextmanager
-from typing import List
+from typing import List, Tuple, Dict
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameSpec, benchmark, GameBenchmark
+from clemcore.clemgame import GameSpec, benchmark, GameBenchmark, Player
 
 
 @contextmanager
@@ -37,5 +37,11 @@ class GameEnv:
             self.task_iterator.reset()
             self.reset()
 
-    def step(self):
-        return self.master.step()
+    def get_observation(self) -> Tuple[Player, Dict, Dict]:
+        player = self.master.get_current_player()
+        context = self.master.get_context_for(player)
+        state = self.master.get_game_state()
+        return player, context, state
+
+    def step(self, action: str) -> Tuple[bool, Dict]:
+        return self.master.step(action)
