@@ -84,15 +84,19 @@ def train(learner: backends.ModelSpec, teacher: backends.ModelSpec, prefix: str 
     if prefix:
         lookup_name = f"{prefix}_trainer.py"
 
+    def is_playpen(obj):
+        return inspect.isclass(obj) and issubclass(obj, BasePlayPen) and obj is not BasePlayPen
+
     playpen_cls = None
     for file_name in os.listdir():
         if file_name == lookup_name:
             module_path = os.path.join(os.getcwd(), file_name)
-            spec = importlib_util.spec_from_file_location(lookup_name, module_path)
+            spec = importlib_util.spec_from_file_location(os.path.splitext(lookup_name)[0], module_path)
             module = importlib_util.module_from_spec(spec)
             spec.loader.exec_module(module)
-            playpen_subclasses = inspect.getmembers(BasePlayPen)
+            playpen_subclasses = inspect.getmembers(module, predicate=is_playpen)
             _, playpen_cls = playpen_subclasses[0]
+            break
 
     if playpen_cls is None:
         raise RuntimeError(f"No playpen trainer found in file '{lookup_name}'")
