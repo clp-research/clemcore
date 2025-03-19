@@ -27,31 +27,33 @@ class GameInstanceIterator:
         self.instances = instances
         self.do_shuffle = do_shuffle
         self.queue = []
+        self.reset()
 
     def __iter__(self):
         return self
 
     def __next__(self) -> Tuple[Dict, Dict]:
         try:
-            return self.queue.pop()
+            return self.queue.pop(0)
         except IndexError:
             raise StopIteration()
 
     def __len__(self):
         return len(self.queue)
 
-    def clone(self):
+    def clone(self) -> "GameInstanceIterator":
         return GameInstanceIterator(self.instances, do_shuffle=self.do_shuffle)
 
-    def reset(self):
+    def reset(self) -> "GameInstanceIterator":
         self.queue = []
-        for idx, experiment in enumerate(self.instances):
+        for idx, experiment in enumerate(self.instances["experiments"]):
             experiment_config = {k: experiment[k] for k in experiment if k != 'game_instances'}
             experiment_config["dir"] = f"{idx}_{experiment_config['name']}"
             for game_instance in experiment["game_instances"]:
                 self.queue.append((experiment_config, game_instance))
         if self.do_shuffle:
             random.shuffle(self.queue)
+        return self
 
 
 class GameBenchmark(GameResourceLocator):
