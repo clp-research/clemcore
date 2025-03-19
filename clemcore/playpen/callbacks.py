@@ -1,12 +1,9 @@
 import abc
-from contextlib import contextmanager
-from typing import List, Dict, Any
+from typing import Dict, Any, List
 
 from tqdm import tqdm
 
-from clemcore.backends import Model
-from clemcore.clemgame import GameRegistry, GameSpec, GameBenchmark
-from clemcore.clemgame import benchmark
+from clemcore.playpen.env import GameEnv
 
 
 class BaseCallback(abc.ABC):
@@ -14,7 +11,7 @@ class BaseCallback(abc.ABC):
     def __init__(self):
         self.locals: Dict[str, Any] = {}
 
-    def on_rollout_start(self, game_env: "GameEnv", num_timesteps: int):
+    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
         pass
 
     def on_rollout_end(self):
@@ -65,7 +62,7 @@ class CallbackList(BaseCallback):
     def append(self, callback: BaseCallback):
         self.callbacks.append(callback)
 
-    def on_rollout_start(self, game_env: "GameEnv", num_timesteps: int):
+    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
         for callback in self.callbacks:
             callback.on_rollout_start(game_env, num_timesteps)
 
@@ -105,7 +102,7 @@ class GameRecordCallback(BaseCallback):
         self.episode_idx = 0
         self.results_dir = results_dir
 
-    def on_rollout_start(self, game_env: "GameEnv", num_timesteps: int):
+    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
         self.game_env = game_env
         self.rollout_idx += 1
         self.num_rollout_steps = 0
@@ -124,7 +121,7 @@ class GameRecordCallback(BaseCallback):
             self.episode_idx += (self.num_rollout_steps - self.episode_start_step)
             self.episode_start_step = self.num_rollout_steps
 
-    def store_records(self, game_env: "GameEnv"):
+    def store_records(self, game_env: GameEnv):
         """
         Stores the records in a similar structure as for running clembench, so that transcribe can be applied.
         """
@@ -154,7 +151,7 @@ class RolloutProgressCallback(BaseCallback):
         self.rollout_steps = rollout_steps
         self.progress_bar = None
 
-    def on_rollout_start(self, game_env: "GameEnv", num_timesteps: int):
+    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
         self.progress_bar = tqdm(total=self.rollout_steps, desc="Rollout steps collected")
 
     def on_rollout_end(self):
@@ -164,77 +161,3 @@ class RolloutProgressCallback(BaseCallback):
     def on_step(self):
         if self.is_learning_player():
             self.progress_bar.update(1)
-
-
-class BasePlayPen(abc.ABC):
-
-    def __init__(self, learner: Model, teacher: Model):
-        self.learner = learner
-        self.teacher = teacher
-        self.rollout_buffer = []
-        self.num_timesteps = 0
-        self.callbacks = CallbackList()
-
-    def add_callback(self, callback: BaseCallback):
-        self.callbacks.append(callback)
-
-    @abc.abstractmethod
-    def learn_interactive(self, game_registry: GameRegistry):
-        pass
-
-    def _collect_rollouts(self, game_env, rollout_steps):
-        # reset() sets up the next game instance;
-        # we should notify somehow when all instances were run so users can intervene if wanted?
-        self.callbacks.on_rollout_start(game_env, self.num_timesteps)
-        num_rollout_steps = 0
-        while num_rollout_steps < rollout_steps:
-            # like: agent, observation, action, reward, done, info
-            player, context, response, feedback, done, info = game_env.step()
-            if self.is_learning_player(player):
-                self.rollout_buffer.append((context, response, feedback, done, info))
-                num_rollout_steps += 1
-                self.num_timesteps += 1
-            self.callbacks.update_locals(locals())
-            self.callbacks.on_step()
-            if done:
-                game_env.reset()
-        self.callbacks.on_rollout_end()
-
-    def is_learning_player(self, player):
-        return player.model is self.learner
-
-
-@contextmanager
-def make_env(game_spec: GameSpec, players: List[Model],
-             instances_name: str = None, shuffle_instances: bool = False):
-    with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
-        yield GameEnv(game, players=players, shuffle_instances=shuffle_instances)
-
-
-class GameEnv:
-
-    def __init__(self, game: GameBenchmark, players: List[Model], shuffle_instances: bool = False):
-        self.game = game
-        self.players = players
-        # setup iterator to go through tasks / game instances
-        self.task_iterator = game.create_game_instance_iterator(shuffle_instances)
-        if len(self.task_iterator) < 1:
-            raise RuntimeError(f"No game instances given for the game: '{self.game.game_name}'")
-        # variables initialized on reset()
-        self.game_instance = None
-        self.experiment_config = None
-        self.master = None
-        # reset here so that game env is fully functional after init
-        self.reset()
-
-    def reset(self):
-        try:
-            self.experiment_config, self.game_instance = next(self.task_iterator)
-            self.master = self.game.create_game_master(self.experiment_config, self.players)
-            self.master.setup(**self.game_instance)
-        except StopIteration:
-            self.task_iterator.reset()
-            self.reset()
-
-    def step(self):
-        return self.master.step()
