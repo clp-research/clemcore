@@ -2,10 +2,11 @@ import importlib.util
 import inspect
 import logging
 import os
+import random
 import sys
 from contextlib import contextmanager
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, ContextManager, Tuple
 from tqdm import tqdm
 
 from clemcore import backends
@@ -17,6 +18,40 @@ from clemcore.utils import transcript_utils
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
+
+
+class GameInstanceIterator:
+
+    def __init__(self, instances, do_shuffle=False):
+        assert instances is not None, "Instances must be given"
+        self.instances = instances
+        self.do_shuffle = do_shuffle
+        self.queue = []
+
+    def __iter__(self):
+        return self
+
+    def __next__(self) -> Tuple[Dict, Dict]:
+        try:
+            return self.queue.pop()
+        except IndexError:
+            raise StopIteration()
+
+    def __len__(self):
+        return len(self.queue)
+
+    def clone(self):
+        return GameInstanceIterator(self.instances, do_shuffle=self.do_shuffle)
+
+    def reset(self):
+        self.queue = []
+        for idx, experiment in enumerate(self.instances):
+            experiment_config = {k: experiment[k] for k in experiment if k != 'game_instances'}
+            experiment_config["dir"] = f"{idx}_{experiment_config['name']}"
+            for game_instance in experiment["game_instances"]:
+                self.queue.append((experiment_config, game_instance))
+        if self.do_shuffle:
+            random.shuffle(self.queue)
 
 
 class GameBenchmark(GameResourceLocator):
@@ -46,6 +81,9 @@ class GameBenchmark(GameResourceLocator):
             self.instances = self.load_instances(self.game_spec.instances)
         else:
             self.instances = self.load_instances("instances")  # fallback to instances.json default
+
+    def create_game_instance_iterator(self, shuffle_instances: bool = False):
+        return GameInstanceIterator(self.instances, do_shuffle=shuffle_instances)
 
     def build_transcripts(self, results_dir: str):
         """Create and store readable HTML and LaTeX episode transcripts.
@@ -329,7 +367,8 @@ def is_game_benchmark(obj):
 
 
 @contextmanager
-def load_from_spec(game_spec: GameSpec, do_setup: bool = True, instances_name: str = None) -> GameBenchmark:
+def load_from_spec(game_spec: GameSpec, do_setup: bool = True, instances_name: str = None) \
+        -> ContextManager[GameBenchmark]:
     """Load a clemgame using a GameSpec.
     Args:
         game_spec: A GameSpec instance holding specific clemgame data.
