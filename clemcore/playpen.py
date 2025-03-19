@@ -1,6 +1,8 @@
 import abc
-import random
-from typing import Tuple, Dict, List
+from contextlib import contextmanager
+from typing import List
+
+from tqdm import tqdm
 
 from clemcore.backends import Model
 from clemcore.clemgame import GameRegistry, GameSpec, GameBenchmark
@@ -15,6 +17,7 @@ class BasePlayPen(abc.ABC):
         self.rollout_steps = rollout_steps
         self.rollout_buffer = []
         self.num_timesteps = 0
+        self.num_rollouts = 0
 
     @abc.abstractmethod
     def learn_interactive(self, game_registry: GameRegistry):
@@ -23,91 +26,71 @@ class BasePlayPen(abc.ABC):
     def _collect_rollouts(self, game_env):
         # reset() sets up the next game instance;
         # we should notify somehow when all instances were run so users can intervene if wanted?
+        self.num_rollouts += 1
         num_rollout_steps = 0
-        num_timesteps_start = self.num_timesteps
-        while num_rollout_steps < self.rollout_steps:
-            # like: agent, observation, action, reward, done, info
-            player, context, response, feedback, done, info = game_env.step()
-            if player == self.learner:
-                self.rollout_buffer.append((context, response, feedback, done, info))
-                num_rollout_steps += 1
-                self.num_timesteps += 1
-            if done:
-                game_env.store_records(num_timesteps_start)
-                game_env.reset()
-                num_timesteps_start += num_rollout_steps
+        episode_start_step = 0
+        records_start_step = self.num_timesteps
+        with tqdm(total=self.rollout_steps, desc="Rollout steps collected") as pbar:
+            while num_rollout_steps < self.rollout_steps:
+                # like: agent, observation, action, reward, done, info
+                player, context, response, feedback, done, info = game_env.step()
+                if player.model is self.learner:
+                    self.rollout_buffer.append((context, response, feedback, done, info))
+                    num_rollout_steps += 1
+                    self.num_timesteps += 1
+                    pbar.update(1)
+                if done:
+                    # Note: It might happen that the learner's turn is not reached because the teacher already
+                    # screws up and the game ends early. Then the rollout steps do not increase and the stored
+                    # records are eventually overwritten by the next episode where the learner has a turn.
+                    # todo: Do we actually want to record these episodes as well?
+                    game_env.store_records(self.num_rollouts, records_start_step)
+                    game_env.reset()
+                    records_start_step += (num_rollout_steps - episode_start_step)
+                    episode_start_step = num_rollout_steps
 
 
+@contextmanager
 def make_env(game_spec: GameSpec, players: List[Model],
              instances_name: str = None, shuffle_instances: bool = False):
-    game = benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name)
-    return GameEnv(game, players=players, shuffle_instances=shuffle_instances)
-
-
-class GameInstanceIterator:
-
-    def __init__(self, instances, do_shuffle=False):
-        assert instances is not None, "Instances must be given"
-        self.instances = instances
-        self.do_shuffle = do_shuffle
-        self.queue = []
-
-    def __iter__(self):
-        return self
-
-    def __next__(self) -> Tuple[Dict, Dict]:
-        try:
-            return self.queue.pop()
-        except IndexError:
-            raise StopIteration()
-
-    def __len__(self):
-        return len(self.queue)
-
-    def clone(self):
-        return GameInstanceIterator(self.instances, do_shuffle=self.do_shuffle)
-
-    def reset(self):
-        self.queue = []
-        for idx, experiment in enumerate(self.instances):
-            experiment_config = {k: experiment[k] for k in experiment if k != 'game_instances'}
-            experiment_config["dir"] = f"{idx}_{experiment_config['name']}"
-            for game_instance in experiment["game_instances"]:
-                self.queue.append((experiment_config, game_instance))
-        if self.do_shuffle:
-            random.shuffle(self.queue)
+    with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
+        yield GameEnv(game, players=players, shuffle_instances=shuffle_instances)
 
 
 class GameEnv:
 
-    def __init__(self, game: GameBenchmark, players: List[Model],
-                 shuffle_instances: bool = False):
+    def __init__(self, game: GameBenchmark, players: List[Model], shuffle_instances: bool = False):
         self.game = game
         self.players = players
-        self.master = None
-        self.experiment_config = None
+        # setup iterator to go through tasks / game instances
+        self.task_iterator = game.create_game_instance_iterator(shuffle_instances)
+        if len(self.task_iterator) < 1:
+            raise RuntimeError(f"No game instances given for the game: '{self.game.game_name}'")
+        # variables initialized on reset()
         self.game_instance = None
-        self.game_instances = GameInstanceIterator(game.instances, do_shuffle=shuffle_instances)
-        self.reset()  # fully functional after init
+        self.experiment_config = None
+        self.master = None
+        # reset here so that game env is fully functional after init
+        self.reset()
 
     def reset(self):
         try:
-            self.experiment_config, self.game_instance = next(self.game_instances)
+            self.experiment_config, self.game_instance = next(self.task_iterator)
             self.master = self.game.create_game_master(self.experiment_config, self.players)
             self.master.setup(**self.game_instance)
         except StopIteration:
-            if len(self.game_instances) < 1:
-                raise RuntimeError(f"No game instances given for the game: '{self.game.game_name}'")
-            self.game_instances.reset()
+            self.task_iterator.reset()
             self.reset()
 
     def step(self):
         return self.master.step()
 
-    def store_records(self, episode_idx):
+    def store_records(self, rollout_idx, episode_idx):
         dialogue_pair_desc = self.game.get_dialogue_pair_descriptor(self.players)
         experiment_name = self.experiment_config['name']
-        experiment_dir = self.experiment_config["dir"]
+        # Note: Cannot use underscores in experiment dir, except the experiment name e.g. 0_high_en, because the
+        # transcribe logic splits on underscore to get the experiment name, i.e., everything after the first underscore
+        experiment_dir = f"rollout{rollout_idx:04d}-{self.experiment_config['dir']}"
         self.game.store_results_file(self.experiment_config,
                                      f"experiment_{experiment_name}.json",
                                      dialogue_pair_desc,
