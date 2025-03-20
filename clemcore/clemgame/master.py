@@ -68,7 +68,7 @@ class Player(abc.ABC):
             self.current_turn += 1
             self.messages.append(context)
 
-        self.__log_send_context_event(context, is_reprompt)
+        self.__log_send_context_event(context["content"], is_reprompt)
         call_start = datetime.now()
         self.prompt, self.response_object, response_text = self.__call_model()
         call_duration = datetime.now() - call_start
