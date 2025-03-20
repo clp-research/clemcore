@@ -25,7 +25,7 @@ class BasePlayPen(abc.ABC):
             player, observation, state = game_env.get_observation()
             action = player(observation)
             done, info = game_env.step(action)
-            if self.is_learning_player(player):
+            if self.is_learner(player):
                 self.rollout_buffer.append((state, observation, action, done, info))
                 num_rollout_steps += 1
                 self.num_timesteps += 1
@@ -35,8 +35,11 @@ class BasePlayPen(abc.ABC):
                 game_env.reset()
         self.callbacks.on_rollout_end()
 
-    def is_learning_player(self, player):
+    def is_learner(self, player):
         return player.model is self.learner
+
+    def is_teacher(self, player):
+        return player.model is self.teacher
 
     @abc.abstractmethod
     def learn_interactive(self, game_registry: GameRegistry):
