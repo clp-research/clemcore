@@ -348,12 +348,12 @@ class DialogueGameMaster(GameMaster):
         action = {'type': 'metadata', 'content': message}
         self.log_event("GM", "GM", action)
 
-    def log_to_self(self, type_: str, value: str):
+    def log_to_self(self, type_: str, value: Any):
         """Logs an action of the passed type from GM to GM.
         This is a logging method, and will not add anything to the conversation history.
         Args:
             type_: The type of the action to be logged.
-            value: The content value of the action to be logged.
+            value: The content value of the action to be logged. Must be JSON serializable.
         """
         action = {'type': type_, 'content': value}
         self.log_event("GM", "GM", action)
