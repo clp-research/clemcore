@@ -30,7 +30,7 @@ class Player(abc.ABC):
         self.game_recorder = game_recorder
         self.messages: List[Dict] = []
         self.descriptor: str = "<missing-description>"
-        self.turns: int = 0
+        self.current_turn: int = 0
         self.prompt = None
         self.response_object = None
         module_logger.info("Player %s", self.get_description())
@@ -60,10 +60,12 @@ class Player(abc.ABC):
     def __call__(self, context: Dict) -> str:
         assert context["role"] != "assistant", "Last entry should not be assistant " \
                                                "b.c. this would be the role of the current player"
-        last_message = self.messages[-1]
-        is_reprompt = last_message == context
+        is_reprompt = False
+        if self.messages:
+            last_message = self.messages[-1]
+            is_reprompt = last_message == context
         if not is_reprompt:
-            self.turns += 1
+            self.current_turn += 1
             self.messages.append(context)
 
         self.__log_send_context_event(context, is_reprompt)
@@ -92,7 +94,7 @@ class Player(abc.ABC):
             prompt, response_object, response_text = self.model.generate_response(self.messages)
         return prompt, response_object, response_text
 
-    def _terminal_response(self, messages, turn_idx) -> str:
+    def _terminal_response(self, messages) -> str:
         """Response for human interaction via terminal.
         Overwrite this method to customize human inputs (model_name: human, terminal).
         Args:
@@ -105,15 +107,14 @@ class Player(abc.ABC):
         if messages:
             latest_response = messages[-1]["content"]
         print(f"\n{latest_response}")
-        user_input = input(f"Your response as {self.__class__.__name__} (turn: {turn_idx}):\n")
+        user_input = input(f"Your response as {self.__class__.__name__} (turn: {self.current_turn}):\n")
         return user_input
 
-    def _custom_response(self, messages, turn_idx) -> str:
+    def _custom_response(self, messages) -> str:
         """Response for programmatic Player interaction.
         Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
         Args:
             messages: A list of dicts that contain the history of the conversation.
-            turn_idx: The index of the current turn.
         Returns:
             The programmatic response as text.
         """
@@ -178,8 +179,6 @@ class DialogueGameMaster(GameMaster):
         self.player_iter: Iterator[Player] = iter([])
         self.current_turn: int = 0
         self.current_player: Player = None
-        self.is_new_turn: bool = True
-        self.is_new_game: bool = True
         self.info = {}
 
     def get_players(self) -> List[Player]:
@@ -215,10 +214,20 @@ class DialogueGameMaster(GameMaster):
         players_descriptions = collections.OrderedDict(GM=f"Game master for {self.game_name}")
         for name, player in self.players_by_names.items():
             players_descriptions[name] = player.get_description()
-        # log player ID and description dcit:
         self.log_players(players_descriptions)
+        # call game hooks
+        self._on_before_game()
+        self.__prepare_next_turn()
+
+    def __prepare_next_turn(self):
+        # setup player iterator
         self.player_iter = iter(self.get_players())
         self.current_player = next(self.player_iter)
+        # add record entry for player turns
+        self.log_next_turn()
+        # call hook
+        self._on_before_turn(self.current_turn)
+        module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
 
     def _on_setup(self, **kwargs):
         """Method executed at the start of the default setup method.
@@ -238,19 +247,12 @@ class DialogueGameMaster(GameMaster):
 
     def get_context_for(self, player):
         messages = self.messages_by_names[player.descriptor]
+        assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.descriptor}"
         return messages[-1]
 
     def step(self, response: str, auto_reprompt: bool = False):
-        if self.is_new_game:
-            self.is_new_game = False
-            self._on_before_game()
-        if self.is_new_turn:
-            self.is_new_turn = False
-            self.log_next_turn()  # not sure if we want to do this always here (or add to _on_before_turn)
-            self._on_before_turn(self.current_turn)
-            module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
-
         self.__validate_parse_and_add_player_response(self.current_player, response)
+
         if auto_reprompt:
             while self._should_reprompt(self.current_player):
                 self._on_before_reprompt(self.current_player)
@@ -264,9 +266,7 @@ class DialogueGameMaster(GameMaster):
         except StopIteration:
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
-            self.player_iter = iter(self.get_players())
-            self.current_player = next(self.player_iter)
-            self.is_new_turn = True
+            self.__prepare_next_turn()
 
         done = not self._does_game_proceed()
         self.info["turn_score"] = self.compute_turn_score()
@@ -284,21 +284,19 @@ class DialogueGameMaster(GameMaster):
         """
         return None
 
-    @abc.abstractmethod
     def compute_turn_score(self):
         """
         Mandatory.
         :return: the performance score for an agent's turn
         """
-        pass
+        return 0
 
-    @abc.abstractmethod
     def compute_episode_score(self):
         """
         Mandatory.
         :return: the performance of the agent over the whole episode
         """
-        pass
+        return 0
 
     def play(self) -> None:
         """Main play loop method.
