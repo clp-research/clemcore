@@ -30,7 +30,6 @@ class Player(abc.ABC):
         self.game_recorder = game_recorder
         self.messages: List[Dict] = []
         self.descriptor: str = "<missing-description>"
-        self.current_turn: int = 0
         self.prompt = None
         self.response_object = None
         module_logger.info("Player %s", self.get_description())
@@ -42,9 +41,8 @@ class Player(abc.ABC):
         """
         return f"{self.__class__.__name__}, {self.model}"
 
-    def __log_send_context_event(self, context, is_reprompt: bool = False):
-        action_type = 'send message' if not is_reprompt else 'send message (reprompt)'
-        action = {'type': action_type, 'content': context}
+    def __log_send_context_event(self, context):
+        action = {'type': 'send message', 'content': context}
         self.game_recorder.log_event(from_='GM', to=self.descriptor, action=action)
 
     def __log_response_received_event(self, response):
@@ -57,20 +55,19 @@ class Player(abc.ABC):
     def get_last_call_info(self):
         return self.prompt, self.response_object
 
-    def __call__(self, context: Dict) -> str:
-        assert context["role"] != "assistant", "Last entry should not be assistant " \
-                                               "b.c. this would be the role of the current player"
-        is_reprompt = False
-        if self.messages:
-            last_message = self.messages[-1]
-            is_reprompt = last_message == context
-        if not is_reprompt:
-            self.current_turn += 1
-            self.messages.append(context)
+    def __call__(self, context: Dict, memorize: bool = True) -> str:
+        """
+        Let the player respond (act verbally) to a given context.
 
-        self.__log_send_context_event(context["content"], is_reprompt)
+        :param context: The context to which the player should respond.
+        :param memorize: Whether the context and response are to be added to the player's message history.
+        :return: the textual response
+        """
+        assert context["role"] == "user", "The context must be given by the user role."
+
+        self.__log_send_context_event(context["content"])
         call_start = datetime.now()
-        self.prompt, self.response_object, response_text = self.__call_model()
+        self.prompt, self.response_object, response_text = self.__call_model(self.messages + [context])  # new list
         call_duration = datetime.now() - call_start
         self.__log_response_received_event(response_text)
 
@@ -81,17 +78,20 @@ class Player(abc.ABC):
             "model_name": self.model.get_name()
         }
 
+        if memorize:
+            self.messages.append(context)
+            self.messages.append(dict(role="assistant", content=response_text))
+
         return response_text
 
-    def __call_model(self):
-        prompt = self.messages
+    def __call_model(self, prompt: List[Dict]):
         response_object = dict()
         if isinstance(self.model, backends.CustomResponseModel):
-            response_text = self._custom_response(self.messages)
+            response_text = self._custom_response(prompt)
         elif isinstance(self.model, backends.HumanModel):
-            response_text = self._terminal_response(self.messages)
+            response_text = self._terminal_response(prompt)
         else:
-            prompt, response_object, response_text = self.model.generate_response(self.messages)
+            prompt, response_object, response_text = self.model.generate_response(prompt)
         return prompt, response_object, response_text
 
     def _terminal_response(self, messages) -> str:
@@ -107,7 +107,7 @@ class Player(abc.ABC):
         if messages:
             latest_response = messages[-1]["content"]
         print(f"\n{latest_response}")
-        user_input = input(f"Your response as {self.__class__.__name__} (turn: {self.current_turn}):\n")
+        user_input = input(f"Your response as {self.__class__.__name__}:\n")
         return user_input
 
     def _custom_response(self, messages) -> str:
@@ -217,9 +217,9 @@ class DialogueGameMaster(GameMaster):
         self.log_players(players_descriptions)
         # call game hooks
         self._on_before_game()
-        self.__prepare_next_turn()
+        self.__prepare_round()
 
-    def __prepare_next_turn(self):
+    def __prepare_round(self):
         # setup player iterator
         self.player_iter = iter(self.get_players())
         self.current_player = next(self.player_iter)
@@ -250,23 +250,18 @@ class DialogueGameMaster(GameMaster):
         assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.descriptor}"
         return messages[-1]
 
-    def step(self, response: str, auto_reprompt: bool = False):
+    def step(self, response: str, rotate_player: bool = True) -> Tuple[bool, Dict]:
+        """
+        Transitions the game state by applying the current player's response.
+
+        :param response: The response (verbal action) of the current player.
+        :param rotate_player: Whether to pass the turn to the next player.
+        :return: done, info
+        """
         self.__validate_parse_and_add_player_response(self.current_player, response)
 
-        if auto_reprompt:
-            while self._should_reprompt(self.current_player):
-                self._on_before_reprompt(self.current_player)
-                context = self.get_context_for(self.current_player)
-                response = self.current_player(context, is_reprompt=True)
-                self.__validate_parse_and_add_player_response(self.current_player, response)
-
-        try:
-            # check already here for next player to increment turn and to check end condition properly
-            self.current_player = next(self.player_iter)
-        except StopIteration:
-            self._on_after_turn(self.current_turn)
-            self.current_turn += 1
-            self.__prepare_next_turn()
+        if rotate_player:
+            self.__next_player()
 
         done = not self._does_game_proceed()
         self.info["turn_score"] = self.compute_turn_score()
@@ -276,6 +271,15 @@ class DialogueGameMaster(GameMaster):
             self._on_after_game()
             self.info["episode_score"] = self.compute_episode_score()
         return done, deepcopy(self.info)
+
+    def __next_player(self):
+        try:
+            # check already here for next player to increment turn and to check end condition properly
+            self.current_player = next(self.player_iter)
+        except StopIteration:
+            self._on_after_turn(self.current_turn)
+            self.current_turn += 1
+            self.__prepare_round()
 
     def get_turn_feedback(self):
         """
@@ -309,11 +313,28 @@ class DialogueGameMaster(GameMaster):
         while not done:
             context = self.get_context_for(self.current_player)
             response = self.current_player(context)
-            done, _ = self.step(response, auto_reprompt=True)
+            done, _ = self.step(response, rotate_player=False)
+
+            # Allow the game to prompt the current player again (if necessary).
+            while self._should_reprompt(self.current_player):
+                self.log_to_self("send message", "reprompt")
+                # We must assume that the game developer correctly adds the messages,
+                # so that the alternating roles of user and assistant are respected.
+                self._on_before_reprompt(self.current_player)
+                context = self.get_context_for(self.current_player)
+                response = self.current_player(context)
+                done, _ = self.step(response, rotate_player=False)
+
+            if not done:
+                self.__next_player()
+
 
     def _should_reprompt(self, player: Player):
         """Method to check if a Player should be re-prompted.
-        This is intended to check for invalid responses.
+
+        Important: Make sure that the response of the player before the re-prompt is added to the history!
+        Otherwise, the requirement of alternating roles (user, assistant, user, ...) in the history might be violated.
+
         Args:
             player: The Player instance to re-prompt.
         """
