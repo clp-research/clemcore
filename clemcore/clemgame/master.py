@@ -240,12 +240,11 @@ class DialogueGameMaster(GameMaster):
         assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.descriptor}"
         return messages[-1]
 
-    def step(self, response: str, rotate_player: bool = True) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> Tuple[bool, Dict]:
         """
         Transitions the game state by applying the current player's response.
 
         :param response: The response (verbal action) of the current player.
-        :param rotate_player: Whether to pass the turn to the next player.
         :return: done, info
         """
         # todo: it seems we should change the order here: Parse should come first, and then validate.
@@ -256,12 +255,12 @@ class DialogueGameMaster(GameMaster):
             self.add_assistant_message(self.current_player, parsed_response)
             self._after_add_player_response(self.current_player, parsed_response)
 
-        if rotate_player:
+        if self._does_game_proceed() and self._should_pass_turn():
             self._next_player()
 
         done = not self._does_game_proceed()
-        self.info["turn_score"] = self.compute_turn_score()
-        self.info["turn_feedback"] = self.get_turn_feedback()
+        self.info["response_score"] = self.compute_response_score(response)
+        self.info["response_feedback"] = self.get_response_feedback(response)
         self.info["episode_score"] = 0
         if done:
             self._on_after_game()
@@ -272,25 +271,27 @@ class DialogueGameMaster(GameMaster):
         try:
             # check already here for next player to increment turn and to check end condition properly
             self.current_player = next(self.player_iter)
-        except StopIteration: # prepare next round of gameplay
+        except StopIteration:  # prepare next round of gameplay
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
             self.player_iter = iter(self.get_players())
             self.current_player = next(self.player_iter)
-            self.log_next_turn() # add record entry for player turns
-            self._on_before_turn(self.current_turn) # call hook
+            self.log_next_turn()  # add record entry for player turns
+            self._on_before_turn(self.current_turn)  # call hook
             module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
 
-    def get_turn_feedback(self):
+    def get_response_feedback(self, response: str):
         """
         Optional.
+        :param response: The response (verbal action) of the current player.
         :return: a verbal feedback about the agent's decision-making at a turn
         """
         return None
 
-    def compute_turn_score(self):
+    def compute_response_score(self, response: str):
         """
         Mandatory.
+        :param response: The response (verbal action) of the current player.
         :return: the performance score for an agent's turn
         """
         return 0
@@ -315,18 +316,11 @@ class DialogueGameMaster(GameMaster):
             response = self.current_player(context)
             done, _ = self.step(response)
 
-
-
-    def _should_reprompt(self, player: Player):
-        """Method to check if a Player should be re-prompted.
-
-        Important: Make sure that the response of the player before the re-prompt is added to the history!
-        Otherwise, the requirement of alternating roles (user, assistant, user, ...) in the history might be violated.
-
-        Args:
-            player: The Player instance to re-prompt.
+    def _should_pass_turn(self):
         """
-        return False
+        Whether to pass the turn to the next player.
+        """
+        return True
 
     def _on_before_reprompt(self, player: Player):
         """Method executed before reprompt is passed to a Player.
