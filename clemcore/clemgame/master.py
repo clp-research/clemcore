@@ -315,8 +315,6 @@ class DialogueGameMaster(GameMaster):
             response = self.current_player(context)
             done, _ = self.step(response)
 
-            if not done:
-                self._next_player()
 
 
     def _should_reprompt(self, player: Player):
