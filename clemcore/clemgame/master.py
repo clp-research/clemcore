@@ -258,7 +258,13 @@ class DialogueGameMaster(GameMaster):
         :param rotate_player: Whether to pass the turn to the next player.
         :return: done, info
         """
-        self.__validate_parse_and_add_player_response(self.current_player, response)
+        # todo: it seems we should change the order here: Parse should come first, and then validate.
+        # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
+        # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
+        if self._validate_player_response(self.current_player, response):
+            parsed_response = self.__parse_response(self.current_player, response)
+            self.add_assistant_message(self.current_player, parsed_response)
+            self._after_add_player_response(self.current_player, parsed_response)
 
         if rotate_player:
             self.__next_player()
@@ -415,22 +421,6 @@ class DialogueGameMaster(GameMaster):
             utterance: The text content of the message to be added.
         """
         self.add_message(player, utterance, role="assistant")
-
-    def __validate_parse_and_add_player_response(self, player: Player, utterance: str):
-        """Checks player response validity, parses it and adds it to the conversation history.
-        Part of the play loop, not intended to be modified - modify _validate_player_response, _on_parse_response and/or
-        _after_add_player_response instead.
-        Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
-        """
-        # todo: it seems we should change the order here: Parse should come first, and then validate.
-        # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
-        # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
-        if self._validate_player_response(player, utterance):
-            utterance = self.__parse_response(player, utterance)
-            self.add_assistant_message(player, utterance)
-            self._after_add_player_response(player, utterance)
 
     def _after_add_player_response(self, player: Player, utterance: str):
         """Method executed after a player response has been validated and added to the conversation history.
