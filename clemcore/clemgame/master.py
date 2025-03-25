@@ -257,7 +257,7 @@ class DialogueGameMaster(GameMaster):
             self._after_add_player_response(self.current_player, parsed_response)
 
         if rotate_player:
-            self.__next_player()
+            self._next_player()
 
         done = not self._does_game_proceed()
         self.info["turn_score"] = self.compute_turn_score()
