@@ -217,17 +217,7 @@ class DialogueGameMaster(GameMaster):
         self.log_players(players_descriptions)
         # call game hooks
         self._on_before_game()
-        self.__prepare_round()
-
-    def __prepare_round(self):
-        # setup player iterator
-        self.player_iter = iter(self.get_players())
-        self.current_player = next(self.player_iter)
-        # add record entry for player turns
-        self.log_next_turn()
-        # call hook
-        self._on_before_turn(self.current_turn)
-        module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
+        self._next_player()
 
     def _on_setup(self, **kwargs):
         """Method executed at the start of the default setup method.
@@ -278,14 +268,18 @@ class DialogueGameMaster(GameMaster):
             self.info["episode_score"] = self.compute_episode_score()
         return done, deepcopy(self.info)
 
-    def __next_player(self):
+    def _next_player(self):
         try:
             # check already here for next player to increment turn and to check end condition properly
             self.current_player = next(self.player_iter)
-        except StopIteration:
+        except StopIteration: # prepare next round of gameplay
             self._on_after_turn(self.current_turn)
             self.current_turn += 1
-            self.__prepare_round()
+            self.player_iter = iter(self.get_players())
+            self.current_player = next(self.player_iter)
+            self.log_next_turn() # add record entry for player turns
+            self._on_before_turn(self.current_turn) # call hook
+            module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
 
     def get_turn_feedback(self):
         """
@@ -319,20 +313,10 @@ class DialogueGameMaster(GameMaster):
         while not done:
             context = self.get_context_for(self.current_player)
             response = self.current_player(context)
-            done, _ = self.step(response, rotate_player=False)
-
-            # Allow the game to prompt the current player again (if necessary).
-            while self._should_reprompt(self.current_player):
-                self.log_to_self("send message", "reprompt")
-                # We must assume that the game developer correctly adds the messages,
-                # so that the alternating roles of user and assistant are respected.
-                self._on_before_reprompt(self.current_player)
-                context = self.get_context_for(self.current_player)
-                response = self.current_player(context)
-                done, _ = self.step(response, rotate_player=False)
+            done, _ = self.step(response)
 
             if not done:
-                self.__next_player()
+                self._next_player()
 
 
     def _should_reprompt(self, player: Player):
