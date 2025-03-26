@@ -21,39 +21,48 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, model: backends.Model, game_recorder: GameRecorder):
+    def __init__(self, name: str, model: backends.Model, game_recorder: GameRecorder):
         """
         Args:
-            model: A backends.Model instance to be used by this Player instance.
+            name: The player's name. The name identifies a player.
+            model: The model used by this player.
+            game_recorder: The recorder to log message events
         """
-        self.model = model
-        self.game_recorder = game_recorder
-        self.messages: List[Dict] = []
-        self.descriptor: str = "<missing-description>"
-        self.prompt = None
-        self.response_object = None
-        module_logger.info("Player %s", self.get_description())
+        self._name: str = name
+        self._model = model
+        self._game_recorder = game_recorder
+        self._messages: List[Dict] = []
+        self._prompt = None
+        self._response_object = None
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def model(self):
+        return self._model
 
     def get_description(self) -> str:
         """Get a description string for this Player instance.
         Returns:
-            A string describing this Player instance's class name and used model.
+            A string describing the player's class, model used and name given.
         """
-        return f"{self.__class__.__name__}, {self.model}"
+        return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
     def __log_send_context_event(self, context):
         action = {'type': 'send message', 'content': context}
-        self.game_recorder.log_event(from_='GM', to=self.descriptor, action=action)
+        self._game_recorder.log_event(from_='GM', to=self.name, action=action)
 
     def __log_response_received_event(self, response):
         # Player -> GM
         action = {'type': 'get message', 'content': response}
         # log 'get message' event including backend/API call:
         _prompt, _response = self.get_last_call_info()
-        self.game_recorder.log_event(from_=self.descriptor, to="GM", action=action, call=(_prompt, _response))
+        self._game_recorder.log_event(from_=self.name, to="GM", action=action, call=(_prompt, _response))
 
     def get_last_call_info(self):
-        return self.prompt, self.response_object
+        return self._prompt, self._response_object
 
     def __call__(self, context: Dict, memorize: bool = True) -> str:
         """
@@ -67,11 +76,11 @@ class Player(abc.ABC):
 
         self.__log_send_context_event(context["content"])
         call_start = datetime.now()
-        self.prompt, self.response_object, response_text = self.__call_model(self.messages + [context])  # new list
+        self._prompt, self._response_object, response_text = self.__call_model(self._messages + [context])  # new list
         call_duration = datetime.now() - call_start
         self.__log_response_received_event(response_text)
 
-        self.response_object["clem_player"] = {
+        self._response_object["clem_player"] = {
             "call_start": str(call_start),
             "call_duration": str(call_duration),
             "response": response_text,
@@ -79,8 +88,8 @@ class Player(abc.ABC):
         }
 
         if memorize:
-            self.messages.append(context)
-            self.messages.append(dict(role="assistant", content=response_text))
+            self._messages.append(context)
+            self._messages.append(dict(role="assistant", content=response_text))
 
         return response_text
 
@@ -99,7 +108,6 @@ class Player(abc.ABC):
         Overwrite this method to customize human inputs (model_name: human, terminal).
         Args:
             messages: A list of dicts that contain the history of the conversation.
-            turn_idx: The index of the current turn.
         Returns:
             The human response as text.
         """
@@ -189,15 +197,19 @@ class DialogueGameMaster(GameMaster):
         return list(self.players_by_names.values())
 
     def add_player(self, player: Player):
-        """Add a player to the game.
-        Note: The players will be called in the same order as added!
+        """Add a player to the game. The same player cannot be added twice.
+        The player identity is determined by the player's name.
+
+        Important: During gameplay, the players will be called in the same order as added to the game master!
+
         Args:
-            player: The player to be added to the game.
+            player: The player to be added to the game. The player's name must be unique.
         """
-        idx = len(self.players_by_names)
-        player.descriptor = f"Player {idx + 1}"
-        self.players_by_names[player.descriptor] = player
-        self.messages_by_names[player.descriptor] = []
+        if player.name in self.players_by_names:
+            raise ValueError(f"Player names must be unique, "
+                             f"but there is already a player registered with name '{player.name}'.")
+        self.players_by_names[player.name] = player
+        self.messages_by_names[player.name] = []
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -236,8 +248,8 @@ class DialogueGameMaster(GameMaster):
         return self.current_player
 
     def get_context_for(self, player) -> Dict:
-        messages = self.messages_by_names[player.descriptor]
-        assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.descriptor}"
+        messages = self.messages_by_names[player.name]
+        assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.name}"
         return messages[-1]
 
     def step(self, response: str) -> Tuple[bool, Dict]:
@@ -288,6 +300,7 @@ class DialogueGameMaster(GameMaster):
         """
         Optional.
         :param response: The response (verbal action) of the current player.
+        :param context: The context given to the current player to generate the response for.
         :return: a verbal feedback about the player's response given the context
         """
         return None
@@ -296,6 +309,7 @@ class DialogueGameMaster(GameMaster):
         """
         Mandatory.
         :param response: The response (verbal action) of the current player.
+        :param context: The context given to the current player to generate the response for.
         :return: the performance score for a player's response given the context
         """
         return 0
@@ -344,7 +358,7 @@ class DialogueGameMaster(GameMaster):
             message: The message content sent to the Player instance.
         """
         action = {'type': 'send message', 'content': message}
-        self.log_event("GM", player.descriptor, action)
+        self.log_event("GM", player.name, action)
 
     def log_message_to_self(self, message: str):
         """Logs a 'metadata' action from GM to GM.
@@ -378,7 +392,7 @@ class DialogueGameMaster(GameMaster):
                 templates require that roles always alternate between messages!
         """
         message = {"role": role, "content": utterance}
-        history = self.messages_by_names[player.descriptor]
+        history = self.messages_by_names[player.name]
         history.append(message)
 
     def add_user_message(self, player: Player, utterance: str):
