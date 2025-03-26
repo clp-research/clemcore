@@ -232,10 +232,10 @@ class DialogueGameMaster(GameMaster):
     def get_game_state(self):
         return None
 
-    def get_current_player(self):
+    def get_current_player(self) -> Player:
         return self.current_player
 
-    def get_context_for(self, player):
+    def get_context_for(self, player) -> Dict:
         messages = self.messages_by_names[player.descriptor]
         assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.descriptor}"
         return messages[-1]
@@ -247,6 +247,13 @@ class DialogueGameMaster(GameMaster):
         :param response: The response (verbal action) of the current player.
         :return: done, info
         """
+        # compute scores first, so that we are sure that the player's context
+        # can still be retrieved (state has not changed yet)
+        context = self.get_context_for(self.current_player)
+        self.info["response_score"] = self.compute_response_score(response, context)
+        self.info["response_feedback"] = self.get_response_feedback(response, context)
+        self.info["episode_score"] = 0
+
         # todo: it seems we should change the order here: Parse should come first, and then validate.
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
         # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
@@ -255,16 +262,13 @@ class DialogueGameMaster(GameMaster):
             self.add_assistant_message(self.current_player, parsed_response)
             self._after_add_player_response(self.current_player, parsed_response)
 
-        if self._does_game_proceed() and self._should_pass_turn():
-            self._next_player()
-
         done = not self._does_game_proceed()
-        self.info["response_score"] = self.compute_response_score(response)
-        self.info["response_feedback"] = self.get_response_feedback(response)
-        self.info["episode_score"] = 0
         if done:
             self._on_after_game()
             self.info["episode_score"] = self.compute_episode_score()
+        elif self._should_pass_turn():
+            self._next_player()
+
         return done, deepcopy(self.info)
 
     def _next_player(self):
@@ -280,19 +284,19 @@ class DialogueGameMaster(GameMaster):
             self._on_before_turn(self.current_turn)  # call hook
             module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
 
-    def get_response_feedback(self, response: str):
+    def get_response_feedback(self, response: str, context: Dict):
         """
         Optional.
         :param response: The response (verbal action) of the current player.
-        :return: a verbal feedback about the agent's decision-making at a turn
+        :return: a verbal feedback about the player's response given the context
         """
         return None
 
-    def compute_response_score(self, response: str):
+    def compute_response_score(self, response: str, context: Dict):
         """
         Mandatory.
         :param response: The response (verbal action) of the current player.
-        :return: the performance score for an agent's turn
+        :return: the performance score for a player's response given the context
         """
         return 0
 
