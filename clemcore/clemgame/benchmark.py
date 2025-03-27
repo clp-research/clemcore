@@ -46,11 +46,11 @@ class GameInstanceIterator:
 
     def reset(self) -> "GameInstanceIterator":
         self.queue = []
-        for idx, experiment in enumerate(self.instances["experiments"]):
-            experiment_config = {k: experiment[k] for k in experiment if k != 'game_instances'}
-            experiment_config["dir"] = f"{idx}_{experiment_config['name']}"
+        for index, experiment in enumerate(self.instances["experiments"]):
+            filtered_experiment = {k: experiment[k] for k in experiment if k != 'game_instances'}
+            filtered_experiment["index"] = index
             for game_instance in experiment["game_instances"]:
-                self.queue.append((experiment_config, game_instance))
+                self.queue.append((filtered_experiment, game_instance))
         if self.do_shuffle:
             random.shuffle(self.queue)
         return self

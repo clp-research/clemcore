@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 
 from tqdm import tqdm
 
-from clemcore.playpen.envs.env import GameEnv
+from clemcore.playpen import GameEnv
 
 
 class BaseCallback(abc.ABC):
@@ -125,23 +125,14 @@ class GameRecordCallback(BaseCallback):
         """
         Stores the records in a similar structure as for running clembench, so that transcribe can be applied.
         """
-        experiment_config = game_env.experiment_config
-        dialogue_pair_desc = game_env.game.get_dialogue_pair_descriptor(game_env.players)
         # Note: Cannot use underscores in experiment dir, except the experiment name e.g. 0_high_en, because the
         # transcribe logic splits on underscore to get the experiment name, i.e., everything after the first underscore
-        experiment_dir = f"rollout{self.rollout_idx:04d}-{experiment_config['dir']}"
-        game_env.game.store_results_file(experiment_config,
-                                         f"experiment_{experiment_config['name']}.json",
-                                         dialogue_pair_desc,
-                                         sub_dir=experiment_dir,
-                                         results_dir=self.results_dir)
+        experiment_dir = f"rollout{self.rollout_idx:04d}-{game_env.experiment['index']}_{game_env.experiment['name']}"
+        game_env.store_experiment_config(experiment_dir, self.results_dir)
+
         episode_dir = f"{experiment_dir}/episode_{self.episode_idx}"
-        game_env.game.store_results_file(game_env.game_instance,
-                                         f"instance.json",
-                                         dialogue_pair_desc,
-                                         sub_dir=episode_dir,
-                                         results_dir=self.results_dir)
-        game_env.master.store_records(self.results_dir, dialogue_pair_desc, episode_dir)
+        game_env.store_game_instance(episode_dir, self.results_dir)
+        game_env.store_game_interactions(episode_dir, self.results_dir)
 
 
 class RolloutProgressCallback(BaseCallback):
