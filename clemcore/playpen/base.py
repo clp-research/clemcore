@@ -1,6 +1,7 @@
 import abc
 from clemcore.backends import Model
 from clemcore.clemgame import GameRegistry
+from clemcore.playpen.buffers import RolloutBuffer
 from clemcore.playpen.callbacks import CallbackList, BaseCallback
 
 
@@ -9,7 +10,7 @@ class BasePlayPen(abc.ABC):
     def __init__(self, learner: Model, teacher: Model):
         self.learner = learner
         self.teacher = teacher
-        self.rollout_buffer = []
+        self.rollout_buffer = RolloutBuffer()
         self.num_timesteps = 0
         self.callbacks = CallbackList()
 
@@ -26,7 +27,7 @@ class BasePlayPen(abc.ABC):
             response = player(context)
             done, info = game_env.step(response)
             if self.is_learner(player):
-                self.rollout_buffer.append((context, response, done, info))
+                self.rollout_buffer.add(context, response, done, info)
                 num_rollout_steps += 1
                 self.num_timesteps += 1
             self.callbacks.update_locals(locals())
