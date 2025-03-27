@@ -5,6 +5,7 @@ import os
 import random
 import sys
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import datetime
 from typing import List, Dict, ContextManager, Tuple
 from tqdm import tqdm
@@ -22,37 +23,40 @@ stdout_logger = logging.getLogger("clemcore.run")
 
 class GameInstanceIterator:
 
-    def __init__(self, instances, do_shuffle=False):
+    def __init__(self, instances, do_shuffle=False, reset=True):
         assert instances is not None, "Instances must be given"
-        self.instances = instances
-        self.do_shuffle = do_shuffle
-        self.queue = []
-        self.reset()
+        self._instances = instances
+        self._do_shuffle = do_shuffle
+        self._queue = []
+        if reset:
+            self.reset()
 
     def __iter__(self):
         return self
 
     def __next__(self) -> Tuple[Dict, Dict]:
         try:
-            return self.queue.pop(0)
+            return self._queue.pop(0)
         except IndexError:
             raise StopIteration()
 
     def __len__(self):
-        return len(self.queue)
+        return len(self._queue)
 
     def clone(self) -> "GameInstanceIterator":
-        return GameInstanceIterator(self.instances, do_shuffle=self.do_shuffle)
+        _clone = GameInstanceIterator(self._instances, do_shuffle=self._do_shuffle, reset=False)
+        _clone._queue = deepcopy(self._queue)
+        return _clone
 
     def reset(self) -> "GameInstanceIterator":
-        self.queue = []
-        for index, experiment in enumerate(self.instances["experiments"]):
+        self._queue = []
+        for index, experiment in enumerate(self._instances["experiments"]):
             filtered_experiment = {k: experiment[k] for k in experiment if k != 'game_instances'}
             filtered_experiment["index"] = index
             for game_instance in experiment["game_instances"]:
-                self.queue.append((filtered_experiment, game_instance))
-        if self.do_shuffle:
-            random.shuffle(self.queue)
+                self._queue.append((filtered_experiment, game_instance))
+        if self._do_shuffle:
+            random.shuffle(self._queue)
         return self
 
 
