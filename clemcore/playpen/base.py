@@ -7,10 +7,10 @@ from clemcore.playpen.callbacks import CallbackList, BaseCallback
 
 class BasePlayPen(abc.ABC):
 
-    def __init__(self, learner: Model, teacher: Model):
+    def __init__(self, learner: Model, teacher: Model, rollout_buffer: RolloutBuffer):
         self.learner = learner
         self.teacher = teacher
-        self.rollout_buffer = RolloutBuffer()
+        self.rollout_buffer = rollout_buffer
         self.num_timesteps = 0
         self.callbacks = CallbackList()
 
@@ -32,7 +32,7 @@ class BasePlayPen(abc.ABC):
                 self.num_timesteps += 1
             self.callbacks.update_locals(locals())
             self.callbacks.on_step()
-            if done:
+            if game_env.is_done():
                 game_env.reset()
         self.callbacks.on_rollout_end()
 
