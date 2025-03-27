@@ -35,6 +35,13 @@ class Player(abc.ABC):
         self._prompt = None
         self._response_object = None
 
+    def clone(self) -> "Player":
+        _clone = self.__class__(self._name, self._model, self._game_recorder.clone())
+        _clone._messages = deepcopy(self._messages)
+        _clone._prompt = deepcopy(self._prompt)
+        _clone._response_object = deepcopy(self._response_object)
+        return _clone
+
     @property
     def name(self):
         return self._name
@@ -188,6 +195,16 @@ class DialogueGameMaster(GameMaster):
         self.current_turn: int = 0
         self.current_player: Player = None
         self.info = {}
+
+    def clone(self) -> "DialogueGameMaster":
+        _clone = DialogueGameMaster(self.game_name, self.game_path, self.experiment, self.player_models)
+        _clone.players_by_names = deepcopy(self.players_by_names)
+        _clone.messages_by_names = deepcopy(self.messages_by_names)
+        _clone.player_iter = iter(list(self.player_iter))
+        _clone.current_turn = self.current_turn
+        _clone.current_player = None if self.current_player is None else self.current_player.clone()
+        _clone.info = deepcopy(self.info)
+        return _clone
 
     def get_players(self) -> List[Player]:
         """Get a list of the players.
