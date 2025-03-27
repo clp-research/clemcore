@@ -9,34 +9,21 @@ from clemcore.playpen.envs import PlayPenEnv
 class BranchingCandidate:
 
     def __init__(self, parent_env: GameEnv, branch_env: GameEnv, done: bool, info: Dict):
-        self._parent_env = parent_env
-        self._branch_env = branch_env
-        self._done = done
-        self._info = info
-
-    @property
-    def done(self):
-        return self.done
-
-    @property
-    def parent_env(self):
-        return self._parent_env
-
-    @property
-    def branch_env(self):
-        return self._branch_env
+        self.parent_env = parent_env
+        self.branch_env = branch_env
+        self.done = done
+        self.info = info
 
 
 class BranchingResponse:
 
-    def __init__(self, parent_env: GameEnv, branch_env: GameEnv, response: str):
-        self._parent_env = parent_env
-        self._branch_env = branch_env
-        self._response = response
-
-    def branch(self) -> BranchingCandidate:
-        done, info = self._branch_env.step(self._response)
-        return BranchingCandidate(self._parent_env, self._branch_env, done, info)
+    def __init__(self, parent_env: GameEnv, parent_context: str, branch_env: GameEnv, branch_response: str):
+        self.parent_env = parent_env
+        self.parent_context = parent_context
+        self.branch_env = branch_env
+        self.branch_response = branch_response
+        self.done = None
+        self.info = None
 
 
 class GameTreeEnv(PlayPenEnv):
@@ -50,11 +37,11 @@ class GameTreeEnv(PlayPenEnv):
     def __init__(self, game: GameBenchmark, player_models: List[Model], shuffle_instances: bool,
                  branching_factor: int, pruning_fn: Callable):
         assert branching_factor > 0, "The branching factor must be greater than zero"
-        self._root = GameEnv(game, player_models, shuffle_instances)
-        self._leaves = [self._root]
-        self._game_tree = GameTree(self._root)
-        self._branching_factor = branching_factor
-        self._pruning_fn = pruning_fn
+        self._root: GameEnv = GameEnv(game, player_models, shuffle_instances)
+        self._active_branches: List[GameEnv] = [self._root]
+        self._game_tree: GameTree = GameTree(self._root)
+        self._branching_factor: int = branching_factor
+        self._pruning_fn: Callable = pruning_fn
 
     def reset(self) -> None:
         # for simplicity, all game environment always operate on the same episode
@@ -62,13 +49,19 @@ class GameTreeEnv(PlayPenEnv):
         self._game_tree.reset()
 
     def observe(self) -> Tuple[Callable, Union[List, Dict]]:
-        return GameTreePlayer(self._branching_factor), self._leaves
+        return GameTreePlayer(self._branching_factor), self._active_branches
 
     def step(self, responses: Union[str, List]) -> Tuple[bool, Dict]:
         assert isinstance(responses, list), f"GameTreeEnv expects a list of responses and not {responses.__class__}"
+
+        def branching_step(_response: BranchingResponse) -> BranchingCandidate:
+            _response.done, _response.info = _response.branch_env.step(_response.branch_response)
+            return BranchingCandidate(_response.parent_env, _response.branch_env, _response.done, _response.info)
+
         candidates: List[BranchingCandidate] = []
-        for response in responses:  # each response represents a possible branch in the tree
-            candidates.append(response.branch())  # step
+        for branching_response in responses:  # each response represents a possible branch in the tree
+            candidate = branching_step(branching_response)
+            candidates.append(candidate)
 
         # establish such responses as branches in the tree that were not pruned
         # these responses will determine the new leaves of the tree
@@ -78,10 +71,11 @@ class GameTreeEnv(PlayPenEnv):
             self._game_tree.add_branch(selected_candidate.parent_env, selected_candidate.branch_env)
 
         # memorize leaves so that we do not have to find them again
-        self._leaves = [candidate.branch_env for candidate in selected_candidates]
+        self._active_branches = [candidate.branch_env for candidate in selected_candidates]
+        # todo: handle pruned branches that became orphans
         # only done when all branches are done
         done = all([candidate.done for candidate in selected_candidates])
-        return done, dict()  # todo
+        return done, {"collector": "GameTreeEnvCollector"}
 
 
 class GameTreePlayer(Callable):
@@ -91,18 +85,18 @@ class GameTreePlayer(Callable):
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._branching_factor = branching_factor
 
-    def __call__(self, context: List):
-        assert isinstance(context, List), "The context for TreePlayer must be TreePlayerContext"
-        tree_responses = []
-        for game_env in context:
+    def __call__(self, game_envs: List[GameEnv]):
+        assert isinstance(game_envs, List), "The context for TreePlayer must be a list of game environments"
+        branching_responses = []
+        for parent_env in game_envs:
+            parent_player = parent_env.master.get_current_player()
+            parent_context = parent_env.master.get_context_for(parent_player)
             for _ in range(self._branching_factor):
-                branch_env = game_env.clone()
-                master = branch_env.master
-                player = master.get_current_player()
-                context = master.get_context_for(player)
-                response = player(context)  # this already changes the player state in branch env
-                tree_responses.append(BranchingResponse(game_env, branch_env, response))
-        return tree_responses
+                branch_env = parent_env.clone()
+                player = branch_env.master.get_current_player()  # we need the branch player, because it keeps state
+                branch_response = player(parent_context)  # this already changes the player state in branch env
+                branching_responses.append(BranchingResponse(parent_env, parent_context, branch_env, branch_response))
+        return branching_responses
 
 
 class GameTreeNode:
