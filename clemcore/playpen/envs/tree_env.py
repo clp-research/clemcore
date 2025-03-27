@@ -1,55 +1,9 @@
-import abc
-from typing import List, Tuple, Dict, Callable, Union
+from typing import List, Dict, Callable, Tuple, Union
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmark, DialogueGameMaster
+from clemcore.clemgame import GameBenchmark
+from clemcore.playpen import GameEnv
 from clemcore.playpen.envs import PlayPenEnv
-from clemcore.playpen.envs.game_tree import GameTree
-
-
-class GameEnv(PlayPenEnv):
-
-    def __init__(self, game: GameBenchmark, player_models: List[Model], shuffle_instances: bool = False):
-        self._game = game
-        self._player_models = player_models
-        # setup iterator to go through tasks / game instances
-        self._task_iterator = game.create_game_instance_iterator(shuffle_instances)
-        if len(self._task_iterator) < 1:
-            raise RuntimeError(f"No game instances given for the game: '{self._game.game_name}'")
-        # variables initialized on reset()
-        self._game_instance = None
-        self._experiment_config = None
-        self._master: DialogueGameMaster = None
-        # reset here so that game env is fully functional after init
-        self.reset()
-
-    @property
-    def master(self):
-        return self._master
-
-    @master.setter
-    def master(self, master):
-        self._master = master
-
-    def reset(self) -> None:
-        try:
-            self.experiment_config, self.game_instance = next(self._task_iterator)
-            self.master = self._game.create_game_master(self.experiment_config, self._player_models)
-            self.master.setup(**self.game_instance)
-        except StopIteration:
-            self._task_iterator.reset()
-            self.reset()
-
-    def observe(self) -> Tuple[Callable, Union[List, Dict]]:
-        player = self.master.get_current_player()
-        context = self.master.get_context_for(player)
-        return player, context
-
-    def step(self, response: Union[str, List]) -> Tuple[bool, Dict]:
-        return self.master.step(response)
-
-    def clone(self) -> "GameEnv":
-        ...
 
 
 class BranchingCandidate:
@@ -149,3 +103,69 @@ class GameTreePlayer(Callable):
                 response = player(context)  # this already changes the player state in branch env
                 tree_responses.append(BranchingResponse(game_env, branch_env, response))
         return tree_responses
+
+
+class GameTreeNode:
+    def __init__(self, game_env: GameEnv):
+        self._game_env = game_env
+        self._branches: List[GameTreeNode] = []
+        self._parent: GameTreeNode = self  # root is its own parent
+
+    def __iter__(self):
+        return iter(self._branches)
+
+    def __bool__(self):
+        return bool(self._branches)
+
+    def unwrap(self):
+        return self._game_env
+
+    def wraps(self, game_env: GameEnv) -> bool:
+        return self._game_env is game_env
+
+    def add_branch(self, branch_node: "GameTreeNode"):
+        self._branches.append(branch_node)
+        branch_node._parent = self
+
+
+class GameTree:
+
+    def __init__(self, root: GameEnv):
+        self._root: GameTreeNode = GameTreeNode(root)
+
+    def reset(self):
+        ...  # todo
+
+    def find_node(self, target_env: GameEnv):
+        def _find_node(node):
+            if node.wraps(target_env):  # check for object identity
+                return node
+
+            for branch in node:
+                target_node = _find_node(branch)
+                if target_node:
+                    return target_node
+
+            return None
+
+        return _find_node(self._root)
+
+    def find_leaves(self, unwrap=False):
+        def _find_leaves(node):
+            if not node:
+                if unwrap:
+                    return [node.unwrap()]
+                return [node]
+            leaves = []
+            for branch in node:
+                leaves.extend(_find_leaves(branch))
+            return leaves
+
+        return _find_leaves(self._root)
+
+    def add_branch(self, parent_env, branch_env):
+        # Find parent node and add child
+        parent_node = self.find_node(parent_env)
+        assert parent_node is not None, "There must be a parent node that wraps the candidates parent env"
+        branch_node = GameTreeNode(branch_env)
+        parent_node.add_branch(branch_node)

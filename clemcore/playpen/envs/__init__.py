@@ -4,8 +4,9 @@ from typing import List, Tuple, Callable, Union, Dict
 
 from clemcore.backends import Model
 from clemcore.clemgame import GameSpec, benchmark
-from clemcore.playpen import GameEnv
-from clemcore.playpen.envs.env import GameTreeEnv
+
+from clemcore.playpen.envs.game_env import GameEnv
+from clemcore.playpen.envs.tree_env import GameTreeEnv
 
 
 @contextmanager
