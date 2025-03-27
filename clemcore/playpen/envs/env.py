@@ -1,44 +1,10 @@
 import abc
-from contextlib import contextmanager
 from typing import List, Tuple, Dict, Callable, Union
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameSpec, benchmark, GameBenchmark, DialogueGameMaster
-from clemcore.playpen.game_tree import GameTree
-
-
-@contextmanager
-def make_env(game_spec: GameSpec, players: List[Model],
-             instances_name: str = None, shuffle_instances: bool = False,
-             branching_factor: int = 1, pruning_fn=lambda candidates: candidates):
-    with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
-        assert branching_factor > 0, "The branching factor must be greater than zero"
-        if branching_factor == 1:
-            # this could also resolve to a tree env with branching factor one, but
-            # for clarity we instantiate here the game benchmark environment directly
-            yield GameEnv(game, players=players, shuffle_instances=shuffle_instances)
-        else:
-            yield GameTreeEnv(game, players=players, shuffle_instances=shuffle_instances,
-                              branching_factor=branching_factor, pruning_fn=pruning_fn)
-
-
-class State:
-    ...
-
-
-class PlayPenEnv(abc.ABC):
-
-    @abc.abstractmethod
-    def reset(self) -> None:
-        pass
-
-    @abc.abstractmethod
-    def observe(self) -> Tuple[Callable, Union[List, Dict], State]:
-        pass
-
-    @abc.abstractmethod
-    def step(self, response: Union[str, List]) -> Tuple[bool, Dict]:
-        pass
+from clemcore.clemgame import GameBenchmark, DialogueGameMaster
+from clemcore.playpen.envs import PlayPenEnv
+from clemcore.playpen.envs.game_tree import GameTree
 
 
 class GameEnv(PlayPenEnv):
@@ -74,11 +40,10 @@ class GameEnv(PlayPenEnv):
             self._task_iterator.reset()
             self.reset()
 
-    def observe(self) -> Tuple[Callable, Union[List, Dict], State]:
+    def observe(self) -> Tuple[Callable, Union[List, Dict]]:
         player = self.master.get_current_player()
         context = self.master.get_context_for(player)
-        state = self.master.get_game_state()  # todo
-        return player, context, State()
+        return player, context
 
     def step(self, response: Union[str, List]) -> Tuple[bool, Dict]:
         return self.master.step(response)
@@ -142,8 +107,8 @@ class GameTreeEnv(PlayPenEnv):
         # (if the instances are not shuffled) or are at least reset at the same time
         self._game_tree.reset()
 
-    def observe(self) -> Tuple[Callable, Union[List, Dict], State]:
-        return GameTreePlayer(self._branching_factor), self._leaves, State()
+    def observe(self) -> Tuple[Callable, Union[List, Dict]]:
+        return GameTreePlayer(self._branching_factor), self._leaves
 
     def step(self, responses: Union[str, List]) -> Tuple[bool, Dict]:
         assert isinstance(responses, list), f"GameTreeEnv expects a list of responses and not {responses.__class__}"
