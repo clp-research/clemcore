@@ -4,7 +4,7 @@ from clemcore.clemgame.master import GameMaster, DialogueGameMaster, Player
 from clemcore.clemgame.metrics import GameScorer
 from clemcore.clemgame.recorder import GameRecorder
 from clemcore.clemgame.registry import GameSpec, GameRegistry
-from clemcore.clemgame.benchmark import GameBenchmark
+from clemcore.clemgame.benchmark import GameBenchmark, GameInstanceIterator
 
 __all__ = [
     "GameBenchmark",
@@ -16,5 +16,6 @@ __all__ = [
     "GameRegistry",
     "GameInstanceGenerator",
     "GameRecorder",
-    "GameResourceLocator"
+    "GameResourceLocator",
+    "GameInstanceIterator"
 ]
