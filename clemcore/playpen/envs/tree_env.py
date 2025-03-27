@@ -17,13 +17,13 @@ class BranchingCandidate:
 
 class BranchingResponse:
 
-    def __init__(self, parent_env: GameEnv, parent_context: str, branch_env: GameEnv, branch_response: str):
+    def __init__(self, parent_env: GameEnv, branch_env: GameEnv, branch_response: str):
         self.parent_env = parent_env
-        self.parent_context = parent_context
         self.branch_env = branch_env
         self.branch_response = branch_response
-        self.done = None
-        self.info = None
+
+    def __str__(self):
+        return self.branch_response
 
 
 class GameTreeEnv(PlayPenEnv):
@@ -34,8 +34,9 @@ class GameTreeEnv(PlayPenEnv):
     A pruning function can be given to reduce the growing number of environments.
     """
 
-    def __init__(self, game: GameBenchmark, player_models: List[Model], shuffle_instances: bool,
-                 branching_factor: int, pruning_fn: Callable):
+    def __init__(self, game: GameBenchmark, player_models: List[Model], shuffle_instances: bool, branching_factor: int,
+                 pruning_fn: Callable):
+        super().__init__()
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._root: GameEnv = GameEnv(game, player_models, shuffle_instances)
         self._active_branches: List[GameEnv] = [self._root]
@@ -48,55 +49,82 @@ class GameTreeEnv(PlayPenEnv):
         self._root.reset()
         self._game_tree = GameTree(self._root)
 
-    def observe(self) -> Tuple[Callable, Union[List, Dict]]:
-        return GameTreePlayer(self._branching_factor), self._active_branches
+    def observe(self) -> Tuple[Callable, Union[Dict, List[Dict]]]:
+        contexts: List[Dict] = []
+        for game_env in self._active_branches:
+            player = game_env.master.get_current_player()
+            context = game_env.master.get_context_for(player)
+            contexts.append(context)
+        # GameTreePlayer assumes that (parent_env, parent_context) can be re-assembled by zipping (using the order)
+        return GameTreePlayer(self._active_branches, self._branching_factor), contexts
 
-    def step(self, responses: Union[str, List]) -> Tuple[bool, Dict]:
+    def step(self, responses: Union[str, List]) -> Tuple[Union[bool, List], Union[Dict, List]]:
         assert isinstance(responses, list), f"GameTreeEnv expects a list of responses and not {responses.__class__}"
 
-        def branching_step(_response: BranchingResponse) -> BranchingCandidate:
-            _response.done, _response.info = _response.branch_env.step(_response.branch_response)
-            return BranchingCandidate(_response.parent_env, _response.branch_env, _response.done, _response.info)
-
+        context_dones = []
+        context_infos = []
         candidates: List[BranchingCandidate] = []
-        for branching_response in responses:  # each response represents a possible branch in the tree
-            candidate = branching_step(branching_response)
-            candidates.append(candidate)
+        for context_responses in responses:
+            response_dones = []
+            response_infos = []
+            for response in context_responses:  # each response represents a possible branch in the tree
+                done, info = response.branch_env.step(response.branch_response)
+                response_dones.append(done)
+                response_infos.append(info)
+                candidate = BranchingCandidate(response.parent_env, response.branch_env, done, info)
+                candidates.append(candidate)
+            context_dones.append(response_dones)
+            context_infos.append(response_infos)
 
         # establish such responses as branches in the tree that were not pruned
         # these responses will determine the new leaves of the tree
         selected_candidates = self._pruning_fn([candidates])
 
+        # after pruning the tree might have inactive branches
+        # however, we only mark the responses and handle the
+        # rest in the rolloout buffer directly
+        self._active_branches = []
         for selected_candidate in selected_candidates:
             self._game_tree.add_branch(selected_candidate.parent_env, selected_candidate.branch_env)
+            # memorize leaves so that we do not have to find them again
+            self._active_branches.append(selected_candidate)
 
-        # memorize leaves so that we do not have to find them again
-        self._active_branches = [candidate.branch_env for candidate in selected_candidates]
-        # todo: handle pruned branches that became orphans
-        # only done when all branches are done
-        done = all([candidate.done for candidate in selected_candidates])
-        return done, {"active_branches": len(self._active_branches)}
+        # the tree env stops when all active branches are done
+        self._done = all([candidate.done for candidate in selected_candidates])
+
+        # return all dones and infos so that they match the quantity of the responses
+        return context_dones, context_infos
+
+    def is_done(self) -> bool:
+        return self._done
 
 
 class GameTreePlayer(Callable):
     """    Applies a player to a given context as many times as determined by the branching factor. """
 
-    def __init__(self, branching_factor: int = 1):
+    def __init__(self, actives_branches: List[GameEnv], branching_factor: int = 1):
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._branching_factor = branching_factor
+        self._active_branches = actives_branches
 
-    def __call__(self, game_envs: List[GameEnv]):
-        assert isinstance(game_envs, List), "The context for TreePlayer must be a list of game environments"
-        branching_responses = []
-        for parent_env in game_envs:
-            parent_player = parent_env.master.get_current_player()
-            parent_context = parent_env.master.get_context_for(parent_player)
+    def __call__(self, contexts: List[str]) -> List[List[BranchingResponse]]:
+        """
+        For each context we return multiple responses that possibly transition the environment.
+        :param contexts:
+        :return:
+        """
+        assert isinstance(contexts, List), "The context for TreePlayer must be a list of game environments"
+        assert len(self._active_branches) == len(contexts), "There must be as many active branches as given contexts"
+        context_responses = []
+        for parent_env, parent_context in zip(self._active_branches, contexts):
+            branch_responses = []
             for _ in range(self._branching_factor):
-                branch_env = parent_env.clone()
-                player = branch_env.master.get_current_player()  # we need the branch player, because it keeps state
-                branch_response = player(parent_context)  # this already changes the player state in branch env
-                branching_responses.append(BranchingResponse(parent_env, parent_context, branch_env, branch_response))
-        return branching_responses
+                branch_env: GameEnv = parent_env.clone()
+                branch_player = branch_env.master.get_current_player()  # we use the branch player as it keeps state
+                branch_response = branch_player(parent_context)  # this already changes the player state in branch env
+                branch_responses.append(BranchingResponse(parent_env, branch_env, branch_response))
+            context_responses.append(branch_responses)
+        return context_responses
 
 
 class GameTreeNode:
