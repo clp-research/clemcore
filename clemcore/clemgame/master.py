@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import List, Dict, Tuple, Any, Iterator
 
 from clemcore import backends
+from clemcore.clemgame import GameResourceLocator
 from clemcore.clemgame.recorder import GameRecorder
 
 module_logger = logging.getLogger(__name__)
@@ -21,7 +22,7 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, name: str, model: backends.Model, game_recorder: GameRecorder):
+    def __init__(self, name: str, model: backends.Model):
         """
         Args:
             name: The player's name. The name identifies a player.
@@ -30,17 +31,44 @@ class Player(abc.ABC):
         """
         self._name: str = name
         self._model = model
-        self._game_recorder = game_recorder
+        self._game_recorder = None
         self._messages: List[Dict] = []
         self._prompt = None
         self._response_object = None
 
+    def __getstate__(self):
+        """
+        Get the attributes to be copied.
+        :return: the attributes to be copied
+        """
+        state = self.__dict__.copy()
+        del state["_model"]
+        del state["_game_recorder"]
+        return dict(state=state, _model=self._model)
+
+    def __setstate__(self, data):
+        """
+        Set the state of the deep copy.
+        :param data: the values for attributes of the new instance
+        """
+        self.__dict__.update(data["state"])
+        self._model = data["_model"]
+        self._game_recorder = None
+
     def clone(self) -> "Player":
-        _clone = self.__class__(self._name, self._model, self._game_recorder.clone())
+        _clone = self.__class__(self._name, self._model)
         _clone._messages = deepcopy(self._messages)
         _clone._prompt = deepcopy(self._prompt)
         _clone._response_object = deepcopy(self._response_object)
         return _clone
+
+    @property
+    def game_recorder(self):
+        return self._game_recorder
+
+    @game_recorder.setter
+    def game_recorder(self, game_recorder: GameRecorder):
+        self._game_recorder = game_recorder
 
     @property
     def name(self):
@@ -58,14 +86,14 @@ class Player(abc.ABC):
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
     def __log_send_context_event(self, context):
+        assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'send message', 'content': context}
         self._game_recorder.log_event(from_='GM', to=self.name, action=action)
 
     def __log_response_received_event(self, response):
-        # Player -> GM
+        assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'get message', 'content': response}
-        # log 'get message' event including backend/API call:
-        _prompt, _response = self.get_last_call_info()
+        _prompt, _response = self.get_last_call_info() # log 'get message' event including backend/API call
         self._game_recorder.log_event(from_=self.name, to="GM", action=action, call=(_prompt, _response))
 
     def get_last_call_info(self):
@@ -136,7 +164,7 @@ class Player(abc.ABC):
         raise NotImplementedError()
 
 
-class GameMaster(GameRecorder):
+class GameMaster(GameResourceLocator):
     """Base class to contain game-specific functionality.
 
     A GameMaster (sub-)class
@@ -159,6 +187,16 @@ class GameMaster(GameRecorder):
         super().__init__(name, path)
         self.experiment: Dict = experiment
         self.player_models: List[backends.Model] = player_models
+        self.game_recorder = GameRecorder(name, path)
+
+    def log_players(self, players_dict):
+        self.game_recorder.log_players(players_dict)
+
+    def log_next_turn(self):
+        self.game_recorder.log_next_turn()
+
+    def log_event(self, from_, to, action):
+        self.game_recorder.log_event(from_, to, action)
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -196,6 +234,22 @@ class DialogueGameMaster(GameMaster):
         self.current_player: Player = None
         self.info = {}
 
+    def __getstate__(self):
+        """
+        Get the attributes to be copied.
+        :return: the attributes to be copied
+        """
+        state = self.__dict__.copy()
+        del state["player_iter"]
+        return dict(state=state, player_iter=list(self.player_iter))
+
+    def __setstate__(self, data):
+        self.__dict__.update(data["state"])
+        for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
+            player.game_recorder = self.game_recorder
+        self.player_iter = iter(data["player_iter"])
+
+
     def clone(self) -> "DialogueGameMaster":
         _clone = DialogueGameMaster(self.game_name, self.game_path, self.experiment, self.player_models)
         _clone.players_by_names = deepcopy(self.players_by_names)
@@ -222,6 +276,7 @@ class DialogueGameMaster(GameMaster):
         Args:
             player: The player to be added to the game. The player's name must be unique.
         """
+        player.game_recorder = self.game_recorder  # player should record to the same interaction log
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")

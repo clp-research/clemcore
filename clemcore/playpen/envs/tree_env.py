@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List, Dict, Callable, Tuple, Union
 
 from clemcore.backends import Model
@@ -119,7 +120,7 @@ class GameTreePlayer(Callable):
         for parent_env, parent_context in zip(self._active_branches, contexts):
             branch_responses = []
             for _ in range(self._branching_factor):
-                branch_env: GameEnv = parent_env.clone()
+                branch_env: GameEnv = deepcopy(parent_env)
                 branch_player = branch_env.master.get_current_player()  # we use the branch player as it keeps state
                 branch_response = branch_player(parent_context)  # this already changes the player state in branch env
                 branch_responses.append(BranchingResponse(parent_env, branch_env, branch_response))
