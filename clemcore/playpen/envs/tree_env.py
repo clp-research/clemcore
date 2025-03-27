@@ -44,9 +44,9 @@ class GameTreeEnv(PlayPenEnv):
         self._pruning_fn: Callable = pruning_fn
 
     def reset(self) -> None:
-        # for simplicity, all game environment always operate on the same episode
-        # (if the instances are not shuffled) or are at least reset at the same time
-        self._game_tree.reset()
+        # all game branches always operate on the same task / episode
+        self._root.reset()
+        self._game_tree = GameTree(self._root)
 
     def observe(self) -> Tuple[Callable, Union[List, Dict]]:
         return GameTreePlayer(self._branching_factor), self._active_branches
@@ -75,7 +75,7 @@ class GameTreeEnv(PlayPenEnv):
         # todo: handle pruned branches that became orphans
         # only done when all branches are done
         done = all([candidate.done for candidate in selected_candidates])
-        return done, {"collector": "GameTreeEnvCollector"}
+        return done, {"active_branches": len(self._active_branches)}
 
 
 class GameTreePlayer(Callable):
@@ -126,9 +126,6 @@ class GameTree:
 
     def __init__(self, root: GameEnv):
         self._root: GameTreeNode = GameTreeNode(root)
-
-    def reset(self):
-        ...  # todo
 
     def find_node(self, target_env: GameEnv):
         def _find_node(node):
