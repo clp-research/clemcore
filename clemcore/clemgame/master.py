@@ -21,20 +21,23 @@ class Player(abc.ABC):
     - the human players are called via the _terminal_response() method
     - the backend players are called via the generate_response() method of the backend
     """
+    _num_players: int = 1
 
-    def __init__(self, name: str, model: backends.Model):
+    def __init__(self, model: backends.Model, name: str = None):
         """
         Args:
-            name: The player's name. The name identifies a player.
             model: The model used by this player.
-            game_recorder: The recorder to log message events
+            name: the player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
         """
-        self._name: str = name
         self._model = model
         self._game_recorder = None
         self._messages: List[Dict] = []
         self._prompt = None
         self._response_object = None
+        self._name = name
+        if name is None:
+            self._name: str = f"Player {Player._num_players} ({self.__class__.__name__})"
+            Player._num_players += 1
 
     def __getstate__(self):
         """
@@ -93,7 +96,7 @@ class Player(abc.ABC):
     def __log_response_received_event(self, response):
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'get message', 'content': response}
-        _prompt, _response = self.get_last_call_info() # log 'get message' event including backend/API call
+        _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
         self._game_recorder.log_event(from_=self.name, to="GM", action=action, call=(_prompt, _response))
 
     def get_last_call_info(self):
@@ -248,7 +251,6 @@ class DialogueGameMaster(GameMaster):
         for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
             player.game_recorder = self.game_recorder
         self.player_iter = iter(data["player_iter"])
-
 
     def clone(self) -> "DialogueGameMaster":
         _clone = DialogueGameMaster(self.game_name, self.game_path, self.experiment, self.player_models)
