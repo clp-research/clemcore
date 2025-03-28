@@ -175,6 +175,9 @@ class GameMaster(GameResourceLocator):
         self.player_models: List[backends.Model] = player_models
         self.game_recorder = GameRecorder(name, path)
 
+    def log_key(self, key: str, value: Any):
+        self.game_recorder.log_key(key, value)
+
     def log_players(self, players_dict):
         self.game_recorder.log_players(players_dict)
 
@@ -183,6 +186,9 @@ class GameMaster(GameResourceLocator):
 
     def log_event(self, from_, to, action):
         self.game_recorder.log_event(from_, to, action)
+
+    def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
+        self.game_recorder.store_records(results_root, dialogue_pair_desc, game_record_dir)
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
