@@ -1,3 +1,3 @@
 class RolloutBuffer:
     def add(self, context, response, done, info):
-        pass
+        print(context, f"[{','.join(response)}]", f"[{','.join(str(done))}]")

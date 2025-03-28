@@ -11,17 +11,20 @@ from clemcore.playpen.envs.tree_env import GameTreeEnv
 
 @contextmanager
 def make_env(game_spec: GameSpec, players: List[Model],
-             instances_name: str = None, shuffle_instances: bool = False,
-             branching_factor: int = 1, pruning_fn=lambda candidates: candidates):
+             instances_name: str = None, shuffle_instances: bool = False):
     with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
-        assert branching_factor > 0, "The branching factor must be greater than zero"
         task_iterator = game.create_game_instance_iterator(shuffle_instances)
-        if branching_factor == 1:
-            # this could also resolve to a tree env with branching factor one, but
-            # for clarity we instantiate here the game benchmark environment directly
-            yield GameEnv(game, players, task_iterator)
-        else:
-            yield GameTreeEnv(game, players, task_iterator, branching_factor=branching_factor, pruning_fn=pruning_fn)
+        yield GameEnv(game, players, task_iterator)
+
+
+@contextmanager
+def make_tree_env(game_spec: GameSpec, players: List[Model],
+                  instances_name: str = None, shuffle_instances: bool = False,
+                  branching_factor: int = 2, pruning_fn=lambda candidates: candidates):
+    with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
+        assert branching_factor > 1, "The branching factor must be greater than one"
+        task_iterator = game.create_game_instance_iterator(shuffle_instances)
+        yield GameTreeEnv(game, players, task_iterator, branching_factor=branching_factor, pruning_fn=pruning_fn)
 
 
 class PlayPenEnv(abc.ABC):
