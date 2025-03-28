@@ -178,8 +178,8 @@ class GameMaster(GameResourceLocator):
     def log_players(self, players_dict):
         self.game_recorder.log_players(players_dict)
 
-    def log_next_turn(self):
-        self.game_recorder.log_next_turn()
+    def log_next_round(self):
+        self.game_recorder.log_next_round()
 
     def log_event(self, from_, to, action):
         self.game_recorder.log_event(from_, to, action)
@@ -215,7 +215,7 @@ class DialogueGameMaster(GameMaster):
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.messages_by_names: Dict[str, List] = dict()
-        self.current_turn: int = 0
+        self.current_round: int = 0
         self.current_player: Player = None
         self.current_player_idx: int = 0
         self.info = {}
@@ -315,8 +315,8 @@ class DialogueGameMaster(GameMaster):
         if self._should_pass_turn():
             self.current_player = self._next_player()
             if self._start_next_round():
-                self._on_after_turn(self.current_turn)
-                self.current_turn += 1
+                self._on_after_round()
+                self.current_round += 1
 
         done = not self._does_game_proceed()
         if done:
@@ -352,9 +352,9 @@ class DialogueGameMaster(GameMaster):
         return self.current_player_idx == 0
 
     def __prepare_next_round(self):
-        self.log_next_turn()  # add record entry for player turns
-        self._on_before_turn(self.current_turn)  # call hook
-        module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
+        self.log_next_round()  # add record entry for player turns
+        self._on_before_round()  # call hook
+        module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_round)
 
     def get_response_feedback(self, response: str, context: Dict):
         """
@@ -459,6 +459,7 @@ class DialogueGameMaster(GameMaster):
         """Adds a message with the 'user' role to the conversation history.
         This method is to be used for 'user' messages, usually the initial prompt and GM response messages. Used to
         iteratively create the conversation history, but will not log/record messages automatically.
+
         Args:
             player: The Player instance that produced the message. This is usually the game's GM, if it directly adds
                 messages to the conversation history. TODO: Check use
@@ -478,7 +479,9 @@ class DialogueGameMaster(GameMaster):
 
     def _after_add_player_response(self, player: Player, utterance: str):
         """Method executed after a player response has been validated and added to the conversation history.
+
         Hook: Modify this method for game-specific functionality.
+
         Add the utterance to other player's history, if necessary. To do this use the method
         add_user_message(other_player,utterance).
         Args:
@@ -489,7 +492,9 @@ class DialogueGameMaster(GameMaster):
 
     def _validate_player_response(self, player: Player, utterance: str) -> bool:
         """Decide if an utterance should be added to the conversation history.
+
         Hook: Modify this method for game-specific functionality.
+
         This is also the place to check for game end conditions.
         Args:
             player: The Player instance for which the response is added as "assistant" to the history.
@@ -501,6 +506,7 @@ class DialogueGameMaster(GameMaster):
 
     def __parse_response(self, player: Player, utterance: str) -> str:
         """Parses a response and logs the message parsing result.
+
         Part of the validate-parse loop, not intended to be modified - modify _on_parse_response instead.
         Args:
             player: The Player instance that produced the response.
@@ -518,7 +524,9 @@ class DialogueGameMaster(GameMaster):
 
     def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
         """Decide if a response utterance should be modified and apply modifications.
+
         Hook: Modify this method for game-specific functionality.
+
         If no modifications are applied, this method must simply return a tuple of the utterance and True.
         When a modified utterance and a true value is returned, then a 'parse' event is logged.
         Args:
@@ -531,25 +539,25 @@ class DialogueGameMaster(GameMaster):
         """
         return utterance, True
 
-    def _on_before_turn(self, turn_idx: int):
-        """Executed in play loop after turn advance and before proceed check and prompting.
+    def _on_before_round(self):
+        """Executed in the play loop before a new round of gameplay starts.
+
         Hook: Modify this method for game-specific functionality.
-        Args:
-            turn_idx: The current turn index.
         """
         pass
 
-    def _on_after_turn(self, turn_idx: int):
-        """Executed in play loop after prompting.
+    def _on_after_round(self):
+        """Executed in the play loop after a round of gameply finished i.e. _start_next_round() resolves to True.
+
         Hook: Modify this method for game-specific functionality.
-        Args:
-            turn_idx: The current turn index.
         """
         pass
 
     def _does_game_proceed(self) -> bool:
         """Check if game should proceed.
+
         Template method: Must be implemented!
+
         This method is used to determine if a game should continue or be stopped. Both successful completion of the game
         and game-ending failures should lead to this method returning False.
         Returns:
@@ -559,14 +567,18 @@ class DialogueGameMaster(GameMaster):
 
     def _on_before_game(self):
         """Executed once at the start, before entering the play loop.
+
         Hook: Modify this method for game-specific functionality.
+
         Adding the initial prompt to the dialogue history with this method is recommended.
         """
         pass
 
     def _on_after_game(self):
         """Executed once at the end, after exiting the play loop.
+
         Hook: Modify this method for game-specific functionality.
+
         This method is useful to process and log/record overall game results.
         """
         pass

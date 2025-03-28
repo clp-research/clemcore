@@ -21,7 +21,7 @@ class GameRecorder(GameResourceLocator):
         """ Stores calls to the API """
         self.requests = []
 
-    def log_next_turn(self):
+    def log_next_round(self):
         """Call this method to group interactions per turn."""
         self.log_current_turn += 1
         self.interactions["turns"].append([])
