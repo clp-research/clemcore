@@ -45,8 +45,8 @@ class Player(abc.ABC):
         :return: the attributes to be copied
         """
         state = self.__dict__.copy()
-        del state["_model"]
-        del state["_game_recorder"]
+        del state["_model"] # do not copy the model: we can use the same model instance for multiple players
+        del state["_game_recorder"] # the game recorder must be reset by the game master
         return dict(state=state, _model=self._model)
 
     def __setstate__(self, data):
@@ -57,13 +57,6 @@ class Player(abc.ABC):
         self.__dict__.update(data["state"])
         self._model = data["_model"]
         self._game_recorder = None
-
-    def clone(self) -> "Player":
-        _clone = self.__class__(self._name, self._model)
-        _clone._messages = deepcopy(self._messages)
-        _clone._prompt = deepcopy(self._prompt)
-        _clone._response_object = deepcopy(self._response_object)
-        return _clone
 
     @property
     def game_recorder(self):
@@ -252,16 +245,6 @@ class DialogueGameMaster(GameMaster):
             player.game_recorder = self.game_recorder
         self.player_iter = iter(data["player_iter"])
 
-    def clone(self) -> "DialogueGameMaster":
-        _clone = DialogueGameMaster(self.game_name, self.game_path, self.experiment, self.player_models)
-        _clone.players_by_names = deepcopy(self.players_by_names)
-        _clone.messages_by_names = deepcopy(self.messages_by_names)
-        _clone.player_iter = iter(list(self.player_iter))
-        _clone.current_turn = self.current_turn
-        _clone.current_player = None if self.current_player is None else self.current_player.clone()
-        _clone.info = deepcopy(self.info)
-        return _clone
-
     def get_players(self) -> List[Player]:
         """Get a list of the players.
         Returns:
@@ -355,7 +338,9 @@ class DialogueGameMaster(GameMaster):
         elif self._should_pass_turn():
             self._next_player()
 
-        return done, deepcopy(self.info)
+        info = deepcopy(self.info)
+        self.info = {} # reset info after each step
+        return done, info
 
     def _next_player(self):
         try:

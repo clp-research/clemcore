@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List, Tuple, Dict, Callable, Union
 
 from clemcore.backends import Model
@@ -13,7 +14,6 @@ class GameEnv(PlayPenEnv):
         self._game = game
         self._player_models = player_models
         self._dialogue_pair_descriptor = game.get_dialogue_pair_descriptor(player_models)
-        # setup iterator to go through tasks / game instances
         self._task_iterator = task_iterator
         if len(self._task_iterator) < 1:
             raise RuntimeError(f"No game instances given for the game: '{self._game.game_name}'")
@@ -23,6 +23,14 @@ class GameEnv(PlayPenEnv):
         self._master: DialogueGameMaster = None
         if reset:  # if reset, then the game env is fully functional after init
             self.reset()
+
+    def __deepcopy__(self, memo):
+        _copy = type(self).__new__(self.__class__)
+        memo[id(self)] = _copy
+        _copy.__dict__.update(self.__dict__.copy())  # shallow copy of most attributes (for now)
+        _copy._master = deepcopy(self._master)
+        _copy._task_iterator = deepcopy(self._task_iterator)
+        return _copy
 
     @property
     def experiment(self):
@@ -53,17 +61,6 @@ class GameEnv(PlayPenEnv):
     def step(self, response: Union[str, List]) -> Tuple[Union[bool, List], Union[Dict, List]]:
         self._done, info = self.master.step(response)
         return self._done, info
-
-    def clone(self) -> "GameEnv":
-        _clone = GameEnv(self._game,  # should not be mutated
-                         self._player_models,  # should not be mutated
-                         self._task_iterator.clone(),
-                         reset=False)
-        _clone._game_instance = self._game_instance  # should not be mutated
-        _clone._dialogue_pair_descriptor = self._dialogue_pair_descriptor  # should not be mutated
-        _clone._experiment = self._experiment  # should not be mutated
-        _clone._master = self._master.clone()
-        return _clone
 
     def store_experiment_config(self, experiment_dir: str, results_dir: str):
         self._game.store_results_file(self.experiment,

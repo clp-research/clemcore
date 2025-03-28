@@ -41,14 +41,12 @@ class GameTreeEnv(PlayPenEnv):
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._root: GameEnv = GameEnv(game, player_models, task_iterator)
         self._active_branches: List[GameEnv] = [self._root]
-        self._game_tree: GameTree = GameTree(self._root)
         self._branching_factor: int = branching_factor
         self._pruning_fn: Callable = pruning_fn
 
-    def reset(self) -> None:
-        # all game branches always operate on the same task / episode
+    def reset(self) -> None:  # all game branches always operate on the same task / episode
         self._root.reset()
-        self._game_tree = GameTree(self._root)
+        self._active_branches: List[GameEnv] = [self._root]
 
     def observe(self) -> Tuple[Callable, Union[Dict, List[Dict]]]:
         contexts: List[Dict] = []
@@ -79,16 +77,14 @@ class GameTreeEnv(PlayPenEnv):
 
         # establish such responses as branches in the tree that were not pruned
         # these responses will determine the new leaves of the tree
-        selected_candidates = self._pruning_fn([candidates])
+        selected_candidates = self._pruning_fn(candidates)
 
         # after pruning the tree might have inactive branches
         # however, we only mark the responses and handle the
         # rest in the rolloout buffer directly
-        self._active_branches = []
-        for selected_candidate in selected_candidates:
-            self._game_tree.add_branch(selected_candidate.parent_env, selected_candidate.branch_env)
-            # memorize leaves so that we do not have to find them again
-            self._active_branches.append(selected_candidate)
+
+        # memorize leaves so that we do not have to find them again
+        self._active_branches = [selected_candidate.branch_env for selected_candidate in selected_candidates]
 
         # the tree env stops when all active branches are done
         self._done = all([candidate.done for candidate in selected_candidates])
@@ -107,6 +103,14 @@ class GameTreePlayer(Callable):
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._branching_factor = branching_factor
         self._active_branches = actives_branches
+        self._current_players = []
+
+    @property
+    def model(self):
+        if not self._current_players:
+            return None
+        # for now, we assume that all current player share the same model
+        return self._current_players[0].model
 
     def __call__(self, contexts: List[str]) -> List[List[BranchingResponse]]:
         """
@@ -116,6 +120,7 @@ class GameTreePlayer(Callable):
         """
         assert isinstance(contexts, List), "The context for TreePlayer must be a list of game environments"
         assert len(self._active_branches) == len(contexts), "There must be as many active branches as given contexts"
+        self._current_players = []
         context_responses = []
         for parent_env, parent_context in zip(self._active_branches, contexts):
             branch_responses = []
@@ -124,6 +129,7 @@ class GameTreePlayer(Callable):
                 branch_player = branch_env.master.get_current_player()  # we use the branch player as it keeps state
                 branch_response = branch_player(parent_context)  # this already changes the player state in branch env
                 branch_responses.append(BranchingResponse(parent_env, branch_env, branch_response))
+                self._current_players.append(branch_player)
             context_responses.append(branch_responses)
         return context_responses
 
