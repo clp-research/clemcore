@@ -39,6 +39,26 @@ def _store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_ove
     return fp
 
 
+def store_results_file(game_name, data, file_name: str, dialogue_pair: str,
+                       sub_dir: str = None, results_dir: str = None):
+    """Store a results file in your game results' directory. The top-level directory is 'results'.
+    Args:
+        game_name: the game name to store the results file for
+        data: The data to store in the file.
+        file_name: The name of the file. Can have subdirectories e.g. "sub/my_file".
+        dialogue_pair: The name of the model pair directory. The directory name is retrieved from the results
+            directory file structure by classes/methods that use this method.
+        sub_dir: The subdirectory to store the results file in. Automatically created when given; otherwise an
+            error will be thrown.
+        results_dir: An (alternative) results directory structure given as a relative or absolute path.
+    """
+    if results_dir is None:
+        results_dir = "results"  # default to a results directory in current terminal workspace
+    game_results_path = os.path.join(results_dir, dialogue_pair, game_name)
+    fp = _store_file(data, file_name, game_results_path, sub_dir)
+    module_logger.info(f"Results file stored to {fp}")
+
+
 class GameResourceLocator(abc.ABC):
     """
     Provides access to game specific resources and results (based on game path and results directory)
@@ -170,21 +190,3 @@ class GameResourceLocator(abc.ABC):
         """
         fp = _store_file(data, file_name, self.game_path, sub_dir=sub_dir)
         module_logger.info("Game file stored to %s", fp)
-
-    def store_results_file(self, data, file_name: str, dialogue_pair: str,
-                           sub_dir: str = None, results_dir: str = None):
-        """Store a results file in your game results' directory. The top-level directory is 'results'.
-        Args:
-            data: The data to store in the file.
-            file_name: The name of the file. Can have subdirectories e.g. "sub/my_file".
-            dialogue_pair: The name of the model pair directory. The directory name is retrieved from the results
-                directory file structure by classes/methods that use this method.
-            sub_dir: The subdirectory to store the results file in. Automatically created when given; otherwise an
-                error will be thrown.
-            results_dir: An (alternative) results directory structure given as a relative or absolute path.
-        """
-        if results_dir is None:
-            results_dir = "results"  # default to a results directory in current terminal workspace
-        game_results_path = os.path.join(results_dir, dialogue_pair, self.game_name)
-        fp = _store_file(data, file_name, game_results_path, sub_dir)
-        module_logger.info(f"Results file stored to {fp}")

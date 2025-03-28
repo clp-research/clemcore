@@ -173,8 +173,8 @@ class GameMaster:
         self.game_name = name
         self.experiment: Dict = experiment
         self.player_models: List[backends.Model] = player_models
-        self.game_recorder = GameRecorder(name, path)
-        self.game_resources = GameResourceLocator(name, path)
+        self.game_recorder = GameRecorder(name)
+        self.game_resources = GameResourceLocator(name, path)  # could be obsolete, when all info is in the instances
 
     def load_json(self, file_name):
         return self.game_resources.load_json(file_name)

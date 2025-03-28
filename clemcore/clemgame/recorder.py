@@ -3,15 +3,15 @@ import logging
 from datetime import datetime
 from typing import Dict, Tuple, Any, List
 
-from clemcore.clemgame.resources import GameResourceLocator
+from clemcore.clemgame.resources import store_results_file
 
 module_logger = logging.getLogger(__name__)
 
 
-class GameRecorder(GameResourceLocator):
+class GameRecorder:
 
-    def __init__(self, game_name: str, game_path: str):
-        super().__init__(game_name, game_path)
+    def __init__(self, game_name: str):
+        self.game_name = game_name
         self.log_current_turn = -1
         """ Stores players and turn during the runs """
         self.interactions = {
@@ -110,11 +110,13 @@ class GameRecorder(GameResourceLocator):
             module_logger.warning(f"Interaction logs are missing!")
         if not self.requests:
             module_logger.warning(f"No calls logged!")
-        self.store_results_file(self.interactions, "interactions.json",
-                                dialogue_pair_desc,
-                                sub_dir=game_record_dir,
-                                results_dir=results_root)
-        self.store_results_file(self.requests, "requests.json",
-                                dialogue_pair_desc,
-                                sub_dir=game_record_dir,
-                                results_dir=results_root)
+        store_results_file(self.game_name, self.interactions,
+                           "interactions.json",
+                           dialogue_pair_desc,
+                           sub_dir=game_record_dir,
+                           results_dir=results_root)
+        store_results_file(self.game_name, self.requests,
+                           "requests.json",
+                           dialogue_pair_desc,
+                           sub_dir=game_record_dir,
+                           results_dir=results_root)

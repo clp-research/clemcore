@@ -3,6 +3,7 @@ from typing import List, Tuple, Dict, Callable, Union
 
 from clemcore.backends import Model
 from clemcore.clemgame import GameBenchmark, DialogueGameMaster, GameInstanceIterator
+from clemcore.clemgame.resources import store_results_file
 from clemcore.playpen.envs import PlayPenEnv
 
 
@@ -12,11 +13,12 @@ class GameEnv(PlayPenEnv):
                  reset=True):
         super().__init__()
         self._game = game
+        self._game_name = game.game_name
         self._player_models = player_models
         self._dialogue_pair_descriptor = game.get_dialogue_pair_descriptor(player_models)
         self._task_iterator = task_iterator
         if len(self._task_iterator) < 1:
-            raise RuntimeError(f"No game instances given for the game: '{self._game.game_name}'")
+            raise RuntimeError(f"No game instances given for the game: '{self._game_name}'")
         # variables initialized on reset()
         self._game_instance: Dict = None
         self._experiment: Dict = None
@@ -63,18 +65,18 @@ class GameEnv(PlayPenEnv):
         return self._done, info
 
     def store_experiment_config(self, experiment_dir: str, results_dir: str):
-        self._game.store_results_file(self.experiment,
-                                      f"experiment_{self.experiment['name']}.json",
-                                      self._dialogue_pair_descriptor,
-                                      sub_dir=experiment_dir,
-                                      results_dir=results_dir)
+        store_results_file(self._game_name, self.experiment,
+                           f"experiment_{self.experiment['name']}.json",
+                           self._dialogue_pair_descriptor,
+                           sub_dir=experiment_dir,
+                           results_dir=results_dir)
 
     def store_game_instance(self, episode_dir, results_dir):
-        self._game.store_results_file(self._game_instance,
-                                      f"instance.json",
-                                      self._dialogue_pair_descriptor,
-                                      sub_dir=episode_dir,
-                                      results_dir=results_dir)
+        store_results_file(self._game_name, self._game_instance,
+                           f"instance.json",
+                           self._dialogue_pair_descriptor,
+                           sub_dir=episode_dir,
+                           results_dir=results_dir)
 
     def store_game_interactions(self, episode_dir, results_dir):
         self.master.store_records(results_dir, self._dialogue_pair_descriptor, episode_dir)

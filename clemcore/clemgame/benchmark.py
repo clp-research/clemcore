@@ -14,7 +14,7 @@ from clemcore import backends
 from clemcore.clemgame.master import GameMaster
 from clemcore.clemgame.metrics import GameScorer
 from clemcore.clemgame.registry import GameSpec
-from clemcore.clemgame.resources import GameResourceLocator
+from clemcore.clemgame.resources import GameResourceLocator, store_results_file
 from clemcore.utils import transcript_utils
 
 module_logger = logging.getLogger(__name__)
@@ -133,15 +133,15 @@ class GameBenchmark(GameResourceLocator):
 
                         transcript = transcript_utils.build_transcript(game_interactions, experiment_config,
                                                                        game_instance, dialogue_pair)
-                        self.store_results_file(transcript, "transcript.html",
-                                                dialogue_pair,
-                                                sub_dir=rel_episode_path,
-                                                results_dir=results_root)
+                        store_results_file(self.game_name, transcript, "transcript.html",
+                                           dialogue_pair,
+                                           sub_dir=rel_episode_path,
+                                           results_dir=results_root)
                         transcript_tex = transcript_utils.build_tex(game_interactions)
-                        self.store_results_file(transcript_tex, "transcript.tex",
-                                                dialogue_pair,
-                                                sub_dir=rel_episode_path,
-                                                results_dir=results_root)
+                        store_results_file(self.game_name, transcript_tex, "transcript.tex",
+                                           dialogue_pair,
+                                           sub_dir=rel_episode_path,
+                                           results_dir=results_root)
                     except Exception:  # continue with other episodes if something goes wrong
                         module_logger.exception(f"{self.game_name}: Cannot transcribe {episode_dir} (but continue)")
                         error_count += 1
@@ -274,11 +274,11 @@ class GameBenchmark(GameResourceLocator):
                 experiment_config["timestamp"] = datetime.now().isoformat()
                 experiment_config["dialogue_partners"] = dialogue_pair_desc
 
-                self.store_results_file(experiment_config,
-                                        f"experiment_{experiment_name}.json",
-                                        dialogue_pair_desc,
-                                        sub_dir=experiment_record_dir,
-                                        results_dir=results_root)
+                store_results_file(self.game_name, experiment_config,
+                                   f"experiment_{experiment_name}.json",
+                                   dialogue_pair_desc,
+                                   sub_dir=experiment_record_dir,
+                                   results_dir=results_root)
 
                 error_count = 0
                 time_experiment_start = datetime.now()
@@ -288,11 +288,11 @@ class GameBenchmark(GameResourceLocator):
                     module_logger.info("Activity: %s Experiment: %s Episode: %d Game: %s",
                                        self.game_name, experiment_name, episode_counter, game_id)
                     episode_dir = experiment_record_dir + f"/episode_{episode_counter}"
-                    self.store_results_file(game_instance,
-                                            f"instance.json",
-                                            dialogue_pair_desc,
-                                            sub_dir=episode_dir,
-                                            results_dir=results_root)
+                    store_results_file(self.game_name, game_instance,
+                                       f"instance.json",
+                                       dialogue_pair_desc,
+                                       sub_dir=episode_dir,
+                                       results_dir=results_root)
                     try:
                         game_master = self.create_game_master(experiment_config, dialogue_pair)
                         game_master.setup(**game_instance)
@@ -308,11 +308,11 @@ class GameBenchmark(GameResourceLocator):
                 # Add experiment duration and overwrite file
                 time_experiment_end = datetime.now() - time_experiment_start
                 experiment_config["duration"] = str(time_experiment_end)
-                self.store_results_file(experiment_config,
-                                        f"experiment_{experiment_name}.json",
-                                        dialogue_pair_desc,
-                                        sub_dir=experiment_record_dir,
-                                        results_dir=results_root)
+                store_results_file(self.game_name, experiment_config,
+                                   f"experiment_{experiment_name}.json",
+                                   dialogue_pair_desc,
+                                   sub_dir=experiment_record_dir,
+                                   results_dir=results_root)
 
     def get_dialogue_pair_descriptor(self, dialogue_pair: List[backends.Model]):
         if self.is_single_player:
