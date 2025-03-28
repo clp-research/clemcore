@@ -39,24 +39,14 @@ class Player(abc.ABC):
             self._name: str = f"Player {Player._num_players} ({self.__class__.__name__})"
             Player._num_players += 1
 
-    def __getstate__(self):
-        """
-        Get the attributes to be copied.
-        :return: the attributes to be copied
-        """
-        state = self.__dict__.copy()
-        del state["_model"]  # do not copy the model: we can use the same model instance for multiple players
-        del state["_game_recorder"]  # the game recorder must be reset by the game master
-        return dict(state=state, _model=self._model)
-
-    def __setstate__(self, data):
-        """
-        Set the state of the deep copy.
-        :param data: the values for attributes of the new instance
-        """
-        self.__dict__.update(data["state"])
-        self._model = data["_model"]
-        self._game_recorder = None
+    def __deepcopy__(self, memo):
+        _copy = type(self).__new__(self.__class__)
+        memo[id(self)] = _copy
+        for key, value in self.__dict__.items():
+            if key not in ["_model", "_game_recorder"]:
+                setattr(_copy, key, deepcopy(value, memo))
+        _copy._model = self._model
+        return _copy
 
     @property
     def game_recorder(self):
