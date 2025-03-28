@@ -312,16 +312,18 @@ class DialogueGameMaster(GameMaster):
             self.add_assistant_message(self.current_player, parsed_response)
             self._after_add_player_response(self.current_player, parsed_response)
 
+        if self._should_pass_turn():
+            self.current_player = self._next_player()
+            if self._start_next_round():
+                self._on_after_turn(self.current_turn)
+                self.current_turn += 1
+
         done = not self._does_game_proceed()
         if done:
             self._on_after_game()
             self.info["episode_score"] = self.compute_episode_score()
-        elif self._should_pass_turn():
-            self.current_player = self._next_player()
-            if self.current_player_idx == 0:  # we cycled through the whole list
-                self._on_after_turn(self.current_turn)
-                self.current_turn += 1
-                self.__prepare_next_round()
+        elif self._start_next_round():
+            self.__prepare_next_round()
 
         info = deepcopy(self.info)
         self.info = {}  # reset info after each step
