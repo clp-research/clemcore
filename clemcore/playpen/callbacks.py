@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 
 from tqdm import tqdm
 
-from clemcore.playpen import GameEnv
+from clemcore.playpen.envs.game_env import GameEnv
 
 
 class BaseCallback(abc.ABC):

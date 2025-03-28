@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import List, Dict, Callable, Tuple, Union
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmark
+from clemcore.clemgame import GameBenchmark, GameInstanceIterator
 from clemcore.playpen import GameEnv
 from clemcore.playpen.envs import PlayPenEnv
 
@@ -35,11 +35,11 @@ class GameTreeEnv(PlayPenEnv):
     A pruning function can be given to reduce the growing number of environments.
     """
 
-    def __init__(self, game: GameBenchmark, player_models: List[Model], shuffle_instances: bool, branching_factor: int,
-                 pruning_fn: Callable):
+    def __init__(self, game: GameBenchmark, player_models: List[Model], task_iterator: GameInstanceIterator,
+                 branching_factor: int, pruning_fn: Callable):
         super().__init__()
         assert branching_factor > 0, "The branching factor must be greater than zero"
-        self._root: GameEnv = GameEnv(game, player_models, shuffle_instances)
+        self._root: GameEnv = GameEnv(game, player_models, task_iterator)
         self._active_branches: List[GameEnv] = [self._root]
         self._game_tree: GameTree = GameTree(self._root)
         self._branching_factor: int = branching_factor
