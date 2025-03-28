@@ -150,7 +150,7 @@ class Player(abc.ABC):
         raise NotImplementedError()
 
 
-class GameMaster(GameResourceLocator):
+class GameMaster:
     """Base class to contain game-specific functionality.
 
     A GameMaster (sub-)class
@@ -170,10 +170,17 @@ class GameMaster(GameResourceLocator):
             experiment: The experiment (set of instances) to use.
             player_models: Player models to use for one or two players.
         """
-        super().__init__(name, path)
+        self.game_name = name
         self.experiment: Dict = experiment
         self.player_models: List[backends.Model] = player_models
         self.game_recorder = GameRecorder(name, path)
+        self.game_resources = GameResourceLocator(name, path)
+
+    def load_json(self, file_name):
+        return self.game_resources.load_json(file_name)
+
+    def load_template(self, file_name):
+        return self.game_resources.load_template(file_name)
 
     def log_key(self, key: str, value: Any):
         self.game_recorder.log_key(key, value)
