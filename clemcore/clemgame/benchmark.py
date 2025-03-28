@@ -124,6 +124,7 @@ class GameBenchmark(GameResourceLocator):
                 error_count = 0
                 for episode_dir in tqdm(episode_dirs, desc="Building transcripts"):
                     try:
+                        # todo: to allow more structured episode dirs we should rather simply "glob" for the files
                         rel_episode_path = f"{experiment_dir}/{episode_dir}"
                         game_instance = self.load_results_json(f"{rel_episode_path}/instance",
                                                                results_root, dialogue_pair)

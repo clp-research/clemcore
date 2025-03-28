@@ -45,8 +45,8 @@ class Player(abc.ABC):
         :return: the attributes to be copied
         """
         state = self.__dict__.copy()
-        del state["_model"] # do not copy the model: we can use the same model instance for multiple players
-        del state["_game_recorder"] # the game recorder must be reset by the game master
+        del state["_model"]  # do not copy the model: we can use the same model instance for multiple players
+        del state["_game_recorder"]  # the game recorder must be reset by the game master
         return dict(state=state, _model=self._model)
 
     def __setstate__(self, data):
@@ -103,7 +103,7 @@ class Player(abc.ABC):
         :param memorize: Whether the context and response are to be added to the player's message history.
         :return: the textual response
         """
-        assert context["role"] == "user", "The context must be given by the user role."
+        assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
 
         self.__log_send_context_event(context["content"])
         call_start = datetime.now()
@@ -225,25 +225,15 @@ class DialogueGameMaster(GameMaster):
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.messages_by_names: Dict[str, List] = dict()
-        self.player_iter: Iterator[Player] = iter([])
         self.current_turn: int = 0
         self.current_player: Player = None
+        self.current_player_idx: int = 0
         self.info = {}
 
-    def __getstate__(self):
-        """
-        Get the attributes to be copied.
-        :return: the attributes to be copied
-        """
-        state = self.__dict__.copy()
-        del state["player_iter"]
-        return dict(state=state, player_iter=list(self.player_iter))
-
-    def __setstate__(self, data):
-        self.__dict__.update(data["state"])
+    def __setstate__(self, state):
+        self.__dict__.update(state)
         for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
             player.game_recorder = self.game_recorder
-        self.player_iter = iter(data["player_iter"])
 
     def get_players(self) -> List[Player]:
         """Get a list of the players.
@@ -284,9 +274,10 @@ class DialogueGameMaster(GameMaster):
         for name, player in self.players_by_names.items():
             players_descriptions[name] = player.get_description()
         self.log_players(players_descriptions)
+        self.current_player = self.get_players()[self.current_player_idx]
         # call game hooks
         self._on_before_game()
-        self._next_player()
+        self.__prepare_next_round()
 
     def _on_setup(self, **kwargs):
         """Method executed at the start of the default setup method.
@@ -336,24 +327,42 @@ class DialogueGameMaster(GameMaster):
             self._on_after_game()
             self.info["episode_score"] = self.compute_episode_score()
         elif self._should_pass_turn():
-            self._next_player()
+            self.current_player = self._next_player()
+            if self.current_player_idx == 0:  # we cycled through the whole list
+                self._on_after_turn(self.current_turn)
+                self.current_turn += 1
+                self.__prepare_next_round()
 
         info = deepcopy(self.info)
-        self.info = {} # reset info after each step
+        self.info = {}  # reset info after each step
         return done, info
 
-    def _next_player(self):
-        try:
-            # check already here for next player to increment turn and to check end condition properly
-            self.current_player = next(self.player_iter)
-        except StopIteration:  # prepare next round of gameplay
-            self._on_after_turn(self.current_turn)
-            self.current_turn += 1
-            self.player_iter = iter(self.get_players())
-            self.current_player = next(self.player_iter)
-            self.log_next_turn()  # add record entry for player turns
-            self._on_before_turn(self.current_turn)  # call hook
-            module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
+    def _next_player(self) -> Player:
+        """
+        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
+
+        Default: The gamer master passes the turn to the next player in the player list (order as added).
+        Starting again with the first player, when all players have had their turn(s).
+
+        :return: the next (current) player
+        """
+        self.current_player_idx = (self.current_player_idx + 1) % len(self.players_by_names)
+        return self.get_players()[self.current_player_idx]
+
+    def _start_next_round(self) -> bool:
+        """
+        Subclasses can overwrite this method to specify when a next round should start after a player's turn is passed.
+
+        Default: Start next round when we cycled through the whole list i.e. it is again the first player's turn.
+
+        :return: True, when to start a new round
+        """
+        return self.current_player_idx == 0
+
+    def __prepare_next_round(self):
+        self.log_next_turn()  # add record entry for player turns
+        self._on_before_turn(self.current_turn)  # call hook
+        module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_turn)
 
     def get_response_feedback(self, response: str, context: Dict):
         """

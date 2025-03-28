@@ -79,12 +79,14 @@ class GameTreeEnv(PlayPenEnv):
         # these responses will determine the new leaves of the tree
         selected_candidates = self._pruning_fn(candidates)
 
-        # after pruning the tree might have inactive branches
+        # todo: after pruning the tree might have inactive branches
         # however, we only mark the responses and handle the
         # rest in the rolloout buffer directly
 
         # memorize leaves so that we do not have to find them again
         self._active_branches = [selected_candidate.branch_env for selected_candidate in selected_candidates]
+
+        # todo: active branches that are done should not continue playing
 
         # the tree env stops when all active branches are done
         self._done = all([candidate.done for candidate in selected_candidates])
