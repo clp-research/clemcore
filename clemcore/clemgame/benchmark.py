@@ -13,9 +13,9 @@ from tqdm import tqdm
 from clemcore import backends
 from clemcore.clemgame.master import GameMaster
 from clemcore.clemgame.metrics import GameScorer
+from clemcore.clemgame.recorder import GameRecorder, DefaultGameRecorder
 from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator, store_results_file
-from clemcore.utils import transcript_utils
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -90,64 +90,6 @@ class GameBenchmark(GameResourceLocator):
 
     def create_game_instance_iterator(self, shuffle_instances: bool = False):
         return GameInstanceIterator(self.instances, do_shuffle=shuffle_instances)
-
-    def build_transcripts(self, results_dir: str):
-        """Create and store readable HTML and LaTeX episode transcripts.
-        Transcripts are stored in each corresponding episode directory.
-        Args:
-            results_dir: Path to the results directory.
-        """
-        results_root = results_dir
-        dialogue_partners = [model_dir for model_dir in os.listdir(results_root)
-                             if os.path.isdir(os.path.join(results_root, model_dir))]
-        for dialogue_pair in dialogue_partners:
-            game_result_path = os.path.join(results_root, dialogue_pair, self.game_name)
-            if not os.path.exists(game_result_path) or not os.path.isdir(game_result_path):
-                stdout_logger.info("No results directory found at: " + game_result_path)
-                continue
-
-            experiment_dirs = [experiment_dir for experiment_dir in os.listdir(game_result_path)
-                               if os.path.isdir(os.path.join(game_result_path, experiment_dir))]
-            if not experiment_dirs:
-                stdout_logger.warning(f"{self.game_name}: No experiments for {dialogue_pair}")
-            for experiment_dir in experiment_dirs:
-                experiment_path = os.path.join(game_result_path, experiment_dir)
-                experiment_name = "_".join(experiment_dir.split("_")[1:])  # remove leading index number
-                if self.filter_experiment and experiment_name not in self.filter_experiment:
-                    stdout_logger.info(f"Skip experiment {experiment_name}")
-                    continue
-                stdout_logger.info(f"Transcribe: {experiment_name}")
-                experiment_config = self.load_results_json(f"{experiment_dir}/experiment_{experiment_name}",
-                                                           results_root, dialogue_pair)
-                episode_dirs = [file for file in os.listdir(experiment_path)
-                                if os.path.isdir(os.path.join(experiment_path, file))]
-                error_count = 0
-                for episode_dir in tqdm(episode_dirs, desc="Building transcripts"):
-                    try:
-                        # todo: to allow more structured episode dirs we should rather simply "glob" for the files
-                        rel_episode_path = f"{experiment_dir}/{episode_dir}"
-                        game_instance = self.load_results_json(f"{rel_episode_path}/instance",
-                                                               results_root, dialogue_pair)
-                        game_interactions = self.load_results_json(f"{rel_episode_path}/interactions",
-                                                                   results_root, dialogue_pair)
-
-                        transcript = transcript_utils.build_transcript(game_interactions, experiment_config,
-                                                                       game_instance, dialogue_pair)
-                        store_results_file(self.game_name, transcript, "transcript.html",
-                                           dialogue_pair,
-                                           sub_dir=rel_episode_path,
-                                           results_dir=results_root)
-                        transcript_tex = transcript_utils.build_tex(game_interactions)
-                        store_results_file(self.game_name, transcript_tex, "transcript.tex",
-                                           dialogue_pair,
-                                           sub_dir=rel_episode_path,
-                                           results_dir=results_root)
-                    except Exception:  # continue with other episodes if something goes wrong
-                        module_logger.exception(f"{self.game_name}: Cannot transcribe {episode_dir} (but continue)")
-                        error_count += 1
-                if error_count > 0:
-                    stdout_logger.error(
-                        f"{self.game_name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
     def compute_scores(self, results_dir: str):
         """Compute and store scores for each episode and player pair.
@@ -293,8 +235,13 @@ class GameBenchmark(GameResourceLocator):
                                        dialogue_pair_desc,
                                        sub_dir=episode_dir,
                                        results_dir=results_root)
+                    game_recorder = DefaultGameRecorder(self.game_name,
+                                                        experiment_config["name"],  # meta info for transcribe
+                                                        game_instance["game_id"],  # meta info for transcribe
+                                                        dialogue_pair_desc)  # meta info for transcribe
                     try:
                         game_master = self.create_game_master(experiment_config, dialogue_pair)
+                        game_master.game_recorder(game_recorder)
                         game_master.setup(**game_instance)
                         game_master.play()
                         game_master.store_records(results_root, dialogue_pair_desc, episode_dir)

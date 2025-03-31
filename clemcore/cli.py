@@ -11,6 +11,7 @@ from clemcore.backends import ModelRegistry, BackendRegistry
 from clemcore.clemgame import GameRegistry, GameSpec
 from clemcore.clemgame import benchmark
 from clemcore import clemeval
+from clemcore.clemgame.transcripts.builder import build_transcripts
 from clemcore.playpen import BasePlayPen
 
 logger = logging.getLogger(__name__)
@@ -230,33 +231,24 @@ def score(game_selector: Union[str, Dict, GameSpec], experiment_name: str = None
             logger.error(e, exc_info=True)
 
 
-def transcripts(game_selector: Union[str, Dict, GameSpec], experiment_name: str = None, results_dir: str = None):
+def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
     """Create episode transcripts from a game benchmark run's records and store transcript files.
     Args:
         game_selector: Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.
-        experiment_name: Name of the experiment to score. Corresponds to the experiment directory in each player pair
-            subdirectory in the results directory.
         results_dir: Path to the results directory in which the benchmark records are stored.
     """
-    logger.info(f"Transcribing game {game_selector}")
-    stdout_logger.info(f"Transcribing game {game_selector}")
-    if experiment_name:
-        logger.info("Only transcribing experiment: %s", experiment_name)
+    logger.info(f"Transcribing game interactions that match game_selector={game_selector}")
+    stdout_logger.info(f"Transcribing game interactions that match game_selector={game_selector}")
 
-    game_registry = GameRegistry.from_directories_and_cwd_files()
-    game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
-    for game_spec in game_specs:
-        try:
-            with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
-                if experiment_name:
-                    game_benchmark.filter_experiment.append(experiment_name)
-                time_start = datetime.now()
-                game_benchmark.build_transcripts(results_dir)
-                time_end = datetime.now()
-                logger.info(f"Building transcripts for {game_benchmark.game_name} took {str(time_end - time_start)}")
-        except Exception as e:
-            stdout_logger.exception(e)
-            logger.error(e, exc_info=True)
+    filter_games = []
+    if game_selector != "all":
+        game_registry = GameRegistry.from_directories_and_cwd_files()
+        game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
+        filter_games = [game_spec.game_name for game_spec in game_specs]
+    time_start = datetime.now()
+    build_transcripts(results_dir, filter_games)
+    time_end = datetime.now()
+    logger.info(f"Building transcripts took {str(time_end - time_start)}")
 
 
 def read_gen_args(args: argparse.Namespace):
@@ -293,7 +285,7 @@ def cli(args: argparse.Namespace):
     if args.command_name == "score":
         score(args.game, experiment_name=args.experiment_name, results_dir=args.results_dir)
     if args.command_name == "transcribe":
-        transcripts(args.game, experiment_name=args.experiment_name, results_dir=args.results_dir)
+        transcripts(args.game, results_dir=args.results_dir)
     if args.command_name == "eval":
         clemeval.perform_evaluation(args.results_dir)
 
@@ -406,8 +398,6 @@ def main():
                                    "When not specified, then the results will be located in 'results'")
 
     transcribe_parser = sub_parsers.add_parser("transcribe")
-    transcribe_parser.add_argument("-e", "--experiment_name", type=str,
-                                   help="Optional argument to only run a specific experiment")
     transcribe_parser.add_argument("-g", "--game", type=str,
                                    help='A specific game name (see ls), a GameSpec-like JSON string object or "all" (default).',
                                    default="all")

@@ -1,14 +1,16 @@
 import abc
 import csv
+import importlib.resources
 import json
 import logging
 import os
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Union
 
 module_logger = logging.getLogger(__name__)
 
 
-def store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_overwrite: bool = True) -> str:
+def store_file(data, file_name: str, dir_path: Union[str, Path], sub_dir: str = None, do_overwrite: bool = True) -> str:
     """Store a file.
     Base function to handle relative clembench directory paths.
     Args:
@@ -37,6 +39,32 @@ def store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_over
         else:
             f.write(data)
     return fp
+
+
+def load_json(file_path: str) -> Dict:
+    """
+    Load a JSON file.
+    Args:
+        file_path: The path to the JSON file.
+    Returns:
+        The JSON file content as dict.
+    """
+    file_ending = ".json"
+    if not file_path.endswith(file_ending):
+        file_path = file_path + file_ending
+    with open(file_path, encoding='utf8') as f:
+        data = json.load(f)
+    return data
+
+
+def load_packaged_file(file_path: str):
+    """
+    Loads a file within the clemcore package.
+    :param file_path: The path to the file within the clemcore package (without the 'clemcore/' prefix).
+    :return: The file content
+    """
+    with importlib.resources.files("clemcore").joinpath(file_path).open("r") as f:
+        return f.read()
 
 
 def store_results_file(game_name, data, file_name: str, dialogue_pair: str,

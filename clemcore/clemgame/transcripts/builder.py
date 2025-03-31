@@ -1,92 +1,19 @@
+import glob
 import json
+import logging
 import os
-from string import Template
-from typing import Dict
-import clemcore.utils.file_utils as file_utils
-
 import html
+from pathlib import Path
+from typing import Dict, List
+from tqdm import tqdm
 
-CSS_FILE = os.path.join(file_utils.clemcore_root(), "utils", "chat-two-tracks.css")
-CSS_STRING = file_utils.load_file(CSS_FILE, file_ending=".css")
+import clemcore.clemgame.transcripts.constants as constants
+import clemcore.clemgame.transcripts.patterns as patterns
+from clemcore.utils import file_utils
+from clemcore.clemgame.resources import store_file, load_json
 
-HTML_HEADER = '''
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-    <style>
-        {}
-    </style>
-</head>
-<body>
-
-<br/>
-'''
-
-top_info = '''
-<div class="top-info">
-    <p>{}</p>
-</div>
-
-<br/>
-
-<div class="chat">
-'''
-
-HTML_TEMPLATE = '''
-    <div speaker="{}" class="msg {}">
-        <p>{}</p>
-    </div>
-'''
-
-HTML_FOOTER = '''
-</div>
-
-</body>
-</html>
-'''
-
-TEX_HEADER = '''
-\\documentclass{article}
-\\usepackage{colortbl}
-\\usepackage{makecell}
-\\usepackage{multirow}
-\\usepackage{supertabular}
-
-\\begin{document}
-
-\\newcounter{utterance}
-
-\\twocolumn
-
-{ \\footnotesize  \\setcounter{utterance}{1}
-\\setlength{\\tabcolsep}{0pt}
-\\begin{supertabular}{c@{$\;$}|p{.15\\linewidth}@{}p{.15\\linewidth}p{.15\\linewidth}p{.15\\linewidth}p{.15\\linewidth}p{.15\linewidth}}
-
-    \\# & $\\;$A & \\multicolumn{4}{c}{Game Master} & $\\;\\:$B\\\\
-    \\hline 
-'''
-
-TEX_BUBBLE_PARAMS = {
-    "a-gm": ("0.8,1,0.9", "A$\\rangle$GM", "&", "& &", 4, 0.6),
-    "b-gm": ("1,0.85,0.72", "GM$\\langle$B", "& & &", "", 4, 0.6),
-    "gm-a": ("0.9,0.9,0.9", "A$\\langle$GM", "& &", "&", 4, 0.6),
-    "gm-b": ("0.9,0.9,0.9", "GM$\\rangle$B", "& &", "&", 4, 0.6),
-    "gm-gm": ("0.95,0.95,0.95", "GM$|$GM", "& & &", "& &", 2, 0.3)
-}
-
-TEX_TEMPLATE = Template('''
-    \\theutterance \\stepcounter{utterance}  
-
-    $cols_init \\multicolumn{$ncols}{p{$width\\linewidth}}{\\cellcolor[rgb]{$rgb}{%\n\t\\makecell[{{p{\\linewidth}}}]{% \n\t  \\tt {\\tiny [$speakers]}  \n\t $msg \n\t  } \n\t   } \n\t   } \n\t $cols_end \\\\ \n 
-''')
-
-TEX_FOOTER = '''
-\\end{supertabular}
-}
-
-\\end{document}
-'''
+module_logger = logging.getLogger(__name__)
+stdout_logger = logging.getLogger("clemcore.run")
 
 
 def _get_class_name(event):
@@ -109,7 +36,40 @@ def _get_class_name(event):
         return "gm-gm"
 
 
-def build_transcript(interactions: Dict, experiment_config: Dict, game_instance: Dict, dialogue_pair: str):
+def build_transcripts(top_dir: str, filter_games: List = None):
+    """
+    Create and store readable HTML and LaTeX episode transcripts from the interactions.json.
+    Transcripts are stored as sibling files in the directory where the interactions.json is found.
+    Args:
+        top_dir: Path to a top directory.
+        filter_games: Transcribe only interaction files which are part of the given games.
+                      A game is specified by its name e.g. ['taboo']
+    """
+    if filter_games is None:
+        filter_games = []
+    interaction_files = glob.glob(os.path.join(top_dir, '**', 'interactions.json'), recursive=True)
+    if filter_games:
+        interaction_files = [interaction_file for interaction_file in interaction_files
+                             if any(game_name in interaction_file for game_name in filter_games)]
+    stdout_logger.info(f"Found {len(interaction_files)} interaction files to transcribe. "
+                       f"Games: {filter_games if filter_games else 'all'}")
+    error_count = 0
+    for interaction_file in tqdm(interaction_files, desc="Building transcripts"):
+        try:
+            game_interactions = load_json(interaction_file)
+            interactions_dir = Path(interaction_file).parent
+            transcript = build_transcript(game_interactions)
+            store_file(transcript, "transcript.html", interactions_dir)
+            transcript_tex = build_tex(game_interactions)
+            store_file(transcript_tex, "transcript.tex", interactions_dir)
+        except Exception:  # continue with other episodes if something goes wrong
+            module_logger.exception(f"Cannot transcribe {interaction_file} (but continue)")
+            error_count += 1
+    if error_count > 0:
+        stdout_logger.error(f"'{error_count}' exceptions occurred: See clembench.log for details.")
+
+
+def build_transcript(interactions: Dict):
     """Create an HTML file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
@@ -118,10 +78,11 @@ def build_transcript(interactions: Dict, experiment_config: Dict, game_instance:
         game_instance: The instance dict the episode interaction record is based on.
         dialogue_pair: The model pair descriptor string for the Players.
     """
-    transcript = HTML_HEADER.format(CSS_STRING)
-    title = f"Interaction Transcript for {experiment_config['name']}, " \
-            f"episode {game_instance['game_id']} with {dialogue_pair}."
-    transcript += top_info.format(title)
+    meta = interactions["meta"]
+    transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
+    title = f"Interaction Transcript for {meta['experiment_name']}, " \
+            f"episode {meta['game_id']} with {meta['dialogue_pair']}."
+    transcript += patterns.TOP_INFO.format(title)
     # Collect all events over all turns (ignore turn boundaries here)
     events = [event for turn in interactions['turns'] for event in turn]
     for event in events:
@@ -149,16 +110,17 @@ def build_transcript(interactions: Dict, experiment_config: Dict, game_instance:
                         if "IMAGE_ROOT" in os.environ:
                             image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
                         else:
+                            # CAUTION: this only works when the project is checked out (dev mode)
                             image_src = os.path.join(file_utils.project_root(), image_src)
                     transcript += (f'  <a title="{image_src}">'
                                    f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
                                    f'</a>\n')
                 transcript += '</div>\n'
             else:
-                transcript += HTML_TEMPLATE.format(speaker, class_name, msg_raw)
+                transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, msg_raw)
         else:
-            transcript += HTML_TEMPLATE.format(speaker, class_name, msg_raw)
-    transcript += HTML_FOOTER
+            transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, msg_raw)
+    transcript += patterns.HTML_FOOTER
     return transcript
 
 
@@ -168,7 +130,7 @@ def build_tex(interactions: Dict):
     Args:
         interactions: An episode interaction record dict.
     """
-    tex = TEX_HEADER
+    tex = patterns.TEX_HEADER
     # Collect all events over all turns (ignore turn boundaries here)
     events = [event for turn in interactions['turns'] for event in turn]
     for event in events:
@@ -176,13 +138,13 @@ def build_tex(interactions: Dict):
         msg_content = event['action']['content']
         if isinstance(msg_content, str):
             msg_content = msg_content.replace('\n', '\\\\ \\tt ')
-        rgb, speakers, cols_init, cols_end, ncols, width = TEX_BUBBLE_PARAMS[class_name]
-        tex += TEX_TEMPLATE.substitute(cols_init=cols_init,
-                                       rgb=rgb,
-                                       speakers=speakers,
-                                       msg=msg_content,
-                                       cols_end=cols_end,
-                                       ncols=ncols,
-                                       width=width)
-    tex += TEX_FOOTER
+        rgb, speakers, cols_init, cols_end, ncols, width = constants.TEX_BUBBLE_PARAMS[class_name]
+        tex += patterns.TEX_TEMPLATE.substitute(cols_init=cols_init,
+                                                rgb=rgb,
+                                                speakers=speakers,
+                                                msg=msg_content,
+                                                cols_end=cols_end,
+                                                ncols=ncols,
+                                                width=width)
+    tex += patterns.TEX_FOOTER
     return tex

@@ -3,11 +3,11 @@ import collections
 import logging
 from copy import deepcopy
 from datetime import datetime
-from typing import List, Dict, Tuple, Any, Iterator
+from typing import List, Dict, Tuple, Any
 
 from clemcore import backends
 from clemcore.clemgame import GameResourceLocator
-from clemcore.clemgame.recorder import GameRecorder
+from clemcore.clemgame.recorder import NoopGameRecorder, GameRecorder
 
 module_logger = logging.getLogger(__name__)
 
@@ -162,19 +162,29 @@ class GameMaster:
     - builds the interaction transcripts
     """
 
-    def __init__(self, name: str, path: str, experiment: Dict, player_models: List[backends.Model] = None):
+    def __init__(self, name: str, path: str, experiment: Dict, player_models: List[backends.Model]):
         """
         Args:
             name: The name of the game (as specified in game_registry).
             path: Path to the game (as specified in game_registry).
-            experiment: The experiment (set of instances) to use.
+            experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
             player_models: Player models to use for one or two players.
+            game_recorder: Enables to log each interaction in the game.
+                           Resulting records can be stored to an interactions.json.
         """
         self.game_name = name
         self.experiment: Dict = experiment
         self.player_models: List[backends.Model] = player_models
-        self.game_recorder = GameRecorder(name)
+        self._game_recorder = NoopGameRecorder()
         self.game_resources = GameResourceLocator(name, path)  # could be obsolete, when all info is in the instances
+
+    @property
+    def game_recorder(self):
+        return self._game_recorder
+
+    @game_recorder.setter
+    def game_recorder(self, game_recorder):
+        self._game_recorder = game_recorder
 
     def load_json(self, file_name):
         return self.game_resources.load_json(file_name)
@@ -183,19 +193,19 @@ class GameMaster:
         return self.game_resources.load_template(file_name)
 
     def log_key(self, key: str, value: Any):
-        self.game_recorder.log_key(key, value)
+        self._game_recorder.log_key(key, value)
 
     def log_players(self, players_dict):
-        self.game_recorder.log_players(players_dict)
+        self._game_recorder.log_players(players_dict)
 
     def log_next_round(self):
-        self.game_recorder.log_next_round()
+        self._game_recorder.log_next_round()
 
     def log_event(self, from_, to, action):
-        self.game_recorder.log_event(from_, to, action)
+        self._game_recorder.log_event(from_, to, action)
 
     def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
-        self.game_recorder.store_records(results_root, dialogue_pair_desc, game_record_dir)
+        self._game_recorder.store_records(results_root, dialogue_pair_desc, game_record_dir)
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.

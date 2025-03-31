@@ -1,5 +1,6 @@
 import copy
 import logging
+from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Any, List
 
@@ -8,13 +9,86 @@ from clemcore.clemgame.resources import store_results_file
 module_logger = logging.getLogger(__name__)
 
 
-class GameRecorder:
+class GameRecorder(ABC):
 
-    def __init__(self, game_name: str):
+    @abstractmethod
+    def log_next_round(self):
+        """Call this method to group interactions per turn."""
+        pass
+
+    @abstractmethod
+    def log_key(self, key, value):
+        """Add a key and value to the internal log.
+        Args:
+            key: A string to identify the kind of log entry to be made.
+            value: The content of the entry to be logged.
+        """
+        pass
+
+    @abstractmethod
+    def log_players(self, players_dic):
+        """Log/record the players in this game episode.
+        Args:
+            players_dic: Dictionary of players in this game episode.
+        """
+        pass
+
+    @abstractmethod
+    def log_event(self, from_, to, action, call=None):
+        """Add an event to the internal log.
+        It can be only an action or an action plus an API call that should have the same timestamp as the action.
+        Args:
+            from_: The identifier string of the Player/GM that originated the action.
+            to: The identifier string of the Player/GM target of the action.
+            action: The benchmark action to be logged.
+            call: If given, this is a tuple whose first element is the input prompt object (after API-specific
+                manipulation) as passed to the API and the second element is the raw response object as returned by the
+                API.
+        """
+        pass
+
+    @abstractmethod
+    def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
+        """Store benchmark records.
+        Raise warnings if a mandatory element is empty or format is wrong.
+        Args:
+            results_root: The root path to the results directory.
+            dialogue_pair_desc: A string combining the Player pair names to be used as directory name.
+            game_record_dir: The game's record directory path.
+        """
+        pass
+
+
+class NoopGameRecorder(GameRecorder):
+
+    def __init__(self):
+        self.interactions = []
+        self.requests = []
+
+    def log_next_round(self):
+        pass
+
+    def log_key(self, key, value):
+        pass
+
+    def log_players(self, players_dic):
+        pass
+
+    def log_event(self, from_, to, action, call=None):
+        pass
+
+    def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
+        pass
+
+
+class DefaultGameRecorder(GameRecorder):
+
+    def __init__(self, game_name: str, experiment_name: str, game_id: int, dialogue_pair: str):
         self.game_name = game_name
         self.log_current_turn = -1
         """ Stores players and turn during the runs """
         self.interactions = {
+            "meta": dict(experiment_name=experiment_name, game_id=game_id, dialogue_pair=dialogue_pair),
             "players": {},
             "turns": []
         }
