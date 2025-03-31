@@ -8,7 +8,7 @@ from typing import Dict, List
 module_logger = logging.getLogger(__name__)
 
 
-def _store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_overwrite: bool = True) -> str:
+def store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_overwrite: bool = True) -> str:
     """Store a file.
     Base function to handle relative clembench directory paths.
     Args:
@@ -55,7 +55,7 @@ def store_results_file(game_name, data, file_name: str, dialogue_pair: str,
     if results_dir is None:
         results_dir = "results"  # default to a results directory in current terminal workspace
     game_results_path = os.path.join(results_dir, dialogue_pair, game_name)
-    fp = _store_file(data, file_name, game_results_path, sub_dir)
+    fp = store_file(data, file_name, game_results_path, sub_dir)
     module_logger.info(f"Results file stored to {fp}")
 
 
@@ -188,5 +188,5 @@ class GameResourceLocator(abc.ABC):
             sub_dir: The subdirectory to store the file in. Automatically created when given; otherwise an error will
                 be thrown.
         """
-        fp = _store_file(data, file_name, self.game_path, sub_dir=sub_dir)
+        fp = store_file(data, file_name, self.game_path, sub_dir=sub_dir)
         module_logger.info("Game file stored to %s", fp)

@@ -21,3 +21,10 @@ class PlayPenEnv(abc.ABC):
     @abc.abstractmethod
     def step(self, responses: Union[str, List]) -> Tuple[Union[bool, List], Union[Dict, List]]:
         pass
+
+    @abc.abstractmethod
+    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str):
+        """
+        Stores the records in a similar structure as for running clembench, so that transcribe can be applied.
+        """
+        pass

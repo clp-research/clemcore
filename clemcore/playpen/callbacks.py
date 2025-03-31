@@ -3,7 +3,7 @@ from typing import Dict, Any, List
 
 from tqdm import tqdm
 
-from clemcore.playpen.envs.game_env import GameEnv
+from clemcore.playpen.envs import PlayPenEnv
 
 
 class BaseCallback(abc.ABC):
@@ -11,7 +11,7 @@ class BaseCallback(abc.ABC):
     def __init__(self):
         self.locals: Dict[str, Any] = {}
 
-    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
+    def on_rollout_start(self, game_env: PlayPenEnv, num_timesteps: int):
         pass
 
     def on_rollout_end(self):
@@ -46,9 +46,9 @@ class BaseCallback(abc.ABC):
         return player.model is learner
 
     def is_done(self):
-        if "done" not in self.locals:
-            return False
-        return self.locals["done"]
+        assert "game_env" in self.locals, "There must be an env in the callback locals to determine the terminal state."
+        game_env: PlayPenEnv = self.locals["game_env"]
+        return game_env.is_done()
 
 
 class CallbackList(BaseCallback):
@@ -62,7 +62,7 @@ class CallbackList(BaseCallback):
     def append(self, callback: BaseCallback):
         self.callbacks.append(callback)
 
-    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
+    def on_rollout_start(self, game_env: PlayPenEnv, num_timesteps: int):
         for callback in self.callbacks:
             callback.on_rollout_start(game_env, num_timesteps)
 
@@ -93,16 +93,16 @@ class GameRecordCallback(BaseCallback):
     The records can be transcribed into an HTML readable format.
     """
 
-    def __init__(self, results_dir="playpen"):
+    def __init__(self, top_dir="playpen"):
         super().__init__()
         self.game_env = None
         self.rollout_idx = 0
         self.num_rollout_steps = 0
         self.episode_start_step = 0
         self.episode_idx = 0
-        self.results_dir = results_dir
+        self.top_dir = top_dir
 
-    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
+    def on_rollout_start(self, game_env: PlayPenEnv, num_timesteps: int):
         self.game_env = game_env
         self.rollout_idx += 1
         self.num_rollout_steps = 0
@@ -117,22 +117,11 @@ class GameRecordCallback(BaseCallback):
         if self.is_learning_player():
             self.num_rollout_steps += 1
         if self.is_done():
-            self.store_records(self.game_env)
+            rollout_dir = f"rollout{self.rollout_idx:04d}"
+            episode_dir = f"episode_{self.episode_idx}"
+            self.game_env.store_records(self.top_dir, rollout_dir, episode_dir)
             self.episode_idx += (self.num_rollout_steps - self.episode_start_step)
             self.episode_start_step = self.num_rollout_steps
-
-    def store_records(self, game_env: GameEnv):
-        """
-        Stores the records in a similar structure as for running clembench, so that transcribe can be applied.
-        """
-        # Note: Cannot use underscores in experiment dir, except the experiment name e.g. 0_high_en, because the
-        # transcribe logic splits on underscore to get the experiment name, i.e., everything after the first underscore
-        experiment_dir = f"rollout{self.rollout_idx:04d}-{game_env.experiment['index']}_{game_env.experiment['name']}"
-        game_env.store_experiment_config(experiment_dir, self.results_dir)
-
-        episode_dir = f"{experiment_dir}/episode_{self.episode_idx}"
-        game_env.store_game_instance(episode_dir, self.results_dir)
-        game_env.store_game_interactions(episode_dir, self.results_dir)
 
 
 class RolloutProgressCallback(BaseCallback):
@@ -142,7 +131,7 @@ class RolloutProgressCallback(BaseCallback):
         self.rollout_steps = rollout_steps
         self.progress_bar = None
 
-    def on_rollout_start(self, game_env: GameEnv, num_timesteps: int):
+    def on_rollout_start(self, game_env: PlayPenEnv, num_timesteps: int):
         self.progress_bar = tqdm(total=self.rollout_steps, desc="Rollout steps collected")
 
     def on_rollout_end(self):
