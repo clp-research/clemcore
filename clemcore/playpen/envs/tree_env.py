@@ -27,7 +27,7 @@ class BranchingResponse:
         return self.branch_response
 
 
-class GameTreeEnv(PlayPenEnv):
+class GameBranchingEnv(PlayPenEnv):
     """
     A game benchmark environment that branches after each step, that is,
     the games states multiply as determined by the branching factor.
@@ -55,7 +55,7 @@ class GameTreeEnv(PlayPenEnv):
             context = game_env.master.get_context_for(player)
             contexts.append(context)
         # GameTreePlayer assumes that (parent_env, parent_context) can be re-assembled by zipping (using the order)
-        return GameTreePlayer(self._active_branches, self._branching_factor), contexts
+        return GameBranchingPlayer(self._active_branches, self._branching_factor), contexts
 
     def step(self, responses: Union[str, List]) -> Tuple[Union[bool, List], Union[Dict, List]]:
         assert isinstance(responses, list), f"GameTreeEnv expects a list of responses and not {responses.__class__}"
@@ -98,7 +98,7 @@ class GameTreeEnv(PlayPenEnv):
         return self._done
 
 
-class GameTreePlayer(Callable):
+class GameBranchingPlayer(Callable):
     """    Applies a player to a given context as many times as determined by the branching factor. """
 
     def __init__(self, actives_branches: List[GameEnv], branching_factor: int = 1):

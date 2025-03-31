@@ -8,7 +8,7 @@ from clemcore.playpen.callbacks import BaseCallback, GameRecordCallback, Rollout
 from clemcore.playpen.base import BasePlayPen
 from clemcore.playpen.envs import PlayPenEnv
 from clemcore.playpen.envs.game_env import GameEnv
-from clemcore.playpen.envs.tree_env import GameTreeEnv
+from clemcore.playpen.envs.tree_env import GameBranchingEnv
 
 __all__ = [
     "BaseCallback",
@@ -19,7 +19,7 @@ __all__ = [
     "PlayPenEnv",
     "RolloutBuffer",
     "GameEnv",
-    "GameTreeEnv"
+    "GameBranchingEnv"
 ]
 
 
@@ -38,4 +38,4 @@ def make_tree_env(game_spec: GameSpec, players: List[Model],
     with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
         assert branching_factor > 1, "The branching factor must be greater than one"
         task_iterator = game.create_game_instance_iterator(shuffle_instances)
-        yield GameTreeEnv(game, players, task_iterator, branching_factor=branching_factor, pruning_fn=pruning_fn)
+        yield GameBranchingEnv(game, players, task_iterator, branching_factor=branching_factor, pruning_fn=pruning_fn)
