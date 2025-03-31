@@ -24,16 +24,17 @@ def _get_class_name(event):
     Returns:
         The string representation of the direction of the message in the passed interaction event.
     """
-    if event['from'] == 'GM' and event['to'] == 'Player 1':
+    if event['from'] == 'GM' and event['to'].startswith('Player 1'):
         return "gm-a"
-    if event['from'] == 'GM' and event['to'] == 'Player 2':
+    if event['from'] == 'GM' and event['to'].startswith('Player 2'):
         return "gm-b"
-    if event['from'] == 'Player 1' and event['to'] == 'GM':
+    if event['from'].startswith('Player 1') and event['to'] == 'GM':
         return "a-gm"
-    if event['from'] == 'Player 2' and event['to'] == 'GM':
+    if event['from'].startswith('Player 2') and event['to'] == 'GM':
         return "b-gm"
     if event['from'] == 'GM' and event['to'] == 'GM':
         return "gm-gm"
+    raise RuntimeError(f"Cannot handle event entry {event}")
 
 
 def build_transcripts(top_dir: str, filter_games: List = None):
