@@ -23,7 +23,8 @@ class PlayPenEnv(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str):
+    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str,
+                      store_experiment: bool = False, store_instance: bool = False):
         """
         Stores the records in a similar structure as for running clembench, so that transcribe can be applied.
         """

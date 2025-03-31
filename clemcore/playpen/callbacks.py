@@ -93,14 +93,17 @@ class GameRecordCallback(BaseCallback):
     The records can be transcribed into an HTML readable format.
     """
 
-    def __init__(self, top_dir="playpen"):
+    def __init__(self, top_dir="playpen", store_instance: bool = False, store_experiment: bool = False):
         super().__init__()
+        self.top_dir = top_dir
+        self.store_experiment = store_experiment
+        self.store_instance = store_instance
+        # internal state
         self.game_env = None
         self.rollout_idx = 0
         self.num_rollout_steps = 0
         self.episode_start_step = 0
         self.episode_idx = 0
-        self.top_dir = top_dir
 
     def on_rollout_start(self, game_env: PlayPenEnv, num_timesteps: int):
         self.game_env = game_env
@@ -119,7 +122,8 @@ class GameRecordCallback(BaseCallback):
         if self.is_done():
             rollout_dir = f"rollout{self.rollout_idx:04d}"
             episode_dir = f"episode_{self.episode_idx}"
-            self.game_env.store_records(self.top_dir, rollout_dir, episode_dir)
+            self.game_env.store_records(self.top_dir, rollout_dir, episode_dir,
+                                        self.store_experiment, self.store_instance)
             self.episode_idx += (self.num_rollout_steps - self.episode_start_step)
             self.episode_start_step = self.num_rollout_steps
 

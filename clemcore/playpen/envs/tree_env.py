@@ -95,9 +95,11 @@ class GameBranchingEnv(PlayPenEnv):
         # return all dones and infos so that they match the quantity of the responses
         return context_dones, context_infos
 
-    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str):
+    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str,
+                      store_experiment: bool = False, store_instance: bool = False):
         for branch_idx, game_env in enumerate(self._active_branches):
-            game_env.store_records(top_dir, rollout_dir, os.path.join(episode_dir, f"branch_{branch_idx}"))
+            game_env.store_records(top_dir, rollout_dir, os.path.join(episode_dir, f"branch_{branch_idx}"),
+                                   store_experiment, store_instance)
 
     def is_done(self) -> bool:
         return self._done

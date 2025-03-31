@@ -69,7 +69,8 @@ class GameEnv(PlayPenEnv):
         self._done, info = self.master.step(response)
         return self._done, info
 
-    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str):
+    def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str,
+                      store_experiment: bool = False, store_instance: bool = False):
         experiment_dir = f"{self.experiment['index']}_{self.experiment['name']}"
         experiment_path = os.path.join(top_dir,
                                        self._dialogue_pair_descriptor,
@@ -77,7 +78,9 @@ class GameEnv(PlayPenEnv):
                                        self._game_name,
                                        experiment_dir)
         episode_path = os.path.join(experiment_path, episode_dir)
-        store_file(self.experiment, f"experiment_{self.experiment['name']}.json", experiment_path)
-        store_file(self._game_instance, f"instance.json", episode_path)
+        if store_experiment:
+            store_file(self.experiment, f"experiment_{self.experiment['name']}.json", experiment_path)
+        if store_instance:
+            store_file(self._game_instance, f"instance.json", episode_path)
         store_file(self.master.game_recorder.interactions, f"interactions.json", episode_path)
         store_file(self.master.game_recorder.requests, f"requests.json", episode_path)
