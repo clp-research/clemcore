@@ -2,7 +2,7 @@ import abc
 import collections
 import logging
 from copy import deepcopy
-from typing import List, Dict, Tuple, Any
+from typing import List, Dict, Tuple, Any, Union
 
 from clemcore import backends
 from clemcore.clemgame import GameResourceLocator
@@ -54,6 +54,35 @@ class GameMaster(abc.ABC):
     def load_template(self, file_name):
         return self.game_resources.load_template(file_name)
 
+    def log_message_to(self, player: Player, message: str):
+        """Logs a 'send message' action from GM to Player.
+        This is a logging method, and will not add the message to the conversation history on its own!
+        Args:
+            player: The Player instance the message is targeted at.
+            message: The message content sent to the Player instance.
+        """
+        action = {'type': 'send message', 'content': message}
+        self.log_event("GM", player.name, action)
+
+    def log_message_to_self(self, message: str):
+        """Logs a 'metadata' action from GM to GM.
+        This is a logging method, and will not add anything to the conversation history.
+        Args:
+            message: The message content logged as metadata.
+        """
+        action = {'type': 'metadata', 'content': message}
+        self.log_event("GM", "GM", action)
+
+    def log_to_self(self, type_: str, value: Any):
+        """Logs an action of the passed type from GM to GM.
+        This is a logging method, and will not add anything to the conversation history.
+        Args:
+            type_: The type of the action to be logged.
+            value: The content value of the action to be logged. Must be JSON serializable.
+        """
+        action = {'type': type_, 'content': value}
+        self.log_event("GM", "GM", action)
+
     def log_key(self, key: str, value: Any):
         self._game_recorder.log_key(key, value)
 
@@ -69,6 +98,7 @@ class GameMaster(abc.ABC):
     def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
         self._game_recorder.store_records(results_root, dialogue_pair_desc, game_record_dir)
 
+    @abc.abstractmethod
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
         Needs to log the players dictionary via self.log_players(players_dict).
@@ -76,11 +106,12 @@ class GameMaster(abc.ABC):
         Args:
             kwargs: Keyword arguments used to set up the GameMaster instance.
         """
-        raise NotImplementedError()
+        pass
 
+    @abc.abstractmethod
     def play(self) -> None:
         """Play the game (multiple turns of a specific game instance)."""
-        raise NotImplementedError()
+        pass
 
 
 class DialogueGameMaster(GameMaster):
@@ -99,7 +130,7 @@ class DialogueGameMaster(GameMaster):
         super().__init__(name, path, experiment, player_models)
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
-        self.messages_by_names: Dict[str, List] = dict()
+        self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
         self.current_round: int = 0
         self.current_player: Player = None
         self.current_player_idx: int = 0
@@ -132,7 +163,6 @@ class DialogueGameMaster(GameMaster):
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
-        self.messages_by_names[player.name] = []
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -155,6 +185,7 @@ class DialogueGameMaster(GameMaster):
         self._on_before_game()
         self.__prepare_next_round()
 
+    @abc.abstractmethod
     def _on_setup(self, **kwargs):
         """Method executed at the start of the default setup method.
         Template method: Must be implemented!
@@ -163,7 +194,7 @@ class DialogueGameMaster(GameMaster):
             kwargs: Keyword arguments of the game instance. This is usually a game instance object
                 read from the game's instances.json.
         """
-        raise NotImplementedError()
+        pass
 
     def get_game_state(self):
         return None
@@ -171,10 +202,33 @@ class DialogueGameMaster(GameMaster):
     def get_current_player(self) -> Player:
         return self.current_player
 
+    def set_context_for(self, player: Player, content: Union[str, Dict]):
+        """ Set the context for the specified Player. The "role" is always "user".
+        Args:
+            player: The Player instance that produced the message. This is usually a model output, but can be the game's
+                GM as well, if it directly adds messages to the conversation history. TODO: Check use
+            content: The content to be added to the context. Could be a more complex dict-like object.
+        """
+        context = {"role": "user", "content": content}
+        self.context_for_player[player.name] = context
+
     def get_context_for(self, player) -> Dict:
-        messages = self.messages_by_names[player.name]
-        assert len(messages) > 0, f"Cannot get context, because there are no messages for {player.name}"
-        return messages[-1]
+        assert player.name in self.context_for_player, f"No context set for {player.name}"
+        context = self.context_for_player[player.name]
+        assert "role" in context, f"Player context must have a 'role' entry"
+        assert context["role"] == "user", f"Role of player context must be 'user'"
+        assert "content" in context, f"Player context must have a 'content' entry"
+        return context
+
+    def play(self) -> None:
+        """
+        Main play loop method. This method is called to run the game for benchmarking.
+        """
+        done = False
+        while not done:
+            context = self.get_context_for(self.current_player)
+            response = self.current_player(context)
+            done, _ = self.step(response)
 
     def step(self, response: str) -> Tuple[bool, Dict]:
         """
@@ -194,9 +248,8 @@ class DialogueGameMaster(GameMaster):
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
         # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
         if self._validate_player_response(self.current_player, response):
-            parsed_response = self.__parse_response(self.current_player, response)
-            self.add_assistant_message(self.current_player, parsed_response)
-            self._after_add_player_response(self.current_player, parsed_response)
+            parsed_response = self._parse_response(self.current_player, response)
+            self._on_valid_player_response(self.current_player, parsed_response)
 
         if self._should_pass_turn():
             self.current_player = self._next_player()
@@ -245,7 +298,7 @@ class DialogueGameMaster(GameMaster):
     def get_response_feedback(self, response: str, context: Dict):
         """
         Optional.
-        :param response: The response (verbal action) of the current player.
+        :param response: The response of the current player.
         :param context: The context given to the current player to generate the response for.
         :return: a verbal feedback about the player's response given the context
         """
@@ -254,7 +307,7 @@ class DialogueGameMaster(GameMaster):
     def compute_response_score(self, response: str, context: Dict):
         """
         Mandatory.
-        :param response: The response (verbal action) of the current player.
+        :param response: The response of the current player.
         :param context: The context given to the current player to generate the response for.
         :return: the performance score for a player's response given the context
         """
@@ -267,163 +320,75 @@ class DialogueGameMaster(GameMaster):
         """
         return 0
 
-    def play(self) -> None:
-        """Main play loop method.
-        This method is called to run the game for benchmarking.
-        Intended to be left as-is by inheriting classes. Implement additional game functionality in the
-        _on_before_game, _does_game_proceed, _on_before_turn, _should_reprompt, _on_before_reprompt, _on_after_turn and
-        _on_after_game methods.
-        """
-        done = False
-        while not done:
-            context = self.get_context_for(self.current_player)
-            response = self.current_player(context)
-            done, _ = self.step(response)
-
+    @abc.abstractmethod
     def _should_pass_turn(self):
         """
-        Whether to pass the turn to the next player.
-        """
-        return True
-
-    def _on_before_reprompt(self, player: Player):
-        """Method executed before reprompt is passed to a Player.
-        Hook
-        Change the prompt to reprompt the player on e.g. an invalid response.
-        Add the new prompt to the players message via self.add_user_message(player, new_prompt)
-        Args:
-            player: The Player instance that produced the invalid response.
+        Whether to pass the turn to the next player. Otherwise, the current player keeps playing
+        based on the context set via set_player_context(player, content).
         """
         pass
 
-    def log_message_to(self, player: Player, message: str):
-        """Logs a 'send message' action from GM to Player.
-        This is a logging method, and will not add the message to the conversation history on its own!
-        Args:
-            player: The Player instance the message is targeted at.
-            message: The message content sent to the Player instance.
+    @abc.abstractmethod
+    def _on_valid_player_response(self, player: Player, parsed_response: str):
         """
-        action = {'type': 'send message', 'content': message}
-        self.log_event("GM", player.name, action)
+        Method executed after a player response has been parsed and validated.
 
-    def log_message_to_self(self, message: str):
-        """Logs a 'metadata' action from GM to GM.
-        This is a logging method, and will not add anything to the conversation history.
-        Args:
-            message: The message content logged as metadata.
-        """
-        action = {'type': 'metadata', 'content': message}
-        self.log_event("GM", "GM", action)
+        Set the response as the context for the other player (if necessary).
 
-    def log_to_self(self, type_: str, value: Any):
-        """Logs an action of the passed type from GM to GM.
-        This is a logging method, and will not add anything to the conversation history.
-        Args:
-            type_: The type of the action to be logged.
-            value: The content value of the action to be logged. Must be JSON serializable.
-        """
-        action = {'type': type_, 'content': value}
-        self.log_event("GM", "GM", action)
+        You could also set a new context for the current player and give the player
+        another turn by letting _should_pass_turn() return False.
 
-    def add_message(self, player: Player, utterance: str, role: str):
-        """Adds a message to the conversation history.
-        This method is used to iteratively create the conversation history, but will not log/record messages
-        automatically.
-        Args:
-            player: The Player instance that produced the message. This is usually a model output, but can be the game's
-                GM as well, if it directly adds messages to the conversation history. TODO: Check use
-            utterance: The text content of the message to be added.
-            role: The chat/instruct conversation role to use for this message. Either 'user' or 'assistant', or 'system'
-                for models/templates that support it. This is important to properly apply chat templates. Some chat
-                templates require that roles always alternate between messages!
-        """
-        message = {"role": role, "content": utterance}
-        history = self.messages_by_names[player.name]
-        history.append(message)
-
-    def add_user_message(self, player: Player, utterance: str):
-        """Adds a message with the 'user' role to the conversation history.
-        This method is to be used for 'user' messages, usually the initial prompt and GM response messages. Used to
-        iteratively create the conversation history, but will not log/record messages automatically.
-
-        Args:
-            player: The Player instance that produced the message. This is usually the game's GM, if it directly adds
-                messages to the conversation history. TODO: Check use
-            utterance: The text content of the message to be added.
-        """
-        self.add_message(player, utterance, role="user")
-
-    def add_assistant_message(self, player: Player, utterance: str):
-        """Adds a message with the 'assistant' role to the conversation history.
-        This method is to be used for 'assistant' messages, usually model outputs. Used to iteratively create the
-        conversation history, but will not log/record messages automatically.
-        Args:
-            player: The Player instance that produced the message.
-            utterance: The text content of the message to be added.
-        """
-        self.add_message(player, utterance, role="assistant")
-
-    def _after_add_player_response(self, player: Player, utterance: str):
-        """Method executed after a player response has been validated and added to the conversation history.
-
-        Hook: Modify this method for game-specific functionality.
-
-        Add the utterance to other player's history, if necessary. To do this use the method
-        add_user_message(other_player,utterance).
+        To do this use the method set_context_for(player, response).
         Args:
             player: The Player instance that produced the response (or has been modified by the GM).
-            utterance: The text content of the message that was added.
+            parsed_response: The parsed and valid response of the current player.
         """
         pass
 
-    def _validate_player_response(self, player: Player, utterance: str) -> bool:
-        """Decide if an utterance should be added to the conversation history.
-
-        Hook: Modify this method for game-specific functionality.
-
-        This is also the place to check for game end conditions.
-        Args:
-            player: The Player instance for which the response is added as "assistant" to the history.
-            utterance: The text content of the message to be added.
-        Returns:
-            True, if the utterance is fine; False, if the response should not be added to the history.
+    @abc.abstractmethod
+    def _validate_player_response(self, player: Player, response: str) -> bool:
         """
-        return True
+        Decide if a player response is valid. An invalid response breaks the game rules and might end the game.
 
-    def __parse_response(self, player: Player, utterance: str) -> str:
-        """Parses a response and logs the message parsing result.
+        Note: If the response is not valid, then _parse_response() and on_valid_player_response() will not be called.
 
-        Part of the validate-parse loop, not intended to be modified - modify _on_parse_response instead.
+        However, game developers can decide to give the player another turn by letting _should_pass_turn() return False.
+
         Args:
-            player: The Player instance that produced the response.
-            utterance: The text content of the response.
+            player: The player that gave the response.
+            response: The response of the current player.
         Returns:
-            The response content, potentially modified by the _on_parse_response method.
+            True, if the response is fine. Otherwise, False.
         """
-        _utterance, log_action = self._on_parse_response(player, utterance)
-        if _utterance == utterance:
-            return utterance
-        if log_action:
-            action = {'type': 'parse', 'content': _utterance}
-            self.log_event(from_="GM", to="GM", action=action)
-        return _utterance
+        pass
 
-    def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]:
+    @abc.abstractmethod
+    def _parse_response(self, player: Player, response: str) -> str:
         """Decide if a response utterance should be modified and apply modifications.
 
         Hook: Modify this method for game-specific functionality.
 
-        If no modifications are applied, this method must simply return a tuple of the utterance and True.
-        When a modified utterance and a true value is returned, then a 'parse' event is logged.
         Args:
             player: The Player instance that produced the response. Intended to allow for individual handling of
                 different players.
-            utterance: The text content of the response.
+            response: The response of the current player.
         Returns:
-            A tuple of the (modified) utterance, and a bool to determine if the parse action is to be logged (default:
-            True).
+            The parsed response
         """
-        return utterance, True
+        pass
+
+    @abc.abstractmethod
+    def _does_game_proceed(self) -> bool:
+        """Check if game should proceed.
+
+        Template method: Must be implemented!
+
+        This method is used to determine if a game should continue or be stopped. Both successful completion of the game
+        and game-ending failures should lead to this method returning False.
+        Returns:
+            A bool, True if game continues, False if game should stop.
+        """
+        pass
 
     def _on_before_round(self):
         """Executed in the play loop before a new round of gameplay starts.
@@ -438,18 +403,6 @@ class DialogueGameMaster(GameMaster):
         Hook: Modify this method for game-specific functionality.
         """
         pass
-
-    def _does_game_proceed(self) -> bool:
-        """Check if game should proceed.
-
-        Template method: Must be implemented!
-
-        This method is used to determine if a game should continue or be stopped. Both successful completion of the game
-        and game-ending failures should lead to this method returning False.
-        Returns:
-            A bool, True if game continues, False if game should stop.
-        """
-        raise NotImplementedError()
 
     def _on_before_game(self):
         """Executed once at the start, before entering the play loop.

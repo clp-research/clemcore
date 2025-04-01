@@ -129,7 +129,7 @@ The dialogue game master defines a play routine that is as follows:
             if not self._does_game_proceed():
                 break  # potentially stop in between player turns
             # GM -> Player
-            history = self.messages_by_names[player.descriptor]
+            history = self.context_for_player[player.descriptor]
             assert history, f"messages history must not be empty for {player.descriptor}"
 
             last_entry = history[-1]
