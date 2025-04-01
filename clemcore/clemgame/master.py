@@ -158,7 +158,7 @@ class DialogueGameMaster(GameMaster):
             player: The player to be added to the game. The player's name must be unique.
         """
         player.game_recorder = self.game_recorder  # player should record to the same interaction log
-        player.name = f"Player {len(self.players_by_names) + 1}"
+        player.name = f"Player {len(self.players_by_names) + 1} ({player.__class__.__name__})"
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
