@@ -8,7 +8,7 @@ from clemcore.playpen.callbacks import BaseCallback, GameRecordCallback, Rollout
 from clemcore.playpen.base import BasePlayPen
 from clemcore.playpen.envs import PlayPenEnv
 from clemcore.playpen.envs.game_env import GameEnv
-from clemcore.playpen.envs.tree_env import GameBranchingEnv
+from clemcore.playpen.envs.branching_env import GameBranchingEnv
 
 __all__ = [
     "BaseCallback",
