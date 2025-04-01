@@ -33,17 +33,15 @@ class GameBranchingEnv(PlayPenEnv):
     A game benchmark environment that branches after each step, that is,
     the games states multiply as determined by the branching factor.
     This allows to collect at each step multiple responses for the same context.
-    A pruning function can be given to reduce the growing number of environments.
     """
 
     def __init__(self, game: GameBenchmark, player_models: List[Model], task_iterator: GameInstanceIterator,
-                 branching_factor: int, pruning_fn: Callable):
+                 branching_factor: int):
         super().__init__()
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._root: GameEnv = GameEnv(game, player_models, task_iterator)
         self._active_branches: List[GameEnv] = [self._root]
         self._branching_factor: int = branching_factor
-        self._pruning_fn: Callable = pruning_fn
 
     def reset(self) -> None:  # all game branches always operate on the same task / episode
         self._root.reset()
@@ -63,7 +61,8 @@ class GameBranchingEnv(PlayPenEnv):
 
         context_dones = []
         context_infos = []
-        candidates: List[BranchingCandidate] = []
+        # memorize leaves so that we do not have to find them again
+        self._active_branches: List[BranchingCandidate] = []
         for context_responses in responses:
             response_dones = []
             response_infos = []
@@ -72,25 +71,13 @@ class GameBranchingEnv(PlayPenEnv):
                 response_dones.append(done)
                 response_infos.append(info)
                 candidate = BranchingCandidate(response.parent_env, response.branch_env, done, info)
-                candidates.append(candidate)
+                self._active_branches.append(candidate)
             context_dones.append(response_dones)
             context_infos.append(response_infos)
 
-        # establish such responses as branches in the tree that were not pruned
-        # these responses will determine the new leaves of the tree
-        selected_candidates = self._pruning_fn(candidates)
-
-        # todo: after pruning the tree might have inactive branches
-        # however, we only mark the responses and handle the
-        # rest in the rolloout buffer directly
-
-        # memorize leaves so that we do not have to find them again
-        self._active_branches = [selected_candidate.branch_env for selected_candidate in selected_candidates]
-
-        # todo: active branches that are done should not continue playing
-
         # the tree env stops when all active branches are done
-        self._done = all([candidate.done for candidate in selected_candidates])
+        # note: called candidates because we considered to apply a pruning function
+        self._done = all([branch.done for branch in self._active_branches])
 
         # return all dones and infos so that they match the quantity of the responses
         return context_dones, context_infos
