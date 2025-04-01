@@ -203,10 +203,12 @@ class DialogueGameMaster(GameMaster):
         return self.current_player
 
     def set_context_for(self, player: Player, content: str, **extras):
-        """ Set the context for the specified Player. The "role" is always "user".
+        """
+        Set the context for the specified Player. The player will be prompted with the context on its next turn.
+
+        The context always has a 'role' and 'content' entry where the 'role' is always set to 'user'.
         Args:
-            player: The Player instance that produced the message. This is usually a model output, but can be the game's
-                GM as well, if it directly adds messages to the conversation history. TODO: Check use
+            player: The player to set the context for.
             content: The text content to be added to the context.
             extras: Additional content to be merged into the context e.g. information about images
         """
