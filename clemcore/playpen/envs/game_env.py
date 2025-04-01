@@ -3,7 +3,7 @@ from copy import deepcopy
 from typing import List, Tuple, Dict, Callable, Union
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmark, DialogueGameMaster, GameInstanceIterator, DefaultGameRecorder
+from clemcore.clemgame import GameBenchmark, DialogueGameMaster, GameInstanceIterator, DefaultGameRecorder, Player
 from clemcore.clemgame.resources import store_file
 from clemcore.playpen.envs import PlayPenEnv
 
@@ -60,7 +60,7 @@ class GameEnv(PlayPenEnv):
             self._task_iterator.reset()
             self.reset()
 
-    def observe(self) -> Tuple[Callable, Union[Dict, List[Dict]]]:
+    def observe(self) -> Tuple[Union[Player, Callable], Union[Dict, List[Dict]]]:
         player = self.master.get_current_player()
         context = self.master.get_context_for(player)
         return player, context

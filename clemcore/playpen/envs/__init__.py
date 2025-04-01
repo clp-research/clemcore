@@ -1,6 +1,8 @@
 import abc
 from typing import List, Tuple, Callable, Union, Dict
 
+from clemcore.clemgame import Player
+
 
 class PlayPenEnv(abc.ABC):
 
@@ -15,7 +17,7 @@ class PlayPenEnv(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def observe(self) -> Tuple[Callable, Union[Dict, List[Dict]]]:
+    def observe(self) -> Tuple[Union[Player, Callable], Union[Dict, List[Dict]]]:
         pass
 
     @abc.abstractmethod

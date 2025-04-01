@@ -34,8 +34,9 @@ def make_env(game_spec: GameSpec, players: List[Model],
 @contextmanager
 def make_tree_env(game_spec: GameSpec, players: List[Model],
                   instances_name: str = None, shuffle_instances: bool = False,
-                  branching_factor: int = 2):
+                  branching_factor: int = 2, branching_model=None):
     with benchmark.load_from_spec(game_spec, do_setup=True, instances_name=instances_name) as game:
         assert branching_factor > 1, "The branching factor must be greater than one"
         task_iterator = game.create_game_instance_iterator(shuffle_instances)
-        yield GameBranchingEnv(game, players, task_iterator, branching_factor=branching_factor)
+        yield GameBranchingEnv(game, players, task_iterator,
+                               branching_factor=branching_factor, branching_model=branching_model)
