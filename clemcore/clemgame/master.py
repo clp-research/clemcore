@@ -320,13 +320,12 @@ class DialogueGameMaster(GameMaster):
         """
         return 0
 
-    @abc.abstractmethod
     def _should_pass_turn(self):
         """
         Whether to pass the turn to the next player. Otherwise, the current player keeps playing
         based on the context set via set_player_context(player, content).
         """
-        pass
+        return True
 
     @abc.abstractmethod
     def _on_valid_player_response(self, player: Player, parsed_response: str):
@@ -362,7 +361,6 @@ class DialogueGameMaster(GameMaster):
         """
         pass
 
-    @abc.abstractmethod
     def _parse_response(self, player: Player, response: str) -> str:
         """Decide if a response utterance should be modified and apply modifications.
 
@@ -375,7 +373,7 @@ class DialogueGameMaster(GameMaster):
         Returns:
             The parsed response
         """
-        pass
+        return response
 
     @abc.abstractmethod
     def _does_game_proceed(self) -> bool:
