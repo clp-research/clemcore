@@ -241,7 +241,7 @@ class GameBenchmark(GameResourceLocator):
                                                         dialogue_pair_desc)  # meta info for transcribe
                     try:
                         game_master = self.create_game_master(experiment_config, dialogue_pair)
-                        game_master.game_recorder(game_recorder)
+                        game_master.game_recorder = game_recorder
                         game_master.setup(**game_instance)
                         game_master.play()
                         game_master.store_records(results_root, dialogue_pair_desc, episode_dir)
