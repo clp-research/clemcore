@@ -17,15 +17,15 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, model: backends.Model):
+    def __init__(self, model: backends.Model, name: str = None, game_recorder: GameRecorder = None):
         """
         Args:
             model: The model used by this player.
             name: the player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
         """
         self._model = model
-        self._game_recorder = None  # set by master
-        self._name = None  # set by master
+        self._game_recorder = game_recorder  # set by master
+        self._name = name  # set by master
         self._messages: List[Dict] = []  # internal state
         self._prompt = None  # internal state
         self._response_object = None  # internal state
@@ -92,7 +92,7 @@ class Player(abc.ABC):
 
         self.__log_send_context_event(context["content"])
         call_start = datetime.now()
-        self._prompt, self._response_object, response_text = self.__call_model(self._messages + [context])  # new list
+        self._prompt, self._response_object, response_text = self.__call_model(context)  # new list
         call_duration = datetime.now() - call_start
         self.__log_response_received_event(response_text)
 
@@ -109,37 +109,40 @@ class Player(abc.ABC):
 
         return response_text
 
-    def __call_model(self, prompt: List[Dict]):
+    def __call_model(self, context: Dict):
         response_object = dict()
+        prompt = context
         if isinstance(self.model, backends.CustomResponseModel):
-            response_text = self._custom_response(prompt)
+            response_text = self._custom_response(context)
         elif isinstance(self.model, backends.HumanModel):
-            response_text = self._terminal_response(prompt)
+            response_text = self._terminal_response(context)
         else:
-            prompt, response_object, response_text = self.model.generate_response(prompt)
+            prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
         return prompt, response_object, response_text
 
-    def _terminal_response(self, messages) -> str:
+    def _terminal_response(self, context: Dict) -> str:
         """Response for human interaction via terminal.
         Overwrite this method to customize human inputs (model_name: human, terminal).
         Args:
-            messages: A list of dicts that contain the history of the conversation.
+            context: The dialogue context to which the player should respond.
         Returns:
             The human response as text.
         """
         latest_response = "Nothing has been said yet."
-        if messages:
-            latest_response = messages[-1]["content"]
+        if context is not None:
+            latest_response = context["content"]
         print(f"\n{latest_response}")
         user_input = input(f"Your response as {self.__class__.__name__}:\n")
         return user_input
 
-    def _custom_response(self, messages) -> str:
+    @abc.abstractmethod
+    def _custom_response(self, context: Dict) -> str:
         """Response for programmatic Player interaction.
+
         Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
         Args:
-            messages: A list of dicts that contain the history of the conversation.
+            context: The dialogue context to which the player should respond.
         Returns:
             The programmatic response as text.
         """
-        raise NotImplementedError()
+        pass
