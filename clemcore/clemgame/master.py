@@ -202,14 +202,16 @@ class DialogueGameMaster(GameMaster):
     def get_current_player(self) -> Player:
         return self.current_player
 
-    def set_context_for(self, player: Player, content: Union[str, Dict]):
+    def set_context_for(self, player: Player, content: str, **extras):
         """ Set the context for the specified Player. The "role" is always "user".
         Args:
             player: The Player instance that produced the message. This is usually a model output, but can be the game's
                 GM as well, if it directly adds messages to the conversation history. TODO: Check use
-            content: The content to be added to the context. Could be a more complex dict-like object.
+            content: The text content to be added to the context.
+            extras: Additional content to be merged into the context e.g. information about images
         """
-        context = {"role": "user", "content": content}
+        message = {"role": "user", "content": content}
+        context = {**extras, **message}
         self.context_for_player[player.name] = context
 
     def get_context_for(self, player) -> Dict:
