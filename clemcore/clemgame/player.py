@@ -4,7 +4,7 @@ from datetime import datetime
 from typing import List, Dict
 
 from clemcore import backends
-from clemcore.clemgame.recorder import GameRecorder
+from clemcore.clemgame.recorder import GameRecorder, NoopGameRecorder
 
 
 class Player(abc.ABC):
@@ -17,15 +17,21 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, model: backends.Model, name: str = None, game_recorder: GameRecorder = None):
+    def __init__(self, model: backends.Model, name: str = None,
+                 game_recorder: GameRecorder = None, forget_extras: List[str] = None):
         """
         Args:
             model: The model used by this player.
-            name: the player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
+            name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
+            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
+            forget_extras: A list of context entries (keys) to forget after response generation.
+                           This is useful to not keep image extras in the player's message history,
+                           but still to prompt the model with an image given in the context.
         """
         self._model = model
-        self._game_recorder = game_recorder  # set by master
         self._name = name  # set by master
+        self._game_recorder = game_recorder or NoopGameRecorder()  # set by master
+        self._forget_extras = forget_extras or []  # set by game developer
         self._messages: List[Dict] = []  # internal state
         self._prompt = None  # internal state
         self._response_object = None  # internal state
@@ -104,6 +110,10 @@ class Player(abc.ABC):
         }
 
         if memorize:
+            if self._forget_extras:
+                for extra in self._forget_extras:
+                    if extra in context:
+                        del context[extra]
             self._messages.append(context)
             self._messages.append(dict(role="assistant", content=response_text))
 
