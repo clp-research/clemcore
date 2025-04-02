@@ -102,6 +102,15 @@ class GameScorer:
             "episode scores": {},
         }
 
+    # mapworld games use this method directly ... because they overwrite store_scores to store images
+    # we should maybe add an on_store_scores hook for this already providing the full path to the episode dir
+    def store_results_file(self, data, file_name: str, dialogue_pair: str,
+                           sub_dir: str = None, results_dir: str = None):
+        store_results_file(self.game_name, data, file_name,
+                           dialogue_pair=dialogue_pair,
+                           sub_dir=sub_dir,
+                           results_dir=results_dir)
+
     def store_scores(self, results_root: str, dialogue_pair: str, game_record_dir: str):
         """Store calculated scores to scores.json file.
         Args:
