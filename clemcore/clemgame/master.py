@@ -2,6 +2,7 @@ import abc
 import collections
 import logging
 from copy import deepcopy
+from pathlib import Path
 from typing import List, Dict, Tuple, Any, Union
 
 from clemcore import backends
@@ -48,11 +49,11 @@ class GameMaster(abc.ABC):
     def game_recorder(self, game_recorder):
         self._game_recorder = game_recorder
 
-    def load_json(self, file_name):
-        return self.game_resources.load_json(file_name)
+    def load_json(self, file_path: Union[str, Path]):
+        return self.game_resources.load_json(file_path)
 
-    def load_template(self, file_name):
-        return self.game_resources.load_template(file_name)
+    def load_template(self, file_path: Union[str, Path]):
+        return self.game_resources.load_template(file_path)
 
     def log_to_self(self, type_: str, value: Any):
         """Logs an action of the passed type from GM to GM.

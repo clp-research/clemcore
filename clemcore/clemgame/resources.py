@@ -110,17 +110,17 @@ class GameResourceLocator(abc.ABC):
         self.game_name = name  # for building results structure
         self.game_path = path  # for accessing game resources
 
-    def __load_game_file(self, file_name: str, file_ending: str = None) -> str:
+    def __load_game_file(self, file_path: Union[str, Path], file_ending: str = None) -> str:
         """Load a file from a clemgame. Assumes the file to be an utf8-encoded (text) file.
         Args:
-            file_name: Name of the file.
+            file_path: Relative path to the file starting from game path.
             file_ending: The file type suffix of the file.
         Returns:
             The file content as returned by open->read().
         """
-        if file_ending and not file_name.endswith(file_ending):
-            file_name = file_name + file_ending
-        fp = os.path.join(self.game_path, file_name)
+        if file_ending and not file_path.endswith(file_ending):
+            file_path = file_path + file_ending
+        fp = os.path.join(self.game_path, file_path)
         with open(fp, encoding='utf8') as f:
             data = f.read()
         return data
@@ -137,23 +137,23 @@ class GameResourceLocator(abc.ABC):
             instances_name = "instances"
         return self.load_json(f"in/{instances_name}")
 
-    def load_template(self, file_name: str) -> str:
+    def load_template(self, file_path: Union[str, Path]) -> str:
         """Load a .template file from the game directory.
         Args:
-            file_name: The name of the template file. Can have subdirectories e.g. "sub/my_file".
+            file_path: Relative path to the file starting from game path.
         Returns:
             The template file content as string.
         """
-        return self.__load_game_file(file_name, file_ending=".template")
+        return self.__load_game_file(file_path, file_ending=".template")
 
-    def load_json(self, file_name: str) -> Dict:
+    def load_json(self, file_path: Union[str, Path]) -> Dict:
         """Load a .json file from your game directory.
         Args:
-            file_name: The name of the JSON file. Can have subdirectories e.g. "sub/my_file".
+            file_path: Relative path to the file starting from game path.
         Returns:
             The JSON file content as dict.
         """
-        data = self.__load_game_file(file_name, file_ending=".json")
+        data = self.__load_game_file(file_path, file_ending=".json")
         return json.loads(data)
 
     def load_results_json(self, file_name: str, results_dir: str, dialogue_pair: str) -> Dict:
