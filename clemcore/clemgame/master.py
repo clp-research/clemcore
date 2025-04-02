@@ -54,25 +54,6 @@ class GameMaster(abc.ABC):
     def load_template(self, file_name):
         return self.game_resources.load_template(file_name)
 
-    def log_message_to(self, player: Player, message: str):
-        """Logs a 'send message' action from GM to Player.
-        This is a logging method, and will not add the message to the conversation history on its own!
-        Args:
-            player: The Player instance the message is targeted at.
-            message: The message content sent to the Player instance.
-        """
-        action = {'type': 'send message', 'content': message}
-        self.log_event("GM", player.name, action)
-
-    def log_message_to_self(self, message: str):
-        """Logs a 'metadata' action from GM to GM.
-        This is a logging method, and will not add anything to the conversation history.
-        Args:
-            message: The message content logged as metadata.
-        """
-        action = {'type': 'metadata', 'content': message}
-        self.log_event("GM", "GM", action)
-
     def log_to_self(self, type_: str, value: Any):
         """Logs an action of the passed type from GM to GM.
         This is a logging method, and will not add anything to the conversation history.
@@ -80,8 +61,7 @@ class GameMaster(abc.ABC):
             type_: The type of the action to be logged.
             value: The content value of the action to be logged. Must be JSON serializable.
         """
-        action = {'type': type_, 'content': value}
-        self.log_event("GM", "GM", action)
+        self._game_recorder.log_event("GM", "GM", {'type': type_, 'content': value})
 
     def log_key(self, key: str, value: Any):
         self._game_recorder.log_key(key, value)
