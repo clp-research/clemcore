@@ -111,6 +111,9 @@ class Player(abc.ABC):
 
         if memorize:
             if self._forget_extras:
+                # Copy context, so that original context given to the player is kept. This is, for example,
+                # necessary to collect the original contexts in the rollout buffer for playpen training.
+                context = deepcopy(context)
                 for extra in self._forget_extras:
                     if extra in context:
                         del context[extra]
