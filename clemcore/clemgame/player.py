@@ -72,14 +72,16 @@ class Player(abc.ABC):
         """
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
-    def __log_send_context_event(self, context):
+    def __log_send_context_event(self, content: str, memorize=True):
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        action = {'type': 'send message', 'content': context}
+        _type = 'send message' if memorize else 'send message (forget)'
+        action = {'type': _type, 'content': content}
         self._game_recorder.log_event(from_='GM', to=self.name, action=action)
 
-    def __log_response_received_event(self, response):
+    def __log_response_received_event(self, response, memorize=True):
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        action = {'type': 'get message', 'content': response}
+        _type = 'get message' if memorize else 'get message (forget)'
+        action = {'type': _type, 'content': response}
         _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
         self._game_recorder.log_event(from_=self.name, to="GM", action=action,
                                       call=(deepcopy(_prompt), deepcopy(_response)))
@@ -97,11 +99,11 @@ class Player(abc.ABC):
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
 
-        self.__log_send_context_event(context["content"])
+        self.__log_send_context_event(context["content"], memorize)
         call_start = datetime.now()
         self._prompt, self._response_object, response_text = self.__call_model(context)  # new list
         call_duration = datetime.now() - call_start
-        self.__log_response_received_event(response_text)
+        self.__log_response_received_event(response_text, memorize)
 
         self._response_object["clem_player"] = {
             "call_start": str(call_start),
