@@ -193,11 +193,14 @@ class DialogueGameMaster(GameMaster):
             content: The text content to be added to the context.
             extras: Additional content to be merged into the context e.g. information about images
         """
+        if player is None:
+            return
         message = {"role": "user", "content": content}
         context = {**extras, **message}
         self.context_for_player[player.name] = context
 
     def get_context_for(self, player) -> Dict:
+        assert player is not None, "Cannot get player context for 'None'"
         assert player.name in self.context_for_player, f"No context set for {player.name}"
         context = self.context_for_player[player.name]
         assert "role" in context, f"Player context must have a 'role' entry"
