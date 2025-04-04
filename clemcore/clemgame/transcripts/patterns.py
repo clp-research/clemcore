@@ -25,7 +25,7 @@ TOP_INFO = '''
 '''
 
 HTML_TEMPLATE = '''
-    <div speaker="{}" class="msg {}">
+    <div speaker="{}" class="msg {}" style="{}">
         <p>{}</p>
     </div>
 '''

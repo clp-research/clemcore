@@ -101,10 +101,11 @@ def build_transcript(interactions: Dict):
                 msg_content = json.loads(msg_content)
             except:
                 ...
+        style = "border: dashed" if "forget" in event["action"]["type"] else ""
         # in case the content is a json with an image entry
         if isinstance(msg_content, dict):
             if "image" in msg_content:
-                transcript += f'<div speaker="{speaker}" class="msg {class_name}">\n'
+                transcript += f'<div speaker="{speaker}" class="msg {class_name}" style="{style}">\n'
                 transcript += f'  <p>{msg_raw}</p>\n'
                 for image_src in msg_content["image"]:
                     if not image_src.startswith("http"):  # take the web url as it is
@@ -118,9 +119,9 @@ def build_transcript(interactions: Dict):
                                    f'</a>\n')
                 transcript += '</div>\n'
             else:
-                transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, msg_raw)
+                transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, style, msg_raw)
         else:
-            transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, msg_raw)
+            transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, style, msg_raw)
     transcript += patterns.HTML_FOOTER
     return transcript
 
