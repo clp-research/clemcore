@@ -81,7 +81,8 @@ class Player(abc.ABC):
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'get message', 'content': response}
         _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
-        self._game_recorder.log_event(from_=self.name, to="GM", action=action, call=(_prompt, _response))
+        self._game_recorder.log_event(from_=self.name, to="GM", action=action,
+                                      call=(deepcopy(_prompt), deepcopy(_response)))
 
     def get_last_call_info(self):
         return self._prompt, self._response_object
