@@ -101,7 +101,7 @@ def build_transcript(interactions: Dict):
                 msg_content = json.loads(msg_content)
             except:
                 ...
-        style = "border: dashed" if "forget" in event["action"]["type"] else ""
+        style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
         # in case the content is a json with an image entry
         if isinstance(msg_content, dict):
             if "image" in msg_content:

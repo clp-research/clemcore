@@ -127,7 +127,7 @@ class DialogueGameMaster(GameMaster):
         """
         return list(self.players_by_names.values())
 
-    def add_player(self, player: Player):
+    def add_player(self, player: Player, initial_prompt: Union[str, Dict] = None):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
 
@@ -135,8 +135,16 @@ class DialogueGameMaster(GameMaster):
 
         Args:
             player: The player to be added to the game. The player's name must be unique.
+            initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
+                            set before the player is called the first time. If set, then on the first player call
+                            the initial prompt will be added to the player's message history and logged as a
+                            'send message' event without a response event. To properly log this make sure that a proper
+                            game recorder is set. On each player call the initial prompt will be automatically merged
+                            with the first context given to the player via two newlines. Alternatively, the initial
+                            prompt could be given as part of the first message context given to the player.
         """
         player.game_recorder = self.game_recorder  # player should record to the same interaction log
+        player.initial_prompt = initial_prompt
         player.name = f"Player {len(self.players_by_names) + 1} ({player.__class__.__name__})"
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "

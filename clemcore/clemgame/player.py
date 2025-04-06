@@ -1,7 +1,7 @@
 import abc
 from copy import deepcopy
 from datetime import datetime
-from typing import List, Dict
+from typing import List, Dict, Union
 
 from clemcore import backends
 from clemcore.clemgame.recorder import GameRecorder, NoopGameRecorder
@@ -17,21 +17,30 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, model: backends.Model, name: str = None,
-                 game_recorder: GameRecorder = None, forget_extras: List[str] = None):
+    def __init__(self, model: backends.Model, name: str = None, game_recorder: GameRecorder = None,
+                 initial_prompt: Union[str, Dict] = None, forget_extras: List[str] = None):
         """
         Args:
             model: The model used by this player.
             name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
             game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
+            initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
+                            set before the player is called the first time. If set, then on the first player call
+                            the initial prompt will be added to the player's message history and logged as a
+                            'send message' event without a response event. To properly log this make sure that a proper
+                            game recorder is set. On each player call the initial prompt will be automatically merged
+                            with the first context given to the player via two newlines. Alternatively, the initial
+                            prompt could be given as part of the first message context given to the player.
             forget_extras: A list of context entries (keys) to forget after response generation.
                            This is useful to not keep image extras in the player's message history,
                            but still to prompt the model with an image given in the context.
         """
-        self._model = model
-        self._name = name  # set by master
+        self._model: backends.Model = model
+        self._name: str = name  # set by master
         self._game_recorder = game_recorder or NoopGameRecorder()  # set by master
-        self._forget_extras = forget_extras or []  # set by game developer
+        self._is_initial_call: bool = True
+        self._initial_prompt: Dict = None if initial_prompt is None else self.__validate_initial_prompt(initial_prompt)
+        self._forget_extras: List[str] = forget_extras or []  # set by game developer
         self._messages: List[Dict] = []  # internal state
         self._prompt = None  # internal state
         self._response_object = None  # internal state
@@ -54,6 +63,25 @@ class Player(abc.ABC):
         self._game_recorder = game_recorder
 
     @property
+    def initial_prompt(self):
+        return self._initial_prompt
+
+    @initial_prompt.setter
+    def initial_prompt(self, prompt: Union[str, Dict]):
+        if prompt is None:
+            self._initial_prompt = None  # allow to unset the initial prompt (again)
+        self._initial_prompt = self.__validate_initial_prompt(prompt)
+
+    def __validate_initial_prompt(self, prompt: Union[str, Dict]) -> Dict:
+        assert self._is_initial_call is True, "The initial prompt can only be set before the first player call"
+        assert isinstance(prompt, (str, dict)), "The initial prompt must be a string or a dictionary"
+        if isinstance(prompt, dict):
+            assert "role" in prompt and prompt["role"] == "user", \
+                "The initial prompt required a 'role' entry with value 'user'"
+            return deepcopy(prompt)
+        return dict(role="user", content=prompt)  # by default assume str
+
+    @property
     def name(self):
         return self._name
 
@@ -72,16 +100,14 @@ class Player(abc.ABC):
         """
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
-    def __log_send_context_event(self, content: str, memorize=True):
+    def __log_send_context_event(self, content: str, label=None):
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        _type = 'send message' if memorize else 'send message (forget)'
-        action = {'type': _type, 'content': content}
+        action = {'type': 'send message', 'content': content, 'label': label}
         self._game_recorder.log_event(from_='GM', to=self.name, action=action)
 
-    def __log_response_received_event(self, response, memorize=True):
+    def __log_response_received_event(self, response, label=None):
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        _type = 'get message' if memorize else 'get message (forget)'
-        action = {'type': _type, 'content': response}
+        action = {'type': 'get message', 'content': response, 'label': label}
         _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
         self._game_recorder.log_event(from_=self.name, to="GM", action=action,
                                       call=(deepcopy(_prompt), deepcopy(_response)))
@@ -99,11 +125,17 @@ class Player(abc.ABC):
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
 
-        self.__log_send_context_event(context["content"], memorize)
+        if self._is_initial_call and self._initial_prompt is not None:
+            assert len(self._messages) == 0, ("There must be no entry in the player's message history "
+                                              "on the first call, when the initial prompt is set.")
+            self._messages.append(self._initial_prompt)  # merged with the context in ensure_alternating_roles (backend)
+            self.__log_send_context_event(self._initial_prompt["content"], label="initial prompt")
+
+        self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
         call_start = datetime.now()
         self._prompt, self._response_object, response_text = self.__call_model(context)  # new list
         call_duration = datetime.now() - call_start
-        self.__log_response_received_event(response_text, memorize)
+        self.__log_response_received_event(response_text, label="response" if memorize else "forget")
 
         self._response_object["clem_player"] = {
             "call_start": str(call_start),
@@ -123,6 +155,7 @@ class Player(abc.ABC):
             self._messages.append(context)
             self._messages.append(dict(role="assistant", content=response_text))
 
+        self._is_initial_call = False
         return response_text
 
     def __call_model(self, context: Dict):
