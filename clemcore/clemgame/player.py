@@ -29,8 +29,8 @@ class Player(abc.ABC):
                             the initial prompt will be added to the player's message history and logged as a
                             'send message' event without a response event. To properly log this make sure that a proper
                             game recorder is set. On each player call the initial prompt will be automatically merged
-                            with the first context given to the player via two newlines. Alternatively, the initial
-                            prompt could be given as part of the first message context given to the player.
+                            with the first memorized context given to the player (via two newlines) by the backend.
+                            Alternatively, the initial prompt could be part of the first context given to the player.
             forget_extras: A list of context entries (keys) to forget after response generation.
                            This is useful to not keep image extras in the player's message history,
                            but still to prompt the model with an image given in the context.

@@ -135,13 +135,7 @@ class DialogueGameMaster(GameMaster):
 
         Args:
             player: The player to be added to the game. The player's name must be unique.
-            initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
-                            set before the player is called the first time. If set, then on the first player call
-                            the initial prompt will be added to the player's message history and logged as a
-                            'send message' event without a response event. To properly log this make sure that a proper
-                            game recorder is set. On each player call the initial prompt will be automatically merged
-                            with the first context given to the player via two newlines. Alternatively, the initial
-                            prompt could be given as part of the first message context given to the player.
+            initial_prompt: The initial prompt given to the player (optional). See Player for more details.
         """
         player.game_recorder = self.game_recorder  # player should record to the same interaction log
         player.initial_prompt = initial_prompt
