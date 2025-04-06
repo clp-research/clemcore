@@ -124,16 +124,17 @@ class Player(abc.ABC):
         :return: the textual response
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
-
+        memorized_initial_prompt = None
         if self._is_initial_call and self._initial_prompt is not None:
             assert len(self._messages) == 0, ("There must be no entry in the player's message history "
                                               "on the first call, when the initial prompt is set.")
-            self._messages.append(self._initial_prompt)  # merged with the context in ensure_alternating_roles (backend)
-            self.__log_send_context_event(self._initial_prompt["content"], label="initial prompt")
+            memorized_initial_prompt = deepcopy(self._initial_prompt)  # see explanation below
+            self._messages.append(memorized_initial_prompt)  # merged with context in ensure_alternating_roles (backend)
+            self.__log_send_context_event(memorized_initial_prompt["content"], label="initial prompt")
 
         self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
         call_start = datetime.now()
-        self._prompt, self._response_object, response_text = self.__call_model(context)  # new list
+        self._prompt, self._response_object, response_text = self.__call_model(context)
         call_duration = datetime.now() - call_start
         self.__log_response_received_event(response_text, label="response" if memorize else "forget")
 
@@ -144,15 +145,19 @@ class Player(abc.ABC):
             "model_name": self.model.get_name()
         }
 
+        # Copy context, so that original context given to the player is kept on forget extras. This is, for
+        # example, necessary to collect the original contexts in the rollout buffer for playpen training.
+        memorized_context = deepcopy(context)
+        # forget must happen only after the model has been called with the extras
+        # we forget extras here in any case, so that the prompt is also handled
+        for extra in self._forget_extras:
+            if extra in memorized_context:
+                del memorized_context[extra]
+            if memorized_initial_prompt is not None and extra in memorized_initial_prompt:
+                del memorized_initial_prompt[extra]
+
         if memorize:
-            if self._forget_extras:
-                # Copy context, so that original context given to the player is kept. This is, for example,
-                # necessary to collect the original contexts in the rollout buffer for playpen training.
-                context = deepcopy(context)
-                for extra in self._forget_extras:
-                    if extra in context:
-                        del context[extra]
-            self._messages.append(context)
+            self._messages.append(memorized_context)
             self._messages.append(dict(role="assistant", content=response_text))
 
         self._is_initial_call = False
