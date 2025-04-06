@@ -10,8 +10,6 @@ from clemcore.clemgame import GameResourceLocator
 from clemcore.clemgame.player import Player
 from clemcore.clemgame.recorder import NoopGameRecorder
 
-module_logger = logging.getLogger(__name__)
-
 
 class GameMaster(abc.ABC):
     """Base class to contain game-specific functionality.
@@ -164,7 +162,7 @@ class DialogueGameMaster(GameMaster):
         self.current_player = self.get_players()[self.current_player_idx]
         # call game hooks
         self._on_before_game()
-        self.__prepare_next_round()
+        self._on_before_round()
 
     @abc.abstractmethod
     def _on_setup(self, **kwargs):
@@ -280,8 +278,7 @@ class DialogueGameMaster(GameMaster):
 
     def __prepare_next_round(self):
         self.log_next_round()  # add record entry for player turns
-        self._on_before_round()  # call hook
-        module_logger.info(f"{self.game_name}: %s turn: %d", self.game_name, self.current_round)
+        self._on_before_round()
 
     def get_response_feedback(self, response: str, context: Dict):
         """

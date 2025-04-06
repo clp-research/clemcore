@@ -84,20 +84,20 @@ class NoopGameRecorder(GameRecorder):
 class DefaultGameRecorder(GameRecorder):
 
     def __init__(self, game_name: str, experiment_name: str, game_id: int, dialogue_pair: str):
-        self.game_name = game_name
-        self.log_current_turn = -1
+        self._game_name = game_name
+        self._log_current_turn = 0
         """ Stores players and turn during the runs """
         self.interactions = {
             "meta": dict(experiment_name=experiment_name, game_id=game_id, dialogue_pair=dialogue_pair),
             "players": {},
-            "turns": []
+            "turns": [[]]  # already prepared to log the first round of turns
         }
         """ Stores calls to the API """
         self.requests = []
 
     def log_next_round(self):
         """Call this method to group interactions per turn."""
-        self.log_current_turn += 1
+        self._log_current_turn += 1
         self.interactions["turns"].append([])
 
     def log_key(self, key: str, value: Any):
@@ -107,7 +107,7 @@ class DefaultGameRecorder(GameRecorder):
             value: The content of the entry to be logged.
         """
         self.interactions[key] = value
-        module_logger.info(f"{self.game_name}: Logged a game-specific interaction key: {key}.")
+        module_logger.info(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
 
     def log_players(self, players_dic: Dict):
         """Log/record the players in this game episode.
@@ -115,7 +115,7 @@ class DefaultGameRecorder(GameRecorder):
             players_dic: Dictionary of players in this game episode.
         """
         self.interactions["players"] = players_dic
-        module_logger.info(f"{self.game_name}: Logged players metadata.")
+        module_logger.info(f"{self._game_name}: Logged players metadata.")
 
     def log_event(self, from_: str, to: str, action: Dict, call: Tuple[Any, Any] = None):
         """Add an event to the internal log.
@@ -128,8 +128,6 @@ class DefaultGameRecorder(GameRecorder):
                 manipulation) as passed to the API and the second element is the raw response object as returned by the
                 API.
         """
-        assert self.log_current_turn >= 0, f"Call log_add_new_turn at least once " \
-                                           f"(log_current_turn={self.log_current_turn})"
         timestamp = datetime.now().isoformat()
         action_obj = {
             "from": from_,
@@ -137,9 +135,9 @@ class DefaultGameRecorder(GameRecorder):
             "timestamp": timestamp,
             "action": action
         }
-        self.interactions["turns"][self.log_current_turn].append(copy.deepcopy(action_obj))
+        self.interactions["turns"][self._log_current_turn].append(copy.deepcopy(action_obj))
         module_logger.info(
-            f"{self.game_name}: Logged {action['type']} action ({from_}->{to}).")
+            f"{self._game_name}: Logged {action['type']} action ({from_}->{to}).")
         if call:
             call_obj = {
                 "timestamp": timestamp,
@@ -147,7 +145,7 @@ class DefaultGameRecorder(GameRecorder):
                 "raw_response_obj": self._needs_copy(call[1])
             }
             self.requests.append(call_obj)
-            module_logger.info(f"{self.game_name}: Logged a call with timestamp {timestamp}")
+            module_logger.info(f"{self._game_name}: Logged a call with timestamp {timestamp}")
 
     @staticmethod
     def _needs_copy(call_obj):
@@ -184,12 +182,12 @@ class DefaultGameRecorder(GameRecorder):
             module_logger.warning(f"Interaction logs are missing!")
         if not self.requests:
             module_logger.warning(f"No calls logged!")
-        store_results_file(self.game_name, self.interactions,
+        store_results_file(self._game_name, self.interactions,
                            "interactions.json",
                            dialogue_pair_desc,
                            sub_dir=game_record_dir,
                            results_dir=results_root)
-        store_results_file(self.game_name, self.requests,
+        store_results_file(self._game_name, self.requests,
                            "requests.json",
                            dialogue_pair_desc,
                            sub_dir=game_record_dir,
