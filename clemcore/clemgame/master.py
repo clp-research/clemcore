@@ -127,7 +127,8 @@ class DialogueGameMaster(GameMaster):
         """
         return list(self.players_by_names.values())
 
-    def add_player(self, player: Player, initial_prompt: Union[str, Dict] = None):
+    def add_player(self, player: Player, initial_prompt: Union[str, Dict] = None,
+                   initial_context: Union[str, Dict] = None):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
 
@@ -136,6 +137,11 @@ class DialogueGameMaster(GameMaster):
         Args:
             player: The player to be added to the game. The player's name must be unique.
             initial_prompt: The initial prompt given to the player (optional). See Player for more details.
+            initial_context: A context to be immediately set for the player (optional). This is useful for initial
+                            prompts that are supposed to be handled as the first context, for example, when adding
+                            the other player's response to the prompt is not necessary, but the player is supposed
+                            to directly react to the initial prompt. Alternatively, overwrite on_before_game() and
+                            use set_context_for(player) to set the player context.
         """
         player.game_recorder = self.game_recorder  # player should record to the same interaction log
         player.initial_prompt = initial_prompt
@@ -144,6 +150,15 @@ class DialogueGameMaster(GameMaster):
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
+        if initial_context is not None:
+            assert isinstance(initial_context, (str, dict)), \
+                f"The initial context must be a str or dict, but is {type(initial_context)}"
+            if isinstance(initial_context, dict):
+                assert "content" in initial_context, "The initial context requires a content entry"
+                extras = {k: v for k, v in initial_context.items() if k not in ["role", "content"]}
+                self.set_context_for(player, initial_context["content"], **extras)
+            else:
+                self.set_context_for(player, initial_context)
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
