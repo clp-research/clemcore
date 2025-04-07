@@ -70,11 +70,13 @@ class Player(abc.ABC):
     def initial_prompt(self, prompt: Union[str, Dict]):
         if prompt is None:
             self._initial_prompt = None  # allow to unset the initial prompt (again)
+            return
         self._initial_prompt = self.__validate_initial_prompt(prompt)
 
     def __validate_initial_prompt(self, prompt: Union[str, Dict]) -> Dict:
         assert self._is_initial_call is True, "The initial prompt can only be set before the first player call"
-        assert isinstance(prompt, (str, dict)), "The initial prompt must be a string or a dictionary"
+        assert isinstance(prompt, (str, dict)), \
+            f"The initial prompt must be a str or dict, but is {type(prompt)}"
         if isinstance(prompt, dict):
             assert "role" in prompt and prompt["role"] == "user", \
                 "The initial prompt required a 'role' entry with value 'user'"
