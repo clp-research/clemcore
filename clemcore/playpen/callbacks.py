@@ -113,12 +113,9 @@ class GameRecordCallback(BaseCallback):
         self.episode_idx = num_timesteps
 
     def on_step(self):
-        # Note: It might happen that the learner's turn is not reached because the teacher already
-        # screws up and the game ends early. Then the rollout steps do not increase and the stored
-        # records are eventually overwritten by the next episode where the learner has a turn.
-        # todo: Do we actually want to record these episodes as well?
-        if self.is_learning_player():
-            self.num_rollout_steps += 1
+        # Note: We always store the full episode records, but in the playpen user
+        # might choose specific player trajectories via the rollout buffers
+        self.num_rollout_steps += 1
         if self.is_done():
             rollout_dir = f"rollout{self.rollout_idx:04d}"
             episode_dir = f"episode_{self.episode_idx}"
@@ -143,5 +140,4 @@ class RolloutProgressCallback(BaseCallback):
         self.progress_bar.close()
 
     def on_step(self):
-        if self.is_learning_player():
-            self.progress_bar.update(1)
+        self.progress_bar.update(1)

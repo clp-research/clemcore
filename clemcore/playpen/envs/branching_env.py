@@ -1,31 +1,44 @@
 import os
-from copy import deepcopy
-from typing import List, Dict, Callable, Tuple, Union
+from copy import deepcopy, copy
+from typing import List, Dict, Callable, Tuple, Union, Set
 
 from clemcore.backends import Model
 from clemcore.clemgame import GameBenchmark, GameInstanceIterator, Player
-from clemcore.playpen import GameEnv
 from clemcore.playpen.envs import PlayPenEnv
-
-
-class BranchingCandidate:
-
-    def __init__(self, parent_env: GameEnv, branch_env: GameEnv, done: bool, info: Dict):
-        self.parent_env = parent_env
-        self.branch_env = branch_env
-        self.done = done
-        self.info = info
+from clemcore.playpen.envs.game_env import GameEnv
 
 
 class BranchingResponse:
 
-    def __init__(self, parent_env: GameEnv, branch_env: GameEnv, branch_response: str):
+    def __init__(self, parent_env: GameEnv, branch_env: GameEnv, parent_context: Dict, branch_response: str):
         self.parent_env = parent_env
         self.branch_env = branch_env
+        self.parent_context = parent_context
         self.branch_response = branch_response
+
+    def step(self):
+        return self.branch_env.step(self.branch_response)
 
     def __str__(self):
         return self.branch_response
+
+
+class BranchingCandidate:
+
+    def __init__(self, response: BranchingResponse, done: bool, info: Dict):
+        self.response = response
+        self.done = done
+        self.info = info
+
+    def add_branch_to(self, game_tree):
+        """ Find parent node and add child"""
+        parent_node = game_tree.find_node(self.response.parent_env)
+        assert parent_node is not None, "There must be a parent node that wraps the candidates parent env"
+        branch_node = ResponseTreeNode(self.response.branch_env,
+                                       self.response.parent_context,
+                                       self.response.branch_response,
+                                       self.done, self.info)
+        parent_node.connect_to(branch_node)
 
 
 class GameBranchingEnv(PlayPenEnv):
@@ -40,12 +53,14 @@ class GameBranchingEnv(PlayPenEnv):
         super().__init__()
         assert branching_factor > 0, "The branching factor must be greater than zero"
         self._root: GameEnv = GameEnv(game, player_models, task_iterator)
+        self._game_tree = GameTree(GameTreeNode(self._root))
         self._active_envs: List[GameEnv] = [self._root]
         self._branching_factor: int = branching_factor
         self._branching_model = branching_model
 
     def reset(self) -> None:  # all game branches always operate on the same task / episode
         self._root.reset()
+        self._game_tree = GameTree(GameTreeNode(self._root))
         self._active_envs: List[GameEnv] = [self._root]
 
     def observe(self) -> Tuple[Union[Player, Callable], Union[Dict, List[Dict]]]:
@@ -70,18 +85,20 @@ class GameBranchingEnv(PlayPenEnv):
             response_dones = []
             response_infos = []
             for response in context_responses:  # each response represents a possible branch in the tree
-                done, info = response.branch_env.step(response.branch_response)
+                done, info = response.step()
                 response_dones.append(done)
                 response_infos.append(info)
-                candidate = BranchingCandidate(response.parent_env, response.branch_env, done, info)
+                candidate = BranchingCandidate(response, done, info)
                 candidates.append(candidate)
             context_dones.append(response_dones)
             context_infos.append(response_infos)
 
         self._done = all([candidate.done for candidate in candidates])
 
-        # memorize leaves so that we do not have to find them again
-        self._active_envs = [candidate.branch_env for candidate in candidates]
+        self._active_envs = []  # memorize active leaves so that we do not have to find them again
+        for candidate in candidates:
+            candidate.add_branch_to(self._game_tree)
+            self._active_envs.append(candidate.response.branch_env)
 
         # return all dones and infos so that they match the quantity of the responses
         return context_dones, context_infos
@@ -91,6 +108,32 @@ class GameBranchingEnv(PlayPenEnv):
         for branch_idx, game_env in enumerate(self._active_envs):
             game_env.store_records(top_dir, rollout_dir, os.path.join(episode_dir, f"branch_{branch_idx}"),
                                    store_experiment, store_instance)
+
+    def get_active_tree(self) -> "GameTree":
+        """ Ad-hoc calculation of the tree containing only active branches """
+        leaves = self._game_tree.find_leaves()
+        active_leaves = []
+        for leave in leaves:
+            if leave.unwrap() in self._active_envs:
+                active_leaves.append(leave)
+
+        def label_active_recursive(active_node):
+            active_node.tag("active")
+            if active_node.parent:  # root has no parent
+                label_active_recursive(active_node.parent)
+
+        for active_leave in active_leaves:
+            label_active_recursive(active_leave)
+
+        def copy_active_tree_recursive(active_node):
+            _copy = copy(active_node)
+            _copy.branches = [node for node in active_node if node.has_tag("active")]
+            for branch in _copy:
+                copy_active_tree_recursive(branch)
+
+        active_root = copy(self._game_tree.root)  # we do not want to change the initial tree
+        copy_active_tree_recursive(active_root)
+        return GameTree(active_root)
 
     def is_done(self) -> bool:
         return self._done
@@ -114,9 +157,9 @@ class GameBranchingPlayer(Callable):
         # for now, we assume that all current player share the same model
         return self._current_players[0].model
 
-    def _should_branch(self):
+    def _is_branching_model(self):
         if self._branching_model is None:
-            return True
+            return True  # by default always branch
         return self.model is self._branching_model
 
     def __call__(self, contexts: List[str]) -> List[List[BranchingResponse]]:
@@ -130,17 +173,16 @@ class GameBranchingPlayer(Callable):
         context_responses = []
         for parent_env, parent_context in zip(self._current_envs, contexts):
             branch_responses = []
-            if self._should_branch():
-                for _ in range(self._branching_factor):
-                    branch_env: GameEnv = deepcopy(parent_env)
-                    branch_player = branch_env.master.get_current_player()  # we use the branch player as it keeps state
-                    branch_response = branch_player(
-                        parent_context)  # this already changes the player state in branch env
-                    branch_responses.append(BranchingResponse(parent_env, branch_env, branch_response))
-            else:
-                player = parent_env.master.get_current_player()
-                response = player(parent_context)
-                branch_responses.append(BranchingResponse(parent_env, parent_env, response))
+            branching_factor = self._branching_factor if self._is_branching_model() else 1
+            for _ in range(branching_factor):
+                # We need to copy the env even with factor=1 (for the teacher) b.c. otherwise we run into problems
+                # when adding the response to the tree, since we use the env identity as an id. If we do not copy,
+                # then there will be two nodes with the same env which makes finding them via the env unpredictable.
+                branch_env: GameEnv = deepcopy(parent_env)
+                branch_player = branch_env.master.get_current_player()  # we use the branch player as it keeps state
+                # this already changes the player state in branch env
+                branch_response = branch_player(parent_context)
+                branch_responses.append(BranchingResponse(parent_env, branch_env, parent_context, branch_response))
             context_responses.append(branch_responses)
         return context_responses
 
@@ -149,7 +191,29 @@ class GameTreeNode:
     def __init__(self, game_env: GameEnv):
         self._game_env = game_env
         self._branches: List[GameTreeNode] = []
-        self._parent: GameTreeNode = self  # root is its own parent
+        self._parent: GameTreeNode = None  # root has no parent
+        self._tags: Set = set()
+
+    @property
+    def branches(self):
+        return self._branches
+
+    @branches.setter
+    def branches(self, branches):
+        self._branches = branches
+
+    @property
+    def parent(self):
+        return self._parent
+
+    def untag(self, tag: str):
+        self._tags.remove(tag)
+
+    def tag(self, tag: str):
+        self._tags.add(tag)
+
+    def has_tag(self, tag: str):
+        return tag in self._tags
 
     def __iter__(self):
         return iter(self._branches)
@@ -161,37 +225,50 @@ class GameTreeNode:
         return self._game_env
 
     def wraps(self, game_env: GameEnv) -> bool:
-        return self._game_env is game_env
+        is_wrapping = self._game_env is game_env
+        return is_wrapping
 
-    def add_branch(self, branch_node: "GameTreeNode"):
+    def connect_to(self, branch_node: "GameTreeNode"):
+        if branch_node in self._branches:
+            return
         self._branches.append(branch_node)
         branch_node._parent = self
 
 
+class ResponseTreeNode(GameTreeNode):
+
+    def __init__(self, game_env: GameEnv, context: Dict, response: str, done: bool, info: Dict):
+        super().__init__(game_env)
+        self.context = context
+        self.response = response
+        self.done = done
+        self.info = info
+
+
 class GameTree:
 
-    def __init__(self, root: GameEnv):
-        self._root: GameTreeNode = GameTreeNode(root)
+    def __init__(self, root: GameTreeNode):
+        self._root: GameTreeNode = root
+
+    @property
+    def root(self):
+        return self._root
 
     def find_node(self, target_env: GameEnv):
         def _find_node(node):
             if node.wraps(target_env):  # check for object identity
                 return node
-
             for branch in node:
                 target_node = _find_node(branch)
-                if target_node:
+                if target_node is not None:
                     return target_node
-
             return None
 
         return _find_node(self._root)
 
-    def find_leaves(self, unwrap=False):
+    def find_leaves(self):
         def _find_leaves(node):
             if not node:
-                if unwrap:
-                    return [node.unwrap()]
                 return [node]
             leaves = []
             for branch in node:
@@ -199,10 +276,3 @@ class GameTree:
             return leaves
 
         return _find_leaves(self._root)
-
-    def add_branch(self, parent_env, branch_env):
-        # Find parent node and add child
-        parent_node = self.find_node(parent_env)
-        assert parent_node is not None, "There must be a parent node that wraps the candidates parent env"
-        branch_node = GameTreeNode(branch_env)
-        parent_node.add_branch(branch_node)

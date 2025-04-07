@@ -1,6 +1,8 @@
 import abc
+
 from clemcore.backends import Model
 from clemcore.clemgame import GameRegistry
+from clemcore.playpen.envs import PlayPenEnv
 from clemcore.playpen.buffers import RolloutBuffer
 from clemcore.playpen.callbacks import CallbackList, BaseCallback
 
@@ -16,7 +18,7 @@ class BasePlayPen(abc.ABC):
     def add_callback(self, callback: BaseCallback):
         self.callbacks.append(callback)
 
-    def _collect_rollouts(self, game_env, rollout_steps, rollout_buffer):
+    def _collect_rollouts(self, game_env: PlayPenEnv, rollout_steps: int, rollout_buffer: RolloutBuffer):
         # reset() sets up the next game instance;
         # we should notify somehow when all instances were run so users can intervene if wanted?
         self.callbacks.on_rollout_start(game_env, self.num_timesteps)
@@ -25,13 +27,13 @@ class BasePlayPen(abc.ABC):
             player, context = game_env.observe()
             response = player(context)
             done, info = game_env.step(response)
-            if self.is_learner(player):
-                rollout_buffer.add(context, response, done, info)
-                num_rollout_steps += 1
-                self.num_timesteps += 1
+            num_rollout_steps += 1
+            self.num_timesteps += 1
+            rollout_buffer.on_step(context, response, done, info)
             self.callbacks.update_locals(locals())
             self.callbacks.on_step()
             if game_env.is_done():
+                rollout_buffer.on_done()
                 game_env.reset()
         self.callbacks.on_rollout_end()
 
