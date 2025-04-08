@@ -1,6 +1,9 @@
 """
 Definition of metrics/scores that should be defined and logged for all games.
 This constants should be used so that the naming is standardised across games.
+
+Important: If the game is aborted, all episode-level scores must be set to numpy.nan 
+and turn-level scores can be computed for the valid turns before the abortion action.
 """
 import logging
 from typing import Dict
@@ -68,14 +71,16 @@ BENCH_SCORE = 'Main Score'
 """ 
 The main score of the game. It is a value between 0 and 100 that summarises
 the overall performance of a game play.
+
+Should be np.nan if the game was aborted.
 Record level: episode 
 """
 
 METRIC_PLAYED = 'Played'
 """ 
 1 - ABORTED
-This is used by the eval scripts, which infer the % played from the aborted score
-This metric should thus not be computed for new games if the given eval
+This is computed and used by the eval scripts, which infer the % played from the aborted 
+score. This metric should not be implemented/stored for new games if the given eval
 scripts are used, to avoid duplicates.
 Record level: episode 
 """

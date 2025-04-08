@@ -46,7 +46,7 @@ huggingface = [
     "accelerate==1.2.1",
     "einops==0.6.1",
     "protobuf==4.21.6",
-    "bitsandbytes==0.39.0"
+    "bitsandbytes==0.45.3"
 ]
 slurk = [
     "python-engineio==4.4.0",
