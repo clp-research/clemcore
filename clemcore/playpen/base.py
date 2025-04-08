@@ -22,6 +22,7 @@ class BasePlayPen(abc.ABC):
         # reset() sets up the next game instance;
         # we should notify somehow when all instances were run so users can intervene if wanted?
         self.callbacks.on_rollout_start(game_env, self.num_timesteps)
+        rollout_buffer.initial_prompts = game_env.initial_prompts
         num_rollout_steps = 0
         while num_rollout_steps < rollout_steps:
             player, context = game_env.observe()

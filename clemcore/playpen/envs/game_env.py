@@ -36,6 +36,10 @@ class GameEnv(PlayPenEnv):
         return _copy
 
     @property
+    def initial_prompts(self):
+        return [{player: player.initial_prompt} for player in self.master.get_players()]
+
+    @property
     def experiment(self):
         return self._experiment
 

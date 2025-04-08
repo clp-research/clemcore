@@ -9,6 +9,10 @@ class PlayPenEnv(abc.ABC):
     def __init__(self):
         self._done: bool = False
 
+    @property
+    def initial_prompts(self):
+        return dict()
+
     def is_done(self) -> bool:
         return self._done
 

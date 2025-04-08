@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Dict
 
 from clemcore.clemgame import Player
 from clemcore.playpen.envs.game_env import GameEnv
@@ -9,6 +9,7 @@ class RolloutBuffer:
 
     def __init__(self, game_env):
         self.game_env = game_env
+        self.initial_prompts: Dict[Player, Dict] = {}  # initial prompts that are not given in the initial context
 
     def on_step(self, context, response, done, info):
         pass

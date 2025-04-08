@@ -58,6 +58,10 @@ class GameBranchingEnv(PlayPenEnv):
         self._branching_factor: int = branching_factor
         self._branching_model = branching_model
 
+    @property
+    def initial_prompts(self):
+        return [{player: player.initial_prompt} for player in self._root.master.get_players()]
+
     def reset(self) -> None:  # all game branches always operate on the same task / episode
         self._root.reset()
         self._game_tree = GameTree(GameTreeNode(self._root))
