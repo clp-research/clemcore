@@ -71,7 +71,7 @@ def is_backend(obj):
     Returns:
         True if the object is a Backend child class (instance); False otherwise.
     """
-    if inspect.isclass(obj) and issubclass(obj, Backend):
+    if inspect.isclass(obj) and issubclass(obj, Backend) and obj is not Backend:
         return True
     return False
 

@@ -120,37 +120,39 @@ The dialogue game master defines a play routine that is as follows:
 
 ```python
  def play(self) -> None:
-     self._on_before_game()
-     while self._does_game_proceed():
-         self.log_next_turn()  # not sure if we want to do this always here (or add to _on_before_turn)
-         self._on_before_turn(self.current_turn)
-         self.logger.info(f"{self.name}: %s turn: %d", self.name, self.current_turn)
-         for player in self.__player_sequence():
-             if not self._does_game_proceed():
-                 break  # potentially stop in between player turns
-             # GM -> Player
-             history = self.messages_by_names[player.descriptor]
-             assert history, f"messages history must not be empty for {player.descriptor}"
+    self._on_before_game()
+    while self._does_game_proceed():
+        self.log_next_round()  # not sure if we want to do this always here (or add to _on_before_turn)
+        self._on_before_round(self.current_round)
+        self.logger.info(f"{self.name}: %s turn: %d", self.name, self.current_round)
+        for player in self.__player_sequence():
+            if not self._does_game_proceed():
+                break  # potentially stop in between player turns
+            # GM -> Player
+            history = self.context_for_player[player.descriptor]
+            assert history, f"messages history must not be empty for {player.descriptor}"
 
-             last_entry = history[-1]
-             assert last_entry["role"] != "assistant", "Last entry should not be assistant " \
-                                                       "b.c. this would be the role of the current player"
-             message = last_entry["content"]
+            last_entry = history[-1]
+            assert last_entry["role"] != "assistant", "Last entry should not be assistant "
+            "b.c. this would be the role of the current player"
+        message = last_entry["content"]
 
-             action = {'type': 'send message', 'content': message}
-             self.log_event(from_='GM', to=player.descriptor, action=action)
+        action = {'type': 'send message', 'content': message}
+        self.log_event(from_='GM', to=player.descriptor, action=action)
 
-             _prompt, _response, response_message = player(history, self.current_turn)
+        _prompt, _response, response_message = player(history, self.current_round)
 
-             # Player -> GM
-             action = {'type': 'get message', 'content': response_message}
-             self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
+        # Player -> GM
+        action = {'type': 'get message', 'content': response_message}
+        self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
 
-             # GM -> GM
-             self.__validate_parse_and_add_player_response(player, response_message)
-         self._on_after_turn(self.current_turn)
-         self.current_turn += 1
-     self._on_after_game()
+        # GM -> GM
+        self.__validate_parse_and_add_player_response(player, response_message)
+    self._on_after_round(self.current_round)
+    self.current_round += 1
+
+
+self._on_after_game()
 ```
 
 Let's have a look on this routine. As long as the game proceeds (`_does_game_proceed()`):
@@ -211,15 +213,15 @@ Then we must decide if the guessing should continue like
 
 ```python
  def _does_game_proceed(self):
-     if self.invalid_response:
-         self.log_to_self("invalid format", "abort game")
-         return False
-     if self.clue_error is not None:
-         return False 
-     if self.current_turn >= self.max_turns:
-         self.log_to_self("max turns reached", str(self.max_turns))
-         return False
-     return True
+    if self.invalid_response:
+        self.log_to_self("invalid format", "abort game")
+        return False
+    if self.clue_error is not None:
+        return False
+    if self.current_round >= self.max_turns:
+        self.log_to_self("max turns reached", str(self.max_turns))
+        return False
+    return True
 ```
 
 And we have to check if the player response is actually in the valid format:

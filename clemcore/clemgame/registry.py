@@ -180,6 +180,9 @@ class GameRegistry:
     def __iter__(self):
         return iter(self._game_specs)
 
+    def get_game_specs(self):
+        return self._game_specs
+
     @classmethod
     def from_directories_and_cwd_files(cls):
         """

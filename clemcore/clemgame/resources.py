@@ -1,14 +1,16 @@
 import abc
 import csv
+import importlib.resources
 import json
 import logging
 import os
-from typing import Dict, List
+from pathlib import Path
+from typing import Dict, List, Union
 
 module_logger = logging.getLogger(__name__)
 
 
-def _store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_overwrite: bool = True) -> str:
+def store_file(data, file_name: str, dir_path: Union[str, Path], sub_dir: str = None, do_overwrite: bool = True) -> str:
     """Store a file.
     Base function to handle relative clembench directory paths.
     Args:
@@ -39,6 +41,52 @@ def _store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_ove
     return fp
 
 
+def load_json(file_path: str) -> Dict:
+    """
+    Load a JSON file.
+    Args:
+        file_path: The path to the JSON file.
+    Returns:
+        The JSON file content as dict.
+    """
+    file_ending = ".json"
+    if not file_path.endswith(file_ending):
+        file_path = file_path + file_ending
+    with open(file_path, encoding='utf8') as f:
+        data = json.load(f)
+    return data
+
+
+def load_packaged_file(file_path: str):
+    """
+    Loads a file within the clemcore package.
+    :param file_path: The path to the file within the clemcore package (without the 'clemcore/' prefix).
+    :return: The file content
+    """
+    with importlib.resources.files("clemcore").joinpath(file_path).open("r") as f:
+        return f.read()
+
+
+def store_results_file(game_name, data, file_name: str, dialogue_pair: str,
+                       sub_dir: str = None, results_dir: str = None):
+    """Store a results file in your game results' directory. The top-level directory is 'results'.
+    Args:
+        game_name: the game name to store the results file for
+        data: The data to store in the file.
+        file_name: The name of the file. Can have subdirectories e.g. "sub/my_file".
+        dialogue_pair: The name of the model pair directory. The directory name is retrieved from the results
+            directory file structure by classes/methods that use this method.
+        sub_dir: The subdirectory to store the results file in. Automatically created when given; otherwise an
+            error will be thrown.
+        results_dir: An (alternative) results directory structure given as a relative or absolute path.
+    """
+    if results_dir is None:
+        results_dir = "results"  # default to a results directory in current terminal workspace
+    game_results_path = os.path.join(results_dir, dialogue_pair, game_name)
+    fp = store_file(data, file_name, game_results_path, sub_dir)
+    module_logger.info(f"Results file stored to {fp}")
+
+
 class GameResourceLocator(abc.ABC):
     """
     Provides access to game specific resources and results (based on game path and results directory)
@@ -62,17 +110,17 @@ class GameResourceLocator(abc.ABC):
         self.game_name = name  # for building results structure
         self.game_path = path  # for accessing game resources
 
-    def __load_game_file(self, file_name: str, file_ending: str = None) -> str:
+    def __load_game_file(self, file_path: Union[str, Path], file_ending: str = None) -> str:
         """Load a file from a clemgame. Assumes the file to be an utf8-encoded (text) file.
         Args:
-            file_name: Name of the file.
+            file_path: Relative path to the file starting from game path.
             file_ending: The file type suffix of the file.
         Returns:
             The file content as returned by open->read().
         """
-        if file_ending and not file_name.endswith(file_ending):
-            file_name = file_name + file_ending
-        fp = os.path.join(self.game_path, file_name)
+        if file_ending and not file_path.endswith(file_ending):
+            file_path = file_path + file_ending
+        fp = os.path.join(self.game_path, file_path)
         with open(fp, encoding='utf8') as f:
             data = f.read()
         return data
@@ -89,23 +137,23 @@ class GameResourceLocator(abc.ABC):
             instances_name = "instances"
         return self.load_json(f"in/{instances_name}")
 
-    def load_template(self, file_name: str) -> str:
+    def load_template(self, file_path: Union[str, Path]) -> str:
         """Load a .template file from the game directory.
         Args:
-            file_name: The name of the template file. Can have subdirectories e.g. "sub/my_file".
+            file_path: Relative path to the file starting from game path.
         Returns:
             The template file content as string.
         """
-        return self.__load_game_file(file_name, file_ending=".template")
+        return self.__load_game_file(file_path, file_ending=".template")
 
-    def load_json(self, file_name: str) -> Dict:
+    def load_json(self, file_path: Union[str, Path]) -> Dict:
         """Load a .json file from your game directory.
         Args:
-            file_name: The name of the JSON file. Can have subdirectories e.g. "sub/my_file".
+            file_path: Relative path to the file starting from game path.
         Returns:
             The JSON file content as dict.
         """
-        data = self.__load_game_file(file_name, file_ending=".json")
+        data = self.__load_game_file(file_path, file_ending=".json")
         return json.loads(data)
 
     def load_results_json(self, file_name: str, results_dir: str, dialogue_pair: str) -> Dict:
@@ -168,23 +216,5 @@ class GameResourceLocator(abc.ABC):
             sub_dir: The subdirectory to store the file in. Automatically created when given; otherwise an error will
                 be thrown.
         """
-        fp = _store_file(data, file_name, self.game_path, sub_dir=sub_dir)
+        fp = store_file(data, file_name, self.game_path, sub_dir=sub_dir)
         module_logger.info("Game file stored to %s", fp)
-
-    def store_results_file(self, data, file_name: str, dialogue_pair: str,
-                           sub_dir: str = None, results_dir: str = None):
-        """Store a results file in your game results' directory. The top-level directory is 'results'.
-        Args:
-            data: The data to store in the file.
-            file_name: The name of the file. Can have subdirectories e.g. "sub/my_file".
-            dialogue_pair: The name of the model pair directory. The directory name is retrieved from the results
-                directory file structure by classes/methods that use this method.
-            sub_dir: The subdirectory to store the results file in. Automatically created when given; otherwise an
-                error will be thrown.
-            results_dir: An (alternative) results directory structure given as a relative or absolute path.
-        """
-        if results_dir is None:
-            results_dir = "results"  # default to a results directory in current terminal workspace
-        game_results_path = os.path.join(results_dir, dialogue_pair, self.game_name)
-        fp = _store_file(data, file_name, game_results_path, sub_dir)
-        module_logger.info(f"Results file stored to {fp}")

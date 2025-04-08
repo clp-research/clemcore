@@ -1,11 +1,14 @@
 """
 Definition of metrics/scores that should be defined and logged for all games.
 This constants should be used so that the naming is standardised across games.
+
+Important: If the game is aborted, all episode-level scores must be set to numpy.nan 
+and turn-level scores can be computed for the valid turns before the abortion action.
 """
 import logging
 from typing import Dict
 
-from clemcore.clemgame.resources import GameResourceLocator
+from clemcore.clemgame.resources import store_results_file
 
 # common names
 METRIC_ABORTED = "Aborted"
@@ -68,14 +71,16 @@ BENCH_SCORE = 'Main Score'
 """ 
 The main score of the game. It is a value between 0 and 100 that summarises
 the overall performance of a game play.
+
+Should be np.nan if the game was aborted.
 Record level: episode 
 """
 
 METRIC_PLAYED = 'Played'
 """ 
 1 - ABORTED
-This is used by the eval scripts, which infer the % played from the aborted score
-This metric should thus not be computed for new games if the given eval
+This is computed and used by the eval scripts, which infer the % played from the aborted 
+score. This metric should not be implemented/stored for new games if the given eval
 scripts are used, to avoid duplicates.
 Record level: episode 
 """
@@ -83,7 +88,7 @@ Record level: episode
 module_logger = logging.getLogger(__name__)
 
 
-class GameScorer(GameResourceLocator):
+class GameScorer:
     """Calculates scores based on interaction logs."""
 
     def __init__(self, name: str, experiment: Dict, game_instance: Dict):
@@ -93,7 +98,7 @@ class GameScorer(GameResourceLocator):
             experiment: The experiment to score.
             game_instance: The game instance to score.
         """
-        super().__init__(name=name)
+        self.game_name = name
         self.experiment = experiment
         self.game_instance = game_instance
         """ Stores values of score computation """
@@ -102,6 +107,15 @@ class GameScorer(GameResourceLocator):
             "episode scores": {},
         }
 
+    # mapworld games use this method directly ... because they overwrite store_scores to store images
+    # we should maybe add an on_store_scores hook for this already providing the full path to the episode dir
+    def store_results_file(self, data, file_name: str, dialogue_pair: str,
+                           sub_dir: str = None, results_dir: str = None):
+        store_results_file(self.game_name, data, file_name,
+                           dialogue_pair=dialogue_pair,
+                           sub_dir=sub_dir,
+                           results_dir=results_dir)
+
     def store_scores(self, results_root: str, dialogue_pair: str, game_record_dir: str):
         """Store calculated scores to scores.json file.
         Args:
@@ -109,10 +123,10 @@ class GameScorer(GameResourceLocator):
             dialogue_pair: A string path to the Player pair results directory.
             game_record_dir: The game's record directory path.
         """
-        self.store_results_file(self.scores, "scores.json",
-                                dialogue_pair=dialogue_pair,
-                                sub_dir=game_record_dir,
-                                results_dir=results_root)
+        store_results_file(self.game_name, self.scores, "scores.json",
+                           dialogue_pair=dialogue_pair,
+                           sub_dir=game_record_dir,
+                           results_dir=results_root)
 
     def log_turn_score(self, turn_idx, score_name, score_value):
         """Record a turn-level score for a single turn.
