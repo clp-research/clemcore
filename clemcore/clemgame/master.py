@@ -28,7 +28,9 @@ class GameMaster(abc.ABC):
         Args:
             name: The name of the game (as specified in game_registry).
             path: Path to the game (as specified in game_registry).
-            experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
+            experiment: Parameters of the current experiment, that is, parameters that are the same for all game
+                instances this experiment contains. (Note: These values could be stored in each instance as well, but it
+                is recommended to store them only once on the experiment level.)
             player_models: Player models to use for one or two players.
             game_recorder: Enables to log each interaction in the game.
                            Resulting records can be stored to an interactions.json.
@@ -82,6 +84,7 @@ class GameMaster(abc.ABC):
         """Load resources and prepare everything to play the game.
         Needs to log the players dictionary via self.log_players(players_dict).
         Called by the game's GameBenchmark run method for each game instance.
+        Must be implemented for proper games.
         Args:
             kwargs: Keyword arguments used to set up the GameMaster instance.
         """
@@ -89,7 +92,8 @@ class GameMaster(abc.ABC):
 
     @abc.abstractmethod
     def play(self) -> None:
-        """Play the game (multiple turns of a specific game instance)."""
+        """Play the game (multiple turns of a specific game instance).
+        Must be implemented for proper games."""
         pass
 
 
@@ -97,7 +101,6 @@ class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
     Has most logging and gameplay procedures implemented, including convenient logging methods.
     """
-
     def __init__(self, name: str, path: str, experiment: dict, player_models: List[backends.Model]):
         """
         Args:
@@ -129,7 +132,7 @@ class DialogueGameMaster(GameMaster):
 
     def add_player(self, player: Player, initial_prompt: Union[str, Dict] = None,
                    initial_context: Union[str, Dict] = None):
-        """Add a player to the game. The same player cannot be added twice.
+        """Add a Player (sub-)class object to the game. The same Player (sub-)class object cannot be added twice.
         The player identity is determined by the player's name.
 
         Important: During gameplay, the players will be called in the same order as added to the game master!
@@ -193,20 +196,25 @@ class DialogueGameMaster(GameMaster):
         pass
 
     def get_game_state(self):
+        """???"""
+        # TODO: What is this supposed to do, and is it mandatory...?
         return None
 
     def get_current_player(self) -> Player:
+        """Get the current player.
+        Returns:
+            The current player Player object.
+        """
         return self.current_player
 
     def set_context_for(self, player: Player, content: str, **extras):
-        """
-        Set the context for the specified Player. The player will be prompted with the context on its next turn.
-
+        """Set the context for the specified Player.
+        The player will be prompted with the context on its next turn.
         The context always has a 'role' and 'content' entry where the 'role' is always set to 'user'.
         Args:
             player: The player to set the context for.
             content: The text content to be added to the context.
-            extras: Additional content to be merged into the context e.g. information about images
+            extras: Additional content to be merged into the context e.g. information about images.
         """
         if player is None:
             return
@@ -215,6 +223,12 @@ class DialogueGameMaster(GameMaster):
         self.context_for_player[player.name] = context
 
     def get_context_for(self, player) -> Dict:
+        """Get the current context of a player.
+        Args:
+            player: The player's name.
+        Returns:
+            The player's context, a dict.
+        """
         assert player is not None, "Cannot get player context for 'None'"
         assert player.name in self.context_for_player, f"No context set for {player.name}"
         context = self.context_for_player[player.name]
@@ -224,8 +238,8 @@ class DialogueGameMaster(GameMaster):
         return context
 
     def play(self) -> None:
-        """
-        Main play loop method. This method is called to run the game for benchmarking.
+        """Main play loop method.
+        This method is called to run the game for benchmarking.
         """
         done = False
         while not done:
@@ -234,11 +248,11 @@ class DialogueGameMaster(GameMaster):
             done, _ = self.step(response)
 
     def step(self, response: str) -> Tuple[bool, Dict]:
-        """
-        Transitions the game state by applying the current player's response.
-
-        :param response: The response (verbal action) of the current player.
-        :return: done, info
+        """Transitions the game state by applying the current player's response.
+        Args:
+            response: The response (verbal action) of the current player.
+        Returns:
+            Tuple of: done, info
         """
         # compute scores first, so that we are sure that the player's context
         # can still be retrieved (state has not changed yet)
@@ -248,6 +262,7 @@ class DialogueGameMaster(GameMaster):
         self.info["episode_score"] = 0
 
         # todo: it seems we should change the order here: Parse should come first, and then validate.
+        # JJ: It should also probably be done before the method calls above...
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
         # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
         if self._validate_player_response(self.current_player, response):
@@ -278,7 +293,8 @@ class DialogueGameMaster(GameMaster):
         Default: The gamer master passes the turn to the next player in the player list (order as added).
         Starting again with the first player, when all players have had their turn(s).
 
-        :return: the next (current) player
+        Returns:
+            The next (current) player.
         """
         self.current_player_idx = (self.current_player_idx + 1) % len(self.players_by_names)
         return self.get_players()[self.current_player_idx]
@@ -289,7 +305,8 @@ class DialogueGameMaster(GameMaster):
 
         Default: Start next round when we cycled through the whole list i.e. it is again the first player's turn.
 
-        :return: True, when to start a new round
+        Returns:
+            True, when to start a new round
         """
         return self.current_player_idx == 0
 
@@ -298,32 +315,37 @@ class DialogueGameMaster(GameMaster):
         self._on_before_round()
 
     def get_response_feedback(self, response: str, context: Dict):
-        """
+        """Create text feedback to a player response.
         Optional.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: a verbal feedback about the player's response given the context
+        Args:
+            response: The response of the current player.
+            context: The context given to the current player to generate the response for.
+        Returns:
+            A verbal feedback about the player's response given the context.
         """
         return None
 
     def compute_response_score(self, response: str, context: Dict):
-        """
+        """Calculate a score for a player response.
         Mandatory.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: the performance score for a player's response given the context
+        Args:
+            response: The response of the current player.
+            context: The context given to the current player to generate the response for.
+        Returns:
+            The performance score for a player's response given the context.
         """
         return 0
 
     def compute_episode_score(self):
-        """
+        """Calculate a score for the entire episode.
         Mandatory.
-        :return: the performance of the agent over the whole episode
+        Returns:
+            The performance of the agent over the whole episode.
         """
         return 0
 
     def _should_pass_turn(self):
-        """
+        """Determine if a player is done for the current turn.
         Whether to pass the turn to the next player. Otherwise, the current player keeps playing
         based on the context set via set_player_context(player, content).
         """
@@ -398,7 +420,7 @@ class DialogueGameMaster(GameMaster):
         pass
 
     def _on_after_round(self):
-        """Executed in the play loop after a round of gameply finished i.e. _start_next_round() resolves to True.
+        """Executed in the play loop after a round of gameplay finishes i.e. _start_next_round() resolves to True.
 
         Hook: Modify this method for game-specific functionality.
         """

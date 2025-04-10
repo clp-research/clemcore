@@ -12,18 +12,19 @@ class Player(abc.ABC):
 
     A player can respond via a custom implementation, human input or a language model:
 
-    - the programmatic players are called via the _custom_response() method
-    - the human players are called via the _terminal_response() method
-    - the backend players are called via the generate_response() method of the backend
+    - programmatic players are called via the _custom_response() method
+    - human players are called via the _terminal_response() method
+    - backend players are called via the generate_response() method of a backend
     """
-
     def __init__(self, model: backends.Model, name: str = None, game_recorder: GameRecorder = None,
                  initial_prompt: Union[str, Dict] = None, forget_extras: List[str] = None):
         """
         Args:
             model: The model used by this player.
-            name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
-            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
+            name: The player's name (optional). DialogueGameMaster assigns a name like "Player 1 (Class)", overriding
+                any name given here.
+            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder. DialogueGameMaster
+                assigns its corresponding GameRecorder, overriding any given here.
             initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
                             set before the player is called the first time. If set, then on the first player call
                             the initial prompt will be added to the player's message history and logged as a
@@ -46,6 +47,11 @@ class Player(abc.ABC):
         self._response_object = None  # internal state
 
     def __deepcopy__(self, memo):
+        """
+        Args:
+            memo: ???
+        """
+        # TODO: What does this do differently than default deepcopy? What is 'memo'?
         _copy = type(self).__new__(self.__class__)
         memo[id(self)] = _copy
         for key, value in self.__dict__.items():
@@ -79,7 +85,7 @@ class Player(abc.ABC):
             f"The initial prompt must be a str or dict, but is {type(prompt)}"
         if isinstance(prompt, dict):
             assert "role" in prompt and prompt["role"] == "user", \
-                "The initial prompt required a 'role' entry with value 'user'"
+                "The initial prompt requires a 'role' entry with value 'user'"
             return deepcopy(prompt)
         return dict(role="user", content=prompt)  # by default assume str
 
@@ -98,16 +104,18 @@ class Player(abc.ABC):
     def get_description(self) -> str:
         """Get a description string for this Player instance.
         Returns:
-            A string describing the player's class, model used and name given.
+            A string describing the player's name given, class and model used.
         """
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
     def __log_send_context_event(self, content: str, label=None):
+        """Record a 'send message' event with the current message content."""
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'send message', 'content': content, 'label': label}
         self._game_recorder.log_event(from_='GM', to=self.name, action=action)
 
     def __log_response_received_event(self, response, label=None):
+        """Record a 'get message' event with the current response content."""
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'get message', 'content': response, 'label': label}
         _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
@@ -115,18 +123,25 @@ class Player(abc.ABC):
                                       call=(deepcopy(_prompt), deepcopy(_response)))
 
     def get_last_call_info(self):
+        """Get values of the last player call.
+        Returns:
+            Tuple of: Full prompt of the last call, full response of the last call.
+        """
         return self._prompt, self._response_object
 
     def __call__(self, context: Dict, memorize: bool = True) -> str:
         """
         Let the player respond (act verbally) to a given context.
 
-        :param context: The context to which the player should respond.
-        :param memorize: Whether the context and response are to be added to the player's message history.
-        :return: the textual response
+        Args:
+            context: The context to which the player should respond.
+            memorize: Whether the context and response are to be added to the player's message history.
+        Returns:
+            The textual response.
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
         memorized_initial_prompt = None
+        # handle initial/first call, with only the initial prompt user message in history:
         if self._is_initial_call and self._initial_prompt is not None:
             assert len(self._messages) == 0, ("There must be no entry in the player's message history "
                                               "on the first call, when the initial prompt is set.")
@@ -137,6 +152,7 @@ class Player(abc.ABC):
         self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
         call_start = datetime.now()
         self._prompt, self._response_object, response_text = self.__call_model(context)
+        # TODO: add default ContextExceededError handling here or below
         call_duration = datetime.now() - call_start
         self.__log_response_received_event(response_text, label="response" if memorize else "forget")
 
@@ -174,6 +190,7 @@ class Player(abc.ABC):
             response_text = self._terminal_response(context)
         else:
             prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
+            # TODO: add default ContextExceededError handling here or above
         return prompt, response_object, response_text
 
     def _terminal_response(self, context: Dict) -> str:

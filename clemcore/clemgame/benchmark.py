@@ -22,8 +22,15 @@ stdout_logger = logging.getLogger("clemcore.run")
 
 
 class GameInstanceIterator:
-
+    """Class to iterate over game instances."""
     def __init__(self, instances, do_shuffle=False, reset=True):
+        """
+        Args:
+            instances: A list of instances.
+            do_shuffle: If True, the order of instances will be randomly shuffled on resetting a GameInstanceIterator
+                object.
+            reset: If True, GameInstanceIterator object gets reset when in initialized.
+        """
         assert instances is not None, "Instances must be given"
         self._instances = instances
         self._do_shuffle = do_shuffle
@@ -44,11 +51,13 @@ class GameInstanceIterator:
         return len(self._queue)
 
     def clone(self) -> "GameInstanceIterator":
+        """Clone GameInstanceIterator object, creating an exact copy without references to the original."""
         _clone = GameInstanceIterator(self._instances, do_shuffle=self._do_shuffle, reset=False)
         _clone._queue = deepcopy(self._queue)
         return _clone
 
     def reset(self) -> "GameInstanceIterator":
+        """Reset GameInstanceIterator object."""
         self._queue = []
         for index, experiment in enumerate(self._instances["experiments"]):
             filtered_experiment = {k: experiment[k] for k in experiment if k != 'game_instances'}
@@ -89,6 +98,12 @@ class GameBenchmark(GameResourceLocator):
             self.instances = self.load_instances("instances")  # fallback to instances.json default
 
     def create_game_instance_iterator(self, shuffle_instances: bool = False):
+        """Create a GameInstanceIterator object for running a game.
+        Args:
+            shuffle_instances: If True, instances are randomly shuffled.
+        Returns:
+            A GameInstanceIterator object.
+        """
         return GameInstanceIterator(self.instances, do_shuffle=shuffle_instances)
 
     def compute_scores(self, results_dir: str):
