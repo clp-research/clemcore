@@ -47,11 +47,11 @@ class Player(abc.ABC):
         self._response_object = None  # internal state
 
     def __deepcopy__(self, memo):
-        """
+        """Deepcopy override method.
+        Deepcopies Player class object, but keeps backend model and game recorder references intact.
         Args:
-            memo: ???
+            memo: Dictionary of objects already copied during the current copying pass. (This is a deepcopy default.)
         """
-        # TODO: What does this do differently than default deepcopy? What is 'memo'?
         _copy = type(self).__new__(self.__class__)
         memo[id(self)] = _copy
         for key, value in self.__dict__.items():
