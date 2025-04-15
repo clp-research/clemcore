@@ -196,8 +196,7 @@ class DialogueGameMaster(GameMaster):
         pass
 
     def get_game_state(self):
-        """???"""
-        # TODO: What is this supposed to do, and is it mandatory...?
+        """For future use."""
         return None
 
     def get_current_player(self) -> Player:
@@ -243,8 +242,11 @@ class DialogueGameMaster(GameMaster):
         """
         done = False
         while not done:
+            # get the current context message for the current player, set by set_context_for():
             context = self.get_context_for(self.current_player)
+            # generate/get response from the player based on their message history and the passed context message:
             response = self.current_player(context)
+            # pass the player response to the step() method for processing and determining if play continues:
             done, _ = self.step(response)
 
     def step(self, response: str) -> Tuple[bool, Dict]:
@@ -290,7 +292,7 @@ class DialogueGameMaster(GameMaster):
         """
         Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
 
-        Default: The gamer master passes the turn to the next player in the player list (order as added).
+        Default: The game master passes the turn to the next player in the player list (order as added).
         Starting again with the first player, when all players have had their turn(s).
 
         Returns:
