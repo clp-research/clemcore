@@ -240,19 +240,23 @@ class DialogueGameMaster(GameMaster):
         :param response: The response (verbal action) of the current player.
         :return: done, info
         """
-        # compute scores first, so that we are sure that the player's context
-        # can still be retrieved (state has not changed yet)
-        context = self.get_context_for(self.current_player)
-        self.info["response_score"] = self.compute_response_score(response, context)
-        self.info["response_feedback"] = self.get_response_feedback(response, context)
-        self.info["episode_score"] = 0
-
         # todo: it seems we should change the order here: Parse should come first, and then validate.
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
         # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
         if self._validate_player_response(self.current_player, response):
             parsed_response = self._parse_response(self.current_player, response)
             self._on_valid_player_response(self.current_player, parsed_response)
+
+        # compute scores after validation and parsing to be able to access values/attributes set by game-specific method
+        # implementations
+        # JJ: the player's context should still be possible to be retrieved (state has not changed yet) - this is still
+        #   very obscure to me, since there's no info on what and how "the state changes" (or rather is supposed to
+        #   change or not)
+        #   this change makes implementing basic clemgames vastly less convoluted
+        context = self.get_context_for(self.current_player)
+        self.info["response_score"] = self.compute_response_score(response, context)
+        self.info["response_feedback"] = self.get_response_feedback(response, context)
+        self.info["episode_score"] = 0
 
         if self._should_pass_turn():
             self.current_player = self._next_player()
