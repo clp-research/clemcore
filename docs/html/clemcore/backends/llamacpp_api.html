@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.backends.llamacpp_api API documentation</title>
 <meta name="description" content="Backend using llama.cpp for GGUF/GGML models.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -35,20 +46,154 @@ hljs.highlightAll();
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="clemcore.backends.llamacpp_api.get_chat_formatter"><code class="name flex">
-<span>def <span class="ident">get_chat_formatter</span></span>(<span>model: llama_cpp.llama.Llama, model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>)</span>
+<span>def <span class="ident">get_chat_formatter</span></span>(<span>model: llama_cpp.llama.Llama,<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> llama_cpp.llama_chat_format.Jinja2ChatFormatter</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_chat_formatter(model: Llama, model_spec: backends.ModelSpec) -&gt; llama_cpp.llama_chat_format.Jinja2ChatFormatter:
+    &#34;&#34;&#34;Get a llama-cpp chat formatter for this model.
+    Requires that the model files contain the chat template or a custom chat template is defined via ModelSpec/in the
+    model registry.
+    Args:
+        model: A Llama model instance.
+        model_spec: The ModelSpec for the model.
+    Returns:
+        The llama-cpp chat formatter for this model.
+    &#34;&#34;&#34;
+    # placeholders for BOS/EOS:
+    bos_string = None
+    eos_string = None
+
+    # check chat template:
+    if model_spec.model_config[&#39;premade_chat_template&#39;]:
+        # jinja chat template available in metadata
+        chat_template = model.metadata[&#39;tokenizer.chat_template&#39;]
+    else:
+        chat_template = model_spec.model_config[&#39;custom_chat_template&#39;]
+
+    if hasattr(model, &#39;chat_format&#39;):
+        if not model.chat_format:
+            # no guessed chat format
+            pass
+        else:
+            if model.chat_format == &#34;chatml&#34;:
+                # get BOS/EOS strings for chatml from llama.cpp:
+                bos_string = llama_cpp.llama_chat_format.CHATML_BOS_TOKEN
+                eos_string = llama_cpp.llama_chat_format.CHATML_EOS_TOKEN
+            elif model.chat_format == &#34;mistral-instruct&#34;:
+                # get BOS/EOS strings for mistral-instruct from llama.cpp:
+                bos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_BOS_TOKEN
+                eos_string = llama_cpp.llama_chat_format.MISTRAL_INSTRUCT_EOS_TOKEN
+
+    # get BOS/EOS token string from model file:
+    # NOTE: These may not be the expected tokens, checking these when model is added is likely necessary!
+    if &#34;tokenizer.ggml.bos_token_id&#34; in model.metadata:
+        bos_string = model._model.token_get_text(int(model.metadata.get(&#34;tokenizer.ggml.bos_token_id&#34;)))
+    if &#34;tokenizer.ggml.eos_token_id&#34; in model.metadata:
+        eos_string = model._model.token_get_text(int(model.metadata.get(&#34;tokenizer.ggml.eos_token_id&#34;)))
+
+    # get BOS/EOS strings for template from registry if not available from model file:
+    if not bos_string:
+        bos_string = model_spec.model_config[&#39;bos_string&#39;]
+    if not eos_string:
+        eos_string = model_spec.model_config[&#39;eos_string&#39;]
+
+    # init llama-cpp-python jinja chat formatter:
+    chat_formatter = llama_cpp.llama_chat_format.Jinja2ChatFormatter(
+        template=chat_template,
+        bos_token=bos_string,
+        eos_token=eos_string
+    )
+
+    return chat_formatter</code></pre>
+</details>
+<div class="desc"><p>Get a llama-cpp chat formatter for this model.
+Requires that the model files contain the chat template or a custom chat template is defined via ModelSpec/in the
+model registry.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model</code></strong></dt>
+<dd>A Llama model instance.</dd>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The llama-cpp chat formatter for this model.</p></div>
 </dd>
 <dt id="clemcore.backends.llamacpp_api.load_model"><code class="name flex">
-<span>def <span class="ident">load_model</span></span>(<span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> Any</span>
+<span>def <span class="ident">load_model</span></span>(<span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load GGUF/GGML model weights from HuggingFace, into VRAM if available. Weights are distributed over all available
-GPUs for maximum speed - make sure to limit the available GPUs using environment variables if only a subset is to be
-used.
-:param model_spec: The ModelSpec for the model.
-:return: The llama_cpp model class instance of the loaded model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_model(model_spec: backends.ModelSpec) -&gt; Any:
+    &#34;&#34;&#34;Load GGUF/GGML model weights from HuggingFace, into VRAM if available.
+    Weights are distributed over all available GPUs for maximum speed - make sure to limit the available GPUs using
+    environment variables if only a subset is to be used.
+    Args:
+        model_spec: The ModelSpec for the model.
+    Returns:
+        The llama_cpp model class instance of the loaded model.
+    &#34;&#34;&#34;
+    logger.info(f&#39;Start loading llama.cpp model weights from HuggingFace: {model_spec.model_name}&#39;)
+
+    hf_repo_id = model_spec[&#39;huggingface_id&#39;]
+    hf_model_file = model_spec[&#39;model_config&#39;][&#39;filename&#39;]
+
+    # default to GPU offload:
+    gpu_layers_offloaded = -1  # -1 = offload all model layers to GPU
+    # check for optional execute_on flag:
+    if hasattr(model_spec[&#39;model_config&#39;], &#39;execute_on&#39;):
+        if model_spec.model_config[&#39;execute_on&#39;] == &#34;gpu&#34;:
+            gpu_layers_offloaded = -1
+        elif model_spec.model_config[&#39;execute_on&#39;] == &#34;cpu&#34;:
+            gpu_layers_offloaded = 0
+    # check for optional gpu_layers_offloaded value:
+    elif hasattr(model_spec.model_config, &#39;gpu_layers_offloaded&#39;):
+        gpu_layers_offloaded = model_spec.model_config[&#39;gpu_layers_offloaded&#39;]
+
+    additional_files = []
+    if hasattr(model_spec[&#39;model_config&#39;], &#39;additional_files&#39;):
+        additional_files = model_spec.model_config[&#39;additional_files&#39;]
+
+    if &#39;requires_api_key&#39; in model_spec.model_config and model_spec[&#39;model_config&#39;][&#39;requires_api_key&#39;]:
+        # load HF API key:
+        creds = backends.load_credentials(&#34;huggingface&#34;)
+        api_key = creds[&#34;huggingface&#34;][&#34;api_key&#34;]
+
+        if additional_files:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, additional_files=additional_files, token=api_key,
+                                          verbose=False, n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
+        else:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, token=api_key, verbose=False,
+                                          n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
+    else:
+        if additional_files:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, additional_files=additional_files, verbose=False,
+                                          n_gpu_layers=gpu_layers_offloaded, n_ctx=0)
+        else:
+            model = Llama.from_pretrained(hf_repo_id, hf_model_file, verbose=False, n_gpu_layers=gpu_layers_offloaded,
+                                          n_ctx=0)
+
+    logger.info(f&#34;Finished loading llama.cpp model: {model_spec.model_name}&#34;)
+
+    return model</code></pre>
+</details>
+<div class="desc"><p>Load GGUF/GGML model weights from HuggingFace, into VRAM if available.
+Weights are distributed over all available GPUs for maximum speed - make sure to limit the available GPUs using
+environment variables if only a subset is to be used.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The llama_cpp model class instance of the loaded model.</p></div>
 </dd>
 </dl>
 </section>
@@ -59,27 +204,26 @@ used.
 <span>class <span class="ident">LlamaCPPLocal</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Model/backend handler class for locally-run GGUF/GGML models.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LlamaCPPLocal(backends.Backend):
-    &#34;&#34;&#34;
-    Model/backend handler class for locally-run GGUF/GGML models.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Model/backend handler class for locally-run GGUF/GGML models using llama-cpp.&#34;&#34;&#34;
     def __init__(self):
         super().__init__()
 
     def get_model_for(self, model_spec: backends.ModelSpec) -&gt; backends.Model:
-        &#34;&#34;&#34;
-        Get a LlamaCPPLocalModel instance with the passed model and settings. Will load all required data for using
-        the model upon initialization.
-        :param model_spec: The ModelSpec for the model.
-        :return: The Model class instance of the model.
+        &#34;&#34;&#34;Get a LlamaCPPLocalModel instance with the passed model and settings.
+        Will load all required data for using the model upon initialization.
+        Args:
+            model_spec: The ModelSpec for the model.
+        Returns:
+            The Model class instance of the model.
         &#34;&#34;&#34;
         return LlamaCPPLocalModel(model_spec)</code></pre>
 </details>
+<div class="desc"><p>Model/backend handler class for locally-run GGUF/GGML models using llama-cpp.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="clemcore.backends.Backend" href="index.html#clemcore.backends.Backend">Backend</a></li>
@@ -88,32 +232,51 @@ used.
 <h3>Methods</h3>
 <dl>
 <dt id="clemcore.backends.llamacpp_api.LlamaCPPLocal.get_model_for"><code class="name flex">
-<span>def <span class="ident">get_model_for</span></span>(<span>self, model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></span>
+<span>def <span class="ident">get_model_for</span></span>(<span>self,<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get a LlamaCPPLocalModel instance with the passed model and settings. Will load all required data for using
-the model upon initialization.
-:param model_spec: The ModelSpec for the model.
-:return: The Model class instance of the model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_model_for(self, model_spec: backends.ModelSpec) -&gt; backends.Model:
+    &#34;&#34;&#34;Get a LlamaCPPLocalModel instance with the passed model and settings.
+    Will load all required data for using the model upon initialization.
+    Args:
+        model_spec: The ModelSpec for the model.
+    Returns:
+        The Model class instance of the model.
+    &#34;&#34;&#34;
+    return LlamaCPPLocalModel(model_spec)</code></pre>
+</details>
+<div class="desc"><p>Get a LlamaCPPLocalModel instance with the passed model and settings.
+Will load all required data for using the model upon initialization.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The Model class instance of the model.</p></div>
 </dd>
 </dl>
 </dd>
 <dt id="clemcore.backends.llamacpp_api.LlamaCPPLocalModel"><code class="flex name class">
 <span>class <span class="ident">LlamaCPPLocalModel</span></span>
-<span>(</span><span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>)</span>
+<span>(</span><span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Class for loaded llama.cpp models ready for generation.</p>
-<p>:param model_spec: that specifies the model and the backend to be used</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class LlamaCPPLocalModel(backends.Model):
-    &#34;&#34;&#34;
-    Class for loaded llama.cpp models ready for generation.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Class for loaded llama.cpp models ready for generation.&#34;&#34;&#34;
     def __init__(self, model_spec: backends.ModelSpec):
+        &#34;&#34;&#34;
+        Args:
+            model_spec: The ModelSpec for the model.
+        &#34;&#34;&#34;
         super().__init__(model_spec)
         self.model = load_model(model_spec)
 
@@ -132,16 +295,18 @@ the model upon initialization.
         self.context_size = self.model._n_ctx
 
     def generate_response(self, messages: List[Dict], return_full_text: bool = False) -&gt; Tuple[Any, Any, str]:
-        &#34;&#34;&#34;
-        :param messages: for example
+        &#34;&#34;&#34;Generate a response with the loaded llama-cpp model.
+        Args:
+            messages: A message history. For example:
                 [
                     {&#34;role&#34;: &#34;system&#34;, &#34;content&#34;: &#34;You are a helpful assistant.&#34;},
                     {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Who won the world series in 2020?&#34;},
                     {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;The Los Angeles Dodgers won the World Series in 2020.&#34;},
                     {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Where was it played?&#34;}
                 ]
-        :param return_full_text: If True, whole input context is returned.
-        :return: the continuation
+            return_full_text: If True, whole input context is returned.
+        Returns:
+            The response message generated by the loaded llama-cpp model.
         &#34;&#34;&#34;
         current_messages = ensure_alternating_roles(messages)
 
@@ -176,11 +341,11 @@ the model upon initialization.
         if not return_full_text:
             response_text = model_output[&#39;choices&#39;][0][&#39;text&#39;].strip()
 
-            if &#39;output_split_prefix&#39; in self.model_spec:
-                response_text = response_text.rsplit(self.model_spec[&#39;output_split_prefix&#39;], maxsplit=1)[1]
+            if &#39;output_split_prefix&#39; in self.model_spec.model_config:
+                response_text = response_text.rsplit(self.model_spec[&#39;model_config&#39;][&#39;output_split_prefix&#39;], maxsplit=1)[1]
 
             # remove eos token string:
-            eos_to_cull = self.model_spec[&#39;eos_to_cull&#39;]
+            eos_to_cull = self.model_spec.model_config[&#39;eos_to_cull&#39;]
             response_text = re.sub(eos_to_cull, &#34;&#34;, response_text)
 
         else:
@@ -188,9 +353,15 @@ the model upon initialization.
 
         return prompt, response, response_text</code></pre>
 </details>
+<div class="desc"><p>Class for loaded llama.cpp models ready for generation.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></li>
+<li><a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -199,25 +370,97 @@ the model upon initialization.
 <span>def <span class="ident">generate_response</span></span>(<span>self, messages: List[Dict], return_full_text: bool = False) ‑> Tuple[Any, Any, str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>:param messages: for example
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_response(self, messages: List[Dict], return_full_text: bool = False) -&gt; Tuple[Any, Any, str]:
+    &#34;&#34;&#34;Generate a response with the loaded llama-cpp model.
+    Args:
+        messages: A message history. For example:
+            [
+                {&#34;role&#34;: &#34;system&#34;, &#34;content&#34;: &#34;You are a helpful assistant.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Who won the world series in 2020?&#34;},
+                {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;The Los Angeles Dodgers won the World Series in 2020.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Where was it played?&#34;}
+            ]
+        return_full_text: If True, whole input context is returned.
+    Returns:
+        The response message generated by the loaded llama-cpp model.
+    &#34;&#34;&#34;
+    current_messages = ensure_alternating_roles(messages)
+
+    # use llama.cpp jinja to apply chat template for prompt:
+    prompt_text = self.chat_formatter(messages=current_messages).prompt
+
+    prompt = {&#34;inputs&#34;: prompt_text, &#34;max_new_tokens&#34;: self.get_max_tokens(),
+              &#34;temperature&#34;: self.get_temperature(), &#34;return_full_text&#34;: return_full_text}
+
+    prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)  # BOS expected in template
+
+    # check context limit:
+    check_context_limit_generic(self.context_size, prompt_tokens, self.model_spec.model_name,
+                                max_new_tokens=self.get_max_tokens())
+
+    # NOTE: HF transformers models come with their own generation configs, but llama.cpp doesn&#39;t seem to have a
+    # feature like that. There are default sampling parameters, and clembench only handles two of them so far, which
+    # are set accordingly. Other parameters use the llama-cpp-python default values for now.
+
+    # NOTE: llama.cpp has a set sampling order, which differs from that of HF transformers. The latter allows
+    # individual sampling orders defined in the generation config that comes with HF models.
+
+    model_output = self.model(
+        prompt_text,
+        temperature=self.get_temperature(),
+        max_tokens=self.get_max_tokens()
+    )
+
+    response = {&#39;response&#39;: model_output}
+
+    # cull input context:
+    if not return_full_text:
+        response_text = model_output[&#39;choices&#39;][0][&#39;text&#39;].strip()
+
+        if &#39;output_split_prefix&#39; in self.model_spec.model_config:
+            response_text = response_text.rsplit(self.model_spec[&#39;model_config&#39;][&#39;output_split_prefix&#39;], maxsplit=1)[1]
+
+        # remove eos token string:
+        eos_to_cull = self.model_spec.model_config[&#39;eos_to_cull&#39;]
+        response_text = re.sub(eos_to_cull, &#34;&#34;, response_text)
+
+    else:
+        response_text = prompt_text + model_output[&#39;choices&#39;][0][&#39;text&#39;].strip()
+
+    return prompt, response, response_text</code></pre>
+</details>
+<div class="desc"><p>Generate a response with the loaded llama-cpp model.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>messages</code></strong></dt>
+<dd>A message history. For example:
 [
 {"role": "system", "content": "You are a helpful assistant."},
 {"role": "user", "content": "Who won the world series in 2020?"},
 {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
 {"role": "user", "content": "Where was it played?"}
-]
-:param return_full_text: If True, whole input context is returned.
-:return: the continuation</p></div>
+]</dd>
+<dt><strong><code>return_full_text</code></strong></dt>
+<dd>If True, whole input context is returned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The response message generated by the loaded llama-cpp model.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></b></code>:
+<li><code><b><a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></b></code>:
 <ul class="hlist">
-<li><code><a title="clemcore.backends.Model.get_max_tokens" href="index.html#clemcore.backends.Model.get_max_tokens">get_max_tokens</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_temperature" href="index.html#clemcore.backends.Model.get_temperature">get_temperature</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_arg" href="index.html#clemcore.backends.Model.set_gen_arg">set_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_args" href="index.html#clemcore.backends.Model.set_gen_args">set_gen_args</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_gen_arg" href="model_registry.html#clemcore.backends.model_registry.Model.get_gen_arg">get_gen_arg</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_max_tokens" href="model_registry.html#clemcore.backends.model_registry.Model.get_max_tokens">get_max_tokens</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_name" href="model_registry.html#clemcore.backends.model_registry.Model.get_name">get_name</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_temperature" href="model_registry.html#clemcore.backends.model_registry.Model.get_temperature">get_temperature</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.set_gen_arg" href="model_registry.html#clemcore.backends.model_registry.Model.set_gen_arg">set_gen_arg</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.set_gen_args" href="model_registry.html#clemcore.backends.model_registry.Model.set_gen_args">set_gen_args</a></code></li>
 </ul>
 </li>
 </ul>
@@ -261,7 +504,7 @@ the model upon initialization.
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

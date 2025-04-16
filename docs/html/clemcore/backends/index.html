@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.backends API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -56,7 +67,7 @@ Uses HF tokenizers instruct/chat templates for proper input format per model.</p
 </dd>
 <dt><code class="name"><a title="clemcore.backends.initial_hf_check" href="initial_hf_check.html">clemcore.backends.initial_hf_check</a></code></dt>
 <dd>
-<div class="desc"><p>Initial checks on models to be added to the HuggingFace local backend</p></div>
+<div class="desc"><p>Initial checks on models to be added to the HuggingFace local backend.</p></div>
 </dd>
 <dt><code class="name"><a title="clemcore.backends.llamacpp_api" href="llamacpp_api.html">clemcore.backends.llamacpp_api</a></code></dt>
 <dd>
@@ -66,10 +77,18 @@ Uses HF tokenizers instruct/chat templates for proper input format per model.</p
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="clemcore.backends.model_registry" href="model_registry.html">clemcore.backends.model_registry</a></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 <dt><code class="name"><a title="clemcore.backends.model_registry_eos_check" href="model_registry_eos_check.html">clemcore.backends.model_registry_eos_check</a></code></dt>
 <dd>
 <div class="desc"><p>Script to check model registry entries for regEx in EOS culling strings.
 Run this script after adding new model entries for the HuggingFace, llama-cpp …</p></div>
+</dd>
+<dt><code class="name"><a title="clemcore.backends.multimodal_utils" href="multimodal_utils.html">clemcore.backends.multimodal_utils</a></code></dt>
+<dd>
+<div class="desc"><p>Util functions for multimodal models.</p></div>
 </dd>
 <dt><code class="name"><a title="clemcore.backends.openai_api" href="openai_api.html">clemcore.backends.openai_api</a></code></dt>
 <dd>
@@ -83,6 +102,11 @@ Run this script after adding new model entries for the HuggingFace, llama-cpp �
 <dd>
 <div class="desc"></div>
 </dd>
+<dt><code class="name"><a title="clemcore.backends.vllm_api" href="vllm_api.html">clemcore.backends.vllm_api</a></code></dt>
+<dd>
+<div class="desc"><p>Backend wrapping vLLM.
+Uses HF tokenizers instruct/chat templates for proper input format per model.</p></div>
+</dd>
 </dl>
 </section>
 <section>
@@ -90,38 +114,98 @@ Run this script after adding new model entries for the HuggingFace, llama-cpp �
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="clemcore.backends.get_model_for"><code class="name flex">
-<span>def <span class="ident">get_model_for</span></span>(<span>model_spec: Union[str, Dict, <a title="clemcore.backends.ModelSpec" href="#clemcore.backends.ModelSpec">ModelSpec</a>]) ‑> <a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>:param model_spec: the model spec for which a supporting backend has to be found
-:return: the backend registered that supports the model</p></div>
-</dd>
 <dt id="clemcore.backends.is_backend"><code class="name flex">
 <span>def <span class="ident">is_backend</span></span>(<span>obj)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_backend(obj):
+    &#34;&#34;&#34;Check if an object is a Backend child class (instance).
+    Args:
+        obj: The object to be checked.
+    Returns:
+        True if the object is a Backend child class (instance); False otherwise.
+    &#34;&#34;&#34;
+    if inspect.isclass(obj) and issubclass(obj, Backend) and obj is not Backend:
+        return True
+    return False</code></pre>
+</details>
+<div class="desc"><p>Check if an object is a Backend child class (instance).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>obj</code></strong></dt>
+<dd>The object to be checked.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>True if the object is a Backend child class (instance); False otherwise.</p></div>
+</dd>
+<dt id="clemcore.backends.is_backend_file"><code class="name flex">
+<span>def <span class="ident">is_backend_file</span></span>(<span>file_name: str)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_backend_file(file_name: str):
+    return file_name.endswith(&#34;_api.py&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="clemcore.backends.load_credentials"><code class="name flex">
 <span>def <span class="ident">load_credentials</span></span>(<span>backend, file_name='key.json') ‑> Dict</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load login credentials and API keys from JSON file.
-:param backend: Name of the backend/API provider to load key for.
-:param file_name: Name of the key file. Defaults to key.json in the clembench root directory.
-:return: Dictionary with {backend: {api_key: key}}.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_credentials(backend, file_name=&#34;key.json&#34;) -&gt; Dict:
+    &#34;&#34;&#34;Load login credentials and API keys from JSON file.
+    Args:
+        backend: Name of the backend/API provider to load key for.
+        file_name: Name of the key file.
+    Returns:
+        Dictionary with {backend: {api_key: key}}.
+    &#34;&#34;&#34;
+
+    key_file = os.path.join(os.getcwd(), file_name)
+    try:  # first, optional location at cwd
+        with open(key_file) as f:
+            creds = json.load(f)
+    except:  # second, look into user home app dir
+        key_file = os.path.join(os.path.expanduser(&#34;~&#34;), &#34;.clemcore&#34;, file_name)
+        with open(key_file) as f:
+            creds = json.load(f)
+    assert backend in creds, f&#34;No &#39;{backend}&#39; in {file_name}. See README.&#34;
+    assert &#34;api_key&#34; in creds[backend], f&#34;No &#39;api_key&#39; in {file_name}. See README.&#34;
+    return creds</code></pre>
+</details>
+<div class="desc"><p>Load login credentials and API keys from JSON file.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>backend</code></strong></dt>
+<dd>Name of the backend/API provider to load key for.</dd>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>Name of the key file.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Dictionary with {backend: {api_key: key}}.</p></div>
 </dd>
-<dt id="clemcore.backends.load_custom_model_registry"><code class="name flex">
-<span>def <span class="ident">load_custom_model_registry</span></span>(<span>is_optional=True)</span>
+<dt id="clemcore.backends.to_backend_name"><code class="name flex">
+<span>def <span class="ident">to_backend_name</span></span>(<span>file_name: str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.load_model_registry"><code class="name flex">
-<span>def <span class="ident">load_model_registry</span></span>(<span>is_mandatory=True)</span>
-</code></dt>
-<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def to_backend_name(file_name: str):
+    return file_name.replace(&#34;_api.py&#34;, &#34;&#34;)</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
@@ -133,30 +217,44 @@ Run this script after adding new model entries for the HuggingFace, llama-cpp �
 <span>class <span class="ident">Backend</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Marker class for a model provider.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Backend(abc.ABC):
-    &#34;&#34;&#34; Marker class for a model provider.&#34;&#34;&#34;
+    &#34;&#34;&#34;Abstract base class for clembench backends.
+    All clembench backend classes must be child classes of this base class.&#34;&#34;&#34;
 
     @abc.abstractmethod
     def get_model_for(self, model_spec: ModelSpec) -&gt; Model:
+        &#34;&#34;&#34;Get a Model instance for the model specific by ModelSpec.
+        Must be implemented by every clembench backend.
+        Args:
+            model_spec: A ModelSpec instance specifying the model to return a corresponding Model child class instance
+                for the appropriate backend.
+        Returns:
+            A Model instance using the appropriate backend.
+        &#34;&#34;&#34;
         pass
 
     def __repr__(self):
+        &#34;&#34;&#34;Get a string representation of this Backend instance.&#34;&#34;&#34;
         return str(self)
 
     def __str__(self):
+        &#34;&#34;&#34;Get a string name of the class of this Backend child class instance.&#34;&#34;&#34;
         return f&#34;{self.__class__.__name__}&#34;</code></pre>
 </details>
+<div class="desc"><p>Abstract base class for clembench backends.
+All clembench backend classes must be child classes of this base class.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>abc.ABC</li>
 </ul>
 <h3>Subclasses</h3>
 <ul class="hlist">
+<li><a title="clemcore.backends.CustomResponseModelBackend" href="#clemcore.backends.CustomResponseModelBackend">CustomResponseModelBackend</a></li>
+<li><a title="clemcore.backends.HumanModelBackend" href="#clemcore.backends.HumanModelBackend">HumanModelBackend</a></li>
 <li><a title="clemcore.backends.alephalpha_api.AlephAlpha" href="alephalpha_api.html#clemcore.backends.alephalpha_api.AlephAlpha">AlephAlpha</a></li>
 <li><a title="clemcore.backends.anthropic_api.Anthropic" href="anthropic_api.html#clemcore.backends.anthropic_api.Anthropic">Anthropic</a></li>
 <li><a title="clemcore.backends.cohere_api.Cohere" href="cohere_api.html#clemcore.backends.cohere_api.Cohere">Cohere</a></li>
@@ -167,43 +265,314 @@ Run this script after adding new model entries for the HuggingFace, llama-cpp �
 <li><a title="clemcore.backends.mistral_api.Mistral" href="mistral_api.html#clemcore.backends.mistral_api.Mistral">Mistral</a></li>
 <li><a title="clemcore.backends.openai_api.OpenAI" href="openai_api.html#clemcore.backends.openai_api.OpenAI">OpenAI</a></li>
 <li><a title="clemcore.backends.openai_compatible_api.GenericOpenAI" href="openai_compatible_api.html#clemcore.backends.openai_compatible_api.GenericOpenAI">GenericOpenAI</a></li>
+<li><a title="clemcore.backends.vllm_api.VLLMLocal" href="vllm_api.html#clemcore.backends.vllm_api.VLLMLocal">VLLMLocal</a></li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="clemcore.backends.Backend.get_model_for"><code class="name flex">
-<span>def <span class="ident">get_model_for</span></span>(<span>self, model_spec: <a title="clemcore.backends.ModelSpec" href="#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></span>
+<span>def <span class="ident">get_model_for</span></span>(<span>self,<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abc.abstractmethod
+def get_model_for(self, model_spec: ModelSpec) -&gt; Model:
+    &#34;&#34;&#34;Get a Model instance for the model specific by ModelSpec.
+    Must be implemented by every clembench backend.
+    Args:
+        model_spec: A ModelSpec instance specifying the model to return a corresponding Model child class instance
+            for the appropriate backend.
+    Returns:
+        A Model instance using the appropriate backend.
+    &#34;&#34;&#34;
+    pass</code></pre>
+</details>
+<div class="desc"><p>Get a Model instance for the model specific by ModelSpec.
+Must be implemented by every clembench backend.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>A ModelSpec instance specifying the model to return a corresponding Model child class instance
+for the appropriate backend.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A Model instance using the appropriate backend.</p></div>
+</dd>
+</dl>
+</dd>
+<dt id="clemcore.backends.BackendRegistry"><code class="flex name class">
+<span>class <span class="ident">BackendRegistry</span></span>
+<span>(</span><span>backend_files: List)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class BackendRegistry:
+
+    def __init__(self, backend_files: List):
+        self._backends_files = backend_files
+        # for now, special handling of mock and terminal inputs (should be rather integrated via backends)
+        self._backends_files.append({
+            &#34;backend&#34;: &#34;_player_human&#34;,
+            &#34;file_name&#34;: &#34;_internal&#34;,
+            &#34;file_path&#34;: &#34;_internal&#34;,
+            &#34;lookup_source&#34;: &#34;packaged&#34;
+        })
+        self._backends_files.append({
+            &#34;backend&#34;: &#34;_player_programmed&#34;,
+            &#34;file_name&#34;: &#34;_internal&#34;,
+            &#34;file_path&#34;: &#34;_internal&#34;,
+            &#34;lookup_source&#34;: &#34;packaged&#34;
+        })
+
+    def __len__(self):
+        return len(self._backends_files)
+
+    def __iter__(self):
+        return iter(self._backends_files)
+
+    def is_supported(self, backend_name: str):
+        for backend_file in self._backends_files:
+            if backend_file[&#34;backend&#34;] == backend_name:
+                return True
+        return False
+
+    def get_first_file_matching(self, backend_selector: str):
+        for backend_file in self._backends_files:
+            if backend_file[&#34;backend&#34;] == backend_selector:
+                return backend_file
+        raise ValueError(f&#34;No registered backend file found for selector={backend_selector}&#34;)
+
+    @classmethod
+    def from_packaged_and_cwd_files(cls) -&gt; &#34;BackendRegistry&#34;:
+        &#34;&#34;&#34;
+        Lookup _api.py files in the following locations:
+        (1) Lookup in current working directory (relative to script execution)
+        (2) Lookup in the packaged clemcore backends module
+        Backends found in the (1) are favored over (2), that is listed before them to allow to &#39;overwrite&#39; them.
+        :return: backend registry with file path to backends to be dynamically loaded
+        &#34;&#34;&#34;
+        backend_files = []
+        for file in os.listdir():
+            if is_backend_file(file):
+                backend_files.append({&#34;backend&#34;: to_backend_name(file),
+                                      &#34;file_name&#34;: file,
+                                      &#34;file_path&#34;: os.path.join(os.getcwd(), file),
+                                      &#34;lookup_source&#34;: &#34;cwd&#34;})
+        for file in importlib_resources.files(__package__).iterdir():  # __package__ already points to &#34;backends&#34;
+            if is_backend_file(file.name):
+                backend_files.append({&#34;backend&#34;: to_backend_name(file.name),
+                                      &#34;file_name&#34;: file.name,
+                                      &#34;file_path&#34;: str(file),
+                                      &#34;lookup_source&#34;: &#34;packaged&#34;})
+
+        return cls(backend_files)
+
+    def get_backend_for(self, backend_selector: str) -&gt; Backend:
+        &#34;&#34;&#34;Dynamically loads the Backend from the first file that matches the name &lt;backend_selector&gt;_api.py.
+        Raises an exception if no such file exists or the Backend class could not be found.
+        Args:
+            backend_selector: The &lt;backend_selector&gt; prefix of the &lt;backend_selector&gt;_api.py file.
+        Returns:
+            The Backend subclass for the passed backend name.
+        Raises:
+            FileNotFoundError: Will be raised if no backend python file with the passed name can be found in the backends
+                directory.
+            LookupError: Will be raised if the backend python file with the passed name does not contain exactly one Backend
+                subclass.
+        &#34;&#34;&#34;
+        # for now, special handling of mock and terminal inputs (should be rather integrated via backends)
+        if backend_selector == &#34;_player_human&#34;:
+            return HumanModelBackend()
+        if backend_selector == &#34;_player_programmed&#34;:
+            return CustomResponseModelBackend()
+
+        backend_file = self.get_first_file_matching(backend_selector)
+        module_name, _ = os.path.splitext(backend_file[&#34;file_name&#34;])
+        if backend_file[&#34;lookup_source&#34;] == &#34;packaged&#34;:
+            # relative imports (sibling to __init__.py) require starting dot
+            module = importlib.import_module(f&#34;.{module_name}&#34;, __package__)
+        else:
+            module_path = backend_file[&#34;file_path&#34;]
+            spec = importlib_util.spec_from_file_location(module_name, module_path)
+            module = importlib_util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+        backend_subclasses = inspect.getmembers(module, predicate=is_backend)
+        if len(backend_subclasses) == 0:
+            raise LookupError(f&#34;There is no Backend defined in {module}. &#34;
+                              f&#34;Create such a class and try again or &#34;
+                              f&#34;check the backend selector &#39;{backend_selector}&#39;.&#34;)
+        if len(backend_subclasses) &gt; 1:
+            raise LookupError(f&#34;There is more than one Backend defined in {module}.&#34;)
+        _, backend_cls = backend_subclasses[0]
+        return backend_cls()</code></pre>
+</details>
+<div class="desc"></div>
+<h3>Static methods</h3>
+<dl>
+<dt id="clemcore.backends.BackendRegistry.from_packaged_and_cwd_files"><code class="name flex">
+<span>def <span class="ident">from_packaged_and_cwd_files</span></span>(<span>) ‑> <a title="clemcore.backends.BackendRegistry" href="#clemcore.backends.BackendRegistry">BackendRegistry</a></span>
+</code></dt>
+<dd>
+<div class="desc"><p>Lookup _api.py files in the following locations:
+(1) Lookup in current working directory (relative to script execution)
+(2) Lookup in the packaged clemcore backends module
+Backends found in the (1) are favored over (2), that is listed before them to allow to 'overwrite' them.
+:return: backend registry with file path to backends to be dynamically loaded</p></div>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="clemcore.backends.BackendRegistry.get_backend_for"><code class="name flex">
+<span>def <span class="ident">get_backend_for</span></span>(<span>self, backend_selector: str) ‑> <a title="clemcore.backends.Backend" href="#clemcore.backends.Backend">Backend</a></span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_backend_for(self, backend_selector: str) -&gt; Backend:
+    &#34;&#34;&#34;Dynamically loads the Backend from the first file that matches the name &lt;backend_selector&gt;_api.py.
+    Raises an exception if no such file exists or the Backend class could not be found.
+    Args:
+        backend_selector: The &lt;backend_selector&gt; prefix of the &lt;backend_selector&gt;_api.py file.
+    Returns:
+        The Backend subclass for the passed backend name.
+    Raises:
+        FileNotFoundError: Will be raised if no backend python file with the passed name can be found in the backends
+            directory.
+        LookupError: Will be raised if the backend python file with the passed name does not contain exactly one Backend
+            subclass.
+    &#34;&#34;&#34;
+    # for now, special handling of mock and terminal inputs (should be rather integrated via backends)
+    if backend_selector == &#34;_player_human&#34;:
+        return HumanModelBackend()
+    if backend_selector == &#34;_player_programmed&#34;:
+        return CustomResponseModelBackend()
+
+    backend_file = self.get_first_file_matching(backend_selector)
+    module_name, _ = os.path.splitext(backend_file[&#34;file_name&#34;])
+    if backend_file[&#34;lookup_source&#34;] == &#34;packaged&#34;:
+        # relative imports (sibling to __init__.py) require starting dot
+        module = importlib.import_module(f&#34;.{module_name}&#34;, __package__)
+    else:
+        module_path = backend_file[&#34;file_path&#34;]
+        spec = importlib_util.spec_from_file_location(module_name, module_path)
+        module = importlib_util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+    backend_subclasses = inspect.getmembers(module, predicate=is_backend)
+    if len(backend_subclasses) == 0:
+        raise LookupError(f&#34;There is no Backend defined in {module}. &#34;
+                          f&#34;Create such a class and try again or &#34;
+                          f&#34;check the backend selector &#39;{backend_selector}&#39;.&#34;)
+    if len(backend_subclasses) &gt; 1:
+        raise LookupError(f&#34;There is more than one Backend defined in {module}.&#34;)
+    _, backend_cls = backend_subclasses[0]
+    return backend_cls()</code></pre>
+</details>
+<div class="desc"><p>Dynamically loads the Backend from the first file that matches the name <backend_selector>_api.py.
+Raises an exception if no such file exists or the Backend class could not be found.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>backend_selector</code></strong></dt>
+<dd>The <backend_selector> prefix of the <backend_selector>_api.py file.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The Backend subclass for the passed backend name.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>FileNotFoundError</code></dt>
+<dd>Will be raised if no backend python file with the passed name can be found in the backends
+directory.</dd>
+<dt><code>LookupError</code></dt>
+<dd>Will be raised if the backend python file with the passed name does not contain exactly one Backend
+subclass.</dd>
+</dl></div>
+</dd>
+<dt id="clemcore.backends.BackendRegistry.get_first_file_matching"><code class="name flex">
+<span>def <span class="ident">get_first_file_matching</span></span>(<span>self, backend_selector: str)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_first_file_matching(self, backend_selector: str):
+    for backend_file in self._backends_files:
+        if backend_file[&#34;backend&#34;] == backend_selector:
+            return backend_file
+    raise ValueError(f&#34;No registered backend file found for selector={backend_selector}&#34;)</code></pre>
+</details>
+<div class="desc"></div>
+</dd>
+<dt id="clemcore.backends.BackendRegistry.is_supported"><code class="name flex">
+<span>def <span class="ident">is_supported</span></span>(<span>self, backend_name: str)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def is_supported(self, backend_name: str):
+    for backend_file in self._backends_files:
+        if backend_file[&#34;backend&#34;] == backend_name:
+            return True
+    return False</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 </dl>
 </dd>
 <dt id="clemcore.backends.ContextExceededError"><code class="flex name class">
 <span>class <span class="ident">ContextExceededError</span></span>
-<span>(</span><span>info_str: str = 'Context limit exceeded', tokens_used: int = 0, tokens_left: int = 0, context_size: int = 0)</span>
+<span>(</span><span>info_str: str = 'Context limit exceeded',<br>tokens_used: int = 0,<br>tokens_left: int = 0,<br>context_size: int = 0)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Exception to be raised when the messages passed to a backend instance exceed the context limit of the model.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class ContextExceededError(Exception):
-    &#34;&#34;&#34;
-    Exception to be raised when the messages passed to a backend instance exceed the context limit of the model.
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Exception to be raised when the messages passed to a backend instance exceed the context limit of the model.&#34;&#34;&#34;
     tokens_used: int = int()
     tokens_left: int = int()
     context_size: int = int()
 
     def __init__(self, info_str: str = &#34;Context limit exceeded&#34;, tokens_used: int = 0,
                  tokens_left: int = 0, context_size: int = 0):
+        &#34;&#34;&#34;
+        Args:
+            info_str: String informing about context limit being exceeded. To optionally be modified with further
+                information by the backend class eventually raising this error.
+            tokens_used: The number of tokens used by the context that lead to this error being raised.
+            tokens_left: The number of tokens left in the context limit. Will be negative if this error is raised,
+                absolute value being the number of tokens that exceed the context limit.
+            context_size: The size of the context/the context limit.
+        &#34;&#34;&#34;
         info = f&#34;{info_str} {tokens_used}/{context_size}&#34;
         super().__init__(info)
         self.tokens_used = tokens_used
         self.tokens_left = tokens_left
         self.context_size = context_size</code></pre>
 </details>
+<div class="desc"><p>Exception to be raised when the messages passed to a backend instance exceed the context limit of the model.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>info_str</code></strong></dt>
+<dd>String informing about context limit being exceeded. To optionally be modified with further
+information by the backend class eventually raising this error.</dd>
+<dt><strong><code>tokens_used</code></strong></dt>
+<dd>The number of tokens used by the context that lead to this error being raised.</dd>
+<dt><strong><code>tokens_left</code></strong></dt>
+<dd>The number of tokens left in the context limit. Will be negative if this error is raised,
+absolute value being the number of tokens that exceed the context limit.</dd>
+<dt><strong><code>context_size</code></strong></dt>
+<dd>The size of the context/the context limit.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>builtins.Exception</li>
@@ -225,409 +594,67 @@ Run this script after adding new model entries for the HuggingFace, llama-cpp �
 </dd>
 </dl>
 </dd>
-<dt id="clemcore.backends.CustomResponseModel"><code class="flex name class">
-<span>class <span class="ident">CustomResponseModel</span></span>
-<span>(</span><span>model_spec=ModelSpec({'model_name': 'programmatic'}))</span>
+<dt id="clemcore.backends.CustomResponseModelBackend"><code class="flex name class">
+<span>class <span class="ident">CustomResponseModelBackend</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>A local/remote proxy for a model to be called. </p>
-<p>:param model_spec: that specifies the model and the backend to be used</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class CustomResponseModel(Model):
+<pre><code class="python">class CustomResponseModelBackend(Backend):
 
-    def __init__(self, model_spec=ModelSpec(model_name=&#34;programmatic&#34;)):
-        super().__init__(model_spec)
-        self.set_gen_args(temperature=0.0)  # dummy value for get_temperature()
-
-    def generate_response(self, messages: List[Dict]) -&gt; Tuple[Any, Any, str]:
-        raise NotImplementedError(&#34;This should never be called but is handled in Player for now.&#34;)</code></pre>
+    def get_model_for(self, model_spec: ModelSpec) -&gt; Model:
+        if model_spec.is_programmatic():
+            return CustomResponseModel(model_spec)
+        raise ValueError(f&#34;CustomResponseModelBackend cannot get model for {model_spec.to_string()}&#34;)</code></pre>
 </details>
+<div class="desc"><p>Abstract base class for clembench backends.
+All clembench backend classes must be child classes of this base class.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></li>
+<li><a title="clemcore.backends.Backend" href="#clemcore.backends.Backend">Backend</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></b></code>:
+<li><code><b><a title="clemcore.backends.Backend" href="#clemcore.backends.Backend">Backend</a></b></code>:
 <ul class="hlist">
-<li><code><a title="clemcore.backends.Model.generate_response" href="#clemcore.backends.Model.generate_response">generate_response</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_max_tokens" href="#clemcore.backends.Model.get_max_tokens">get_max_tokens</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_temperature" href="#clemcore.backends.Model.get_temperature">get_temperature</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_arg" href="#clemcore.backends.Model.set_gen_arg">set_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_args" href="#clemcore.backends.Model.set_gen_args">set_gen_args</a></code></li>
+<li><code><a title="clemcore.backends.Backend.get_model_for" href="#clemcore.backends.Backend.get_model_for">get_model_for</a></code></li>
 </ul>
 </li>
 </ul>
 </dd>
-<dt id="clemcore.backends.HumanModel"><code class="flex name class">
-<span>class <span class="ident">HumanModel</span></span>
-<span>(</span><span>model_spec=ModelSpec({'model_name': 'human'}))</span>
+<dt id="clemcore.backends.HumanModelBackend"><code class="flex name class">
+<span>class <span class="ident">HumanModelBackend</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>A local/remote proxy for a model to be called. </p>
-<p>:param model_spec: that specifies the model and the backend to be used</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">class HumanModel(Model):
+<pre><code class="python">class HumanModelBackend(Backend):
 
-    def __init__(self, model_spec=ModelSpec(model_name=&#34;human&#34;)):
-        super().__init__(model_spec)
-        self.set_gen_args(temperature=0.0)  # dummy value for get_temperature()
-
-    def generate_response(self, messages: List[Dict]) -&gt; Tuple[Any, Any, str]:
-        raise NotImplementedError(&#34;This should never be called but is handled in Player for now.&#34;)</code></pre>
+    def get_model_for(self, model_spec: ModelSpec) -&gt; Model:
+        if model_spec.is_human():
+            return HumanModel(model_spec)
+        raise ValueError(f&#34;HumanModelBackend cannot get model for {model_spec.to_string()}&#34;)</code></pre>
 </details>
+<div class="desc"><p>Abstract base class for clembench backends.
+All clembench backend classes must be child classes of this base class.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></li>
+<li><a title="clemcore.backends.Backend" href="#clemcore.backends.Backend">Backend</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></b></code>:
+<li><code><b><a title="clemcore.backends.Backend" href="#clemcore.backends.Backend">Backend</a></b></code>:
 <ul class="hlist">
-<li><code><a title="clemcore.backends.Model.generate_response" href="#clemcore.backends.Model.generate_response">generate_response</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_max_tokens" href="#clemcore.backends.Model.get_max_tokens">get_max_tokens</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_temperature" href="#clemcore.backends.Model.get_temperature">get_temperature</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_arg" href="#clemcore.backends.Model.set_gen_arg">set_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_args" href="#clemcore.backends.Model.set_gen_args">set_gen_args</a></code></li>
+<li><code><a title="clemcore.backends.Backend.get_model_for" href="#clemcore.backends.Backend.get_model_for">get_model_for</a></code></li>
 </ul>
 </li>
 </ul>
-</dd>
-<dt id="clemcore.backends.Model"><code class="flex name class">
-<span>class <span class="ident">Model</span></span>
-<span>(</span><span>model_spec: <a title="clemcore.backends.ModelSpec" href="#clemcore.backends.ModelSpec">ModelSpec</a>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>A local/remote proxy for a model to be called. </p>
-<p>:param model_spec: that specifies the model and the backend to be used</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Model(abc.ABC):
-    &#34;&#34;&#34; A local/remote proxy for a model to be called. &#34;&#34;&#34;
-
-    def __init__(self, model_spec: ModelSpec):
-        &#34;&#34;&#34;
-
-        :param model_spec: that specifies the model and the backend to be used
-        &#34;&#34;&#34;
-        assert hasattr(model_spec, &#34;model_name&#34;), &#34;The passed ModelSpec must have a `model_name` attribute&#34;
-        self.model_spec = model_spec
-        self.__gen_args = dict()
-
-    def set_gen_args(self, **gen_args):
-        &#34;&#34;&#34;
-        :param gen_args: set extra information needed for the generation process
-        &#34;&#34;&#34;
-        self.__gen_args = dict(gen_args)
-
-    def set_gen_arg(self, arg_name, arg_value):
-        &#34;&#34;&#34; Set a particular argument needed for the generation process
-        :param arg_name: the name of the generation argument
-        :param arg_value: the value of the generation argument
-        &#34;&#34;&#34;
-        self.__gen_args[arg_name] = arg_value
-
-    def get_gen_arg(self, arg_name):
-        assert arg_name in self.__gen_args, f&#34;No &#39;{arg_name}&#39; in gen_args given but is expected&#34;
-        return self.__gen_args[arg_name]
-
-    def get_temperature(self):
-        &#34;&#34;&#34;
-        :return: the sampling temperature used for the generation process
-        &#34;&#34;&#34;
-        return self.get_gen_arg(&#34;temperature&#34;)
-
-    def get_max_tokens(self):
-        &#34;&#34;&#34;
-        :return: the maximal number of tokens generated during the generation process
-        &#34;&#34;&#34;
-        return self.get_gen_arg(&#34;max_tokens&#34;)
-
-    def get_name(self) -&gt; str:
-        return self.model_spec.model_name
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return self.get_name()
-
-    def __eq__(self, other: &#34;Model&#34;):
-        if not isinstance(other, Model):
-            return False
-        return self.get_name() == other.get_name()
-
-    @abc.abstractmethod
-    def generate_response(self, messages: List[Dict]) -&gt; Tuple[Any, Any, str]:
-        &#34;&#34;&#34;Put prompt in model-specific format and get its response.
-
-        Args:
-            messages (List[Dict]): The dialogue context represented as a list
-                of turns. Entry element is a dictionary containing one key
-                &#34;role&#34;, whose value is either &#34;user&#34; or &#34;assistant&#34;, and one
-                key &#34;content&#34;, whose value is the message as a string.
-
-        Returns:
-            Tuple[Any, Any, str]: The first element is the prompt object as
-            passed to the LLM (i.e. after any model-specific manipulation).
-            Return the full prompt object, not only the message string.
-
-            The second element is the response object as gotten from the model,
-            before any manipulation. Return the full prompt object, not only
-            the message string.
-
-            These must be returned just to be logged by the GM for later inspection.
-
-            The third element is the response text, i.e. only the actual message
-            generated by the model as a string (after any needed manipulation,
-            like .strip() or excluding the input prompt).
-        &#34;&#34;&#34;
-        pass</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>abc.ABC</li>
-</ul>
-<h3>Subclasses</h3>
-<ul class="hlist">
-<li><a title="clemcore.backends.CustomResponseModel" href="#clemcore.backends.CustomResponseModel">CustomResponseModel</a></li>
-<li><a title="clemcore.backends.HumanModel" href="#clemcore.backends.HumanModel">HumanModel</a></li>
-<li><a title="clemcore.backends.alephalpha_api.AlephAlphaModel" href="alephalpha_api.html#clemcore.backends.alephalpha_api.AlephAlphaModel">AlephAlphaModel</a></li>
-<li><a title="clemcore.backends.anthropic_api.AnthropicModel" href="anthropic_api.html#clemcore.backends.anthropic_api.AnthropicModel">AnthropicModel</a></li>
-<li><a title="clemcore.backends.cohere_api.CohereModel" href="cohere_api.html#clemcore.backends.cohere_api.CohereModel">CohereModel</a></li>
-<li><a title="clemcore.backends.google_api.GoogleModel" href="google_api.html#clemcore.backends.google_api.GoogleModel">GoogleModel</a></li>
-<li><a title="clemcore.backends.huggingface_local_api.HuggingfaceLocalModel" href="huggingface_local_api.html#clemcore.backends.huggingface_local_api.HuggingfaceLocalModel">HuggingfaceLocalModel</a></li>
-<li><a title="clemcore.backends.huggingface_multimodal_api.HuggingfaceMultimodalModel" href="huggingface_multimodal_api.html#clemcore.backends.huggingface_multimodal_api.HuggingfaceMultimodalModel">HuggingfaceMultimodalModel</a></li>
-<li><a title="clemcore.backends.llamacpp_api.LlamaCPPLocalModel" href="llamacpp_api.html#clemcore.backends.llamacpp_api.LlamaCPPLocalModel">LlamaCPPLocalModel</a></li>
-<li><a title="clemcore.backends.mistral_api.MistralModel" href="mistral_api.html#clemcore.backends.mistral_api.MistralModel">MistralModel</a></li>
-<li><a title="clemcore.backends.openai_api.OpenAIModel" href="openai_api.html#clemcore.backends.openai_api.OpenAIModel">OpenAIModel</a></li>
-<li><a title="clemcore.backends.openai_compatible_api.GenericOpenAIModel" href="openai_compatible_api.html#clemcore.backends.openai_compatible_api.GenericOpenAIModel">GenericOpenAIModel</a></li>
-</ul>
-<h3>Methods</h3>
-<dl>
-<dt id="clemcore.backends.Model.generate_response"><code class="name flex">
-<span>def <span class="ident">generate_response</span></span>(<span>self, messages: List[Dict]) ‑> Tuple[Any, Any, str]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Put prompt in model-specific format and get its response.</p>
-<h2 id="args">Args</h2>
-<dl>
-<dt><strong><code>messages</code></strong> :&ensp;<code>List[Dict]</code></dt>
-<dd>The dialogue context represented as a list
-of turns. Entry element is a dictionary containing one key
-"role", whose value is either "user" or "assistant", and one
-key "content", whose value is the message as a string.</dd>
-</dl>
-<h2 id="returns">Returns</h2>
-<dl>
-<dt><code>Tuple[Any, Any, str]</code></dt>
-<dd>The first element is the prompt object as</dd>
-</dl>
-<p>passed to the LLM (i.e. after any model-specific manipulation).
-Return the full prompt object, not only the message string.</p>
-<p>The second element is the response object as gotten from the model,
-before any manipulation. Return the full prompt object, not only
-the message string.</p>
-<p>These must be returned just to be logged by the GM for later inspection.</p>
-<p>The third element is the response text, i.e. only the actual message
-generated by the model as a string (after any needed manipulation,
-like .strip() or excluding the input prompt).</p></div>
-</dd>
-<dt id="clemcore.backends.Model.get_gen_arg"><code class="name flex">
-<span>def <span class="ident">get_gen_arg</span></span>(<span>self, arg_name)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.Model.get_max_tokens"><code class="name flex">
-<span>def <span class="ident">get_max_tokens</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>:return: the maximal number of tokens generated during the generation process</p></div>
-</dd>
-<dt id="clemcore.backends.Model.get_name"><code class="name flex">
-<span>def <span class="ident">get_name</span></span>(<span>self) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.Model.get_temperature"><code class="name flex">
-<span>def <span class="ident">get_temperature</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>:return: the sampling temperature used for the generation process</p></div>
-</dd>
-<dt id="clemcore.backends.Model.set_gen_arg"><code class="name flex">
-<span>def <span class="ident">set_gen_arg</span></span>(<span>self, arg_name, arg_value)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Set a particular argument needed for the generation process
-:param arg_name: the name of the generation argument
-:param arg_value: the value of the generation argument</p></div>
-</dd>
-<dt id="clemcore.backends.Model.set_gen_args"><code class="name flex">
-<span>def <span class="ident">set_gen_args</span></span>(<span>self, **gen_args)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>:param gen_args: set extra information needed for the generation process</p></div>
-</dd>
-</dl>
-</dd>
-<dt id="clemcore.backends.ModelSpec"><code class="flex name class">
-<span>class <span class="ident">ModelSpec</span></span>
-<span>(</span><span>**kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Base class for model specifications.
-Holds all necessary information to make a model available for clembench: Responsible backend and any arbitrary data
-required by the backend. Also covers non-LLM 'models' like programmatic, slurk and direct user input.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">@dataclass(frozen=True)
-class ModelSpec(SimpleNamespace):
-    &#34;&#34;&#34;
-    Base class for model specifications.
-    Holds all necessary information to make a model available for clembench: Responsible backend and any arbitrary data
-    required by the backend. Also covers non-LLM &#39;models&#39; like programmatic, slurk and direct user input.
-    &#34;&#34;&#34;
-    PROGRAMMATIC_SPECS = [&#34;mock&#34;, &#34;dry_run&#34;, &#34;programmatic&#34;, &#34;custom&#34;, &#34;_slurk_response&#34;]
-    HUMAN_SPECS = [&#34;human&#34;, &#34;terminal&#34;]
-
-    def __init__(self, **kwargs):
-        super().__init__(**kwargs)
-
-    def unify(self, other: &#34;ModelSpec&#34;) -&gt; &#34;ModelSpec&#34;:
-        &#34;&#34;&#34; Return whether the other ModelSpec is fully contained within this ModelSpec &#34;&#34;&#34;
-        result = nltk.featstruct.unify(self.__dict__, other.__dict__)
-        if result is None:
-            raise ValueError(f&#34;{self} does not unify with {other}&#34;)
-        return ModelSpec(**result)
-
-    def __repr__(self):
-        return f&#34;ModelSpec({str(self)})&#34;
-
-    def __str__(self):
-        return str(self.__dict__)
-
-    def __getitem__(self, item):
-        &#34;&#34;&#34; dict-like behavior &#34;&#34;&#34;
-        return getattr(self, item)
-
-    def __contains__(self, item):
-        &#34;&#34;&#34; dict-like behavior &#34;&#34;&#34;
-        return self.has_attr(item)
-
-    def has_attr(self, attribute):
-        return hasattr(self, attribute)
-
-    def has_temperature(self):
-        return self.has_attr(&#34;temperature&#34;)
-
-    def has_backend(self):
-        return self.has_attr(&#34;backend&#34;)
-
-    @classmethod
-    def from_name(cls, model_name: str):
-        if model_name is None:
-            raise ValueError(f&#34;Cannot create ModelSpec because model_name is None (but required)&#34;)
-        return cls(model_name=model_name)
-
-    @classmethod
-    def from_dict(cls, spec: Dict):
-        &#34;&#34;&#34;
-        Initialize a ModelSpec from a dictionary. Can be used to directly create a ModelSpec from a model registry entry
-        dictionary.
-        &#34;&#34;&#34;
-        return cls(**spec)
-
-    def is_programmatic(self):
-        return self.model_name in ModelSpec.PROGRAMMATIC_SPECS
-
-    def is_human(self):
-        return self.model_name in ModelSpec.HUMAN_SPECS</code></pre>
-</details>
-<h3>Ancestors</h3>
-<ul class="hlist">
-<li>types.SimpleNamespace</li>
-</ul>
-<h3>Class variables</h3>
-<dl>
-<dt id="clemcore.backends.ModelSpec.HUMAN_SPECS"><code class="name">var <span class="ident">HUMAN_SPECS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.PROGRAMMATIC_SPECS"><code class="name">var <span class="ident">PROGRAMMATIC_SPECS</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Static methods</h3>
-<dl>
-<dt id="clemcore.backends.ModelSpec.from_dict"><code class="name flex">
-<span>def <span class="ident">from_dict</span></span>(<span>spec: Dict)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Initialize a ModelSpec from a dictionary. Can be used to directly create a ModelSpec from a model registry entry
-dictionary.</p></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.from_name"><code class="name flex">
-<span>def <span class="ident">from_name</span></span>(<span>model_name: str)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-</dl>
-<h3>Methods</h3>
-<dl>
-<dt id="clemcore.backends.ModelSpec.has_attr"><code class="name flex">
-<span>def <span class="ident">has_attr</span></span>(<span>self, attribute)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.has_backend"><code class="name flex">
-<span>def <span class="ident">has_backend</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.has_temperature"><code class="name flex">
-<span>def <span class="ident">has_temperature</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.is_human"><code class="name flex">
-<span>def <span class="ident">is_human</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.is_programmatic"><code class="name flex">
-<span>def <span class="ident">is_programmatic</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.backends.ModelSpec.unify"><code class="name flex">
-<span>def <span class="ident">unify</span></span>(<span>self, other: <a title="clemcore.backends.ModelSpec" href="#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.ModelSpec" href="#clemcore.backends.ModelSpec">ModelSpec</a></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return whether the other ModelSpec is fully contained within this ModelSpec</p></div>
-</dd>
-</dl>
 </dd>
 </dl>
 </section>
@@ -653,19 +680,21 @@ dictionary.</p></div>
 <li><code><a title="clemcore.backends.initial_hf_check" href="initial_hf_check.html">clemcore.backends.initial_hf_check</a></code></li>
 <li><code><a title="clemcore.backends.llamacpp_api" href="llamacpp_api.html">clemcore.backends.llamacpp_api</a></code></li>
 <li><code><a title="clemcore.backends.mistral_api" href="mistral_api.html">clemcore.backends.mistral_api</a></code></li>
+<li><code><a title="clemcore.backends.model_registry" href="model_registry.html">clemcore.backends.model_registry</a></code></li>
 <li><code><a title="clemcore.backends.model_registry_eos_check" href="model_registry_eos_check.html">clemcore.backends.model_registry_eos_check</a></code></li>
+<li><code><a title="clemcore.backends.multimodal_utils" href="multimodal_utils.html">clemcore.backends.multimodal_utils</a></code></li>
 <li><code><a title="clemcore.backends.openai_api" href="openai_api.html">clemcore.backends.openai_api</a></code></li>
 <li><code><a title="clemcore.backends.openai_compatible_api" href="openai_compatible_api.html">clemcore.backends.openai_compatible_api</a></code></li>
 <li><code><a title="clemcore.backends.utils" href="utils.html">clemcore.backends.utils</a></code></li>
+<li><code><a title="clemcore.backends.vllm_api" href="vllm_api.html">clemcore.backends.vllm_api</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="clemcore.backends.get_model_for" href="#clemcore.backends.get_model_for">get_model_for</a></code></li>
 <li><code><a title="clemcore.backends.is_backend" href="#clemcore.backends.is_backend">is_backend</a></code></li>
+<li><code><a title="clemcore.backends.is_backend_file" href="#clemcore.backends.is_backend_file">is_backend_file</a></code></li>
 <li><code><a title="clemcore.backends.load_credentials" href="#clemcore.backends.load_credentials">load_credentials</a></code></li>
-<li><code><a title="clemcore.backends.load_custom_model_registry" href="#clemcore.backends.load_custom_model_registry">load_custom_model_registry</a></code></li>
-<li><code><a title="clemcore.backends.load_model_registry" href="#clemcore.backends.load_model_registry">load_model_registry</a></code></li>
+<li><code><a title="clemcore.backends.to_backend_name" href="#clemcore.backends.to_backend_name">to_backend_name</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -677,6 +706,15 @@ dictionary.</p></div>
 </ul>
 </li>
 <li>
+<h4><code><a title="clemcore.backends.BackendRegistry" href="#clemcore.backends.BackendRegistry">BackendRegistry</a></code></h4>
+<ul class="">
+<li><code><a title="clemcore.backends.BackendRegistry.from_packaged_and_cwd_files" href="#clemcore.backends.BackendRegistry.from_packaged_and_cwd_files">from_packaged_and_cwd_files</a></code></li>
+<li><code><a title="clemcore.backends.BackendRegistry.get_backend_for" href="#clemcore.backends.BackendRegistry.get_backend_for">get_backend_for</a></code></li>
+<li><code><a title="clemcore.backends.BackendRegistry.get_first_file_matching" href="#clemcore.backends.BackendRegistry.get_first_file_matching">get_first_file_matching</a></code></li>
+<li><code><a title="clemcore.backends.BackendRegistry.is_supported" href="#clemcore.backends.BackendRegistry.is_supported">is_supported</a></code></li>
+</ul>
+</li>
+<li>
 <h4><code><a title="clemcore.backends.ContextExceededError" href="#clemcore.backends.ContextExceededError">ContextExceededError</a></code></h4>
 <ul class="">
 <li><code><a title="clemcore.backends.ContextExceededError.context_size" href="#clemcore.backends.ContextExceededError.context_size">context_size</a></code></li>
@@ -685,37 +723,10 @@ dictionary.</p></div>
 </ul>
 </li>
 <li>
-<h4><code><a title="clemcore.backends.CustomResponseModel" href="#clemcore.backends.CustomResponseModel">CustomResponseModel</a></code></h4>
+<h4><code><a title="clemcore.backends.CustomResponseModelBackend" href="#clemcore.backends.CustomResponseModelBackend">CustomResponseModelBackend</a></code></h4>
 </li>
 <li>
-<h4><code><a title="clemcore.backends.HumanModel" href="#clemcore.backends.HumanModel">HumanModel</a></code></h4>
-</li>
-<li>
-<h4><code><a title="clemcore.backends.Model" href="#clemcore.backends.Model">Model</a></code></h4>
-<ul class="two-column">
-<li><code><a title="clemcore.backends.Model.generate_response" href="#clemcore.backends.Model.generate_response">generate_response</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_gen_arg" href="#clemcore.backends.Model.get_gen_arg">get_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_max_tokens" href="#clemcore.backends.Model.get_max_tokens">get_max_tokens</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_name" href="#clemcore.backends.Model.get_name">get_name</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_temperature" href="#clemcore.backends.Model.get_temperature">get_temperature</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_arg" href="#clemcore.backends.Model.set_gen_arg">set_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_args" href="#clemcore.backends.Model.set_gen_args">set_gen_args</a></code></li>
-</ul>
-</li>
-<li>
-<h4><code><a title="clemcore.backends.ModelSpec" href="#clemcore.backends.ModelSpec">ModelSpec</a></code></h4>
-<ul class="two-column">
-<li><code><a title="clemcore.backends.ModelSpec.HUMAN_SPECS" href="#clemcore.backends.ModelSpec.HUMAN_SPECS">HUMAN_SPECS</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.PROGRAMMATIC_SPECS" href="#clemcore.backends.ModelSpec.PROGRAMMATIC_SPECS">PROGRAMMATIC_SPECS</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.from_dict" href="#clemcore.backends.ModelSpec.from_dict">from_dict</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.from_name" href="#clemcore.backends.ModelSpec.from_name">from_name</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.has_attr" href="#clemcore.backends.ModelSpec.has_attr">has_attr</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.has_backend" href="#clemcore.backends.ModelSpec.has_backend">has_backend</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.has_temperature" href="#clemcore.backends.ModelSpec.has_temperature">has_temperature</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.is_human" href="#clemcore.backends.ModelSpec.is_human">is_human</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.is_programmatic" href="#clemcore.backends.ModelSpec.is_programmatic">is_programmatic</a></code></li>
-<li><code><a title="clemcore.backends.ModelSpec.unify" href="#clemcore.backends.ModelSpec.unify">unify</a></code></li>
-</ul>
+<h4><code><a title="clemcore.backends.HumanModelBackend" href="#clemcore.backends.HumanModelBackend">HumanModelBackend</a></code></h4>
 </li>
 </ul>
 </li>
@@ -723,7 +734,7 @@ dictionary.</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

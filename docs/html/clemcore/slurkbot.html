@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.slurkbot API documentation</title>
 <meta name="description" content="Slurk (Task)Bot template classes …">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -68,13 +79,6 @@ mapping, e.g. to MTurk HITs)</li>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A bot that talks to a user by calling some chatbot API</p>
-<p>This bot interacts with 1 human player by calling an API to carry
-out the actual interaction</p>
-<p>:param players_per_room: Each room is mapped to a list of
-users. Each user is represented as a dict with the
-keys 'name', 'id', 'msg_n' and 'status'.
-:type players_per_room: dict</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -141,6 +145,13 @@ keys 'name', 'id', 'msg_n' and 'status'.
                     },
                 )</code></pre>
 </details>
+<div class="desc"><p>A bot that talks to a user by calling some chatbot API</p>
+<p>This bot interacts with 1 human player by calling an API to carry
+out the actual interaction</p>
+<p>:param players_per_room: Each room is mapped to a list of
+users. Each user is represented as a dict with the
+keys 'name', 'id', 'msg_n' and 'status'.
+:type players_per_room: dict</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="clemcore.slurkbot.GenericChatbot" href="#clemcore.slurkbot.GenericChatbot">GenericChatbot</a></li>
@@ -171,20 +182,6 @@ keys 'name', 'id', 'msg_n' and 'status'.
 <span>(</span><span>token, user, host, port)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>Serves as a template for bots.
-:param token: A universally unique identifier (UUID);
-e.g. <code>0c45b30f-d049-43d1-b80d-e3c3a3ca22a0</code>
-:type token: str
-:param user: ID of a <code>User</code> object created from the token
-:type user: int
-:param host: Full URL including protocol and hostname
-:type host: str
-:param port: Port used by the slurk chat server;
-If you use a docker container that publishes an internal
-port to another port on the docker host, specify the latter
-:type port: int</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -261,6 +258,20 @@ port to another port on the docker host, specify the latter
             response.raise_for_status()
         logging.debug(f&#34;`{action}` successful.&#34;)</code></pre>
 </details>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Serves as a template for bots.
+:param token: A universally unique identifier (UUID);
+e.g. <code>0c45b30f-d049-43d1-b80d-e3c3a3ca22a0</code>
+:type token: str
+:param user: ID of a <code>User</code> object created from the token
+:type user: int
+:param host: Full URL including protocol and hostname
+:type host: str
+:param port: Port used by the slurk chat server;
+If you use a docker container that publishes an internal
+port to another port on the docker host, specify the latter
+:type port: int</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li>abc.ABC</li>
@@ -282,6 +293,27 @@ port to another port on the docker host, specify the latter
 <span>def <span class="ident">message_callback</span></span>(<span>success, error_msg='Unknown Error')</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def message_callback(success, error_msg=&#34;Unknown Error&#34;):
+    &#34;&#34;&#34;Verify whether a call was successful.
+    Will be invoked after the server has processed the event,
+    any values returned by the event handler will be passed
+    as arguments.
+    :param success: `True` if the message was successfully sent,
+        else `False`
+    :type success: bool
+    :param error_msg: Reason for an unsuccessful call
+    :type status: str, optional
+    &#34;&#34;&#34;
+    if not success:
+        logging.error(f&#34;Could not send message: {error_msg}&#34;)
+        raise ValueError(error_msg)
+    logging.debug(&#34;Message was sent successfully.&#34;)</code></pre>
+</details>
 <div class="desc"><p>Verify whether a call was successful.
 Will be invoked after the server has processed the event,
 any values returned by the event handler will be passed
@@ -296,6 +328,23 @@ else <code>False</code>
 <span>def <span class="ident">request_feedback</span></span>(<span>response, action)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@staticmethod
+def request_feedback(response, action):
+    &#34;&#34;&#34;Verify whether a request was successful.
+    :param response: Response to request
+    :type response: requests.models.Response
+    :param action: Action meant to be performed
+    :type action: str
+    &#34;&#34;&#34;
+    if not response.ok:
+        logging.error(f&#34;`{action}` unsuccessful: {response.status_code}&#34;)
+        response.raise_for_status()
+    logging.debug(f&#34;`{action}` successful.&#34;)</code></pre>
+</details>
 <div class="desc"><p>Verify whether a request was successful.
 :param response: Response to request
 :type response: requests.models.Response
@@ -309,12 +358,34 @@ else <code>False</code>
 <span>def <span class="ident">register_callbacks</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@abstractmethod
+def register_callbacks(self):
+    &#34;&#34;&#34;Register all necessary event handlers.&#34;&#34;&#34;
+    pass</code></pre>
+</details>
 <div class="desc"><p>Register all necessary event handlers.</p></div>
 </dd>
 <dt id="clemcore.slurkbot.Bot.run"><code class="name flex">
 <span>def <span class="ident">run</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(self):
+    &#34;&#34;&#34;Establish a connection to the slurk chat server.&#34;&#34;&#34;
+    self.sio.connect(
+        self.uri,
+        headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;, &#34;user&#34;: str(self.user)},
+        namespaces=&#34;/&#34;,
+    )
+    self.sio.wait()</code></pre>
+</details>
 <div class="desc"><p>Establish a connection to the slurk chat server.</p></div>
 </dd>
 </dl>
@@ -324,13 +395,6 @@ else <code>False</code>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A bot that talks to a user by calling some chatbot API</p>
-<p>This bot interacts with 1 human player by calling an API to carry
-out the actual interaction</p>
-<p>:param players_per_room: Each room is mapped to a list of
-users. Each user is represented as a dict with the
-keys 'name', 'id', 'msg_n' and 'status'.
-:type players_per_room: dict</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -519,6 +583,13 @@ keys 'name', 'id', 'msg_n' and 'status'.
         )
         self.request_feedback(response, &#34;inform user that room is read_only&#34;)</code></pre>
 </details>
+<div class="desc"><p>A bot that talks to a user by calling some chatbot API</p>
+<p>This bot interacts with 1 human player by calling an API to carry
+out the actual interaction</p>
+<p>:param players_per_room: Each room is mapped to a list of
+users. Each user is represented as a dict with the
+keys 'name', 'id', 'msg_n' and 'status'.
+:type players_per_room: dict</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="clemcore.slurkbot.TaskBot" href="#clemcore.slurkbot.TaskBot">TaskBot</a></li>
@@ -542,24 +613,144 @@ keys 'name', 'id', 'msg_n' and 'status'.
 <span>def <span class="ident">close_game</span></span>(<span>self, room_id)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def close_game(self, room_id):
+    &#34;&#34;&#34;Erase any data structures no longer necessary.&#34;&#34;&#34;
+    self.sio.emit(
+        &#34;text&#34;,
+        {
+            &#34;message&#34;: &#34;You will be moved out of this room &#34;
+                       f&#34;in {TIME_CLOSE*2*60}-{TIME_CLOSE*3*60}s.&#34;,
+            &#34;room&#34;: room_id,
+        },
+    )
+    sleep(2)
+    self.sio.emit(
+        &#34;text&#34;,
+        {
+            &#34;message&#34;: &#34;Make sure to save your token before that.&#34;,
+            &#34;room&#34;: room_id
+        },
+    )
+    sleep(TIME_CLOSE*2*60)
+    self.room_to_read_only(room_id)
+
+    # remove users from room
+    for usr in self.players_per_room[room_id]:
+        response = requests.get(
+            f&#34;{self.uri}/users/{usr[&#39;id&#39;]}&#34;,
+            headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+        )
+        self.request_feedback(response, &#34;get user&#34;)
+        etag = response.headers[&#34;ETag&#34;]
+
+        response = requests.delete(
+            f&#34;{self.uri}/users/{usr[&#39;id&#39;]}/rooms/{room_id}&#34;,
+            headers={&#34;If-Match&#34;: etag, &#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+        )
+        self.request_feedback(response, &#34;remove user from task room&#34;)
+
+    # remove any task room specific objects
+    self.players_per_room.pop(room_id)</code></pre>
+</details>
 <div class="desc"><p>Erase any data structures no longer necessary.</p></div>
 </dd>
 <dt id="clemcore.slurkbot.GenericChatbot.command_stop"><code class="name flex">
 <span>def <span class="ident">command_stop</span></span>(<span>self, room_id, user_id)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def command_stop(self, room_id, user_id):
+    &#34;&#34;&#34;Stopping criterion. End conversation&#34;&#34;&#34;
+    # create token and send it to user
+    users = self.players_per_room[room_id]
+    curr_usr = users[0]
+    curr_usr[&#34;status&#34;] = &#34;done&#34;
+    self.confirmation_code(room_id, &#34;done&#34;, receiver_id=user_id)
+    self.close_game(room_id)</code></pre>
+</details>
 <div class="desc"><p>Stopping criterion. End conversation</p></div>
 </dd>
 <dt id="clemcore.slurkbot.GenericChatbot.confirmation_code"><code class="name flex">
 <span>def <span class="ident">confirmation_code</span></span>(<span>self, room_id, status, receiver_id=None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def confirmation_code(self, room_id, status, receiver_id=None):
+    &#34;&#34;&#34;Generate a code that will be sent to each player.&#34;&#34;&#34;
+    kwargs = dict()
+    # either only for one user or for both
+    if receiver_id is not None:
+        kwargs[&#34;receiver_id&#34;] = receiver_id
+
+    code = &#34;&#34;.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    # post code to logs
+    response = requests.post(
+        f&#34;{self.uri}/logs&#34;,
+        json={
+            &#34;event&#34;: &#34;confirmation_log&#34;,
+            &#34;room_id&#34;: room_id,
+            &#34;data&#34;: {&#34;status_txt&#34;: status, &#34;code&#34;: code},
+            **kwargs,
+        },
+        headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+    )
+    self.request_feedback(response, &#34;post code to logs&#34;)
+
+    self.sio.emit(
+        &#34;text&#34;,
+        {
+            &#34;message&#34;: &#34;Please enter the following token into the field on &#34;
+                       &#34;the HIT webpage, and close this browser window. &#34;,
+            &#34;room&#34;: room_id,
+            **kwargs,
+        },
+    )
+    self.sio.emit(
+        &#34;text&#34;,
+        {
+            &#34;message&#34;: f&#34;Here is your token: {code}&#34;,
+            &#34;room&#34;: room_id,
+            **kwargs
+        },
+    )
+    return code</code></pre>
+</details>
 <div class="desc"><p>Generate a code that will be sent to each player.</p></div>
 </dd>
 <dt id="clemcore.slurkbot.GenericChatbot.room_to_read_only"><code class="name flex">
 <span>def <span class="ident">room_to_read_only</span></span>(<span>self, room_id)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def room_to_read_only(self, room_id):
+    &#34;&#34;&#34;Set room to read only.&#34;&#34;&#34;
+    response = requests.patch(
+        f&#34;{self.uri}/rooms/{room_id}/attribute/id/text&#34;,
+        json={&#34;attribute&#34;: &#34;readonly&#34;, &#34;value&#34;: &#34;True&#34;},
+        headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+    )
+    self.request_feedback(response, &#34;set room to read_only&#34;)
+
+    response = requests.patch(
+        f&#34;{self.uri}/rooms/{room_id}/attribute/id/text&#34;,
+        json={&#34;attribute&#34;: &#34;placeholder&#34;, &#34;value&#34;: &#34;This room is read-only&#34;},
+        headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+    )
+    self.request_feedback(response, &#34;inform user that room is read_only&#34;)</code></pre>
+</details>
 <div class="desc"><p>Set room to read only.</p></div>
 </dd>
 </dl>
@@ -582,11 +773,6 @@ keys 'name', 'id', 'msg_n' and 'status'.
 <span>(</span><span>token, user, task, host, port)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Helper class that provides a standard way to create an ABC using
-inheritance.</p>
-<p>Serves as a template for task bots.
-:param task: Task ID
-:type task: str</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -640,6 +826,11 @@ inheritance.</p>
         )
         self.request_feedback(response, &#34;resize chat area&#34;)</code></pre>
 </details>
+<div class="desc"><p>Helper class that provides a standard way to create an ABC using
+inheritance.</p>
+<p>Serves as a template for task bots.
+:param task: Task ID
+:type task: str</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="clemcore.slurkbot.Bot" href="#clemcore.slurkbot.Bot">Bot</a></li>
@@ -655,12 +846,58 @@ inheritance.</p>
 <span>def <span class="ident">join_task_room</span></span>(<span>self)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def join_task_room(self):
+    &#34;&#34;&#34;Let the bot join an assigned task room.&#34;&#34;&#34;
+
+    LOG.info(&#34;join_task_room in TaskBot&#34;)
+
+    def join(data):
+        if self.task_id is None or data[&#34;task&#34;] != self.task_id:
+            return
+
+        response = requests.post(
+            f&#34;{self.uri}/users/{self.user}/rooms/{data[&#39;room&#39;]}&#34;,
+            headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+        )
+        self.request_feedback(response, f&#34;let {self.__class__.__name__}  join room&#34;)
+
+    return join</code></pre>
+</details>
 <div class="desc"><p>Let the bot join an assigned task room.</p></div>
 </dd>
 <dt id="clemcore.slurkbot.TaskBot.move_divider"><code class="name flex">
 <span>def <span class="ident">move_divider</span></span>(<span>self, room_id, chat_area=50, task_area=50)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def move_divider(self, room_id, chat_area=50, task_area=50):
+    &#34;&#34;&#34;move the central divider and resize chat and task area
+    the sum of char_area and task_area must sum up to 100
+    &#34;&#34;&#34;
+    if chat_area + task_area != 100:
+        logging.error(&#34;could not resize chat and task area: invalid parameters&#34;)
+        raise ValueError(&#34;chat_area and task_area must sum up to 100&#34;)
+
+    response = requests.patch(
+        f&#34;{self.uri}/rooms/{room_id}/attribute/id/sidebar&#34;,
+        headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+        json={&#34;attribute&#34;: &#34;style&#34;, &#34;value&#34;: f&#34;width: {task_area}%&#34;}
+    )
+    self.request_feedback(response, &#34;resize display area&#34;)
+    response = requests.patch(
+        f&#34;{self.uri}/rooms/{room_id}/attribute/id/content&#34;,
+        headers={&#34;Authorization&#34;: f&#34;Bearer {self.token}&#34;},
+        json={&#34;attribute&#34;: &#34;style&#34;, &#34;value&#34;: f&#34;width: {chat_area}%&#34;}
+    )
+    self.request_feedback(response, &#34;resize chat area&#34;)</code></pre>
+</details>
 <div class="desc"><p>move the central divider and resize chat and task area
 the sum of char_area and task_area must sum up to 100</p></div>
 </dd>
@@ -728,7 +965,7 @@ the sum of char_area and task_area must sum up to 100</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

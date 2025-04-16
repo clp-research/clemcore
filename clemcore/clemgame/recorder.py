@@ -10,7 +10,7 @@ module_logger = logging.getLogger(__name__)
 
 
 class GameRecorder(ABC):
-
+    """Generic class for creating game records."""
     @abstractmethod
     def log_next_round(self):
         """Call this method to group interactions per turn."""
@@ -60,7 +60,7 @@ class GameRecorder(ABC):
 
 
 class NoopGameRecorder(GameRecorder):
-
+    """Placeholder class for GameMaster initialization, does not actually record anything."""
     def __init__(self):
         self.interactions = []
         self.requests = []
@@ -82,7 +82,7 @@ class NoopGameRecorder(GameRecorder):
 
 
 class DefaultGameRecorder(GameRecorder):
-
+    """Default game recorder with common methods for recording game episodes."""
     def __init__(self, game_name: str, experiment_name: str, game_id: int, dialogue_pair: str):
         self._game_name = game_name
         self._log_current_turn = 0

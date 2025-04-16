@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.backends.huggingface_multimodal_api API documentation</title>
 <meta name="description" content="Backend using HuggingFace transformers for open-weight multimodal models.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -38,79 +49,255 @@ hljs.highlightAll();
 <span>def <span class="ident">check_context_limit</span></span>(<span>context_size: int, prompt_tokens: list, max_new_tokens: int = 100) ‑> Tuple[bool, int, int, int]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>External context limit check
-:param context_size: max_sequence_length/max_position_embeddings of the model
-:param prompt_tokens: List of prompt token IDs.
-:param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
-:return: Tuple with
-Bool: True if context limit is not exceeded, False if too many tokens
-Number of tokens for the given messages and maximum new tokens
-Number of tokens of 'context space left'
-Total context token limit</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_context_limit(context_size: int, prompt_tokens: list, max_new_tokens: int = 100) -&gt; Tuple[
+    bool, int, int, int]:
+    &#34;&#34;&#34;
+    Checks if the context limit is exceeded.
+
+    Args:
+        context_size (int): The maximum sequence length or position embeddings of the model.
+        prompt_tokens (list): A list of prompt token IDs.
+        max_new_tokens (int, optional): The maximum number of tokens to generate. Defaults to 100.
+
+    Returns:
+        Tuple[bool, int, int, int]: A tuple containing:
+            - bool: True if the context limit is not exceeded, False if too many tokens.
+            - int: The total number of tokens used (prompt + new tokens).
+            - int: The number of tokens of &#39;context space left&#39;.
+            - int: The total context token limit.
+    &#34;&#34;&#34;
+    prompt_size = len(prompt_tokens)
+    tokens_used = prompt_size + max_new_tokens
+    tokens_left = context_size - tokens_used
+    fits = tokens_used &lt;= context_size
+    return fits, tokens_used, tokens_left, context_size</code></pre>
+</details>
+<div class="desc"><p>Checks if the context limit is exceeded.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>context_size</code></strong> :&ensp;<code>int</code></dt>
+<dd>The maximum sequence length or position embeddings of the model.</dd>
+<dt><strong><code>prompt_tokens</code></strong> :&ensp;<code>list</code></dt>
+<dd>A list of prompt token IDs.</dd>
+<dt><strong><code>max_new_tokens</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The maximum number of tokens to generate. Defaults to 100.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[bool, int, int, int]</code></dt>
+<dd>A tuple containing:
+- bool: True if the context limit is not exceeded, False if too many tokens.
+- int: The total number of tokens used (prompt + new tokens).
+- int: The number of tokens of 'context space left'.
+- int: The total context token limit.</dd>
+</dl></div>
 </dd>
 <dt id="clemcore.backends.huggingface_multimodal_api.check_multiple_image"><code class="name flex">
 <span>def <span class="ident">check_multiple_image</span></span>(<span>messages: List[Dict])</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return True if a single message contains multiple images
-param messages: A list[Dict] type object passed to the backend containing 'role', 'content' and 'image'</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_multiple_image(messages: List[Dict]):
+    &#34;&#34;&#34;
+    Check if a single message contains multiple images.
+
+    Args:
+        messages (List[Dict]): A list of dictionaries passed to the backend,
+                                each containing &#39;role&#39;, &#39;content&#39;, and possibly &#39;image&#39;.
+
+    Returns:
+        bool: True if any message contains multiple images, False otherwise.
+    &#34;&#34;&#34;
+    has_multiple_images = False
+    for msg in messages:
+        if &#39;image&#39; in msg and type(msg[&#39;image&#39;]) == list:
+            if len(msg[&#39;image&#39;]) &gt; 1:
+                has_multiple_images = True
+
+    return has_multiple_images</code></pre>
+</details>
+<div class="desc"><p>Check if a single message contains multiple images.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>messages</code></strong> :&ensp;<code>List[Dict]</code></dt>
+<dd>A list of dictionaries passed to the backend,
+each containing 'role', 'content', and possibly 'image'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>bool</code></dt>
+<dd>True if any message contains multiple images, False otherwise.</dd>
+</dl></div>
 </dd>
-<dt id="clemcore.backends.huggingface_multimodal_api.generate_idefics_input"><code class="name flex">
-<span>def <span class="ident">generate_idefics_input</span></span>(<span>messages: list[typing.Dict])</span>
+<dt id="clemcore.backends.huggingface_multimodal_api.import_method"><code class="name flex">
+<span>def <span class="ident">import_method</span></span>(<span>method_path: str)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Return inputs specific to the format of Idefics</p>
-<p>param messages: A list[Dict] type object passed to the backend containing 'role', 'content' and 'image'</p></div>
-</dd>
-<dt id="clemcore.backends.huggingface_multimodal_api.generate_idefics_output"><code class="name flex">
-<span>def <span class="ident">generate_idefics_output</span></span>(<span>messages: list[typing.Dict], model: transformers.models.idefics.modeling_idefics.IdeficsForVisionText2Text, processor: transformers.models.auto.processing_auto.AutoProcessor, max_tokens: int, device) ‑> list[str]</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return generated text from Idefics model</p>
-<p>param messages: A list[Dict] type object passed to the backend containing 'role', 'content' and 'image'
-param model: Idefics model
-param processor: Idefics processor
-param device: Processing device - cuda/CPU</p></div>
-</dd>
-<dt id="clemcore.backends.huggingface_multimodal_api.get_context_limit"><code class="name flex">
-<span>def <span class="ident">get_context_limit</span></span>(<span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> int</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Get the context limit of the model</p>
-<p>:param model_spec: Contains definitions about the model to be used
-:return context: Context limit of the model</p></div>
-</dd>
-<dt id="clemcore.backends.huggingface_multimodal_api.get_images"><code class="name flex">
-<span>def <span class="ident">get_images</span></span>(<span>messages: list[typing.Dict]) ‑> list</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Return loaded images from messages</p>
-<p>:param messages: A list of messages passed to the model
-:return images: A list of PIL Image objects.</p></div>
-</dd>
-<dt id="clemcore.backends.huggingface_multimodal_api.load_image"><code class="name flex">
-<span>def <span class="ident">load_image</span></span>(<span>image: str)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Load an image based on a given local path or URL</p>
-<p>:param image: Image path/url
-:return loaded_image: PIL Image</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def import_method(method_path: str):
+    &#34;&#34;&#34;
+    Import the method from the specified module path.
+    
+    Args:
+        method_path (str): The method path separated by dots. Example - clemcore.backends.multimodal_utils.generate_internvl2_prompt_text
+
+    Returns:
+        type: The imported method.
+
+    Raises:
+        ImportError: If the method cannot be imported.
+    &#34;&#34;&#34;
+    try:
+        module_path, method_name = method_path.rsplit(&#39;.&#39;, 1)
+        module = importlib.import_module(module_path)
+        return getattr(module, method_name)
+    except (ImportError, AttributeError) as e:
+        raise ImportError(f&#34;Could not import method &#39;{method_name}&#39; from module &#39;{module_path}&#39;. Error: {e}&#34;) from e</code></pre>
+</details>
+<div class="desc"><p>Import the method from the specified module path.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>method_path</code></strong> :&ensp;<code>str</code></dt>
+<dd>The method path separated by dots. Example - clemcore.backends.multimodal_utils.generate_internvl2_prompt_text</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>type</code></dt>
+<dd>The imported method.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ImportError</code></dt>
+<dd>If the method cannot be imported.</dd>
+</dl></div>
 </dd>
 <dt id="clemcore.backends.huggingface_multimodal_api.load_model"><code class="name flex">
-<span>def <span class="ident">load_model</span></span>(<span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>)</span>
+<span>def <span class="ident">load_model</span></span>(<span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load a specific model</p>
-<p>:param model_spec: A dictionary that defines the model to be used, loaded from Model Registry
-:return model: The specific model</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_model(model_spec: backends.ModelSpec):
+    &#34;&#34;&#34;
+    Load a specific model.
+
+    Args:
+        model_spec (backends.ModelSpec): A dictionary that defines the model to be used, loaded from Model Registry.
+
+    Returns:
+        backends.Model: The specific model.
+
+    Raises:
+        ImportError: If the model class or device map (if custom) cannot be imported.
+    &#34;&#34;&#34;
+    stdout_logger.info(f&#39;Start loading huggingface model weights: {model_spec.model_name}&#39;)
+    hf_model_str = model_spec[&#39;huggingface_id&#39;]  # Get the model name
+    model_class_str = model_spec[&#39;model_config&#39;][&#39;model_class&#39;]  # Model Loader Class
+    model_config = model_spec[&#39;model_config&#39;][&#39;mm_model_config&#39;]  # Model kwargs
+
+    model_class = import_method(model_class_str)
+
+    # Check if a custom device_map split is provided and adjust device_map accordingly
+    if &#39;device_map&#39; in model_config and not model_config[&#39;device_map&#39;] == &#39;auto&#39;:
+        stdout_logger.info(f&#34;Loading Custom device map for model: {hf_model_str}&#34;)
+        split_model = import_method(model_config[&#39;device_map&#39;])
+        device_map = split_model(model_spec[&#39;model_name&#39;])
+        model_config[&#39;device_map&#39;] = device_map
+
+    if &#39;trust_remote_code&#39; in model_spec.model_config:
+        model = model_class.from_pretrained(hf_model_str, trust_remote_code=True, **model_config)  # Load the model using from_pretrained
+    else:
+        model = model_class.from_pretrained(hf_model_str, **model_config)  # Load the model using from_pretrained
+
+    # Check if model&#39;s generation_config has pad_token_id set:
+    if not model.generation_config.pad_token_id:
+        if model.generation_config.pad_token_id != 0: # Additional check for models that have preset pad_token_id = 0, example Gemma
+            # Set pad_token_id to tokenizer&#39;s eos_token_id to prevent excessive warnings:
+            model.generation_config.pad_token_id = model.generation_config.eos_token_id  # Same as processor.tokenizer.pad_token_id
+
+    stdout_logger.info(f&#34;Finished loading huggingface model: {model_spec.model_name}&#34;)
+    stdout_logger.info(f&#34;Device Map: {model.hf_device_map}&#34;)
+
+    return model</code></pre>
+</details>
+<div class="desc"><p>Load a specific model.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong> :&ensp;<code>backends.ModelSpec</code></dt>
+<dd>A dictionary that defines the model to be used, loaded from Model Registry.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>backends.Model</code></dt>
+<dd>The specific model.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ImportError</code></dt>
+<dd>If the model class or device map (if custom) cannot be imported.</dd>
+</dl></div>
 </dd>
 <dt id="clemcore.backends.huggingface_multimodal_api.load_processor"><code class="name flex">
-<span>def <span class="ident">load_processor</span></span>(<span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> transformers.models.auto.processing_auto.AutoProcessor</span>
+<span>def <span class="ident">load_processor</span></span>(<span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load processor from AutoProcessor a specific model (Example - LlavaProcessor)</p>
-<p>:param model_spec: A dictionary that defines the model to be used, loaded from Model Registry
-:return processor: Processor for the specific model</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_processor(model_spec: backends.ModelSpec):
+    &#34;&#34;&#34;
+    Load processor from AutoProcessor/AutoTokenizer for a specific model (Example - LlavaProcessor).
+
+    Args:
+        model_spec (backends.ModelSpec): A dictionary that defines the model to be used, loaded from Model Registry.
+
+    Returns:
+        Processor/Tokenizer for the specific model.
+
+    Raises:
+        ImportError: If the processor type cannot be imported.
+    &#34;&#34;&#34;
+    hf_model_str = model_spec[&#39;huggingface_id&#39;]  # Get the model name
+    processor_class_str = model_spec[&#39;model_config&#39;][&#39;processor_class&#39;]  # Processor type - AutoProcessor/AutoTokenizer
+    processor_config = model_spec[&#39;model_config&#39;][&#39;processor_config&#39;]  # Processor kwargs
+
+    processor_class = import_method(processor_class_str)
+
+    if &#34;trust_remote_code&#34; in model_spec.model_config:
+        processor = processor_class.from_pretrained(hf_model_str, trust_remote_code=True, **processor_config) # Load the processor with trust_remote_code=True
+    else:
+        processor = processor_class.from_pretrained(hf_model_str, **processor_config) # Load the processor with defined args
+
+    stdout_logger.info(f&#39;Loading Processor for model : {model_spec.model_name}&#39;)
+
+    return processor</code></pre>
+</details>
+<div class="desc"><p>Load processor from AutoProcessor/AutoTokenizer for a specific model (Example - LlavaProcessor).</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong> :&ensp;<code>backends.ModelSpec</code></dt>
+<dd>A dictionary that defines the model to be used, loaded from Model Registry.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Processor/Tokenizer for the specific model.</p>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>ImportError</code></dt>
+<dd>If the processor type cannot be imported.</dd>
+</dl></div>
 </dd>
 </dl>
 </section>
@@ -121,7 +308,6 @@ param device: Processing device - cuda/CPU</p></div>
 <span>class <span class="ident">HuggingfaceMultimodal</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Marker class for a model provider.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -131,8 +317,18 @@ param device: Processing device - cuda/CPU</p></div>
         super().__init__()
 
     def get_model_for(self, model_spec: backends.ModelSpec) -&gt; backends.Model:
+        &#34;&#34;&#34;Get the model for the specified model specification.
+
+        Args:
+            model_spec (backends.ModelSpec): The model specification.
+
+        Returns:
+            backends.Model: The model instance.
+        &#34;&#34;&#34;
         return HuggingfaceMultimodalModel(model_spec)</code></pre>
 </details>
+<div class="desc"><p>Abstract base class for clembench backends.
+All clembench backend classes must be child classes of this base class.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="clemcore.backends.Backend" href="index.html#clemcore.backends.Backend">Backend</a></li>
@@ -141,20 +337,43 @@ param device: Processing device - cuda/CPU</p></div>
 <h3>Methods</h3>
 <dl>
 <dt id="clemcore.backends.huggingface_multimodal_api.HuggingfaceMultimodal.get_model_for"><code class="name flex">
-<span>def <span class="ident">get_model_for</span></span>(<span>self, model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></span>
+<span>def <span class="ident">get_model_for</span></span>(<span>self,<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_model_for(self, model_spec: backends.ModelSpec) -&gt; backends.Model:
+    &#34;&#34;&#34;Get the model for the specified model specification.
+
+    Args:
+        model_spec (backends.ModelSpec): The model specification.
+
+    Returns:
+        backends.Model: The model instance.
+    &#34;&#34;&#34;
+    return HuggingfaceMultimodalModel(model_spec)</code></pre>
+</details>
+<div class="desc"><p>Get the model for the specified model specification.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong> :&ensp;<code>backends.ModelSpec</code></dt>
+<dd>The model specification.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>backends.Model</code></dt>
+<dd>The model instance.</dd>
+</dl></div>
 </dd>
 </dl>
 </dd>
 <dt id="clemcore.backends.huggingface_multimodal_api.HuggingfaceMultimodalModel"><code class="flex name class">
 <span>class <span class="ident">HuggingfaceMultimodalModel</span></span>
-<span>(</span><span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>)</span>
+<span>(</span><span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>A local/remote proxy for a model to be called. </p>
-<p>:param model_spec: that specifies the model and the backend to be used</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -166,53 +385,71 @@ param device: Processing device - cuda/CPU</p></div>
 
         # Load instance variable used for evey model
         self.device = &#34;cuda&#34; if torch.cuda.is_available() else &#34;cpu&#34;
-        self.model_type = model_spec[&#39;model_type&#39;]
-        self.model_name = model_spec[&#39;model_name&#39;]
         self.processor = load_processor(model_spec)
         self.multimodal_model = load_model(model_spec)
-        self.split_prefix = model_spec[&#39;output_split_prefix&#39;]
-        self.context_size = get_context_limit(model_spec)
+        self.context_size = int(model_spec[&#39;context_size&#39;].replace(&#34;k&#34;, &#34;&#34;))*1000
+        self.model_name = model_spec[&#39;model_name&#39;]
 
-        # Type cast model_spec to a Dictionary, for cleaner loading of variables
-        model_spec_dict = vars(model_spec)
-        # Load model specific instance variables
-        self.template = model_spec_dict.get(&#39;custom_chat_template&#39;, None)
-        self.cull = model_spec_dict.get(&#39;eos_to_cull&#39;, None)
-        self.supports_multiple_images = model_spec_dict.get(&#39;supports_multiple_images&#39;, False)
-        self.padding = model_spec_dict.get(&#39;padding&#39;, False)
-        self.idefics = &#39;idefics&#39; in model_spec[&#39;model_name&#39;]
+        self.split_prefix = model_spec.model_config[&#39;output_split_prefix&#39;] if &#39;output_split_prefix&#39; in model_spec.model_config else &#34;&#34;
+        self.template = model_spec.model_config[&#39;custom_chat_template&#39;] if &#39;custom_chat_template&#39; in model_spec.model_config else None
+        self.premade_template = True if &#39;premade_chat_template&#39; in model_spec.model_config else False
+        self.cull = model_spec.model_config[&#39;eos_to_cull&#39;] if &#39;eos_to_cull&#39; in model_spec.model_config else None
+        self.supports_multiple_images = model_spec.model_config[&#39;multimodality&#39;][&#39;multiple_images&#39;] if &#39;multiple_images&#39; in model_spec.model_config[&#39;multimodality&#39;] else False
+        self.do_sample = model_spec.model_config[&#39;do_sample&#39;] if &#39;do_sample&#39; in model_spec.model_config else None
+        self.prompt_method = model_spec.model_config[&#39;prompt&#39;] if &#39;prompt&#39; in model_spec.model_config else None
+        self.response_method = model_spec.model_config[&#39;response&#39;] if &#39;response&#39; in model_spec.model_config else None
+
 
     def generate_response(self, messages: List[Dict]) -&gt; Tuple[Any, Any, str]:
-        &#34;&#34;&#34;
-        :param messages: for example
-                [
-                    {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Are there any clouds in the image? Answer with only &#34;Yes&#34; or &#34;No&#34;.&#34;},
-                    {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;Yes&#34;},
-                    {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;This seems correct.&#34;},
-                    {&#39;role&#39;: &#39;user&#39;, &#39;content&#39;: &#39;Are there any chickens in the image? Answer with only &#34;Yes&#34; or &#34;No&#34;.&#39;, &#39;image&#39;: &#39;games/cloudgame/resources/images/3.jpg&#39;}
-                ]
-        :return: the continuation
+        &#34;&#34;&#34;Generate a response based on the provided messages.
+
+        Args:
+            messages (List[Dict]): A list of message dictionaries, each containing &#39;role&#39;, &#39;content&#39; and possibly &#39;images&#39;.
+
+        Returns:
+            Tuple[Any, Any, str]: A tuple containing:
+                - dict: The prompt for the model.
+                - dict: The response from the model.
+                - str: The processed response text.
+
+        Raises:
+            AttributeError: If neither &#39;tokenizer.tokenize&#39; nor &#39;processor.tokenize&#39; exists.
+            backends.ContextExceededError: If the context token limit is exceeded.
+            ValueError: If neither custom chat template or custom prompt method is provided
         &#34;&#34;&#34;
         # Check to see if game passes multiple images in a single turn
         # Proceed only if model supports multiple images, else return blanks for prompt, response and response_text
         has_multiple_images = check_multiple_image(messages=messages)
         if has_multiple_images and not self.supports_multiple_images:
-            print(f&#34;Multiple images not supported in a single turn for model {self.model_name}&#34;)
+            logger.warning(f&#34;Multiple images not supported in a single turn for model {self.model_name}&#34;)
             return &#34;&#34;, {&#34;response&#34;: &#34;&#34;}, &#34;&#34;
 
+        prompt_kwargs = {
+            &#39;model&#39;: self.multimodal_model,
+            &#39;processor&#39;: self.processor,
+            &#39;device&#39;: self.device,
+        }
         prompt_text = &#34;&#34;
         # Get input prompt by applying jinja template, if template is provided
         if self.template:
             template_str = self.template
             template = Template(template_str)
             prompt_text = template.render(messages=messages)
+        elif self.prompt_method:
+            prompt_method = import_method(self.prompt_method)
+            prompt_text = prompt_method(messages,  **prompt_kwargs)
+        else:
+            raise ValueError(&#34;Neither template nor prompt method is provided.&#34;)
 
-        # Get input prompt if model is of type IdeficsForVisionText2Text
-        if self.idefics:
-            _, prompt_text = generate_idefics_input(messages=messages)
 
-        # Check context limit
-        prompt_tokens = self.processor.tokenizer.tokenize(prompt_text)
+        # Check context limit based on if AutoProcessor is loaded or AutoTokenizer
+        if hasattr(self.processor, &#39;tokenize&#39;):
+            prompt_tokens = self.processor.tokenize(prompt_text)
+        elif hasattr(self.processor.tokenizer, &#39;tokenize&#39;):
+            prompt_tokens = self.processor.tokenizer.tokenize(prompt_text)
+        else:
+            raise AttributeError(&#34;Neither &#39;tokenizer.tokenize&#39; nor &#39;processor.tokenize&#39; exists.&#34;)
+
         context_check = check_context_limit(self.context_size, prompt_tokens, max_new_tokens=self.get_max_tokens())
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f&#34;Context token limit for {self.model_spec.model_name} exceeded: &#34;
@@ -222,41 +459,45 @@ param device: Processing device - cuda/CPU</p></div>
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
 
-        # Get a list of images [as input to the Processor]
-        images = get_images(messages)
-
-        # Generate the output
-        if self.idefics:
-            generated_text = generate_idefics_output(messages=messages,
-                                                     model=self.multimodal_model,
-                                                     processor=self.processor,
-                                                     max_tokens=self.get_max_tokens(),
-                                                     device=self.device)
-
-        else:
-            if not images:  # If no images are present in the history + current utterance, use tokenizer to get inputs
-                inputs = self.processor.tokenizer(prompt_text, return_tensors=&#34;pt&#34;).to(self.device)
-            else:
-                inputs = self.processor(prompt_text, images=images, return_tensors=&#34;pt&#34;).to(self.device)
-            model_output = self.multimodal_model.generate(**inputs, max_new_tokens=self.get_max_tokens())
-            generated_text = self.processor.batch_decode(model_output, skip_special_tokens=True)
-
         prompt = {&#34;inputs&#34;: prompt_text, &#34;max_new_tokens&#34;: self.get_max_tokens(), &#34;temperature&#34;: self.get_temperature()}
 
-        # Store generated text
-        response = {&#34;response&#34;: generated_text}
+        stdout_logger.info(f&#34; INPUT PROMPT : \n\n{prompt_text} \n\n&#34;)
+        response_method = import_method(self.response_method)
+        response_kwargs = {
+            &#39;model&#39;: self.multimodal_model,
+            &#39;processor&#39;: self.processor,
+            &#39;device&#39;: self.device,
+            &#39;do_sample&#39;: self.do_sample,
+            &#39;messages&#39;: messages,
+            &#39;max_tokens&#39;: self.get_max_tokens(),
+            &#39;model_name&#39;: self.model_name
+        }
+        generated_response = response_method(**response_kwargs)
 
-        response_text = generated_text[0].split(self.split_prefix)[-1]  # Get the last assistant response
+        # Store generated text
+        response = {&#34;response&#34;: generated_response}
+
+        # Check if split_prefix is not empty before splitting
+        response_text = generated_response
+        if self.split_prefix:
+            response_text = generated_response.split(self.split_prefix)[-1]  # Get the last assistant response
         if self.cull:
             rt_split = response_text.split(self.cull)  # Cull from End of String token
             response_text = rt_split[0]
         response_text = response_text.strip()
 
+        stdout_logger.info(f&#34; RESPONSE TEXT : \n\n{response_text} \n\n&#34;)
         return prompt, response, response_text</code></pre>
 </details>
+<div class="desc"><p>A local/remote proxy for a model to be called.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>A ModelSpec instance that specifies the model and the backend to be used.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></li>
+<li><a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
@@ -265,24 +506,134 @@ param device: Processing device - cuda/CPU</p></div>
 <span>def <span class="ident">generate_response</span></span>(<span>self, messages: List[Dict]) ‑> Tuple[Any, Any, str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>:param messages: for example
-[
-{"role": "user", "content": "Are there any clouds in the image? Answer with only "Yes" or "No"."},
-{"role": "assistant", "content": "Yes"},
-{"role": "user", "content": "This seems correct."},
-{'role': 'user', 'content': 'Are there any chickens in the image? Answer with only "Yes" or "No".', 'image': 'games/cloudgame/resources/images/3.jpg'}
-]
-:return: the continuation</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_response(self, messages: List[Dict]) -&gt; Tuple[Any, Any, str]:
+    &#34;&#34;&#34;Generate a response based on the provided messages.
+
+    Args:
+        messages (List[Dict]): A list of message dictionaries, each containing &#39;role&#39;, &#39;content&#39; and possibly &#39;images&#39;.
+
+    Returns:
+        Tuple[Any, Any, str]: A tuple containing:
+            - dict: The prompt for the model.
+            - dict: The response from the model.
+            - str: The processed response text.
+
+    Raises:
+        AttributeError: If neither &#39;tokenizer.tokenize&#39; nor &#39;processor.tokenize&#39; exists.
+        backends.ContextExceededError: If the context token limit is exceeded.
+        ValueError: If neither custom chat template or custom prompt method is provided
+    &#34;&#34;&#34;
+    # Check to see if game passes multiple images in a single turn
+    # Proceed only if model supports multiple images, else return blanks for prompt, response and response_text
+    has_multiple_images = check_multiple_image(messages=messages)
+    if has_multiple_images and not self.supports_multiple_images:
+        logger.warning(f&#34;Multiple images not supported in a single turn for model {self.model_name}&#34;)
+        return &#34;&#34;, {&#34;response&#34;: &#34;&#34;}, &#34;&#34;
+
+    prompt_kwargs = {
+        &#39;model&#39;: self.multimodal_model,
+        &#39;processor&#39;: self.processor,
+        &#39;device&#39;: self.device,
+    }
+    prompt_text = &#34;&#34;
+    # Get input prompt by applying jinja template, if template is provided
+    if self.template:
+        template_str = self.template
+        template = Template(template_str)
+        prompt_text = template.render(messages=messages)
+    elif self.prompt_method:
+        prompt_method = import_method(self.prompt_method)
+        prompt_text = prompt_method(messages,  **prompt_kwargs)
+    else:
+        raise ValueError(&#34;Neither template nor prompt method is provided.&#34;)
+
+
+    # Check context limit based on if AutoProcessor is loaded or AutoTokenizer
+    if hasattr(self.processor, &#39;tokenize&#39;):
+        prompt_tokens = self.processor.tokenize(prompt_text)
+    elif hasattr(self.processor.tokenizer, &#39;tokenize&#39;):
+        prompt_tokens = self.processor.tokenizer.tokenize(prompt_text)
+    else:
+        raise AttributeError(&#34;Neither &#39;tokenizer.tokenize&#39; nor &#39;processor.tokenize&#39; exists.&#34;)
+
+    context_check = check_context_limit(self.context_size, prompt_tokens, max_new_tokens=self.get_max_tokens())
+    if not context_check[0]:  # if context is exceeded, context_check[0] is False
+        logger.info(f&#34;Context token limit for {self.model_spec.model_name} exceeded: &#34;
+                    f&#34;{context_check[1]}/{context_check[3]}&#34;)
+        # fail gracefully:
+        raise backends.ContextExceededError(f&#34;Context token limit for {self.model_spec.model_name} exceeded&#34;,
+                                            tokens_used=context_check[1], tokens_left=context_check[2],
+                                            context_size=context_check[3])
+
+    prompt = {&#34;inputs&#34;: prompt_text, &#34;max_new_tokens&#34;: self.get_max_tokens(), &#34;temperature&#34;: self.get_temperature()}
+
+    stdout_logger.info(f&#34; INPUT PROMPT : \n\n{prompt_text} \n\n&#34;)
+    response_method = import_method(self.response_method)
+    response_kwargs = {
+        &#39;model&#39;: self.multimodal_model,
+        &#39;processor&#39;: self.processor,
+        &#39;device&#39;: self.device,
+        &#39;do_sample&#39;: self.do_sample,
+        &#39;messages&#39;: messages,
+        &#39;max_tokens&#39;: self.get_max_tokens(),
+        &#39;model_name&#39;: self.model_name
+    }
+    generated_response = response_method(**response_kwargs)
+
+    # Store generated text
+    response = {&#34;response&#34;: generated_response}
+
+    # Check if split_prefix is not empty before splitting
+    response_text = generated_response
+    if self.split_prefix:
+        response_text = generated_response.split(self.split_prefix)[-1]  # Get the last assistant response
+    if self.cull:
+        rt_split = response_text.split(self.cull)  # Cull from End of String token
+        response_text = rt_split[0]
+    response_text = response_text.strip()
+
+    stdout_logger.info(f&#34; RESPONSE TEXT : \n\n{response_text} \n\n&#34;)
+    return prompt, response, response_text</code></pre>
+</details>
+<div class="desc"><p>Generate a response based on the provided messages.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>messages</code></strong> :&ensp;<code>List[Dict]</code></dt>
+<dd>A list of message dictionaries, each containing 'role', 'content' and possibly 'images'.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>Tuple[Any, Any, str]</code></dt>
+<dd>A tuple containing:
+- dict: The prompt for the model.
+- dict: The response from the model.
+- str: The processed response text.</dd>
+</dl>
+<h2 id="raises">Raises</h2>
+<dl>
+<dt><code>AttributeError</code></dt>
+<dd>If neither 'tokenizer.tokenize' nor 'processor.tokenize' exists.</dd>
+<dt><code>backends.ContextExceededError</code></dt>
+<dd>If the context token limit is exceeded.</dd>
+<dt><code>ValueError</code></dt>
+<dd>If neither custom chat template or custom prompt method is provided</dd>
+</dl></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></b></code>:
+<li><code><b><a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></b></code>:
 <ul class="hlist">
-<li><code><a title="clemcore.backends.Model.get_max_tokens" href="index.html#clemcore.backends.Model.get_max_tokens">get_max_tokens</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_temperature" href="index.html#clemcore.backends.Model.get_temperature">get_temperature</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_arg" href="index.html#clemcore.backends.Model.set_gen_arg">set_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_args" href="index.html#clemcore.backends.Model.set_gen_args">set_gen_args</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_gen_arg" href="model_registry.html#clemcore.backends.model_registry.Model.get_gen_arg">get_gen_arg</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_max_tokens" href="model_registry.html#clemcore.backends.model_registry.Model.get_max_tokens">get_max_tokens</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_name" href="model_registry.html#clemcore.backends.model_registry.Model.get_name">get_name</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_temperature" href="model_registry.html#clemcore.backends.model_registry.Model.get_temperature">get_temperature</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.set_gen_arg" href="model_registry.html#clemcore.backends.model_registry.Model.set_gen_arg">set_gen_arg</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.set_gen_args" href="model_registry.html#clemcore.backends.model_registry.Model.set_gen_args">set_gen_args</a></code></li>
 </ul>
 </li>
 </ul>
@@ -304,11 +655,7 @@ param device: Processing device - cuda/CPU</p></div>
 <ul class="">
 <li><code><a title="clemcore.backends.huggingface_multimodal_api.check_context_limit" href="#clemcore.backends.huggingface_multimodal_api.check_context_limit">check_context_limit</a></code></li>
 <li><code><a title="clemcore.backends.huggingface_multimodal_api.check_multiple_image" href="#clemcore.backends.huggingface_multimodal_api.check_multiple_image">check_multiple_image</a></code></li>
-<li><code><a title="clemcore.backends.huggingface_multimodal_api.generate_idefics_input" href="#clemcore.backends.huggingface_multimodal_api.generate_idefics_input">generate_idefics_input</a></code></li>
-<li><code><a title="clemcore.backends.huggingface_multimodal_api.generate_idefics_output" href="#clemcore.backends.huggingface_multimodal_api.generate_idefics_output">generate_idefics_output</a></code></li>
-<li><code><a title="clemcore.backends.huggingface_multimodal_api.get_context_limit" href="#clemcore.backends.huggingface_multimodal_api.get_context_limit">get_context_limit</a></code></li>
-<li><code><a title="clemcore.backends.huggingface_multimodal_api.get_images" href="#clemcore.backends.huggingface_multimodal_api.get_images">get_images</a></code></li>
-<li><code><a title="clemcore.backends.huggingface_multimodal_api.load_image" href="#clemcore.backends.huggingface_multimodal_api.load_image">load_image</a></code></li>
+<li><code><a title="clemcore.backends.huggingface_multimodal_api.import_method" href="#clemcore.backends.huggingface_multimodal_api.import_method">import_method</a></code></li>
 <li><code><a title="clemcore.backends.huggingface_multimodal_api.load_model" href="#clemcore.backends.huggingface_multimodal_api.load_model">load_model</a></code></li>
 <li><code><a title="clemcore.backends.huggingface_multimodal_api.load_processor" href="#clemcore.backends.huggingface_multimodal_api.load_processor">load_processor</a></code></li>
 </ul>
@@ -333,7 +680,7 @@ param device: Processing device - cuda/CPU</p></div>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

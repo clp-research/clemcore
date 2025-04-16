@@ -3,20 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.backends.huggingface_local_api API documentation</title>
 <meta name="description" content="Backend using HuggingFace transformers models.
 Uses HF tokenizers instruct/chat templates for proper input format per model.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -37,63 +48,340 @@ Uses HF tokenizers instruct/chat templates for proper input format per model.</p
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="clemcore.backends.huggingface_local_api.check_context_limit"><code class="name flex">
-<span>def <span class="ident">check_context_limit</span></span>(<span>messages: List[Dict], model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>, max_new_tokens: int = 100, clean_messages: bool = False, verbose: bool = True) ‑> Tuple[bool, int, int, int]</span>
+<span>def <span class="ident">check_context_limit</span></span>(<span>messages: List[Dict],<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>,<br>max_new_tokens: int = 100,<br>clean_messages: bool = False,<br>verbose: bool = True) ‑> Tuple[bool, int, int, int]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Externally-callable context limit check for clemgame development.
-:param messages: for example
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
+                        max_new_tokens: int = 100, clean_messages: bool = False,
+                        verbose: bool = True) -&gt; Tuple[bool, int, int, int]:
+    &#34;&#34;&#34;Externally-callable context limit check for clemgame development.
+    Args:
+        messages: for example
+            [
+                {&#34;role&#34;: &#34;system&#34;, &#34;content&#34;: &#34;You are a helpful assistant.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Who won the world series in 2020?&#34;},
+                {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;The Los Angeles Dodgers won the World Series in 2020.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Where was it played?&#34;}
+            ]
+        model_spec: The ModelSpec for the model.
+        max_new_tokens: How many tokens to generate (&#39;at most&#39;, but no stop sequence is defined).
+        clean_messages: If True, the standard cleaning method for message lists will be applied.
+        verbose: If True, prettyprint token counts.
+    Returns:
+        Tuple with
+            Bool: True if context limit is not exceeded, False if too many tokens
+            Number of tokens for the given messages and maximum new tokens
+            Number of tokens of &#39;context space left&#39;
+            Total context token limit
+    &#34;&#34;&#34;
+    tokenizer, _, context_size = load_config_and_tokenizer(model_spec)
+
+    # optional messages processing:
+    if clean_messages:
+        current_messages = ensure_alternating_roles(messages)
+    else:
+        current_messages = messages
+    # the actual tokens, including chat format:
+    prompt_tokens = tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)
+    context_check_tuple = _check_context_limit(context_size, prompt_tokens, max_new_tokens=max_new_tokens)
+    tokens_used = context_check_tuple[1]
+    tokens_left = context_check_tuple[2]
+    if verbose:
+        print(f&#34;{tokens_used} input tokens, {tokens_left} tokens of {context_size} left.&#34;)
+    fits = context_check_tuple[0]
+    return fits, tokens_used, tokens_left, context_size</code></pre>
+</details>
+<div class="desc"><p>Externally-callable context limit check for clemgame development.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>messages</code></strong></dt>
+<dd>for example
 [
 {"role": "system", "content": "You are a helpful assistant."},
 {"role": "user", "content": "Who won the world series in 2020?"},
 {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
 {"role": "user", "content": "Where was it played?"}
-]
-:param model_spec: The ModelSpec for the model.
-:param max_new_tokens: How many tokens to generate ('at most', but no stop sequence is defined).
-:param clean_messages: If True, the standard cleaning method for message lists will be applied.
-:param verbose: If True, prettyprint token counts.
-:return: Tuple with
-Bool: True if context limit is not exceeded, False if too many tokens
+]</dd>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+<dt><strong><code>max_new_tokens</code></strong></dt>
+<dd>How many tokens to generate ('at most', but no stop sequence is defined).</dd>
+<dt><strong><code>clean_messages</code></strong></dt>
+<dd>If True, the standard cleaning method for message lists will be applied.</dd>
+<dt><strong><code>verbose</code></strong></dt>
+<dd>If True, prettyprint token counts.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt>Tuple with</dt>
+<dt><code>
+Bool</code></dt>
+<dd>True if context limit is not exceeded, False if too many tokens
 Number of tokens for the given messages and maximum new tokens
 Number of tokens of 'context space left'
-Total context token limit</p></div>
+Total context token limit</dd>
+</dl></div>
 </dd>
 <dt id="clemcore.backends.huggingface_local_api.check_messages"><code class="name flex">
-<span>def <span class="ident">check_messages</span></span>(<span>messages: List[Dict], model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> bool</span>
+<span>def <span class="ident">check_messages</span></span>(<span>messages: List[Dict],<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> bool</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Message checking for clemgame development. This checks if the model's chat template accepts the given messages
-as passed, before the standard flattening done for generation. This allows clemgame developers to construct
-message lists that are sound as-is and are not affected by the indiscriminate flattening of the generation
-method. Deliberately verbose.
-:param model_spec: The ModelSpec for the model.
-:param messages: for example
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def check_messages(messages: List[Dict], model_spec: backends.ModelSpec) -&gt; bool:
+    &#34;&#34;&#34;Message checking for clemgame development.
+    This checks if the model&#39;s chat template accepts the given messages as passed, before the standard flattening done
+    for generation. This allows clemgame developers to construct message lists that are sound as-is and are not affected
+    by the indiscriminate flattening of the generation method. Deliberately verbose.
+    Args:
+        model_spec: The ModelSpec for the model.
+        messages: for example
+            [
+                {&#34;role&#34;: &#34;system&#34;, &#34;content&#34;: &#34;You are a helpful assistant.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Who won the world series in 2020?&#34;},
+                {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;The Los Angeles Dodgers won the World Series in 2020.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Where was it played?&#34;}
+            ]
+    Returns:
+        True if messages are sound as-is, False if messages are not compatible with the model&#39;s template.
+    &#34;&#34;&#34;
+    tokenizer, _, _ = load_config_and_tokenizer(model_spec)
+
+    # bool for message acceptance:
+    messages_accepted: bool = True
+
+    # check for system message:
+    has_system_message: bool = False
+    if messages[0][&#39;role&#39;] == &#34;system&#34;:
+        print(&#34;System message detected.&#34;)
+        has_system_message = True
+        if not messages[0][&#39;content&#39;]:
+            print(f&#34;Initial system message is empty. It will be removed when generating responses.&#34;)
+        else:
+            print(f&#34;Initial system message has content! It will not be removed when generating responses. This &#34;
+                  f&#34;will lead to issues with models that do not allow system messages.&#34;)
+        &#34;&#34;&#34;
+        print(&#34;Checking model system message compatibility...&#34;)
+        # unfortunately Mistral models, which do not accept system message, currently do not raise a distinct 
+        # exception for this...
+        try:
+            self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+        except TemplateError:
+            print(&#34;The model&#39;s chat template does not allow for system message!&#34;)
+            messages_accepted = False
+        &#34;&#34;&#34;
+
+    # check for message order:
+    starts_with_assistant: bool = False
+    double_user: bool = False
+    double_assistant: bool = False
+    ends_with_assistant: bool = False
+
+    for msg_idx, message in enumerate(messages):
+        if not has_system_message:
+            if msg_idx == 0 and message[&#39;role&#39;] == &#34;assistant&#34;:
+                starts_with_assistant = True
+        else:
+            if msg_idx == 1 and message[&#39;role&#39;] == &#34;assistant&#34;:
+                starts_with_assistant = True
+        if msg_idx &gt; 0 and message[&#39;role&#39;] == &#34;user&#34; and messages[msg_idx - 1][&#39;role&#39;] == &#34;user&#34;:
+            double_user = True
+        elif msg_idx &gt; 0 and message[&#39;role&#39;] == &#34;assistant&#34; and messages[msg_idx - 1][&#39;role&#39;] == &#34;assistant&#34;:
+            double_assistant = True
+    if messages[-1][&#39;role&#39;] == &#34;assistant&#34;:
+        ends_with_assistant = True
+
+    if starts_with_assistant or double_user or double_assistant or ends_with_assistant:
+        print(&#34;Message order issue(s) found:&#34;)
+        if starts_with_assistant:
+            print(&#34;First message has role:&#39;assistant&#39;.&#34;)
+        if double_user:
+            print(&#34;Messages contain consecutive user messages.&#34;)
+        if double_assistant:
+            print(&#34;Messages contain consecutive assistant messages.&#34;)
+        if ends_with_assistant:
+            print(&#34;Last message has role:&#39;assistant&#39;.&#34;)
+
+    # proper check of chat template application:
+    try:
+        tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+    except TemplateError:
+        print(f&#34;The {model_spec.model_name} chat template does not accept these messages! &#34;
+              f&#34;Cleaning applied before generation might still allow these messages, but is indiscriminate and &#34;
+              f&#34;might lead to unintended generation inputs.&#34;)
+        messages_accepted = False
+    else:
+        print(
+            f&#34;The {model_spec.model_name} chat template accepts these messages. Cleaning before generation is still &#34;
+            f&#34;applied to these messages, which is indiscriminate and might lead to unintended generation inputs.&#34;)
+
+    return messages_accepted</code></pre>
+</details>
+<div class="desc"><p>Message checking for clemgame development.
+This checks if the model's chat template accepts the given messages as passed, before the standard flattening done
+for generation. This allows clemgame developers to construct message lists that are sound as-is and are not affected
+by the indiscriminate flattening of the generation method. Deliberately verbose.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+<dt><strong><code>messages</code></strong></dt>
+<dd>for example
 [
 {"role": "system", "content": "You are a helpful assistant."},
 {"role": "user", "content": "Who won the world series in 2020?"},
 {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
 {"role": "user", "content": "Where was it played?"}
-]
-:return: True if messages are sound as-is, False if messages are not compatible with the model's template.</p></div>
+]</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>True if messages are sound as-is, False if messages are not compatible with the model's template.</p></div>
 </dd>
 <dt id="clemcore.backends.huggingface_local_api.load_config_and_tokenizer"><code class="name flex">
-<span>def <span class="ident">load_config_and_tokenizer</span></span>(<span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> Union[transformers.models.auto.tokenization_auto.AutoTokenizer, transformers.models.auto.configuration_auto.AutoConfig, int]</span>
+<span>def <span class="ident">load_config_and_tokenizer</span></span>(<span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> Tuple[transformers.models.auto.tokenization_auto.AutoTokenizer, transformers.models.auto.configuration_auto.AutoConfig, int]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load a HuggingFace model's standard config and tokenizer, and get context token limit from config. If the model
-config does not contain the context limit, it is set to 256 as fallback. Does not load the model weights, allowing
-for prototyping on non-GPU systems.
-:param model_spec: The ModelSpec for the model.
-:return: Tokenizer, model config and context token limit (int).</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_config_and_tokenizer(model_spec: backends.ModelSpec) -&gt; Tuple[AutoTokenizer, AutoConfig, int]:
+    &#34;&#34;&#34;Load a HuggingFace model&#39;s standard config and tokenizer, and get context token limit from config.
+    If the model config does not contain the context limit, it is set to 256 as fallback. Does not load the model
+    weights, allowing for prototyping on non-GPU systems.
+    Args:
+        model_spec: The ModelSpec for the model.
+    Returns:
+        Tokenizer, model config and context token limit (int).
+    &#34;&#34;&#34;
+    logger.info(f&#39;Loading huggingface model config and tokenizer: {model_spec.model_name}&#39;)
+
+    use_api_key = False
+    api_key = None
+    if &#39;requires_api_key&#39; in model_spec.model_config:
+        if model_spec[&#39;model_config&#39;][&#39;requires_api_key&#39;]:
+            # load HF API key:
+            creds = backends.load_credentials(&#34;huggingface&#34;)
+            api_key = creds[&#34;huggingface&#34;][&#34;api_key&#34;]
+            use_api_key = True
+        else:
+            requires_api_key_info = (f&#34;{model_spec[&#39;model_name&#39;]} registry setting has requires_api_key, &#34;
+                                     f&#34;but it is not &#39;true&#39;. Please check the model entry.&#34;)
+            print(requires_api_key_info)
+            logger.info(requires_api_key_info)
+
+    hf_model_str = model_spec[&#39;huggingface_id&#39;]
+
+    # use &#39;slow&#39; tokenizer for models that require it:
+    if &#39;slow_tokenizer&#39; in model_spec.model_config:
+        if model_spec[&#39;model_config&#39;][&#39;slow_tokenizer&#39;]:
+            tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map=&#34;auto&#34;, torch_dtype=&#34;auto&#34;,
+                                                      verbose=False, use_fast=False)
+        else:
+            tokenizer = None
+            slow_tokenizer_info = (f&#34;{model_spec[&#39;model_name&#39;]} registry setting has slow_tokenizer, &#34;
+                                   f&#34;but it is not &#39;true&#39;. Please check the model entry.&#34;)
+            print(slow_tokenizer_info)
+            logger.info(slow_tokenizer_info)
+    elif use_api_key:
+        tokenizer = AutoTokenizer.from_pretrained(hf_model_str, token=api_key, device_map=&#34;auto&#34;,
+                                                  torch_dtype=&#34;auto&#34;, verbose=False)
+    else:
+        tokenizer = AutoTokenizer.from_pretrained(hf_model_str, device_map=&#34;auto&#34;, torch_dtype=&#34;auto&#34;,
+                                                  verbose=False)
+
+    # apply proper chat template:
+    if not model_spec[&#39;model_config&#39;][&#39;premade_chat_template&#39;]:
+        if &#39;custom_chat_template&#39; in model_spec.model_config:
+            tokenizer.chat_template = model_spec[&#39;model_config&#39;][&#39;custom_chat_template&#39;]
+        else:
+            logger.info(
+                f&#34;No custom chat template for {model_spec.model_name} found in model settings from model registry &#34;
+                f&#34;while model has no pre-made template! Generic template will be used, likely leading to &#34;
+                f&#34;bad results.&#34;)
+
+    if use_api_key:
+        model_config = AutoConfig.from_pretrained(hf_model_str, token=api_key)
+    else:
+        model_config = AutoConfig.from_pretrained(hf_model_str)
+
+    # get context token limit for model:
+    if hasattr(model_config, &#39;max_position_embeddings&#39;):  # this is the standard attribute used by most
+        context_size = model_config.max_position_embeddings
+    elif hasattr(model_config, &#39;n_positions&#39;):  # some models may have their context size under this attribute
+        context_size = model_config.n_positions
+    else:  # few models, especially older ones, might not have their context size in the config
+        context_size = FALLBACK_CONTEXT_SIZE
+
+    # stopping transformers pad_token_id warnings
+    # check if tokenizer has no set pad_token_id:
+    if not tokenizer.pad_token_id:  # if not set, pad_token_id is None
+        # preemptively set pad_token_id to eos_token_id as automatically done to prevent warning at each generation:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+
+    return tokenizer, model_config, context_size</code></pre>
+</details>
+<div class="desc"><p>Load a HuggingFace model's standard config and tokenizer, and get context token limit from config.
+If the model config does not contain the context limit, it is set to 256 as fallback. Does not load the model
+weights, allowing for prototyping on non-GPU systems.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>Tokenizer, model config and context token limit (int).</p></div>
 </dd>
 <dt id="clemcore.backends.huggingface_local_api.load_model"><code class="name flex">
-<span>def <span class="ident">load_model</span></span>(<span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> Any</span>
+<span>def <span class="ident">load_model</span></span>(<span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> Any</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Load Huggingface model weights, into VRAM if available. Weights are distributed over all available GPUs for maximum
-speed - make sure to limit the available GPUs using environment variables if only a subset is to be used.
-:param model_spec: The ModelSpec for the model.
-:return: The transformers model class instance of the loaded model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_model(model_spec: backends.ModelSpec) -&gt; Any:
+    &#34;&#34;&#34;Load Huggingface model weights, into VRAM if available.
+    Weights are distributed over all available GPUs for maximum speed - make sure to limit the available GPUs using
+    environment variables if only a subset is to be used.
+    Args:
+        model_spec: The ModelSpec for the model.
+    Returns:
+        The transformers model class instance of the loaded model.
+    &#34;&#34;&#34;
+    logger.info(f&#39;Start loading huggingface model weights: {model_spec.model_name}&#39;)
+
+    hf_model_str = model_spec[&#39;huggingface_id&#39;]
+    if &#39;requires_api_key&#39; in model_spec.model_config and model_spec[&#39;model_config&#39;][&#39;requires_api_key&#39;]:
+        # load HF API key:
+        creds = backends.load_credentials(&#34;huggingface&#34;)
+        api_key = creds[&#34;huggingface&#34;][&#34;api_key&#34;]
+        # load model using its default configuration:
+        model = AutoModelForCausalLM.from_pretrained(hf_model_str, token=api_key, device_map=&#34;auto&#34;, torch_dtype=&#34;auto&#34;)
+    else:
+        model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map=&#34;auto&#34;, torch_dtype=&#34;auto&#34;)
+
+    logger.info(f&#34;Finished loading huggingface model: {model_spec.model_name}&#34;)
+    logger.info(f&#34;Model device map: {model.hf_device_map}&#34;)
+
+    return model</code></pre>
+</details>
+<div class="desc"><p>Load Huggingface model weights, into VRAM if available.
+Weights are distributed over all available GPUs for maximum speed - make sure to limit the available GPUs using
+environment variables if only a subset is to be used.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The transformers model class instance of the loaded model.</p></div>
 </dd>
 </dl>
 </section>
@@ -104,29 +392,27 @@ speed - make sure to limit the available GPUs using environment variables if onl
 <span>class <span class="ident">HuggingfaceLocal</span></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Model/backend handler class for locally-run Huggingface models.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HuggingfaceLocal(backends.Backend):
-    &#34;&#34;&#34;
-    Model/backend handler class for locally-run Huggingface models.
-    &#34;&#34;&#34;
-
+    &#34;&#34;&#34;Model/backend handler class for locally-run Huggingface models.&#34;&#34;&#34;
     def __init__(self):
         super().__init__()
 
     def get_model_for(self, model_spec: backends.ModelSpec) -&gt; backends.Model:
-        &#34;&#34;&#34;
-        Get a HuggingFaceLocalModel instance with the passed model and settings. Will load all required data for using
-        the model upon initialization.
-        :param model_spec: The ModelSpec for the model.
-        :return: The Model class instance of the model.
+        &#34;&#34;&#34;Get a HuggingFaceLocalModel instance with the passed model and settings.
+        Will load all required data for using the model upon initialization.
+        Args:
+            model_spec: The ModelSpec for the model.
+        Returns:
+            The Model class instance of the model.
         &#34;&#34;&#34;
         torch.set_num_threads(1)
         return HuggingfaceLocalModel(model_spec)</code></pre>
 </details>
+<div class="desc"><p>Model/backend handler class for locally-run Huggingface models.</p></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
 <li><a title="clemcore.backends.Backend" href="index.html#clemcore.backends.Backend">Backend</a></li>
@@ -135,33 +421,52 @@ speed - make sure to limit the available GPUs using environment variables if onl
 <h3>Methods</h3>
 <dl>
 <dt id="clemcore.backends.huggingface_local_api.HuggingfaceLocal.get_model_for"><code class="name flex">
-<span>def <span class="ident">get_model_for</span></span>(<span>self, model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></span>
+<span>def <span class="ident">get_model_for</span></span>(<span>self,<br>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>) ‑> <a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></span>
 </code></dt>
 <dd>
-<div class="desc"><p>Get a HuggingFaceLocalModel instance with the passed model and settings. Will load all required data for using
-the model upon initialization.
-:param model_spec: The ModelSpec for the model.
-:return: The Model class instance of the model.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_model_for(self, model_spec: backends.ModelSpec) -&gt; backends.Model:
+    &#34;&#34;&#34;Get a HuggingFaceLocalModel instance with the passed model and settings.
+    Will load all required data for using the model upon initialization.
+    Args:
+        model_spec: The ModelSpec for the model.
+    Returns:
+        The Model class instance of the model.
+    &#34;&#34;&#34;
+    torch.set_num_threads(1)
+    return HuggingfaceLocalModel(model_spec)</code></pre>
+</details>
+<div class="desc"><p>Get a HuggingFaceLocalModel instance with the passed model and settings.
+Will load all required data for using the model upon initialization.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>The ModelSpec for the model.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The Model class instance of the model.</p></div>
 </dd>
 </dl>
 </dd>
 <dt id="clemcore.backends.huggingface_local_api.HuggingfaceLocalModel"><code class="flex name class">
 <span>class <span class="ident">HuggingfaceLocalModel</span></span>
-<span>(</span><span>model_spec: <a title="clemcore.backends.ModelSpec" href="index.html#clemcore.backends.ModelSpec">ModelSpec</a>)</span>
+<span>(</span><span>model_spec: <a title="clemcore.backends.model_registry.ModelSpec" href="model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Class for loaded models ready for generation.</p>
-<p>:param model_spec: that specifies the model and the backend to be used</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class HuggingfaceLocalModel(backends.Model):
-    &#34;&#34;&#34;
-    Class for loaded models ready for generation.
-    &#34;&#34;&#34;
-
+    &#34;&#34;&#34;Class for loaded HuggingFace transformers models ready for generation.&#34;&#34;&#34;
     def __init__(self, model_spec: backends.ModelSpec):
+        &#34;&#34;&#34;
+        Args:
+            model_spec: A ModelSpec instance specifying the model.
+        &#34;&#34;&#34;
         super().__init__(model_spec)
         # fail-fast
         self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
@@ -177,17 +482,19 @@ the model upon initialization.
     def generate_response(self, messages: List[Dict],
                           return_full_text: bool = False,
                           log_messages: bool = False) -&gt; Tuple[Any, Any, str]:
-        &#34;&#34;&#34;
-        :param messages: for example
+        &#34;&#34;&#34;Generate a response with the loaded HuggingFace transformers model.
+        Args:
+            messages: A message history. For example:
                 [
                     {&#34;role&#34;: &#34;system&#34;, &#34;content&#34;: &#34;You are a helpful assistant.&#34;},
                     {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Who won the world series in 2020?&#34;},
                     {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;The Los Angeles Dodgers won the World Series in 2020.&#34;},
                     {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Where was it played?&#34;}
                 ]
-        :param return_full_text: If True, whole input context is returned.
-        :param log_messages: If True, raw and cleaned messages passed will be logged.
-        :return: the continuation
+            return_full_text: If True, whole input context is returned.
+            log_messages: If True, raw and cleaned messages passed will be logged.
+        Returns:
+            The response message generated by the loaded HuggingFace transformers model.
         &#34;&#34;&#34;
         # log current given messages list:
         if log_messages:
@@ -246,11 +553,11 @@ the model upon initialization.
         if not return_full_text:
             response_text = model_output.replace(prompt_text, &#39;&#39;).strip()
 
-            if &#39;output_split_prefix&#39; in self.model_spec:
-                response_text = model_output.rsplit(self.model_spec[&#39;output_split_prefix&#39;], maxsplit=1)[1]
+            if &#39;output_split_prefix&#39; in self.model_spec.model_config:
+                response_text = model_output.rsplit(self.model_spec[&#39;model_config&#39;][&#39;output_split_prefix&#39;], maxsplit=1)[1]
 
             # remove eos token string:
-            eos_to_cull = self.model_spec[&#39;eos_to_cull&#39;]
+            eos_to_cull = self.model_spec[&#39;model_config&#39;][&#39;eos_to_cull&#39;]
             response_text = re.sub(eos_to_cull, &#34;&#34;, response_text)
         else:
             response_text = model_output.strip()
@@ -260,37 +567,145 @@ the model upon initialization.
 
         return prompt, response, response_text</code></pre>
 </details>
+<div class="desc"><p>Class for loaded HuggingFace transformers models ready for generation.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>model_spec</code></strong></dt>
+<dd>A ModelSpec instance specifying the model.</dd>
+</dl></div>
 <h3>Ancestors</h3>
 <ul class="hlist">
-<li><a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></li>
+<li><a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></li>
 <li>abc.ABC</li>
 </ul>
 <h3>Methods</h3>
 <dl>
 <dt id="clemcore.backends.huggingface_local_api.HuggingfaceLocalModel.generate_response"><code class="name flex">
-<span>def <span class="ident">generate_response</span></span>(<span>self, messages: List[Dict], return_full_text: bool = False, log_messages: bool = False) ‑> Tuple[Any, Any, str]</span>
+<span>def <span class="ident">generate_response</span></span>(<span>self,<br>messages: List[Dict],<br>return_full_text: bool = False,<br>log_messages: bool = False) ‑> Tuple[Any, Any, str]</span>
 </code></dt>
 <dd>
-<div class="desc"><p>:param messages: for example
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def generate_response(self, messages: List[Dict],
+                      return_full_text: bool = False,
+                      log_messages: bool = False) -&gt; Tuple[Any, Any, str]:
+    &#34;&#34;&#34;Generate a response with the loaded HuggingFace transformers model.
+    Args:
+        messages: A message history. For example:
+            [
+                {&#34;role&#34;: &#34;system&#34;, &#34;content&#34;: &#34;You are a helpful assistant.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Who won the world series in 2020?&#34;},
+                {&#34;role&#34;: &#34;assistant&#34;, &#34;content&#34;: &#34;The Los Angeles Dodgers won the World Series in 2020.&#34;},
+                {&#34;role&#34;: &#34;user&#34;, &#34;content&#34;: &#34;Where was it played?&#34;}
+            ]
+        return_full_text: If True, whole input context is returned.
+        log_messages: If True, raw and cleaned messages passed will be logged.
+    Returns:
+        The response message generated by the loaded HuggingFace transformers model.
+    &#34;&#34;&#34;
+    # log current given messages list:
+    if log_messages:
+        logger.info(f&#34;Raw messages passed: {messages}&#34;)
+
+    current_messages = ensure_alternating_roles(messages)
+
+    # log current flattened messages list:
+    if log_messages:
+        logger.info(f&#34;Flattened messages: {current_messages}&#34;)
+
+    # apply chat template &amp; tokenize:
+    prompt_tokens = self.tokenizer.apply_chat_template(current_messages, add_generation_prompt=True,
+                                                       return_tensors=&#34;pt&#34;)
+    prompt_tokens = prompt_tokens.to(self.device)
+
+    prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
+    prompt = {&#34;inputs&#34;: prompt_text, &#34;max_new_tokens&#34;: self.get_max_tokens(),
+              &#34;temperature&#34;: self.get_temperature(), &#34;return_full_text&#34;: return_full_text}
+
+    # check context limit:
+    context_check = _check_context_limit(self.context_size, prompt_tokens[0],
+                                         max_new_tokens=self.get_max_tokens())
+    if not context_check[0]:  # if context is exceeded, context_check[0] is False
+        logger.info(f&#34;Context token limit for {self.model_spec.model_name} exceeded: &#34;
+                    f&#34;{context_check[1]}/{context_check[3]}&#34;)
+        # fail gracefully:
+        raise backends.ContextExceededError(f&#34;Context token limit for {self.model_spec.model_name} exceeded&#34;,
+                                            tokens_used=context_check[1], tokens_left=context_check[2],
+                                            context_size=context_check[3])
+
+    # greedy decoding:
+    do_sample: bool = False
+    if self.get_temperature() &gt; 0.0:
+        do_sample = True
+
+    if do_sample:
+        model_output_ids = self.model.generate(
+            prompt_tokens,
+            temperature=self.get_temperature(),
+            max_new_tokens=self.get_max_tokens(),
+            do_sample=do_sample
+        )
+    else:
+        model_output_ids = self.model.generate(
+            prompt_tokens,
+            max_new_tokens=self.get_max_tokens(),
+            do_sample=do_sample
+        )
+
+    model_output = self.tokenizer.batch_decode(model_output_ids)[0]
+
+    response = {&#39;response&#39;: model_output}
+
+    # cull input context; equivalent to transformers.pipeline method:
+    if not return_full_text:
+        response_text = model_output.replace(prompt_text, &#39;&#39;).strip()
+
+        if &#39;output_split_prefix&#39; in self.model_spec.model_config:
+            response_text = model_output.rsplit(self.model_spec[&#39;model_config&#39;][&#39;output_split_prefix&#39;], maxsplit=1)[1]
+
+        # remove eos token string:
+        eos_to_cull = self.model_spec[&#39;model_config&#39;][&#39;eos_to_cull&#39;]
+        response_text = re.sub(eos_to_cull, &#34;&#34;, response_text)
+    else:
+        response_text = model_output.strip()
+
+    if log_messages:
+        logger.info(f&#34;Response message: {response_text}&#34;)
+
+    return prompt, response, response_text</code></pre>
+</details>
+<div class="desc"><p>Generate a response with the loaded HuggingFace transformers model.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>messages</code></strong></dt>
+<dd>A message history. For example:
 [
 {"role": "system", "content": "You are a helpful assistant."},
 {"role": "user", "content": "Who won the world series in 2020?"},
 {"role": "assistant", "content": "The Los Angeles Dodgers won the World Series in 2020."},
 {"role": "user", "content": "Where was it played?"}
-]
-:param return_full_text: If True, whole input context is returned.
-:param log_messages: If True, raw and cleaned messages passed will be logged.
-:return: the continuation</p></div>
+]</dd>
+<dt><strong><code>return_full_text</code></strong></dt>
+<dd>If True, whole input context is returned.</dd>
+<dt><strong><code>log_messages</code></strong></dt>
+<dd>If True, raw and cleaned messages passed will be logged.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The response message generated by the loaded HuggingFace transformers model.</p></div>
 </dd>
 </dl>
 <h3>Inherited members</h3>
 <ul class="hlist">
-<li><code><b><a title="clemcore.backends.Model" href="index.html#clemcore.backends.Model">Model</a></b></code>:
+<li><code><b><a title="clemcore.backends.model_registry.Model" href="model_registry.html#clemcore.backends.model_registry.Model">Model</a></b></code>:
 <ul class="hlist">
-<li><code><a title="clemcore.backends.Model.get_max_tokens" href="index.html#clemcore.backends.Model.get_max_tokens">get_max_tokens</a></code></li>
-<li><code><a title="clemcore.backends.Model.get_temperature" href="index.html#clemcore.backends.Model.get_temperature">get_temperature</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_arg" href="index.html#clemcore.backends.Model.set_gen_arg">set_gen_arg</a></code></li>
-<li><code><a title="clemcore.backends.Model.set_gen_args" href="index.html#clemcore.backends.Model.set_gen_args">set_gen_args</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_gen_arg" href="model_registry.html#clemcore.backends.model_registry.Model.get_gen_arg">get_gen_arg</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_max_tokens" href="model_registry.html#clemcore.backends.model_registry.Model.get_max_tokens">get_max_tokens</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_name" href="model_registry.html#clemcore.backends.model_registry.Model.get_name">get_name</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.get_temperature" href="model_registry.html#clemcore.backends.model_registry.Model.get_temperature">get_temperature</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.set_gen_arg" href="model_registry.html#clemcore.backends.model_registry.Model.set_gen_arg">set_gen_arg</a></code></li>
+<li><code><a title="clemcore.backends.model_registry.Model.set_gen_args" href="model_registry.html#clemcore.backends.model_registry.Model.set_gen_args">set_gen_args</a></code></li>
 </ul>
 </li>
 </ul>
@@ -336,7 +751,7 @@ the model upon initialization.
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>

@@ -3,19 +3,30 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.cli API documentation</title>
 <meta name="description" content="">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -33,23 +44,517 @@ hljs.highlightAll();
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="clemcore.cli.main"><code class="name flex">
-<span>def <span class="ident">main</span></span>(<span>args: argparse.Namespace)</span>
+<dt id="clemcore.cli.cli"><code class="name flex">
+<span>def <span class="ident">cli</span></span>(<span>args: argparse.Namespace)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def cli(args: argparse.Namespace):
+    if args.command_name == &#34;list&#34;:
+        if args.mode == &#34;games&#34;:
+            list_games(args.selector, args.verbose)
+        elif args.mode == &#34;models&#34;:
+            list_models(args.verbose)
+        elif args.mode == &#34;backends&#34;:
+            list_backends(args.verbose)
+        else:
+            print(f&#34;Cannot list {args.mode}. Choose an option documented at &#39;list -h&#39;.&#34;)
+    if args.command_name == &#34;train&#34;:
+        train(backends.ModelSpec.from_string(args.learner),
+              backends.ModelSpec.from_string(args.teacher))
+    if args.command_name == &#34;run&#34;:
+        run(args.game,
+            model_selectors=backends.ModelSpec.from_strings(args.models),
+            gen_args=read_gen_args(args),
+            experiment_name=args.experiment_name,
+            instances_name=args.instances_name,
+            results_dir=args.results_dir)
+    if args.command_name == &#34;score&#34;:
+        score(args.game, experiment_name=args.experiment_name, results_dir=args.results_dir)
+    if args.command_name == &#34;transcribe&#34;:
+        transcripts(args.game, results_dir=args.results_dir)
+    if args.command_name == &#34;eval&#34;:
+        clemeval.perform_evaluation(args.results_dir)</code></pre>
+</details>
 <div class="desc"></div>
+</dd>
+<dt id="clemcore.cli.list_backends"><code class="name flex">
+<span>def <span class="ident">list_backends</span></span>(<span>verbose: bool)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_backends(verbose: bool):
+    &#34;&#34;&#34;List all models specified in the models registries.&#34;&#34;&#34;
+    print(&#34;Listing all supported backends (use -v option to see full file path)&#34;)
+    backend_registry = BackendRegistry.from_packaged_and_cwd_files()
+    if not backend_registry:
+        print(&#34;No registered backends found&#34;)
+        return
+    print(f&#34;Found &#39;{len(backend_registry)}&#39; supported backends.&#34;)
+    print(&#34;Then you can use models that specify one of the following backends:&#34;)
+    wrapper = textwrap.TextWrapper(initial_indent=&#34;\t&#34;, width=70, subsequent_indent=&#34;\t&#34;)
+    for backend_file in backend_registry:
+        print(f&#39;{backend_file[&#34;backend&#34;]} &#39;
+              f&#39;({backend_file[&#34;lookup_source&#34;]})&#39;)
+        if verbose:
+            print(wrapper.fill(&#34;\nFull Path: &#34; + backend_file[&#34;file_path&#34;]))</code></pre>
+</details>
+<div class="desc"><p>List all models specified in the models registries.</p></div>
+</dd>
+<dt id="clemcore.cli.list_games"><code class="name flex">
+<span>def <span class="ident">list_games</span></span>(<span>game_selector: str, verbose: bool)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_games(game_selector: str, verbose: bool):
+    &#34;&#34;&#34;List all games specified in the game registries.
+    Only loads those for which master.py can be found in the specified path.
+    See game registry doc for more infos (TODO: add link)
+    TODO: add filtering options to see only specific games
+    &#34;&#34;&#34;
+    print(&#34;Listing all available games (use -v option to see the whole specs)&#34;)
+    game_registry = GameRegistry.from_directories_and_cwd_files()
+    if not game_registry:
+        print(&#34;No clemgames found.&#34;)
+        return
+    if game_selector != &#34;all&#34;:
+        game_selector = GameSpec.from_string(game_selector)
+    game_specs = game_registry.get_game_specs_that_unify_with(game_selector, verbose=False)
+    print(f&#34;Found &#39;{len(game_specs)}&#39; game specs that match the game_selector=&#39;{game_selector}&#39;&#34;)
+    wrapper = textwrap.TextWrapper(initial_indent=&#34;\t&#34;, width=70, subsequent_indent=&#34;\t&#34;)
+    for game_spec in game_specs:
+        game_name = f&#39;{game_spec[&#34;game_name&#34;]}:\n&#39;
+        if verbose:
+            print(game_name,
+                  wrapper.fill(game_spec[&#34;description&#34;]), &#34;\n&#34;,
+                  wrapper.fill(&#34;GameSpec: &#34; + game_spec.to_string()),
+                  )
+        else:
+            print(game_name, wrapper.fill(game_spec[&#34;description&#34;]))</code></pre>
+</details>
+<div class="desc"><p>List all games specified in the game registries.
+Only loads those for which master.py can be found in the specified path.
+See game registry doc for more infos (TODO: add link)
+TODO: add filtering options to see only specific games</p></div>
+</dd>
+<dt id="clemcore.cli.list_models"><code class="name flex">
+<span>def <span class="ident">list_models</span></span>(<span>verbose: bool)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def list_models(verbose: bool):
+    &#34;&#34;&#34;List all models specified in the models registries.&#34;&#34;&#34;
+    print(&#34;Listing all available models by name (use -v option to see the whole specs)&#34;)
+    model_registry = ModelRegistry.from_packaged_and_cwd_files()
+    if not model_registry:
+        print(&#34;No registered models found&#34;)
+        return
+    print(f&#34;Found &#39;{len(model_registry)}&#39; registered model specs:&#34;)
+    wrapper = textwrap.TextWrapper(initial_indent=&#34;\t&#34;, width=70, subsequent_indent=&#34;\t&#34;)
+    for model_spec in model_registry:
+        print(f&#39;{model_spec[&#34;model_name&#34;]} &#39;
+              f&#39;-&gt; {model_spec[&#34;backend&#34;]} &#39;
+              f&#39;({model_spec[&#34;lookup_source&#34;]})&#39;)
+        if verbose:
+            print(wrapper.fill(&#34;\nModelSpec: &#34; + model_spec.to_string()))</code></pre>
+</details>
+<div class="desc"><p>List all models specified in the models registries.</p></div>
+</dd>
+<dt id="clemcore.cli.main"><code class="name flex">
+<span>def <span class="ident">main</span></span>(<span>)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def main():
+    &#34;&#34;&#34;Main CLI handling function.
+
+    Handles the clembench CLI commands
+
+    - &#39;ls&#39; to list available clemgames.
+    - &#39;run&#39; to start a benchmark run. Takes further arguments determining the clemgame to run, which experiments,
+    instances and models to use, inference parameters, and where to store the benchmark records.
+    - &#39;score&#39; to score benchmark results. Takes further arguments determining the clemgame and which of its experiments
+    to score, and where the benchmark records are located.
+    - &#39;transcribe&#39; to transcribe benchmark results. Takes further arguments determining the clemgame and which of its
+    experiments to transcribe, and where the benchmark records are located.
+
+    Args:
+        args: CLI arguments as passed via argparse.
+    &#34;&#34;&#34;
+    parser = argparse.ArgumentParser()
+    sub_parsers = parser.add_subparsers(dest=&#34;command_name&#34;)
+    list_parser = sub_parsers.add_parser(&#34;list&#34;)
+    list_parser.add_argument(&#34;mode&#34;, choices=[&#34;games&#34;, &#34;models&#34;, &#34;backends&#34;],
+                             default=&#34;games&#34;, nargs=&#34;?&#34;, type=str,
+                             help=&#34;Choose to list available games, models or backends. Default: games&#34;)
+    list_parser.add_argument(&#34;-v&#34;, &#34;--verbose&#34;, action=&#34;store_true&#34;)
+    list_parser.add_argument(&#34;-s&#34;, &#34;--selector&#34;, type=str, default=&#34;all&#34;)
+
+    train_parser = sub_parsers.add_parser(&#34;train&#34;)
+    train_parser.add_argument(&#34;-l&#34;, &#34;--learner&#34;, type=str)
+    train_parser.add_argument(&#34;-t&#34;, &#34;--teacher&#34;, type=str)
+
+    run_parser = sub_parsers.add_parser(&#34;run&#34;, formatter_class=argparse.RawTextHelpFormatter)
+    run_parser.add_argument(&#34;-m&#34;, &#34;--models&#34;, type=str, nargs=&#34;*&#34;,
+                            help=&#34;&#34;&#34;Assumes model names supported by the implemented backends.
+
+      To run a specific game with a single player:
+      $&gt; python3 scripts/cli.py run -g privateshared -m mock
+
+      To run a specific game with a two players:
+      $&gt; python3 scripts/cli.py run -g taboo -m mock mock
+
+      If the game supports model expansion (using the single specified model for all players):
+      $&gt; python3 scripts/cli.py run -g taboo -m mock
+
+      When this option is not given, then the dialogue partners configured in the experiment are used. 
+      Default: None.&#34;&#34;&#34;)
+    run_parser.add_argument(&#34;-e&#34;, &#34;--experiment_name&#34;, type=str,
+                            help=&#34;Optional argument to only run a specific experiment&#34;)
+    run_parser.add_argument(&#34;-g&#34;, &#34;--game&#34;, type=str,
+                            required=True, help=&#34;A specific game name (see ls), or a GameSpec-like JSON string object.&#34;)
+    run_parser.add_argument(&#34;-t&#34;, &#34;--temperature&#34;, type=float, default=0.0,
+                            help=&#34;Argument to specify sampling temperature for the models. Default: 0.0.&#34;)
+    run_parser.add_argument(&#34;-l&#34;, &#34;--max_tokens&#34;, type=int, default=100,
+                            help=&#34;Specify the maximum number of tokens to be generated per turn (except for cohere). &#34;
+                                 &#34;Be careful with high values which might lead to exceed your API token limits.&#34;
+                                 &#34;Default: 100.&#34;)
+    run_parser.add_argument(&#34;-i&#34;, &#34;--instances_name&#34;, type=str, default=None,
+                            help=&#34;The instances file name (.json suffix will be added automatically.&#34;)
+    run_parser.add_argument(&#34;-r&#34;, &#34;--results_dir&#34;, type=str, default=&#34;results&#34;,
+                            help=&#34;A relative or absolute path to the results root directory. &#34;
+                                 &#34;For example &#39;-r results/v1.5/de‘ or &#39;-r /absolute/path/for/results&#39;. &#34;
+                                 &#34;When not specified, then the results will be located in &#39;results&#39;&#34;)
+
+    score_parser = sub_parsers.add_parser(&#34;score&#34;)
+    score_parser.add_argument(&#34;-e&#34;, &#34;--experiment_name&#34;, type=str,
+                              help=&#34;Optional argument to only run a specific experiment&#34;)
+    score_parser.add_argument(&#34;-g&#34;, &#34;--game&#34;, type=str,
+                              help=&#39;A specific game name (see ls), a GameSpec-like JSON string object or &#34;all&#34; (default).&#39;,
+                              default=&#34;all&#34;)
+    score_parser.add_argument(&#34;-r&#34;, &#34;--results_dir&#34;, type=str, default=&#34;results&#34;,
+                              help=&#34;A relative or absolute path to the results root directory. &#34;
+                                   &#34;For example &#39;-r results/v1.5/de‘ or &#39;-r /absolute/path/for/results&#39;. &#34;
+                                   &#34;When not specified, then the results will be located in &#39;results&#39;&#34;)
+
+    transcribe_parser = sub_parsers.add_parser(&#34;transcribe&#34;)
+    transcribe_parser.add_argument(&#34;-g&#34;, &#34;--game&#34;, type=str,
+                                   help=&#39;A specific game name (see ls), a GameSpec-like JSON string object or &#34;all&#34; (default).&#39;,
+                                   default=&#34;all&#34;)
+    transcribe_parser.add_argument(&#34;-r&#34;, &#34;--results_dir&#34;, type=str, default=&#34;results&#34;,
+                                   help=&#34;A relative or absolute path to the results root directory. &#34;
+                                        &#34;For example &#39;-r results/v1.5/de‘ or &#39;-r /absolute/path/for/results&#39;. &#34;
+                                        &#34;When not specified, then the results will be located in &#39;results&#39;&#34;)
+
+    eval_parser = sub_parsers.add_parser(&#34;eval&#34;)
+    eval_parser.add_argument(&#34;-r&#34;, &#34;--results_dir&#34;, type=str, default=&#34;results&#34;,
+                             help=&#34;A relative or absolute path to the results root directory. &#34;
+                                  &#34;For example &#39;-r results/v1.5/de‘ or &#39;-r /absolute/path/for/results&#39;. &#34;
+                                  &#34;When not specified, then the results will be located in &#39;results&#39;.&#34;
+                                  &#34;For evaluation, the directory must already contain the scores.&#34;)
+
+    cli(parser.parse_args())</code></pre>
+</details>
+<div class="desc"><p>Main CLI handling function.</p>
+<p>Handles the clembench CLI commands</p>
+<ul>
+<li>'ls' to list available clemgames.</li>
+<li>'run' to start a benchmark run. Takes further arguments determining the clemgame to run, which experiments,
+instances and models to use, inference parameters, and where to store the benchmark records.</li>
+<li>'score' to score benchmark results. Takes further arguments determining the clemgame and which of its experiments
+to score, and where the benchmark records are located.</li>
+<li>'transcribe' to transcribe benchmark results. Takes further arguments determining the clemgame and which of its
+experiments to transcribe, and where the benchmark records are located.</li>
+</ul>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>args</code></strong></dt>
+<dd>CLI arguments as passed via argparse.</dd>
+</dl></div>
 </dd>
 <dt id="clemcore.cli.read_gen_args"><code class="name flex">
 <span>def <span class="ident">read_gen_args</span></span>(<span>args: argparse.Namespace)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def read_gen_args(args: argparse.Namespace):
+    &#34;&#34;&#34;Get text generation inference parameters from CLI arguments.
+    Handles sampling temperature and maximum number of tokens to generate.
+    Args:
+        args: CLI arguments as passed via argparse.
+    Returns:
+        A dict with the keys &#39;temperature&#39; and &#39;max_tokens&#39; with the values parsed by argparse.
+    &#34;&#34;&#34;
+    return dict(temperature=args.temperature, max_tokens=args.max_tokens)</code></pre>
+</details>
+<div class="desc"><p>Get text generation inference parameters from CLI arguments.
+Handles sampling temperature and maximum number of tokens to generate.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>args</code></strong></dt>
+<dd>CLI arguments as passed via argparse.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A dict with the keys 'temperature' and 'max_tokens' with the values parsed by argparse.</p></div>
 </dd>
-<dt id="clemcore.cli.read_model_specs"><code class="name flex">
-<span>def <span class="ident">read_model_specs</span></span>(<span>model_strings: List[str])</span>
+<dt id="clemcore.cli.run"><code class="name flex">
+<span>def <span class="ident">run</span></span>(<span>game_selector: str | Dict | <a title="clemcore.clemgame.registry.GameSpec" href="clemgame/registry.html#clemcore.clemgame.registry.GameSpec">GameSpec</a>,<br>model_selectors: List[<a title="clemcore.backends.model_registry.ModelSpec" href="backends/model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>],<br>gen_args: Dict,<br>experiment_name: str = None,<br>instances_name: str = None,<br>results_dir: str = None)</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backends.ModelSpec],
+        gen_args: Dict, experiment_name: str = None, instances_name: str = None, results_dir: str = None):
+    &#34;&#34;&#34;Run specific model/models with a specified clemgame.
+    Args:
+        game_selector: Name of the game, matching the game&#39;s name in the game registry, OR GameSpec-like dict, OR GameSpec.
+        model_selectors: One or two selectors for the models that are supposed to play the games.
+        gen_args: Text generation parameters for the backend; output length and temperature are implemented for the
+            majority of model backends.
+        experiment_name: Name of the experiment to run. Corresponds to the experiment key in the instances JSON file.
+        instances_name: Name of the instances JSON file to use for this benchmark run.
+        results_dir: Path to the results directory in which to store the episode records.
+    &#34;&#34;&#34;
+    try:
+        # check games first
+        game_registry = GameRegistry.from_directories_and_cwd_files()
+        game_specs = game_registry.get_game_specs_that_unify_with(game_selector)  # throws error when nothing unifies
+        # check models are available
+        model_registry = ModelRegistry.from_packaged_and_cwd_files()
+        unified_model_specs = []
+        for model_selector in model_selectors:
+            unified_model_spec = model_registry.get_first_model_spec_that_unify_with(model_selector)
+            logger.info(f&#34;Found registered model spec that unifies with {model_selector.to_string()} &#34;
+                        f&#34;-&gt; {unified_model_spec}&#34;)
+            unified_model_specs.append(unified_model_spec)
+        # check backends are available
+        backend_registry = BackendRegistry.from_packaged_and_cwd_files()
+        for unified_model_spec in unified_model_specs:
+            backend_selector = unified_model_spec.backend
+            if not backend_registry.is_supported(backend_selector):
+                raise ValueError(f&#34;Specified model backend &#39;{backend_selector}&#39; not found in backend registry.&#34;)
+            logger.info(f&#34;Found registry entry for backend {backend_selector} &#34;
+                        f&#34;-&gt; {backend_registry.get_first_file_matching(backend_selector)}&#34;)
+        # ready to rumble, do the heavy lifting only now, that is, loading the additional modules
+        player_models = []
+        for unified_model_spec in unified_model_specs:
+            logger.info(f&#34;Dynamically import backend {unified_model_spec.backend}&#34;)
+            backend = backend_registry.get_backend_for(unified_model_spec.backend)
+            model = backend.get_model_for(unified_model_spec)
+            model.set_gen_args(**gen_args)  # todo make this somehow available in generate method?
+            logger.info(f&#34;Successfully loaded {unified_model_spec.model_name} model&#34;)
+            player_models.append(model)
+
+        for game_spec in game_specs:
+            with benchmark.load_from_spec(game_spec, instances_name=instances_name) as game_benchmark:
+                logger.info(
+                    f&#39;Running {game_spec[&#34;game_name&#34;]} &#39;
+                    f&#39;(models={player_models if player_models is not None else &#34;see experiment configs&#34;})&#39;)
+                stdout_logger.info(f&#34;Running game {game_spec[&#39;game_name&#39;]}&#34;)
+                if experiment_name:  # leaving this as-is for now, needs discussion conclusions
+                    logger.info(&#34;Only running experiment: %s&#34;, experiment_name)
+                    game_benchmark.filter_experiment.append(experiment_name)
+                time_start = datetime.now()
+                game_benchmark.run(player_models=player_models, results_dir=results_dir)
+                try:
+                    stdout_logger.info(f&#34;Scoring game {game_spec[&#39;game_name&#39;]}&#34;)
+                    game_benchmark.compute_scores(results_dir)
+                except Exception as e:
+                    stdout_logger.info(f&#34;There was a problem during scoring. See clembench.log for details.&#34;)
+                    logger.error(e, exc_info=True)
+                time_end = datetime.now()
+                logger.info(f&#39;Running {game_spec[&#34;game_name&#34;]} took {str(time_end - time_start)}&#39;)
+
+    except Exception as e:
+        stdout_logger.exception(e)
+        logger.error(e, exc_info=True)</code></pre>
+</details>
+<div class="desc"><p>Run specific model/models with a specified clemgame.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>game_selector</code></strong></dt>
+<dd>Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.</dd>
+<dt><strong><code>model_selectors</code></strong></dt>
+<dd>One or two selectors for the models that are supposed to play the games.</dd>
+<dt><strong><code>gen_args</code></strong></dt>
+<dd>Text generation parameters for the backend; output length and temperature are implemented for the
+majority of model backends.</dd>
+<dt><strong><code>experiment_name</code></strong></dt>
+<dd>Name of the experiment to run. Corresponds to the experiment key in the instances JSON file.</dd>
+<dt><strong><code>instances_name</code></strong></dt>
+<dd>Name of the instances JSON file to use for this benchmark run.</dd>
+<dt><strong><code>results_dir</code></strong></dt>
+<dd>Path to the results directory in which to store the episode records.</dd>
+</dl></div>
+</dd>
+<dt id="clemcore.cli.score"><code class="name flex">
+<span>def <span class="ident">score</span></span>(<span>game_selector: str | Dict | <a title="clemcore.clemgame.registry.GameSpec" href="clemgame/registry.html#clemcore.clemgame.registry.GameSpec">GameSpec</a>,<br>experiment_name: str = None,<br>results_dir: str = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def score(game_selector: Union[str, Dict, GameSpec], experiment_name: str = None, results_dir: str = None):
+    &#34;&#34;&#34;Calculate scores from a game benchmark run&#39;s records and store score files.
+    Args:
+        game_selector: Name of the game, matching the game&#39;s name in the game registry, OR GameSpec-like dict, OR GameSpec.
+        experiment_name: Name of the experiment to score. Corresponds to the experiment directory in each player pair
+            subdirectory in the results directory.
+        results_dir: Path to the results directory in which the benchmark records are stored.
+    &#34;&#34;&#34;
+    logger.info(f&#34;Scoring game {game_selector}&#34;)
+    stdout_logger.info(f&#34;Scoring game {game_selector}&#34;)
+
+    if experiment_name:
+        logger.info(&#34;Only scoring experiment: %s&#34;, experiment_name)
+
+    game_registry = GameRegistry.from_directories_and_cwd_files()
+    game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
+    for game_spec in game_specs:
+        try:
+            with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
+                if experiment_name:
+                    game_benchmark.filter_experiment.append(experiment_name)
+                time_start = datetime.now()
+                game_benchmark.compute_scores(results_dir)
+                time_end = datetime.now()
+                logger.info(f&#34;Scoring {game_benchmark.game_name} took {str(time_end - time_start)}&#34;)
+        except Exception as e:
+            stdout_logger.exception(e)
+            logger.error(e, exc_info=True)</code></pre>
+</details>
+<div class="desc"><p>Calculate scores from a game benchmark run's records and store score files.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>game_selector</code></strong></dt>
+<dd>Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.</dd>
+<dt><strong><code>experiment_name</code></strong></dt>
+<dd>Name of the experiment to score. Corresponds to the experiment directory in each player pair
+subdirectory in the results directory.</dd>
+<dt><strong><code>results_dir</code></strong></dt>
+<dd>Path to the results directory in which the benchmark records are stored.</dd>
+</dl></div>
+</dd>
+<dt id="clemcore.cli.train"><code class="name flex">
+<span>def <span class="ident">train</span></span>(<span>learner: <a title="clemcore.backends.model_registry.ModelSpec" href="backends/model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>,<br>teacher: <a title="clemcore.backends.model_registry.ModelSpec" href="backends/model_registry.html#clemcore.backends.model_registry.ModelSpec">ModelSpec</a>,<br>prefix: str = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def train(learner: backends.ModelSpec, teacher: backends.ModelSpec, prefix: str = None):
+    import importlib.util as importlib_util
+    lookup_name = &#34;trainer.py&#34;
+    if prefix:
+        lookup_name = f&#34;{prefix}_trainer.py&#34;
+
+    def is_playpen(obj):
+        return inspect.isclass(obj) and issubclass(obj, BasePlayPen) and obj is not BasePlayPen
+
+    playpen_cls = None
+    for file_name in os.listdir():
+        if file_name == lookup_name:
+            module_path = os.path.join(os.getcwd(), file_name)
+            spec = importlib_util.spec_from_file_location(os.path.splitext(lookup_name)[0], module_path)
+            module = importlib_util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            playpen_subclasses = inspect.getmembers(module, predicate=is_playpen)
+            _, playpen_cls = playpen_subclasses[0]
+            break
+
+    if playpen_cls is None:
+        raise RuntimeError(f&#34;No playpen trainer found in file &#39;{lookup_name}&#39;&#34;)
+
+    game_registry = GameRegistry.from_directories_and_cwd_files()
+    model_registry = ModelRegistry.from_packaged_and_cwd_files()
+
+    learner_spec = model_registry.get_first_model_spec_that_unify_with(learner)
+    logger.info(f&#34;Found registered model spec that unifies with {learner.to_string()} -&gt; {learner_spec}&#34;)
+
+    teacher_spec = model_registry.get_first_model_spec_that_unify_with(learner)
+    logger.info(f&#34;Found registered model spec that unifies with {teacher.to_string()} -&gt; {teacher_spec}&#34;)
+
+    backend_registry = BackendRegistry.from_packaged_and_cwd_files()
+    for model_spec in [learner_spec, teacher_spec]:
+        backend_selector = model_spec.backend
+        if not backend_registry.is_supported(backend_selector):
+            raise ValueError(f&#34;Specified model backend &#39;{backend_selector}&#39; not found in backend registry.&#34;)
+        logger.info(f&#34;Found registry entry for backend {backend_selector} &#34;
+                    f&#34;-&gt; {backend_registry.get_first_file_matching(backend_selector)}&#34;)
+
+    logger.info(f&#34;Dynamically import backend {learner_spec.backend}&#34;)
+    backend = backend_registry.get_backend_for(learner_spec.backend)
+    learner_model = backend.get_model_for(learner_spec)
+    learner_model.set_gen_args(max_tokens=100, temperature=0.0)
+    logger.info(f&#34;Successfully loaded {learner_spec.model_name} model&#34;)
+
+    logger.info(f&#34;Dynamically import backend {teacher_spec.backend}&#34;)
+    backend = backend_registry.get_backend_for(teacher_spec.backend)
+    teacher_model = backend.get_model_for(teacher_spec)
+    teacher_model.set_gen_args(max_tokens=100, temperature=0.0)
+    logger.info(f&#34;Successfully loaded {teacher_spec.model_name} model&#34;)
+
+    playpen_cls(learner_model, teacher_model).learn_interactive(game_registry)</code></pre>
+</details>
 <div class="desc"></div>
+</dd>
+<dt id="clemcore.cli.transcripts"><code class="name flex">
+<span>def <span class="ident">transcripts</span></span>(<span>game_selector: str | Dict | <a title="clemcore.clemgame.registry.GameSpec" href="clemgame/registry.html#clemcore.clemgame.registry.GameSpec">GameSpec</a>,<br>results_dir: str = None)</span>
+</code></dt>
+<dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
+    &#34;&#34;&#34;Create episode transcripts from a game benchmark run&#39;s records and store transcript files.
+    Args:
+        game_selector: Name of the game, matching the game&#39;s name in the game registry, OR GameSpec-like dict, OR GameSpec.
+        results_dir: Path to the results directory in which the benchmark records are stored.
+    &#34;&#34;&#34;
+    logger.info(f&#34;Transcribing game interactions that match game_selector={game_selector}&#34;)
+    stdout_logger.info(f&#34;Transcribing game interactions that match game_selector={game_selector}&#34;)
+
+    filter_games = []
+    if game_selector != &#34;all&#34;:
+        game_registry = GameRegistry.from_directories_and_cwd_files()
+        game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
+        filter_games = [game_spec.game_name for game_spec in game_specs]
+    time_start = datetime.now()
+    build_transcripts(results_dir, filter_games)
+    time_end = datetime.now()
+    logger.info(f&#34;Building transcripts took {str(time_end - time_start)}&#34;)</code></pre>
+</details>
+<div class="desc"><p>Create episode transcripts from a game benchmark run's records and store transcript files.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>game_selector</code></strong></dt>
+<dd>Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.</dd>
+<dt><strong><code>results_dir</code></strong></dt>
+<dd>Path to the results directory in which the benchmark records are stored.</dd>
+</dl></div>
 </dd>
 </dl>
 </section>
@@ -67,17 +572,24 @@ hljs.highlightAll();
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
+<li><code><a title="clemcore.cli.cli" href="#clemcore.cli.cli">cli</a></code></li>
+<li><code><a title="clemcore.cli.list_backends" href="#clemcore.cli.list_backends">list_backends</a></code></li>
+<li><code><a title="clemcore.cli.list_games" href="#clemcore.cli.list_games">list_games</a></code></li>
+<li><code><a title="clemcore.cli.list_models" href="#clemcore.cli.list_models">list_models</a></code></li>
 <li><code><a title="clemcore.cli.main" href="#clemcore.cli.main">main</a></code></li>
 <li><code><a title="clemcore.cli.read_gen_args" href="#clemcore.cli.read_gen_args">read_gen_args</a></code></li>
-<li><code><a title="clemcore.cli.read_model_specs" href="#clemcore.cli.read_model_specs">read_model_specs</a></code></li>
+<li><code><a title="clemcore.cli.run" href="#clemcore.cli.run">run</a></code></li>
+<li><code><a title="clemcore.cli.score" href="#clemcore.cli.score">score</a></code></li>
+<li><code><a title="clemcore.cli.train" href="#clemcore.cli.train">train</a></code></li>
+<li><code><a title="clemcore.cli.transcripts" href="#clemcore.cli.transcripts">transcripts</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>
