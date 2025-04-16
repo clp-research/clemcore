@@ -3,21 +3,31 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
-<meta name="generator" content="pdoc3 0.11.1">
+<meta name="generator" content="pdoc3 0.11.6">
 <title>clemcore.utils.file_utils API documentation</title>
-<meta name="description" content="Defines locations within the project structure
-and supplies several functions for loading different files
-TODO: check which functions could be moved …">
+<meta name="description" content="Defines locations within the project structure (for root directories, games and results)
+and supplies several functions for loading and storing files.">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/sanitize.min.css" integrity="sha512-y1dtMcuvtTMJc1yPgEqF0ZjQbhnc/bFhyvIyVNb9Zk5mIGtqVaAB1Ttl28su8AvFMOY0EwRbAe+HCLqj6W7/KA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/13.0.0/typography.min.css" integrity="sha512-Y1DYSb995BAfxobCkKepB1BqJJTPrOp3zPL74AWFugHHmmdcvO+C48WLrUOlhGMc0QG7AE3f7gmvvcrmX2fDoA==" crossorigin>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/default.min.css" crossorigin>
-<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:1.5em;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:2em 0 .50em 0}h3{font-size:1.4em;margin:1.6em 0 .7em 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .2s ease-in-out}a:visited{color:#503}a:hover{color:#b62}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900;font-weight:bold}pre code{font-size:.8em;line-height:1.4em;padding:1em;display:block}code{background:#f3f3f3;font-family:"DejaVu Sans Mono",monospace;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source > summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible;min-width:max-content}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em 1em;margin:1em 0}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
 <style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul ul{padding-left:1em}.toc > ul > li{margin-top:.5em}}</style>
 <style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" integrity="sha512-D9gUyxqja7hBtkWpPWGt9wfbfaMGVt9gnyCvYa+jojwwPHLCzUm5i8rpk7vD7wNee9bA35eYIjobYPaQuKS1MQ==" crossorigin></script>
 <script>window.addEventListener('DOMContentLoaded', () => {
 hljs.configure({languages: ['bash', 'css', 'diff', 'graphql', 'ini', 'javascript', 'json', 'plaintext', 'python', 'python-repl', 'rust', 'shell', 'sql', 'typescript', 'xml', 'yaml']});
 hljs.highlightAll();
+/* Collapse source docstrings */
+setTimeout(() => {
+[...document.querySelectorAll('.hljs.language-python > .hljs-string')]
+.filter(el => el.innerHTML.length > 200 && ['"""', "'''"].includes(el.innerHTML.substring(0, 3)))
+.forEach(el => {
+let d = document.createElement('details');
+d.classList.add('hljs-string');
+d.innerHTML = '<summary>"""</summary>' + el.innerHTML.substring(3);
+el.replaceWith(d);
+});
+}, 100);
 })</script>
 </head>
 <body>
@@ -27,9 +37,8 @@ hljs.highlightAll();
 <h1 class="title">Module <code>clemcore.utils.file_utils</code></h1>
 </header>
 <section id="section-intro">
-<p>Defines locations within the project structure
-and supplies several functions for loading different files</p>
-<h1 id="todo-check-which-functions-could-be-moved-to-resourcelocator">TODO: check which functions could be moved to ResourceLocator</h1>
+<p>Defines locations within the project structure (for root directories, games and results)
+and supplies several functions for loading and storing files.</p>
 </section>
 <section>
 </section>
@@ -42,90 +51,347 @@ and supplies several functions for loading different files</p>
 <span>def <span class="ident">clemcore_root</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns absolute path to clemcore directory (clembench/clemcore)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def clemcore_root():
+    &#34;&#34;&#34;Get the absolute path to the framework directory.
+    Returns:
+        The absolute path to the framework directory (clembench/framework) as string.
+    &#34;&#34;&#34;
+    return os.path.dirname(os.path.dirname(os.path.abspath(__file__)))</code></pre>
+</details>
+<div class="desc"><p>Get the absolute path to the framework directory.</p>
+<h2 id="returns">Returns</h2>
+<p>The absolute path to the framework directory (clembench/framework) as string.</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.file_path"><code class="name flex">
 <span>def <span class="ident">file_path</span></span>(<span>file_name: str, game_path: str = None) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def file_path(file_name: str, game_path: str = None) -&gt; str:
+    &#34;&#34;&#34;
+    Get absolute path to a specific file
+    TODO check if this is actually ever called without a game_path
+    Args:
+        file_name: the path to a file (can be a path relative to the game directory)
+        game_path: the path to the game directory (optinal)
+
+    Returns: The absolute path to a file relative to the game directory (if specified) or the clembench directory
+
+    &#34;&#34;&#34;
+    if game_path:
+        if os.path.isabs(game_path):
+            return os.path.join(game_path, file_name)
+        else:
+            return os.path.join(project_root(), game_path, file_name)
+    return os.path.join(project_root(), file_name)</code></pre>
+</details>
+<div class="desc"><p>Get absolute path to a specific file
+TODO check if this is actually ever called without a game_path</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>the path to a file (can be a path relative to the game directory)</dd>
+<dt><strong><code>game_path</code></strong></dt>
+<dd>the path to the game directory (optinal)</dd>
+</dl>
+<p>Returns: The absolute path to a file relative to the game directory (if specified) or the clembench directory</p></div>
 </dd>
-<dt id="clemcore.utils.file_utils.game_results_dir_for"><code class="name flex">
-<span>def <span class="ident">game_results_dir_for</span></span>(<span>results_dir: str, dialogue_pair: str, game_name: str) ‑> str</span>
+<dt id="clemcore.utils.file_utils.game_results_dir"><code class="name flex">
+<span>def <span class="ident">game_results_dir</span></span>(<span>results_dir: str, dialogue_pair: str, game_name: str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def game_results_dir(results_dir: str, dialogue_pair: str, game_name: str):
+    &#34;&#34;&#34;Get the absolute path to the results directory for a specified game and player pair combination.
+    Args:
+        results_dir: The relative path to the results directory inside the clembench directory.
+        dialogue_pair: The name of the player pair combination directory.
+        game_name: The name of the game (directory).
+    Returns:
+        The absolute path to the results directory for a specified game and player pair combination as string.
+    &#34;&#34;&#34;
+    return os.path.join(results_root(results_dir), dialogue_pair, game_name)</code></pre>
+</details>
+<div class="desc"><p>Get the absolute path to the results directory for a specified game and player pair combination.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>results_dir</code></strong></dt>
+<dd>The relative path to the results directory inside the clembench directory.</dd>
+<dt><strong><code>dialogue_pair</code></strong></dt>
+<dd>The name of the player pair combination directory.</dd>
+<dt><strong><code>game_name</code></strong></dt>
+<dd>The name of the game (directory).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The absolute path to the results directory for a specified game and player pair combination as string.</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.load_csv"><code class="name flex">
-<span>def <span class="ident">load_csv</span></span>(<span>file_name: str, game_name: str)</span>
+<span>def <span class="ident">load_csv</span></span>(<span>file_name: str, game_path: str)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_csv(file_name: str, game_path: str):
+    &#34;&#34;&#34;Load a CSV file from a clemgame.
+    Args:
+        file_name: Name of the CSV file.
+        game_name: The name of the game that the CSV file belongs to.
+    Returns:
+        A list version of the CSV file content.
+    &#34;&#34;&#34;
+    # iso8859_2 was required for opening nytcrosswords.csv for clues in wordle
+    rows = []
+    fp = file_path(file_name, game_path)
+    with open(fp, encoding=&#39;iso8859_2&#39;) as csv_file:
+        data = csv.reader(csv_file, delimiter=&#39;,&#39;)
+        # header = next(data)
+        for row in data:
+            rows.append(row)
+    return rows</code></pre>
+</details>
+<div class="desc"><p>Load a CSV file from a clemgame.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>Name of the CSV file.</dd>
+<dt><strong><code>game_name</code></strong></dt>
+<dd>The name of the game that the CSV file belongs to.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A list version of the CSV file content.</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.load_file"><code class="name flex">
-<span>def <span class="ident">load_file</span></span>(<span>file_name: str, game_name: str = None, file_ending: str = None) ‑> str</span>
+<span>def <span class="ident">load_file</span></span>(<span>file_name: str, game_path: str = None, file_ending: str = None) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_file(file_name: str, game_path: str = None, file_ending: str = None) -&gt; str:
+    &#34;&#34;&#34;Load a file from a clemgame.
+    Assumes the file to be an utf8-encoded (text) file.
+    Args:
+        file_name: Name of the file.
+        game_name: The name of the game that the file belongs to.
+        file_ending: The file type suffix of the file.
+    Returns:
+        The file content as returned by open-&gt;read().
+    &#34;&#34;&#34;
+    if file_ending and not file_name.endswith(file_ending):
+        file_name = file_name + file_ending
+    fp = file_path(file_name, game_path)
+    with open(fp, encoding=&#39;utf8&#39;) as f:
+        data = f.read()
+    return data</code></pre>
+</details>
+<div class="desc"><p>Load a file from a clemgame.
+Assumes the file to be an utf8-encoded (text) file.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>Name of the file.</dd>
+<dt><strong><code>game_name</code></strong></dt>
+<dd>The name of the game that the file belongs to.</dd>
+<dt><strong><code>file_ending</code></strong></dt>
+<dd>The file type suffix of the file.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The file content as returned by open-&gt;read().</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.load_json"><code class="name flex">
-<span>def <span class="ident">load_json</span></span>(<span>file_name: str, game_name: str) ‑> Dict</span>
+<span>def <span class="ident">load_json</span></span>(<span>file_name: str, game_path: str) ‑> Dict</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_json(file_name: str, game_path: str) -&gt; Dict:
+    &#34;&#34;&#34;Load a JSON file from a clemgame.
+    Args:
+        file_name: Name of the JSON file.
+        game_name: The name of the game that the JSON file belongs to.
+    Returns:
+        A dict of the JSON file content.
+    &#34;&#34;&#34;
+    data = load_file(file_name, game_path, file_ending=&#34;.json&#34;)
+    data = json.loads(data)
+    return data</code></pre>
+</details>
+<div class="desc"><p>Load a JSON file from a clemgame.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>Name of the JSON file.</dd>
+<dt><strong><code>game_name</code></strong></dt>
+<dd>The name of the game that the JSON file belongs to.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A dict of the JSON file content.</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.load_results_json"><code class="name flex">
 <span>def <span class="ident">load_results_json</span></span>(<span>file_name: str, results_dir: str, dialogue_pair: str, game_name: str) ‑> Dict</span>
 </code></dt>
 <dd>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_results_json(file_name: str, results_dir: str, dialogue_pair: str, game_name: str) -&gt; Dict:
+    file_ending = &#34;.json&#34;
+    if not file_name.endswith(file_ending):
+        file_name = file_name + file_ending
+    fp = os.path.join(game_results_dir(results_dir, dialogue_pair, game_name), file_name)
+    with open(fp, encoding=&#39;utf8&#39;) as f:
+        data = f.read()
+    data = json.loads(data)
+    return data</code></pre>
+</details>
 <div class="desc"></div>
 </dd>
 <dt id="clemcore.utils.file_utils.load_template"><code class="name flex">
-<span>def <span class="ident">load_template</span></span>(<span>file_name: str, game_name: str) ‑> str</span>
+<span>def <span class="ident">load_template</span></span>(<span>file_name: str, game_path: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_template(file_name: str, game_path: str) -&gt; str:
+    &#34;&#34;&#34;Load a text template file from a clemgame.
+    Args:
+        file_name: Name of the text template file.
+        game_name: The name of the game that the text template file belongs to.
+    Returns:
+        A string version of the text template file content.
+    &#34;&#34;&#34;
+    # TODO this a bit redundant and could be removed by changing all usages
+    #  of load_template (and GameResourceLocator.load_template()) to directly use load_file(..., file_ending=&#34;.template&#34;)
+    return load_file(file_name, game_path, file_ending=&#34;.template&#34;)</code></pre>
+</details>
+<div class="desc"><p>Load a text template file from a clemgame.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>Name of the text template file.</dd>
+<dt><strong><code>game_name</code></strong></dt>
+<dd>The name of the game that the text template file belongs to.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>A string version of the text template file content.</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.project_root"><code class="name flex">
 <span>def <span class="ident">project_root</span></span>(<span>)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>returns absolute path to main directory (clembench)</p></div>
-</dd>
-<dt id="clemcore.utils.file_utils.project_utils"><code class="name flex">
-<span>def <span class="ident">project_utils</span></span>(<span>)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>returns absolute path to utils directory (clembench/utils)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def project_root():
+    &#34;&#34;&#34;Get the absolute path to main clembench directory.
+    Returns:
+         The absolute path to main clembench directory as string.
+    &#34;&#34;&#34;
+    return os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))</code></pre>
+</details>
+<div class="desc"><p>Get the absolute path to main clembench directory.</p>
+<h2 id="returns">Returns</h2>
+<p>The absolute path to main clembench directory as string.</p></div>
 </dd>
 <dt id="clemcore.utils.file_utils.results_root"><code class="name flex">
-<span>def <span class="ident">results_root</span></span>(<span>results_dir: str = None) ‑> str</span>
+<span>def <span class="ident">results_root</span></span>(<span>results_dir: str) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def results_root(results_dir: str) -&gt; str:
+    &#34;&#34;&#34;Get the absolute path to the results root directory.
+    Args:
+        results_dir: The relative path to the results directory inside the clembench directory.
+    &#34;&#34;&#34;
+    if os.path.isabs(results_dir):
+        return results_dir
+    # if not absolute, results_dir is given relative to project root (see default in cli.py)
+    return os.path.normpath(os.path.join(project_root(), results_dir))</code></pre>
+</details>
+<div class="desc"><p>Get the absolute path to the results root directory.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>results_dir</code></strong></dt>
+<dd>The relative path to the results directory inside the clembench directory.</dd>
+</dl></div>
 </dd>
 <dt id="clemcore.utils.file_utils.store_file"><code class="name flex">
 <span>def <span class="ident">store_file</span></span>(<span>data, file_name: str, dir_path: str, sub_dir: str = None, do_overwrite: bool = True) ‑> str</span>
 </code></dt>
 <dd>
-<div class="desc"><p>:param data: to store
-:param file_name: of the file to store
-:param dir_path: to the directory to store to
-:param sub_dir: optional subdirectories
-:param do_overwrite: default: True
-:return: the file path</p></div>
-</dd>
-<dt id="clemcore.utils.file_utils.store_game_file"><code class="name flex">
-<span>def <span class="ident">store_game_file</span></span>(<span>data, file_name: str, game_name: str, sub_dir: str = None, do_overwrite: bool = True) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt id="clemcore.utils.file_utils.store_game_results_file"><code class="name flex">
-<span>def <span class="ident">store_game_results_file</span></span>(<span>data, file_name: str, dialogue_pair: str, game_name: str, sub_dir: str = None, root_dir: str = None, do_overwrite: bool = True) ‑> str</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def store_file(data, file_name: str, dir_path: str, sub_dir: str = None, do_overwrite: bool = True) -&gt; str:
+    &#34;&#34;&#34;Store a file.
+    Base function to handle relative clembench directory paths.
+    Args:
+        data: Content to store in the file.
+        file_name: Name of the file to store.
+        dir_path: Path to the directory to store the file to.
+        sub_dir: Optional subdirectories to store the file in.
+        do_overwrite: Determines if existing file should be overwritten. Default: True
+    Returns:
+        The path to the stored file.
+    &#34;&#34;&#34;
+    if sub_dir:
+        dir_path = os.path.join(dir_path, sub_dir)
+
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
+
+    fp = os.path.join(dir_path, file_name)
+    if not do_overwrite:
+        if os.path.exists(fp):
+            raise FileExistsError(fp)
+
+    with open(fp, &#34;w&#34;, encoding=&#39;utf-8&#39;) as f:
+        if file_name.endswith(&#34;.json&#34;):
+            json.dump(data, f, ensure_ascii=False)
+        else:
+            f.write(data)
+    return fp</code></pre>
+</details>
+<div class="desc"><p>Store a file.
+Base function to handle relative clembench directory paths.</p>
+<h2 id="args">Args</h2>
+<dl>
+<dt><strong><code>data</code></strong></dt>
+<dd>Content to store in the file.</dd>
+<dt><strong><code>file_name</code></strong></dt>
+<dd>Name of the file to store.</dd>
+<dt><strong><code>dir_path</code></strong></dt>
+<dd>Path to the directory to store the file to.</dd>
+<dt><strong><code>sub_dir</code></strong></dt>
+<dd>Optional subdirectories to store the file in.</dd>
+<dt><strong><code>do_overwrite</code></strong></dt>
+<dd>Determines if existing file should be overwritten. Default: True</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>The path to the stored file.</p></div>
 </dd>
 </dl>
 </section>
@@ -134,9 +400,7 @@ and supplies several functions for loading different files</p>
 </article>
 <nav id="sidebar">
 <div class="toc">
-<ul>
-<li><a href="#todo-check-which-functions-could-be-moved-to-resourcelocator">TODO: check which functions could be moved to ResourceLocator</a></li>
-</ul>
+<ul></ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
@@ -145,28 +409,25 @@ and supplies several functions for loading different files</p>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
-<ul class="">
+<ul class="two-column">
 <li><code><a title="clemcore.utils.file_utils.clemcore_root" href="#clemcore.utils.file_utils.clemcore_root">clemcore_root</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.file_path" href="#clemcore.utils.file_utils.file_path">file_path</a></code></li>
-<li><code><a title="clemcore.utils.file_utils.game_results_dir_for" href="#clemcore.utils.file_utils.game_results_dir_for">game_results_dir_for</a></code></li>
+<li><code><a title="clemcore.utils.file_utils.game_results_dir" href="#clemcore.utils.file_utils.game_results_dir">game_results_dir</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.load_csv" href="#clemcore.utils.file_utils.load_csv">load_csv</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.load_file" href="#clemcore.utils.file_utils.load_file">load_file</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.load_json" href="#clemcore.utils.file_utils.load_json">load_json</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.load_results_json" href="#clemcore.utils.file_utils.load_results_json">load_results_json</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.load_template" href="#clemcore.utils.file_utils.load_template">load_template</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.project_root" href="#clemcore.utils.file_utils.project_root">project_root</a></code></li>
-<li><code><a title="clemcore.utils.file_utils.project_utils" href="#clemcore.utils.file_utils.project_utils">project_utils</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.results_root" href="#clemcore.utils.file_utils.results_root">results_root</a></code></li>
 <li><code><a title="clemcore.utils.file_utils.store_file" href="#clemcore.utils.file_utils.store_file">store_file</a></code></li>
-<li><code><a title="clemcore.utils.file_utils.store_game_file" href="#clemcore.utils.file_utils.store_game_file">store_game_file</a></code></li>
-<li><code><a title="clemcore.utils.file_utils.store_game_results_file" href="#clemcore.utils.file_utils.store_game_results_file">store_game_results_file</a></code></li>
 </ul>
 </li>
 </ul>
 </nav>
 </main>
 <footer id="footer">
-<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.1</a>.</p>
+<p>Generated by <a href="https://pdoc3.github.io/pdoc" title="pdoc: Python API documentation generator"><cite>pdoc</cite> 0.11.6</a>.</p>
 </footer>
 </body>
 </html>
