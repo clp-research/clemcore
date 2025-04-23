@@ -252,10 +252,10 @@ class DialogueGameMaster(GameMaster):
             # check game rules (correctness/success) and do any processing that changes the game state:
             self._on_valid_player_response(self.current_player, parsed_response)
 
-        # score response based on (limited) context (for playpen RL):
-        self.info["response_score"] = self.compute_response_score(response, context)
-        # textual feedback to be fed back to model (for playpen RL):
-        self.info["response_feedback"] = self.get_response_feedback(response, context)
+            # score response based on (limited) context (for playpen RL):
+            self.info["response_score"] = self.compute_response_score(parsed_response, context)
+            # textual feedback to be fed back to model (for playpen RL):
+            self.info["response_feedback"] = self.get_response_feedback(parsed_response, context)
 
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
