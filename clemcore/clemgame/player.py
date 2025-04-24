@@ -44,6 +44,7 @@ class Player(abc.ABC):
         self._messages: List[Dict] = []  # internal state
         self._prompt = None  # internal state
         self._response_object = None  # internal state
+        self._last_context = None  # internal state
 
     def __deepcopy__(self, memo):
         _copy = type(self).__new__(self.__class__)
@@ -95,6 +96,14 @@ class Player(abc.ABC):
     def model(self):
         return self._model
 
+    @property
+    def messages(self):
+        return deepcopy(self._messages)
+
+    @property
+    def last_context(self):
+        return deepcopy(self._last_context)
+
     def get_description(self) -> str:
         """Get a description string for this Player instance.
         Returns:
@@ -136,6 +145,7 @@ class Player(abc.ABC):
 
         self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
         call_start = datetime.now()
+        self._last_context = deepcopy(context)
         self._prompt, self._response_object, response_text = self.__call_model(context)
         call_duration = datetime.now() - call_start
         self.__log_response_received_event(response_text, label="response" if memorize else "forget")

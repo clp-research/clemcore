@@ -1,6 +1,5 @@
 import abc
 import collections
-import logging
 from copy import deepcopy
 from pathlib import Path
 from typing import List, Dict, Tuple, Any, Union
@@ -11,17 +10,53 @@ from clemcore.clemgame.player import Player
 from clemcore.clemgame.recorder import NoopGameRecorder
 
 
-class GameMaster(abc.ABC):
-    """Base class to contain game-specific functionality.
+class GameException(Exception):
 
-    A GameMaster (sub-)class
+    def __init__(self, reason: str = None, response: str = None):
+        """
+        :param reason: (optional) a brief description of the cause
+        :param response: (optional) the player's response
+        """
+        super().__init__(reason)
+        self.reason = reason
+        self.response = response
 
-    - prepares a concrete game instance
-    - plays an episode of a game instance
-    - records a game episode
-    - evaluates the game episode records
-    - builds the interaction transcripts
+    def __str__(self):
+        return f"{self.__class__.__name__}: {self.reason}"
+
+
+class ParseError(GameException):
+    """Raised when a message does not follow the communication protocol expected by the game master.
+
+    In particular, this error is supposed to be raised when player messages do not start with a specified prefix.
+
+    For example:
+        - taboo: clue giver messages should start with 'CLUE:'
+        - wordle: guesser messages should start with 'GUESS:'
+
+    Developers can introduce more specific error types by subclassing this error.
+    Alternatively, the 'reason' attribute can be used to define more granular error types.
     """
+    pass
+
+
+class ValidationError(GameException):
+    """Raised when a verbal action of a player violates the specified game rules.
+
+    For example:
+        - taboo: mentioning the target word as the clue giver
+        - wordle: guessing words that are not exactly 5 letters long
+
+    Additionally, this error is can be raised when an action is not applicable or insensible.
+
+    Developers can introduce more specific error types by subclassing this error.
+    Alternatively, the 'reason' attribute can be used to define more granular error types.
+    """
+    pass
+
+
+class GameMaster(abc.ABC):
+    """Base class to contain game-specific functionality."""
 
     def __init__(self, name: str, path: str, experiment: Dict, player_models: List[backends.Model]):
         """
@@ -242,20 +277,22 @@ class DialogueGameMaster(GameMaster):
         :param response: The response (verbal action) of the current player.
         :return: done, info
         """
-        # deepcopy incoming context to preserve it for response score/feedback:
-        context = deepcopy(self.get_context_for(self.current_player))
+        try:
+            # preprocess response: prepare for game rule checks (ie remove move format tag):
+            parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
+            # check game rules
+            self._validate_player_response(self.current_player, parsed_response)  # throws ValidationError
+            # do any processing that changes the game state
+            self._on_valid_player_response(self.current_player, parsed_response)  # continue game
+        except ParseError as error:
+            self._on_parse_error(error)  # set game state to abort / or prepare reprompt
+        except ValidationError as error:
+            self._on_validation_error(error)  # set game state to failure / or prepare reprompt
 
-        # check for move format rules (validity):
-        if self._validate_player_response(self.current_player, response):
-            # preprocess response: set player contexts and prepare for game rule checks (ie remove move format tag):
-            parsed_response = self._parse_response(self.current_player, response)
-            # check game rules (correctness/success) and do any processing that changes the game state:
-            self._on_valid_player_response(self.current_player, parsed_response)
-
-            # score response based on (limited) context (for playpen RL):
-            self.info["response_score"] = self.compute_response_score(parsed_response, context)
-            # textual feedback to be fed back to model (for playpen RL):
-            self.info["response_feedback"] = self.get_response_feedback(parsed_response, context)
+        # score response based on (limited) context (for playpen RL):
+        self.info["response_score"] = self.compute_response_score()
+        # textual feedback to be fed back to model (for playpen RL):
+        self.info["response_feedback"] = self.get_response_feedback()
 
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
@@ -274,6 +311,18 @@ class DialogueGameMaster(GameMaster):
         info = deepcopy(self.info)
         self.info = {}  # reset info after each step
         return done, info
+
+    def _on_validation_error(self, error: GameException):
+        """
+        Hook to implement consequences for validation errors e.g. prepare re-prompting or set game state to failure.
+        """
+        pass
+
+    def _on_parse_error(self, error: GameException):
+        """
+        Hook to implement consequences for parsing errors e.g. prepare re-prompting or set game state to abort.
+        """
+        pass
 
     def _next_player(self) -> Player:
         """
@@ -305,21 +354,17 @@ class DialogueGameMaster(GameMaster):
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 
-    def get_response_feedback(self, response: str, context: Dict):
+    def get_response_feedback(self):
         """
         Optional.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
         :return: a verbal feedback about the player's response given the context
         """
         return None
 
-    def compute_response_score(self, response: str, context: Dict):
+    def compute_response_score(self):
         """
         Mandatory override.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: the performance score for a player's response given the context
+        :return: the performance score for a player's response given its last context
         """
         return 0
 
@@ -358,14 +403,13 @@ class DialogueGameMaster(GameMaster):
         pass
 
     @abc.abstractmethod
-    def _validate_player_response(self, player: Player, response: str) -> bool:
+    def _validate_player_response(self, player: Player, response: str):
         """
-        Decide if a player response is valid. An invalid response breaks the game's move format rules and might abort
-        the game.
+        Checks if a player response is applicable (w.r.t game state) and valid (w.r.t. game rules).
 
-        Note: If the response is not valid, then _parse_response() and on_valid_player_response() will not be called.
+        Note: If the response is not valid, then on_valid_player_response() will not be called.
 
-        However, game developers can decide to give the player another turn by letting _should_pass_turn() return False.
+        Game developers can decide to give the player another turn by letting _should_pass_turn() return False.
 
         Mandatory override.
 
@@ -374,6 +418,8 @@ class DialogueGameMaster(GameMaster):
             response: The response of the current player.
         Returns:
             True, if the response is fine. Otherwise, False.
+        Raises:
+            ValidationError: If the action violates game rules.
         """
         pass
 
@@ -388,6 +434,8 @@ class DialogueGameMaster(GameMaster):
             response: The response of the current player.
         Returns:
             The parsed response
+        Raises:
+            ParseError: If the message format is incorrect or the message cannot be properly parsed by the game master.
         """
         return response
 
