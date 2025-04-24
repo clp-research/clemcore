@@ -1,3 +1,0 @@
-# This requires compilation - make sure a working compiler is available!
-vllm==0.5.4 # vLLM
-transformers==4.43.1 # Huggingface

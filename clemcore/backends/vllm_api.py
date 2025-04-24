@@ -3,11 +3,11 @@
     Uses HF tokenizers instruct/chat templates for proper input format per model.
 """
 import logging
-from typing import List, Dict, Tuple, Any, Union
-import torch
 import re
+import torch
+import vllm
 
-from vllm import LLM, SamplingParams
+from typing import List, Dict, Tuple, Any, Union
 from transformers import AutoTokenizer, AutoConfig
 
 from jinja2 import TemplateError
@@ -101,49 +101,23 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     :param model_spec: The ModelSpec for the model.
     :return: The vLLM LLM class instance of the loaded model.
     """
+    assert "model_config" in model_spec, "vllm model requires model_config entry in model spec"
+    model_config = model_spec.model_config
+
+    default_args = dict(tensor_parallel_size=model_config['number_gpus'] if 'number_gpus' in model_config else 1)
+    max_model_len = int(model_spec.context_size) if 'context_size' in model_spec and model_spec.context_size else None
+    if max_model_len is not None:
+        default_args["max_model_len"] = max_model_len
+
+    vllm_args = model_config['vllm_args'] if 'vllm_args' in model_config else {}
+    model_args = {**default_args, **vllm_args}
+    logger.info(f"Number of GPUs used for model: {model_args['tensor_parallel_size']}")
+    if "max_model_len" in model_args:
+        logger.info(f"Context size forcefully limited to {model_args['max_model_len']} tokens.")
+
     logger.info(f'Start loading model weights from HuggingFace: {model_spec.model_name}')
-
-    if 'number_gpus' in model_spec['model_config'] and model_spec['model_config']['number_gpus']:
-        number_gpus = model_spec['model_config']['number_gpus']
-    else:
-        # if number of GPUs to use is not set in the modelSpec, default to one:
-        number_gpus = 1
-
-    if 'context_size' in model_spec and model_spec['context_size']:
-        max_model_len = int(model_spec['context_size'])
-        use_context_limit = True
-    else:
-        # if context limit is not set in the modelSpec, default to model config:
-        use_context_limit = False
-
-    hf_model_str = model_spec['huggingface_id']
-
-    if use_context_limit:
-        if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
-            # NOTE: this is left here in case some issue with gated models comes up later
-            # load HF API key:
-            creds = backends.load_credentials("huggingface")
-            api_key = creds["huggingface"]["api_key"]
-            # load model:
-            model = LLM(hf_model_str, tensor_parallel_size=number_gpus, max_model_len=max_model_len)
-        else:
-            model = LLM(hf_model_str, tensor_parallel_size=number_gpus, max_model_len=max_model_len)
-    else:
-        if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
-            # NOTE: this is left here in case some issue with gated models comes up later
-            # load HF API key:
-            creds = backends.load_credentials("huggingface")
-            api_key = creds["huggingface"]["api_key"]
-            # load model:
-            model = LLM(hf_model_str, tensor_parallel_size=number_gpus)
-        else:
-            model = LLM(hf_model_str, tensor_parallel_size=number_gpus)
-
+    model = vllm.LLM(model_spec.huggingface_id, **model_args)
     logger.info(f"Finished loading model weights from HuggingFace: {model_spec.model_name}")
-    logger.info(f"Number of GPUs used for model: {number_gpus}")
-    if use_context_limit:
-        logger.info(f"Context size limited to {max_model_len} tokens.")
-
     return model
 
 
@@ -237,7 +211,7 @@ class VLLMLocalModel(backends.Model):
                                                 context_size=context_check[3])
 
         # vLLM sampling parameters:
-        sampling_params = SamplingParams(
+        sampling_params = vllm.SamplingParams(
             temperature=self.get_temperature(),
             # using example value from https://huggingface.co/neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8#use-with-vllm:
             # top_p=0.9,

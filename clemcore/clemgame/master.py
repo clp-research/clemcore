@@ -237,8 +237,9 @@ class DialogueGameMaster(GameMaster):
         return context
 
     def play(self) -> None:
-        """Main play loop method.
-        This method is called to run the game for benchmarking.
+        """
+        Main play loop method. This method is called to run the game for benchmarking.
+        Do not override.
         """
         done = False
         while not done:
@@ -250,28 +251,30 @@ class DialogueGameMaster(GameMaster):
             done, _ = self.step(response)
 
     def step(self, response: str) -> Tuple[bool, Dict]:
-        """Transitions the game state by applying the current player's response.
-        Args:
-            response: The response (verbal action) of the current player.
-        Returns:
-            Tuple of: done, info
         """
-        # compute scores first, so that we are sure that the player's context
-        # can still be retrieved (state has not changed yet)
-        context = self.get_context_for(self.current_player)
-        self.info["response_score"] = self.compute_response_score(response, context)
-        self.info["response_feedback"] = self.get_response_feedback(response, context)
-        self.info["episode_score"] = 0
+        Transitions the game state by applying the current player's response.
+        Do not override.
 
-        # todo: it seems we should change the order here: Parse should come first, and then validate.
-        # JJ: It should also probably be done before the method calls above...
-        # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
-        # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
+        :param response: The response (verbal action) of the current player.
+        :return: done, info
+        """
+        # deepcopy incoming context to preserve it for response score/feedback:
+        context = deepcopy(self.get_context_for(self.current_player))
+
+        # check for move format rules (validity):
         if self._validate_player_response(self.current_player, response):
+            # preprocess response: set player contexts and prepare for game rule checks (ie remove move format tag):
             parsed_response = self._parse_response(self.current_player, response)
+            # check game rules (correctness/success) and do any processing that changes the game state:
             self._on_valid_player_response(self.current_player, parsed_response)
 
-        if self._should_pass_turn():
+            # score response based on (limited) context (for playpen RL):
+            self.info["response_score"] = self.compute_response_score(parsed_response, context)
+            # textual feedback to be fed back to model (for playpen RL):
+            self.info["response_feedback"] = self.get_response_feedback(parsed_response, context)
+
+        # determine if the current player should pass the turn to the next player or get another turn:
+        if self._should_pass_turn():  # True = move on to next player
             self.current_player = self._next_player()
             if self._start_next_round():
                 self._on_after_round()
@@ -294,7 +297,7 @@ class DialogueGameMaster(GameMaster):
 
         Default: The game master passes the turn to the next player in the player list (order as added).
         Starting again with the first player, when all players have had their turn(s).
-
+        
         Returns:
             The next (current) player.
         """
@@ -313,6 +316,10 @@ class DialogueGameMaster(GameMaster):
         return self.current_player_idx == 0
 
     def __prepare_next_round(self):
+        """
+        Logs moving to next round and calls self._on_before_round().
+        Do not override.
+        """
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 
@@ -329,7 +336,7 @@ class DialogueGameMaster(GameMaster):
 
     def compute_response_score(self, response: str, context: Dict):
         """Calculate a score for a player response.
-        Mandatory.
+        Mandatory override.
         Args:
             response: The response of the current player.
             context: The context given to the current player to generate the response for.
@@ -340,16 +347,17 @@ class DialogueGameMaster(GameMaster):
 
     def compute_episode_score(self):
         """Calculate a score for the entire episode.
-        Mandatory.
+        Mandatory override.
         Returns:
             The performance of the agent over the whole episode.
         """
         return 0
 
     def _should_pass_turn(self):
-        """Determine if a player is done for the current turn.
-        Whether to pass the turn to the next player. Otherwise, the current player keeps playing
-        based on the context set via set_player_context(player, content).
+        """
+        Whether to pass the turn to the next player. Otherwise, the current player keeps playing based on the context
+        set via set_player_context(player, content).
+        As every response request entails a single turn, this should return False if the player is to be reprompted.
         """
         return True
 
@@ -363,6 +371,8 @@ class DialogueGameMaster(GameMaster):
         You could also set a new context for the current player and give the player
         another turn by letting _should_pass_turn() return False.
 
+        Mandatory override.
+
         To do this use the method set_context_for(player, response).
         Args:
             player: The Player instance that produced the response (or has been modified by the GM).
@@ -373,11 +383,14 @@ class DialogueGameMaster(GameMaster):
     @abc.abstractmethod
     def _validate_player_response(self, player: Player, response: str) -> bool:
         """
-        Decide if a player response is valid. An invalid response breaks the game rules and might end the game.
+        Decide if a player response is valid. An invalid response breaks the game's move format rules and might abort
+        the game.
 
         Note: If the response is not valid, then _parse_response() and on_valid_player_response() will not be called.
 
         However, game developers can decide to give the player another turn by letting _should_pass_turn() return False.
+
+        Mandatory override.
 
         Args:
             player: The player that gave the response.
@@ -405,7 +418,7 @@ class DialogueGameMaster(GameMaster):
     def _does_game_proceed(self) -> bool:
         """Check if game should proceed.
 
-        Template method: Must be implemented!
+        Mandatory override.
 
         This method is used to determine if a game should continue or be stopped. Both successful completion of the game
         and game-ending failures should lead to this method returning False.

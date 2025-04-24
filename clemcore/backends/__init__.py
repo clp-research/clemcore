@@ -64,6 +64,17 @@ class Backend(abc.ABC):
         return f"{self.__class__.__name__}"
 
 
+class RemoteBackend(Backend):
+
+    def __init__(self):
+        self.client = self._make_api_client()
+
+    @abc.abstractmethod
+    def _make_api_client(self):
+        """Subclasses must return an initialized client for remote interaction."""
+        pass
+
+
 def is_backend(obj):
     """Check if an object is a Backend child class (instance).
     Args:
