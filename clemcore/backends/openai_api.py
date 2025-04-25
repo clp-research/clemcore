@@ -15,24 +15,13 @@ logger = logging.getLogger(__name__)
 NAME = "openai"
 
 
-class OpenAI(backends.Backend):
-    """Backend class for accessing the OpenAI remote API."""
-    def __init__(self):
+class OpenAI(backends.RemoteBackend):
+
+    def _make_api_client(self):
         creds = backends.load_credentials(NAME)
         api_key = creds[NAME]["api_key"]
         organization = creds[NAME]["organisation"] if "organisation" in creds[NAME] else None
-        self.client = openai.OpenAI(api_key=api_key, organization=organization)
-
-    def list_models(self):
-        """List models available on the OpenAI remote API.
-        Returns:
-            A list containing names of models available on the OpenAI remote API.
-        """
-        models = self.client.models.list()
-        names = [item.id for item in models.data]
-        names = sorted(names)
-        return names
-        # [print(n) for n in names]   # 2024-01-10: what was this? a side effect-only method?
+        return openai.OpenAI(api_key=api_key, organization=organization)
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get an OpenAI model instance based on a model specification.
@@ -125,7 +114,7 @@ class OpenAIModel(backends.Model):
                 encoded_messages.append(this)
         return encoded_messages
 
-    @retry(tries=3, delay=0, logger=logger)
+    @retry(tries=3, delay=90, logger=logger)
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """Request a generated response from the OpenAI remote API.
@@ -148,9 +137,9 @@ class OpenAIModel(backends.Model):
                                                                temperature=1)
         else:
             api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
-                                                           messages=prompt,
-                                                           temperature=self.get_temperature(),
-                                                           max_tokens=self.get_max_tokens())
+                                                               messages=prompt,
+                                                               temperature=self.get_temperature(),
+                                                               max_tokens=self.get_max_tokens())
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")
