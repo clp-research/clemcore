@@ -2,7 +2,7 @@ import abc
 import collections
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, Union
+from typing import List, Dict, Tuple, Any, Union, final
 
 from clemcore import backends
 from clemcore.clemgame import GameResourceLocator
@@ -10,7 +10,13 @@ from clemcore.clemgame.player import Player
 from clemcore.clemgame.recorder import NoopGameRecorder
 
 
-class GameException(Exception):
+class ResponseError(Exception):
+    """
+    General error class for problems with the player response.
+
+    Developers can introduce more specific error types by subclassing this error.
+    Alternatively, the 'reason' attribute can be used to define more granular error types.
+    """
 
     def __init__(self, reason: str = None, response: str = None):
         """
@@ -25,33 +31,40 @@ class GameException(Exception):
         return f"{self.__class__.__name__}: {self.reason}"
 
 
-class ParseError(GameException):
-    """Raised when a message does not follow the communication protocol expected by the game master.
+class ProtocolError(ResponseError):
+    """Raised when a message does not follow the communication protocol expected by the game master."""
+    pass
 
-    In particular, this error is supposed to be raised when player messages do not start with a specified prefix.
+
+class ParseError(ProtocolError):
+    """
+    This error is supposed to be raised when player messages cannot be parsed or understood by the game master e.g.
+    because the response does not start with a specified prefix.
 
     For example:
         - taboo: clue giver messages should start with 'CLUE:'
         - wordle: guesser messages should start with 'GUESS:'
-
-    Developers can introduce more specific error types by subclassing this error.
-    Alternatively, the 'reason' attribute can be used to define more granular error types.
     """
     pass
 
 
-class ValidationError(GameException):
+class GameError(ResponseError):
+    """Raised when a verbal action of a player causes problems for advancing the game."""
+    pass
+
+
+class RuleViolationError(GameError):
     """Raised when a verbal action of a player violates the specified game rules.
 
     For example:
         - taboo: mentioning the target word as the clue giver
         - wordle: guessing words that are not exactly 5 letters long
-
-    Additionally, this error is can be raised when an action is not applicable or insensible.
-
-    Developers can introduce more specific error types by subclassing this error.
-    Alternatively, the 'reason' attribute can be used to define more granular error types.
     """
+    pass
+
+
+class NotApplicableError(GameError):
+    """Raised when a verbal action of a player cannot be applied to advance the game state."""
     pass
 
 
@@ -65,8 +78,6 @@ class GameMaster(abc.ABC):
             path: Path to the game (as specified in game_registry).
             experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
             player_models: Player models to use for one or two players.
-            game_recorder: Enables to log each interaction in the game.
-                           Resulting records can be stored to an interactions.json.
         """
         self.game_name = name
         self.experiment: Dict = experiment
@@ -146,8 +157,8 @@ class DialogueGameMaster(GameMaster):
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
         self.current_round: int = 0
-        self.current_player: Player = None
-        self.current_player_idx: int = 0
+        self._current_player: Player = None
+        self._current_player_idx: int = 0
         self.info = {}
 
     def __setstate__(self, state):
@@ -155,6 +166,15 @@ class DialogueGameMaster(GameMaster):
         for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
             player.game_recorder = self.game_recorder
 
+    @property
+    def game_state(self):
+        return None
+
+    @property
+    def current_player(self) -> Player:
+        return self._current_player
+
+    @final
     def get_players(self) -> List[Player]:
         """Get a list of the players.
         Returns:
@@ -162,6 +182,7 @@ class DialogueGameMaster(GameMaster):
         """
         return list(self.players_by_names.values())
 
+    @final
     def add_player(self, player: Player, initial_prompt: Union[str, Dict] = None,
                    initial_context: Union[str, Dict] = None):
         """Add a player to the game. The same player cannot be added twice.
@@ -195,6 +216,7 @@ class DialogueGameMaster(GameMaster):
             else:
                 self.set_context_for(player, initial_context)
 
+    @final
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
         Needs to log the players dictionary via self.log_players(players_dict).
@@ -211,7 +233,7 @@ class DialogueGameMaster(GameMaster):
         for name, player in self.players_by_names.items():
             players_descriptions[name] = player.get_description()
         self.log_players(players_descriptions)
-        self.current_player = self.get_players()[self.current_player_idx]
+        self._current_player = self.get_players()[self._current_player_idx]
         # call game hooks
         self._on_before_game()
         self._on_before_round()
@@ -227,12 +249,7 @@ class DialogueGameMaster(GameMaster):
         """
         pass
 
-    def get_game_state(self):
-        return None
-
-    def get_current_player(self) -> Player:
-        return self.current_player
-
+    @final
     def set_context_for(self, player: Player, content: str, **extras):
         """
         Set the context for the specified Player. The player will be prompted with the context on its next turn.
@@ -249,6 +266,7 @@ class DialogueGameMaster(GameMaster):
         context = {**extras, **message}
         self.context_for_player[player.name] = context
 
+    @final
     def get_context_for(self, player) -> Dict:
         assert player is not None, "Cannot get player context for 'None'"
         assert player.name in self.context_for_player, f"No context set for {player.name}"
@@ -258,36 +276,32 @@ class DialogueGameMaster(GameMaster):
         assert "content" in context, f"Player context must have a 'content' entry"
         return context
 
+    @final
     def play(self) -> None:
         """
         Main play loop method. This method is called to run the game for benchmarking.
-        Do not override.
         """
         done = False
         while not done:
             context = self.get_context_for(self.current_player)
             response = self.current_player(context)
-            done, _ = self.step(response)
+            done, _ = self.process_turn(response)
 
-    def step(self, response: str) -> Tuple[bool, Dict]:
+    @final
+    def process_turn(self, response: str) -> Tuple[bool, Dict]:
         """
-        Transitions the game state by applying the current player's response.
-        Do not override.
+        Verifies the response and transitions the game by applying the current player's response for the turn.
 
         :param response: The response (verbal action) of the current player.
         :return: done, info
         """
         try:
-            # preprocess response: prepare for game rule checks (ie remove move format tag):
             parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
-            # check game rules
-            self._validate_player_response(self.current_player, parsed_response)  # throws ValidationError
-            # do any processing that changes the game state
-            self._on_valid_player_response(self.current_player, parsed_response)  # continue game
+            self._advance_game(self.current_player, parsed_response)  # throws GameError
         except ParseError as error:
-            self._on_parse_error(error)  # set game state to abort / or prepare reprompt
-        except ValidationError as error:
-            self._on_validation_error(error)  # set game state to failure / or prepare reprompt
+            self._on_parse_error(error)
+        except GameError as error:
+            self._on_game_error(error)
 
         # score response based on (limited) context (for playpen RL):
         self.info["response_score"] = self.compute_response_score()
@@ -296,7 +310,7 @@ class DialogueGameMaster(GameMaster):
 
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
-            self.current_player = self._next_player()
+            self._current_player = self._next_player()
             if self._start_next_round():
                 self._on_after_round()
                 self.current_round += 1
@@ -312,18 +326,6 @@ class DialogueGameMaster(GameMaster):
         self.info = {}  # reset info after each step
         return done, info
 
-    def _on_validation_error(self, error: GameException):
-        """
-        Hook to implement consequences for validation errors e.g. prepare re-prompting or set game state to failure.
-        """
-        pass
-
-    def _on_parse_error(self, error: GameException):
-        """
-        Hook to implement consequences for parsing errors e.g. prepare re-prompting or set game state to abort.
-        """
-        pass
-
     def _next_player(self) -> Player:
         """
         Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
@@ -333,8 +335,8 @@ class DialogueGameMaster(GameMaster):
 
         :return: the new current player
         """
-        self.current_player_idx = (self.current_player_idx + 1) % len(self.players_by_names)
-        return self.get_players()[self.current_player_idx]
+        self._current_player_idx = (self._current_player_idx + 1) % len(self.players_by_names)
+        return self.get_players()[self._current_player_idx]
 
     def _start_next_round(self) -> bool:
         """
@@ -344,7 +346,7 @@ class DialogueGameMaster(GameMaster):
 
         :return: True, when it's the first player's turn to start a new round
         """
-        return self.current_player_idx == 0
+        return self._current_player_idx == 0
 
     def __prepare_next_round(self):
         """
@@ -384,49 +386,29 @@ class DialogueGameMaster(GameMaster):
         return True
 
     @abc.abstractmethod
-    def _on_valid_player_response(self, player: Player, parsed_response: str):
+    def _advance_game(self, player: Player, parsed_response: str):
         """
-        Method executed after a player response has been parsed and validated.
+        Method executed after a player response has been parsed and validated w.r.t to the communication protocol.
 
-        Set the response as the context for the other player (if necessary).
+        Checks if a player response is applicable (w.r.t game state) and valid (w.r.t. game rules).
 
-        You could also set a new context for the current player and give the player
-        another turn by letting _should_pass_turn() return False.
+        Implements effects that an applicable player's response has on the game world, that is,
+        advancing the game by using the player's response to update the game state.
 
-        Mandatory override.
+        For example:
+            - set the response as the context for the another player to respond to via set_context_for(other_player, response) and let _should_pass_turn() return True
+            - set an adjusted context for the current player and give the current player an additional turn by letting _should_pass_turn() return False
 
-        To do this use the method set_context_for(player, response).
         Args:
             player: The Player instance that produced the response (or has been modified by the GM).
-            parsed_response: The parsed and valid response of the current player.
+            parsed_response: The response of the current player.
         """
         pass
 
     @abc.abstractmethod
-    def _validate_player_response(self, player: Player, response: str):
-        """
-        Checks if a player response is applicable (w.r.t game state) and valid (w.r.t. game rules).
-
-        Note: If the response is not valid, then on_valid_player_response() will not be called.
-
-        Game developers can decide to give the player another turn by letting _should_pass_turn() return False.
-
-        Mandatory override.
-
-        Args:
-            player: The player that gave the response.
-            response: The response of the current player.
-        Returns:
-            True, if the response is fine. Otherwise, False.
-        Raises:
-            ValidationError: If the action violates game rules.
-        """
-        pass
-
     def _parse_response(self, player: Player, response: str) -> str:
-        """Decide if a response utterance should be modified and apply modifications.
-
-        Hook: Modify this method for game-specific functionality.
+        """Parse the response based on the communication protocol expected by the game master.
+        For example, games might require the player to prefix every response with 'GUESS:'
 
         Args:
             player: The Player instance that produced the response. Intended to allow for individual handling of
@@ -437,7 +419,7 @@ class DialogueGameMaster(GameMaster):
         Raises:
             ParseError: If the message format is incorrect or the message cannot be properly parsed by the game master.
         """
-        return response
+        pass
 
     @abc.abstractmethod
     def _does_game_proceed(self) -> bool:
@@ -449,6 +431,18 @@ class DialogueGameMaster(GameMaster):
         and game-ending failures should lead to this method returning False.
         Returns:
             A bool, True if game continues, False if game should stop.
+        """
+        pass
+
+    def _on_game_error(self, error: GameError):
+        """
+        Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure.
+        """
+        pass
+
+    def _on_parse_error(self, error: ParseError):
+        """
+        Hook to implement consequences for parsing errors e.g. prepare re-prompting or set game state to abort.
         """
         pass
 

@@ -183,7 +183,7 @@ class GameBranchingPlayer(Callable):
                 # when adding the response to the tree, since we use the env identity as an id. If we do not copy,
                 # then there will be two nodes with the same env which makes finding them via the env unpredictable.
                 branch_env: GameEnv = deepcopy(parent_env)
-                branch_player = branch_env.master.get_current_player()  # we use the branch player as it keeps state
+                branch_player = branch_env.master.current_player  # we use the branch player as it keeps state
                 # this already changes the player state in branch env
                 branch_response = branch_player(parent_context)
                 branch_responses.append(BranchingResponse(parent_env, branch_env, parent_context, branch_response))
