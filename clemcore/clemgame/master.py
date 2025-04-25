@@ -303,10 +303,8 @@ class DialogueGameMaster(GameMaster):
         except GameError as error:
             self._on_game_error(error)
 
-        # score response based on (limited) context (for playpen RL):
-        self.info["response_score"] = self.compute_response_score()
-        # textual feedback to be fed back to model (for playpen RL):
-        self.info["response_feedback"] = self.get_response_feedback()
+        self.info["turn_score"] = self.compute_turn_score()
+        self.info["turn_feedback"] = self.get_turn_feedback()
 
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
@@ -325,6 +323,14 @@ class DialogueGameMaster(GameMaster):
         info = deepcopy(self.info)
         self.info = {}  # reset info after each step
         return done, info
+
+    def _should_pass_turn(self):
+        """
+        Whether to pass the turn to the next player. Otherwise, the current player keeps playing based on the context
+        set via set_player_context(player, content).
+        As every response request entails a single turn, this should return False if the player is to be reprompted.
+        """
+        return True
 
     def _next_player(self) -> Player:
         """
@@ -356,34 +362,25 @@ class DialogueGameMaster(GameMaster):
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 
-    def get_response_feedback(self):
-        """
-        Optional.
+    def get_turn_feedback(self):
+        """Optional textual feedback to be fed back to model (for playpen RL).
         :return: a verbal feedback about the player's response given the context
         """
         return None
 
-    def compute_response_score(self):
-        """
-        Mandatory override.
+    @abc.abstractmethod
+    def compute_turn_score(self):
+        """Score response based on last context (for playpen RL)
         :return: the performance score for a player's response given its last context
         """
-        return 0
+        pass
 
+    @abc.abstractmethod
     def compute_episode_score(self):
         """
-        Mandatory override.
         :return: the performance of the agent over the whole episode
         """
-        return 0
-
-    def _should_pass_turn(self):
-        """
-        Whether to pass the turn to the next player. Otherwise, the current player keeps playing based on the context
-        set via set_player_context(player, content).
-        As every response request entails a single turn, this should return False if the player is to be reprompted.
-        """
-        return True
+        pass
 
     @abc.abstractmethod
     def _advance_game(self, player: Player, parsed_response: str):
