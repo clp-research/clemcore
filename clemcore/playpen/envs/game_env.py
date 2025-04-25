@@ -65,12 +65,12 @@ class GameEnv(PlayPenEnv):
             self.reset()
 
     def observe(self) -> Tuple[Union[Player, Callable], Union[Dict, List[Dict]]]:
-        player = self.master.get_current_player()
+        player = self.master.current_player
         context = self.master.get_context_for(player)
         return player, context
 
     def step(self, response: Union[str, List]) -> Tuple[Union[bool, List], Union[Dict, List]]:
-        self._done, info = self.master.step(response)
+        self._done, info = self.master.process_turn(response)
         return self._done, info
 
     def store_records(self, top_dir: str, rollout_dir: str, episode_dir: str,
