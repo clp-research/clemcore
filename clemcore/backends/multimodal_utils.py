@@ -93,6 +93,47 @@ def split_model(model_name):
 
     return device_map
 
+def split_internvl3_model(model_name):
+    """
+    Splits the InternVL3 model across available GPUs based on the model name.
+
+    Args:
+        model_name (str): The name of the model to be split.
+                          Expected values include 'InternVL3-1B', 'InternVL3-2B',
+                          'InternVL3-8B', 'InternVL3-9B', 'InternVL3-14B',
+                          'InternVL3-38B', 'InternVL3-78B'.
+
+    Returns:
+        dict: A mapping of model layers to GPU indices.
+    """
+    device_map = {}
+    world_size = torch.cuda.device_count()
+    num_layers = {
+        'InternVL3-1B': 24, 'InternVL3-2B': 28, 'InternVL3-8B': 28, 
+        'InternVL3-9B': 48, 'InternVL3-14B': 48, 'InternVL3-38B': 64, 
+        'InternVL3-78B': 80   
+        }[model_name]
+    # Since the first GPU will be used for ViT, treat it as half a GPU.
+    num_layers_per_gpu = math.ceil(num_layers / (world_size - 0.5))
+    num_layers_per_gpu = [num_layers_per_gpu] * world_size
+    num_layers_per_gpu[0] = math.ceil(num_layers_per_gpu[0] * 0.5)
+    layer_cnt = 0
+    for i, num_layer in enumerate(num_layers_per_gpu):
+        for j in range(num_layer):
+            device_map[f'language_model.model.layers.{layer_cnt}'] = i
+            layer_cnt += 1
+    device_map['vision_model'] = 0
+    device_map['mlp1'] = 0
+    device_map['language_model.model.tok_embeddings'] = 0
+    device_map['language_model.model.embed_tokens'] = 0
+    device_map['language_model.output'] = 0
+    device_map['language_model.model.norm'] = 0
+    device_map['language_model.model.rotary_emb'] = 0
+    device_map['language_model.lm_head'] = 0
+    device_map[f'language_model.model.layers.{num_layers - 1}'] = 0
+
+    return device_map
+
 def build_transform(input_size):
     """Builds a transformation pipeline for image preprocessing.
 
@@ -297,6 +338,46 @@ def generate_internvl2_response(**response_kwargs) -> str:
         raise RuntimeError("Failed to generate response from the model.") from e
 
 
+
+    return generated_response
+
+def generate_internvl3_response(**response_kwargs) -> str:
+    """Generates a response from the InternVL3 model based on the provided messages and configuration.
+
+    Args:
+        **response_kwargs: A dictionary containing the following keys:
+            - messages (List[str]): A list of message dictionaries.
+            - device (str): The device to which the image tensors will be moved (e.g., 'cuda' or 'cpu').
+            - max_tokens (int): The maximum number of tokens to generate.
+            - model: The model instance used for generating responses.
+            - processor: The processor instance used for processing images.
+
+    Returns:
+        str: The generated response from the model.
+
+    Raises:
+        RuntimeError: If the model fails to generate a response.
+    """
+    messages = response_kwargs['messages']
+    device = response_kwargs['device']
+    max_tokens = response_kwargs['max_tokens']
+    model = response_kwargs['model']
+    processor = response_kwargs['processor']
+    do_sample = response_kwargs['do_sample']
+
+    images = get_internvl2_image(messages=messages, device=device)
+    history, question = generate_history_internvl2(messages=messages)
+
+    if not history:
+        history = None
+    # InternVL3 needs an explicitly passed `pad_token_id` to prevent excessive warnings
+    generation_config = dict(max_new_tokens=max_tokens, do_sample=do_sample, pad_token_id=processor.eos_token_id)
+    try:
+        generated_response, _ = model.chat(processor, images, question, generation_config,
+                                                     history=history, return_history=True)
+
+    except Exception as e:
+        raise RuntimeError("Failed to generate response from the model.") from e
 
     return generated_response
 

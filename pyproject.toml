@@ -47,7 +47,9 @@ huggingface = [
     "protobuf==4.21.6",
     "einops==0.6.1",
     "bitsandbytes==0.45.3",
-    "transformers==4.51.1" # nltk<=3.8.1 torch>=2.0 sentencepiece>=0.1.91,!=0.1.92 accelerate>=0.26.0 protobuf
+    "transformers==4.51.1", # nltk<=3.8.1 torch>=2.0 sentencepiece>=0.1.91,!=0.1.92 accelerate>=0.26.0 protobuf
+    "torchvision==0.16.1",  # needs to be kept in synch with torch
+    "timm>=1.0.15"
 ]
 slurk = [
     "python-engineio==4.4.0",
