@@ -24,26 +24,26 @@ handlers:
         encoding: utf8
 loggers:
     "clemcore":
-        level: DEBUG
+        level: INFO
         handlers: [console]
         propagate: false
     "clemcore.run":
-        level: DEBUG
+        level: INFO
         handlers: [console]
         propagate: false
     "clemcore.cli":
-        level: DEBUG
+        level: INFO
         handlers: [console]
         propagate: false
     "clemcore.backends":
-        level: DEBUG
+        level: INFO
         handlers: [console]
         propagate: false
     "clemcore.clemgame":
-        level: DEBUG
+        level: INFO
         handlers: [console]
         propagate: false
 root: # this will catch all other loggers (including external repos)
-    level: DEBUG
+    level: INFO
     handlers: [console, file_handler]
     propagate: false

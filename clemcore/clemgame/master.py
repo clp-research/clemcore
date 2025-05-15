@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from clemcore import backends
-from clemcore.clemgame.environment import GameEnvironment
+from clemcore.clemgame.environment import Action, GameEnvironment
 from clemcore.clemgame.player import Player
 from clemcore.clemgame.recorder import NoopGameRecorder
 from clemcore.clemgame.resources import GameResourceLocator
@@ -657,21 +657,12 @@ class EnvGameMaster(GameMaster):
             logger.warning("No current player set, ending game.")
             return
 
-        self.game_environment.reset()
-
-        terminated = False
-        while not terminated:
+        while not self.game_environment.state["terminated"]:
             self._on_before_round()
-            observation = self.game_environment.get_observation_space(
-                self.current_player
-            )
-            logger.debug(f"[_play] Observation: {observation}")
-            context = {
-                "role": "user",
-                "content": observation["content"],
-            }
 
-            response = self.current_player(context)
+            observation = self.game_environment.get_observation(self.current_player)
+
+            response = self.current_player(observation)
 
             # TODO: now that we have _validate_action in the game_environment, do we still need this?
             if not self._validate_player_response(self.current_player, response):
@@ -683,33 +674,21 @@ class EnvGameMaster(GameMaster):
                     self._on_after_game()
                     break
 
-            parsed_response = self._parse_response(self.current_player, response)
-            logger.debug(f"[_play] Parsed response: {parsed_response}")
-            self._on_valid_player_response(self.current_player, parsed_response)
+            action = self.parse_action_from_response(response)
 
-            action = self.create_action_from_response(parsed_response)
             logger.debug(f"[_play] Action: {action}")
-            next_observation, score, terminated = self.game_environment.step(
-                self.current_player, action
-            )
+            self.game_environment.step(self.current_player, action)
 
-            if terminated:
+            if self.game_environment.state["terminated"]:
                 self._on_after_game()
+                break
 
-            if not terminated and self._should_pass_turn():
-                # next player should now play
+            if self._should_pass_turn():
                 self.current_player = self._next_player()
-                # if the current player is the first player, we are at the end of a round (default behavior in _start_next_round)
                 if self._start_next_round():
                     self._on_after_round()
                     self.current_round += 1
                     self.log_next_round()
-
-                observation = self.game_environment.get_observation_space(
-                    self.current_player
-                )
-            else:
-                observation = next_observation
 
     def _next_player(self) -> Player:
         """
@@ -763,23 +742,6 @@ class EnvGameMaster(GameMaster):
         return True
 
     @abc.abstractmethod
-    def _on_valid_player_response(self, player: Player, parsed_response: str):
-        """
-        Method executed after a player response has been parsed and validated.
-
-        Set the response as the context for the other player (if necessary).
-
-        You could also set a new context for the current player and give the player
-        another turn by letting _should_pass_turn() return False.
-
-        To do this use the method set_context_for(player, response).
-        Args:
-            player: The Player instance that produced the response (or has been modified by the GM).
-            parsed_response: The parsed and valid response of the current player.
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
     def _validate_player_response(self, player: Player, response: str) -> bool:
         """
         Decide if a player response is valid. An invalid response breaks the game rules and might end the game.
@@ -796,7 +758,7 @@ class EnvGameMaster(GameMaster):
         """
         raise NotImplementedError
 
-    def create_action_from_response(self, response: str) -> Dict[str, Any]:
+    def parse_action_from_response(self, response: str) -> Action:
         """Create an action from a player's response.
 
         Default: return action
@@ -806,9 +768,9 @@ class EnvGameMaster(GameMaster):
             action_type: The type of action to create
 
         Returns:
-            {"action_type": "verbal_response", "body": response}
+            {"action_type": "verbal_response", "message": response}
         """
-        return {"action_type": "verbal_response", "body": response}
+        return {"action_type": "verbal_response", "message": response}
 
     def _should_terminate_on_invalid_response(self) -> bool:
         """
@@ -817,20 +779,6 @@ class EnvGameMaster(GameMaster):
         Default: False
         """
         return False
-
-    def _parse_response(self, player: Player, response: str) -> str:
-        """Decide if a response utterance should be modified and apply modifications.
-
-        Hook: Modify this method for game-specific functionality.
-
-        Args:
-            player: The Player instance that produced the response. Intended to allow for individual handling of
-                different players.
-            response: The response of the current player.
-        Returns:
-            The parsed response
-        """
-        return response
 
     def _on_before_round(self):
         """Executed in the play loop before a new round of gameplay starts.

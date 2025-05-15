@@ -1,5 +1,11 @@
 from clemcore.clemgame.benchmark import GameBenchmark, GameInstanceIterator
-from clemcore.clemgame.environment import GameEnvironment, GameState
+from clemcore.clemgame.environment import (
+    Action,
+    ActionSpace,
+    GameEnvironment,
+    GameState,
+    Observation,
+)
 from clemcore.clemgame.instances import GameInstanceGenerator
 from clemcore.clemgame.master import (
     DialogueGameMaster,
@@ -19,6 +25,9 @@ __all__ = [
     "GameEnvironment",
     "GameState",
     "Player",
+    "Action",
+    "ActionSpace",
+    "Observation",
     "GameMaster",
     "DialogueGameMaster",
     "EnvGameMaster",

@@ -9,7 +9,7 @@ Environments:
 """
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Literal, Optional, TypedDict
 
 from clemcore.utils import format_json, setup_logger
 
@@ -18,20 +18,47 @@ from .player import Player
 logger = setup_logger(__name__)
 
 
+ActionType = str
+
+ActionSpace = List[ActionType]
+
+
 class GameState(TypedDict):
     """Base type definition for the game environment's state with required fields.
 
     Required fields:
-    - current_context: The current context/observation for the active player
     - terminated: Whether the game has terminated
     - success: Whether the game was successful
     - aborted: Whether the game was aborted
     """
 
-    current_context: str
     terminated: bool
     success: bool
     aborted: bool
+    # add fields for game-specific state on inheritance
+
+
+class Observation(TypedDict):
+    """Base type definition for the game environment's observation with required fields.
+
+    Required fields:
+    - role: The role of the player
+    - prompt: The prompt of the observation
+    """
+
+    role: Literal["user"]
+    prompt: str
+
+
+class Action(TypedDict):
+    """Base type definition for the game environment's action with required fields.
+
+    Required fields:
+    - action_type: The type of action
+    """
+
+    action_type: ActionType
+    # add fields for game-specific action parameters on inheritance, e.g. message for conversational responses
 
 
 class GameEnvironment(ABC):
@@ -41,11 +68,8 @@ class GameEnvironment(ABC):
     This class follows both the Gymnasium interface and the clembench framework.
     """
 
-    # TODO: initial action_spaces and observation_spaces are currently only actually set in the GameMaster._on_setup method — remove those args from __init__?
     def __init__(
         self,
-        # action_spaces: Optional[Dict[str, List[Any]]] = None,
-        # observation_spaces: Optional[Dict[str, Dict[str, Any]]] = None,
         config: Optional[Dict[str, Any]] = None,
     ):
         """
@@ -56,40 +80,42 @@ class GameEnvironment(ABC):
             observation_spaces: Dictionary of observation spaces, one key per player
         """
         super().__init__()
-        # logger.info(
-        #     f"Initializing game environment with action spaces: {action_spaces} and observation spaces: {observation_spaces}"
-        # )
 
-        # self.action_spaces = action_spaces or {}
-        # self.observation_spaces = observation_spaces or {}
-        self.action_spaces = {}
-        self.observation_spaces = {}
+        # string keys represent player names
+        self.action_spaces: Dict[str, ActionSpace] = {}
+        self.observations: Dict[str, Observation] = {}
 
         self.config = config or {}
 
         self.state: GameState = {
-            "current_context": "",
             "terminated": False,
             "success": False,
             "aborted": False,
+            # add fields for game-specific state on inheritance
         }
 
-    def reset(self):
+    def reset(
+        self,
+        initial_observations: Optional[Dict[str, Observation]] = None,
+        initial_action_spaces: Optional[Dict[str, ActionSpace]] = None,
+    ):
         """
         Reset the environment to its initial state.
 
-        Overwrite this in your inheriting class to add functionality.
+        Overwrite this in your inheriting class to account for game-specific state.
         """
         self.state = {
-            "current_context": "",
             "terminated": False,
             "success": False,
             "aborted": False,
+            # add fields for game-specific state on inheritance
         }
+        if initial_observations is not None:
+            self.observations = initial_observations
+        if initial_action_spaces is not None:
+            self.action_spaces = initial_action_spaces
 
-    def step(
-        self, player: Player, action: Dict[str, Any]
-    ) -> Tuple[Dict[str, Any], bool, bool]:
+    def step(self, player: Player, action: Action) -> None:
         """Execute one step in the environment.
 
         Args:
@@ -97,39 +123,27 @@ class GameEnvironment(ABC):
             action: Action dictionary with:
                 - action_type: Type of action (always 'text' for this game)
                 - body: The text response from the player
-
-        Returns:
-            Tuple of (observation, success, terminated)
         """
         logger.info(f"[step] Environment step with player: {player.name}")
-        logger.debug(f"[step] Action: {action}")
 
         # TODO: alternatively, should it check for a bool that is true only if setup was done previously?
-        if (
-            not self.observation_spaces[player.name]
-            or not self.action_spaces[player.name]
-        ):
+        if not self.observations[player.name] or not self.action_spaces[player.name]:
             raise ValueError(
                 f"[step] No observation or action space for player: {player.name}"
             )
-
-        logger.debug("[step] Validating action")
-        if not self._validate_action(player, action):
-            # TODO: implement an option to continue the game on invalid action?
-            raise ValueError(f"[step] Invalid action: {action}")
 
         self._update_state_through_action(player, action)
 
         logger.debug(f"[step] New game state: \n{format_json(self.state)}")
         if self.state["aborted"]:
-            logger.warning(f"[step] Action aborted")
+            logger.warning(f"[step] Action aborted: {action}")
         elif self.state["success"]:
-            logger.info("[step] Action was successful")
+            logger.info(f"[step] Action was successful: {action}")
         else:
-            logger.warning(f"[step] Action was unsuccessful")
+            logger.warning(f"[step] Action was unsuccessful: {action}")
 
-        self.set_observation_space(player, self.state["current_context"])
-        observation = self.get_observation_space(player)
+        self.update_observation(player)
+        observation = self.get_observation(player)
 
         logger.debug(f"[step] Observation: \n{format_json(observation)}")
 
@@ -137,9 +151,7 @@ class GameEnvironment(ABC):
             f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
         )
 
-        return observation, self.state["success"], self.state["terminated"]
-
-    def _validate_action(self, player: Player, action: Dict[str, Any]) -> bool:
+    def _validate_action(self, player: Player, action: Action) -> bool:
         """
         Validate if an action is legal in the current state.
         """
@@ -150,14 +162,20 @@ class GameEnvironment(ABC):
             return False
         return True
 
-    @abstractmethod
-    def _update_state_through_action(self, player: Player, action: Dict[str, Any]):
+    def _update_state_through_action(self, player: Player, action: Action):
         """
         Update the state after an action is taken.
 
-        This method should update state["current_context"], state["success"], state["aborted"].
-        It should also update self.state["terminated"] if the game should terminate.
+        This method should update state["terminated"], state["success"], state["aborted"], as well as any other game-specific state fields.
         """
+        logger.debug("[_update_state_through_action] Validating action")
+        if not self._validate_action(player, action):
+            raise ValueError(f"[step] Invalid action: {action}")
+        self._do_update_state(player, action)
+
+    @abstractmethod
+    def _do_update_state(self, player: Player, action: Action):
+        """Subclasses must implement this method to perform the actual state update."""
         raise NotImplementedError
 
     def _is_action_valid_in_state(self, player: Player, action_type: str) -> bool:
@@ -168,23 +186,22 @@ class GameEnvironment(ABC):
         """
         return True
 
-    def set_observation_space(self, player: Player, content: str):
+    def update_observation(self, player: Player):
         """
-        Set the observation space for a specific player.
+        Set the observation for a specific player.
 
         Args:
             player: The player to set the observation for
-            content: The text content for the observation
         """
-        observation_space = {"role": "user", "content": content}
+        observation = {"role": "user", "prompt": self.state}
 
-        self.observation_spaces[player.name] = observation_space
+        self.observations[player.name] = observation
 
         logger.info(
-            f"[set_observation_space_for] Set observation space for player: {player.name}"
+            f"[update_observation] Updated observation for player: {player.name}"
         )
 
-    def get_observation_space(self, player: Player) -> Dict[str, Any]:
+    def get_observation(self, player: Player) -> Observation:
         """
         Get the current observation for a specific player.
 
@@ -196,7 +213,7 @@ class GameEnvironment(ABC):
         """
         logger.debug(f"[observe_for] Getting observation for player: {player.name}")
 
-        if player.name not in self.observation_spaces:
+        if player.name not in self.observations:
             logger.warning(
                 f"[observe_for] No observation found for player: {player.name}. Creating default."
             )
@@ -204,7 +221,7 @@ class GameEnvironment(ABC):
                 f"[observe_for] No observation found for player: {player.name}"
             )
 
-        observation = self.observation_spaces[player.name]
+        observation = self.observations[player.name]
         logger.debug(f"[observe_for] Observation for {player.name}: {observation}")
         return observation
 
