@@ -167,7 +167,7 @@ class Player(abc.ABC):
         else:
             prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
         call_duration = datetime.now() - call_start
-        self._response_object["clem_player"] = {
+        response_object["clem_player"] = {
             "call_start": str(call_start),
             "call_duration": str(call_duration),
             "response": response_text,
