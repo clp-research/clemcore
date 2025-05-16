@@ -15,6 +15,10 @@
   "cohere": {
     "api_key": ""
   },
+  "slurk": {
+    "api_key": "00000000-0000-0000-0000-000000000000",
+    "host": "http://localhost:5000"
+  }
   "generic_openai_compatible": {
     "api_key": "",
     "base_url": "http://127.0.0.1:8000/v1"

@@ -67,7 +67,10 @@ Homepage = "https://github.com/clp-research/clemcore"
 clemcore = [
     "clemcore/utils/logging.yaml",
     "clemcore/utils/chat-two-tracks.css",
-    "clemcore/backends/model_registry.json"
+    "clemcore/backends/model_registry.json",
+    "clemcore/resources/slurk_api/bot_permissions.json",
+    "clemcore/resources/slurk_api/task_room_layout.json",
+    "clemcore/resources/slurk_api/user_permissions.json"
 ]
 
 [tool.setuptools]
