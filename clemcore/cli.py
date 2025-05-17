@@ -1,16 +1,15 @@
 import argparse
 import inspect
+import logging
 import os
 import textwrap
-import logging
 from datetime import datetime
-from typing import List, Dict, Union
+from typing import Dict, List, Union
 
 import clemcore.backends as backends
-from clemcore.backends import ModelRegistry, BackendRegistry
-from clemcore.clemgame import GameRegistry, GameSpec
-from clemcore.clemgame import benchmark
 from clemcore import clemeval
+from clemcore.backends import BackendRegistry, ModelRegistry
+from clemcore.clemgame import GameRegistry, GameSpec, benchmark
 from clemcore.clemgame.transcripts.builder import build_transcripts
 
 logger = logging.getLogger(__name__)
@@ -147,7 +146,6 @@ def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
         results_dir: Path to the results directory in which the benchmark records are stored.
     """
     logger.info(f"Scoring game {game_selector}")
-    stdout_logger.info(f"Scoring game {game_selector}")
 
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
