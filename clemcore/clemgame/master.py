@@ -661,8 +661,11 @@ class EnvGameMaster(GameMaster):
             self._on_before_round()
 
             observation = self.game_environment.get_observation(self.current_player)
+            logger.info(f"[_play] Player {self.current_player.name}")
+            logger.info(f"[_play] Observation: \n{format_json(observation)}")
 
             response = self.current_player(observation)
+            logger.info(f"[_play] Response: {response}")
 
             # TODO: now that we have _validate_action in the game_environment, do we still need this?
             if not self._validate_player_response(self.current_player, response):

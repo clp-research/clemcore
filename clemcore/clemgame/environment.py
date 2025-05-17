@@ -43,11 +43,11 @@ class Observation(TypedDict):
 
     Required fields:
     - role: The role of the player
-    - prompt: The prompt of the observation
+    - content: The string content (prompt) that will be sent to the model
     """
 
     role: Literal["user"]
-    prompt: str
+    content: str
 
 
 class Action(TypedDict):
@@ -143,9 +143,6 @@ class GameEnvironment(ABC):
             logger.warning(f"[step] Action was unsuccessful: {action}")
 
         self.update_observation(player)
-        observation = self.get_observation(player)
-
-        logger.debug(f"[step] Observation: \n{format_json(observation)}")
 
         logger.debug(
             f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
@@ -193,7 +190,7 @@ class GameEnvironment(ABC):
         Args:
             player: The player to set the observation for
         """
-        observation = {"role": "user", "prompt": self.state}
+        observation = {"role": "user", "content": self.state}
 
         self.observations[player.name] = observation
 

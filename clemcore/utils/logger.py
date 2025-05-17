@@ -83,5 +83,8 @@ def setup_logger(name: str) -> logging.Logger:
 
 
 def format_json(data: Any) -> str:
-    """Format a dictionary or object as a pretty JSON string."""
-    return json.dumps(data, indent=2, sort_keys=True, default=str)
+    """Format a dictionary or object as a pretty JSON string with proper newlines."""
+    json_str = json.dumps(
+        data, indent=2, sort_keys=True, default=str, ensure_ascii=False
+    )
+    return json_str.replace("\\n", "\n")

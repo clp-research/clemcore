@@ -2,10 +2,13 @@ import copy
 import logging
 from abc import ABC, abstractmethod
 from datetime import datetime
-from typing import Dict, Tuple, Any, List
+from typing import Any, Dict, List, Tuple
 
-from clemcore.clemgame.metrics import METRIC_REQUEST_COUNT, METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED
-
+from clemcore.clemgame.metrics import (
+    METRIC_REQUEST_COUNT,
+    METRIC_REQUEST_COUNT_PARSED,
+    METRIC_REQUEST_COUNT_VIOLATED,
+)
 from clemcore.clemgame.resources import store_results_file
 
 module_logger = logging.getLogger(__name__)
@@ -141,7 +144,7 @@ class DefaultGameRecorder(GameRecorder):
             value: The content of the entry to be logged.
         """
         self.interactions[key] = value
-        module_logger.info(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
+        module_logger.debug(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
 
     def log_players(self, players_dic: Dict):
         """Log/record the players in this game episode.
@@ -149,7 +152,7 @@ class DefaultGameRecorder(GameRecorder):
             players_dic: Dictionary of players in this game episode.
         """
         self.interactions["players"] = players_dic
-        module_logger.info(f"{self._game_name}: Logged players metadata.")
+        module_logger.debug(f"{self._game_name}: Logged players metadata.")
 
     def log_event(self, from_: str, to: str, action: Dict, call: Tuple[Any, Any] = None):
         """Add an event to the internal log.
