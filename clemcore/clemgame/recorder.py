@@ -1,3 +1,4 @@
+import collections
 import copy
 import logging
 from abc import ABC, abstractmethod
@@ -26,10 +27,12 @@ class GameRecorder(ABC):
         pass
 
     @abstractmethod
-    def log_players(self, players_dic):
-        """Log/record the players in this game episode.
+    def log_player(self, player_name: str, game_role: str, model_name: str):
+        """Log a player of this game episode.
         Args:
-            players_dic: Dictionary of players in this game episode.
+            player_name: The player's name, usually "Player 1", "Player 2" or "Game Master"
+            game_role: the role in the game e.g. Guesser or Answerer
+            model_name: the name of the used model; CustomResponseModels resolve to "programmatic"
         """
         pass
 
@@ -71,7 +74,7 @@ class NoopGameRecorder(GameRecorder):
     def log_key(self, key, value):
         pass
 
-    def log_players(self, players_dic):
+    def log_player(self, player_name: str, game_role: str, model_name: str):
         pass
 
     def log_event(self, from_, to, action, call=None):
@@ -88,8 +91,11 @@ class DefaultGameRecorder(GameRecorder):
         self._log_current_turn = 0
         """ Stores players and turn during the runs """
         self.interactions = {
-            "meta": dict(experiment_name=experiment_name, game_id=game_id, dialogue_pair=dialogue_pair),
-            "players": {},
+            "meta": dict(game_name=game_name,
+                         experiment_name=experiment_name,
+                         game_id=game_id,
+                         dialogue_pair=dialogue_pair),
+            "players": collections.OrderedDict(),
             "turns": [[]]  # already prepared to log the first round of turns
         }
         """ Stores calls to the API """
@@ -109,13 +115,19 @@ class DefaultGameRecorder(GameRecorder):
         self.interactions[key] = value
         module_logger.info(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
 
-    def log_players(self, players_dic: Dict):
-        """Log/record the players in this game episode.
+    def log_player(self, player_name: str, game_role: str, model_name: str):
+        """Log a player of this game episode.
         Args:
-            players_dic: Dictionary of players in this game episode.
+            player_name: The player's name, usually "Player 1", "Player 2" or "Game Master"
+            game_role: the role in the game e.g. Guesser or Answerer
+            model_name: the name of the used model; CustomResponseModels resolve to "programmatic"
         """
-        self.interactions["players"] = players_dic
-        module_logger.info(f"{self._game_name}: Logged players metadata.")
+        player_info = {
+            "game_role": game_role,
+            "model_name": model_name
+        }
+        self.interactions["players"][player_name] = player_info
+        module_logger.info(f"{self._game_name}: Logged {player_name}: {player_info}")
 
     def log_event(self, from_: str, to: str, action: Dict, call: Tuple[Any, Any] = None):
         """Add an event to the internal log.

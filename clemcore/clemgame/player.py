@@ -17,12 +17,14 @@ class Player(abc.ABC):
     - the backend players are called via the generate_response() method of the backend
     """
 
-    def __init__(self, model: backends.Model, name: str = None, game_recorder: GameRecorder = None,
-                 initial_prompt: Union[str, Dict] = None, forget_extras: List[str] = None):
+    def __init__(self, model: backends.Model, name: str = None, game_role: str = None,
+                 game_recorder: GameRecorder = None, initial_prompt: Union[str, Dict] = None,
+                 forget_extras: List[str] = None):
         """
         Args:
             model: The model used by this player.
             name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
+            game_role: The player's game role (optional). If not given, then automatically resolves to the class name.
             game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
             initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
                             set before the player is called the first time. If set, then on the first player call
@@ -37,6 +39,7 @@ class Player(abc.ABC):
         """
         self._model: backends.Model = model
         self._name: str = name  # set by master
+        self._game_role = game_role or self.__class__.__name__
         self._game_recorder = game_recorder or NoopGameRecorder()  # set by master
         self._is_initial_call: bool = True
         self._initial_prompt: Dict = None if initial_prompt is None else self.__validate_initial_prompt(initial_prompt)
@@ -90,6 +93,10 @@ class Player(abc.ABC):
     @name.setter
     def name(self, name):
         self._name = name
+
+    @property
+    def game_role(self):
+        return self._game_role
 
     @property
     def model(self):

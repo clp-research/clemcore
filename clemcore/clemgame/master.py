@@ -65,8 +65,8 @@ class GameMaster(abc.ABC):
     def log_key(self, key: str, value: Any):
         self._game_recorder.log_key(key, value)
 
-    def log_players(self, players_dict):
-        self._game_recorder.log_players(players_dict)
+    def log_player(self, player_name: str, game_role: str, model_name: str):
+        self._game_recorder.log_player(player_name, game_role, model_name)
 
     def log_next_round(self):
         self._game_recorder.log_next_round()
@@ -80,7 +80,7 @@ class GameMaster(abc.ABC):
     @abc.abstractmethod
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
-        Needs to log the players dictionary via self.log_players(players_dict).
+        Needs to log the player infos via self.log_player().
         Called by the game's GameBenchmark run method for each game instance.
         Args:
             kwargs: Keyword arguments used to set up the GameMaster instance.
@@ -171,11 +171,9 @@ class DialogueGameMaster(GameMaster):
                 read from the game's instances.json.
         """
         self._on_setup(**kwargs)
-        # log players
-        players_descriptions = collections.OrderedDict(GM=f"Game master for {self.game_name}")
+        self.log_player("GM", "Game Master", "programmatic")
         for name, player in self.players_by_names.items():
-            players_descriptions[name] = player.get_description()
-        self.log_players(players_descriptions)
+            self.log_player(name, player.game_role, player.model.get_name())
         self.current_player = self.get_players()[self.current_player_idx]
         # call game hooks
         self._on_before_game()
