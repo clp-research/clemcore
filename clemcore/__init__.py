@@ -3,21 +3,16 @@ import os
 
 import yaml
 import importlib.resources as importlib_resources
+from importlib.metadata import version, PackageNotFoundError
 
 import clemcore.backends as backends
 
-BANNER = \
-    r"""
-      _                                   
-     | |                                  
-  ___| | ___ _ __ ___   ___ ___  _ __ ___ 
- / __| |/ _ \ '_ ` _ \ / __/ _ \| '__/ _ \
-| (__| |  __/ | | | | | (_| (_) | | |  __/
- \___|_|\___|_| |_| |_|\___\___/|_|  \___|
-"""  # doom font, thanks to http://patorjk.com/software/taag/
 
-if os.getenv("CLEM_DISABLE_BANNER", "0") not in ("1", "true", "yes", "on"):
-    print(BANNER)
+def get_version():
+    try:
+        return version("clemcore")
+    except PackageNotFoundError:
+        return "unknown"
 
 
 def load_logging_config():
