@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Any, List
 
+from clemcore import get_version
+
 from clemcore.clemgame.resources import store_results_file
 
 module_logger = logging.getLogger(__name__)
@@ -94,9 +96,12 @@ class DefaultGameRecorder(GameRecorder):
             "meta": dict(game_name=game_name,
                          experiment_name=experiment_name,
                          game_id=game_id,
-                         dialogue_pair=dialogue_pair),
-            "players": collections.OrderedDict(),
-            "turns": [[]]  # already prepared to log the first round of turns
+                         dialogue_pair=dialogue_pair,
+                         clem_version=get_version()),
+            # already add Game Master
+            "players": collections.OrderedDict(GM=dict(game_role="Game Master", model_name="programmatic")),
+            # already prepare to log the first round of turns
+            "turns": [[]]
         }
         """ Stores calls to the API """
         self.requests = []
@@ -117,8 +122,9 @@ class DefaultGameRecorder(GameRecorder):
 
     def log_player(self, player_name: str, game_role: str, model_name: str):
         """Log a player of this game episode.
+
         Args:
-            player_name: The player's name, usually "Player 1", "Player 2" or "Game Master"
+            player_name: The player's name, usually "Player 1" or "Player 2"
             game_role: the role in the game e.g. Guesser or Answerer
             model_name: the name of the used model; CustomResponseModels resolve to "programmatic"
         """
@@ -181,15 +187,12 @@ class DefaultGameRecorder(GameRecorder):
             dialogue_pair_desc: A string combining the Player pair names to be used as directory name.
             game_record_dir: The game's record directory path.
         """
-        if not self.interactions["players"]:
-            module_logger.warning(f"Players metadada is missing!")
-        else:
-            for name in self.interactions["players"]:
-                """The transcript builder relies on specific player identifiers."""
-                try:
-                    assert name == "GM" or name.startswith("Player ")
-                except AssertionError:
-                    module_logger.warning(f"Invalid player identifiers, html builder won't work.")
+        for name in self.interactions["players"]:
+            """The transcript builder relies on specific player identifiers."""
+            try:
+                assert name == "GM" or name.startswith("Player ")
+            except AssertionError:
+                module_logger.warning(f"Invalid player identifiers, html builder won't work.")
         if not self.interactions["turns"]:
             module_logger.warning(f"Interaction logs are missing!")
         if not self.requests:
