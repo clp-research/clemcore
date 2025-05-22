@@ -193,7 +193,7 @@ class ModelRegistry:
         return self
 
     def get_first_model_spec_that_unify_with(self, model_selector: Union[str, Dict, ModelSpec]) -> ModelSpec:
-        """Get a Model subclass based on the passed specification.
+        """Get a ModelSpec that unifies with the given model selector.
         Args:
             model_selector: The model spec for which a supporting backend has to be found.
                             Can be either a model name as string,
@@ -219,28 +219,36 @@ class ModelRegistry:
                 return ModelSpec.from_dict({"model_name": model_selector.model_name,
                                             "backend": "_player_programmed"})
 
-        if not self._model_specs:
-            raise AttributeError("Model registry is empty. Load a model registry and try again.")
+        unified_model_spec = self._find_first_unifying_spec(model_selector)
 
-        selected_model_specs = []
-        for registered_spec in self._model_specs:
-            try:
-                unified_model_spec = model_selector.unify(registered_spec)
-                selected_model_specs.append(unified_model_spec)
-                break  # use first model spec that does unify (doesn't throw an error)
-            except ValueError:
-                continue
-
-        if not selected_model_specs:
+        if unified_model_spec is None:
             raise ValueError(f"No model spec unifies with model selector={model_selector.to_string()}")
 
-        unified_model_spec = selected_model_specs[0]
+        if "base_name" in model_selector:
+            # User can specify a base model name to inherit from. This basically disables the unifying mechanism,
+            # because the game selector spec overwrites the base spec. This is useful to rename existing specs
+            # while also extending a base spec with wanted criteria. todo: allow recursive lookup?
+            base_spec = self._find_first_unifying_spec(model_selector.base_name)
+            if base_spec is None:
+                raise ValueError(f"No base spec found with model_name={model_selector.base_name}")
+            unified_model_spec = {**base_spec, **unified_model_spec}
+
         if not unified_model_spec.has_backend():
             raise ValueError(
                 f"Model spec requires 'backend' after unification, but not found in model spec '{model_selector}'. "
                 f"Check or update the backends/model_registry.json or pass the backend directly and try again. "
                 f"A minimal model spec is {{'model_id':<id>,'backend':<backend>}}.")
         return unified_model_spec
+
+    def _find_first_unifying_spec(self, model_spec: ModelSpec):
+        if not self._model_specs:
+            raise AttributeError("Model registry is empty. Load a model registry and try again.")
+        for registered_spec in self._model_specs:
+            try:  # return first model spec that does unify (doesn't throw an error)
+                return model_spec.unify(registered_spec)
+            except ValueError:
+                continue
+        return None
 
 
 class Model(abc.ABC):
