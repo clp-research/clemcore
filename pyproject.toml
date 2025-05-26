@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clemcore"
-version = "3.0.2"
+version = "3.1.0"
 description = "The cLLM (chat-optimized Large Language Model, 'clem') framework tests such models' ability to engage in games, that is, rule-constituted activities played using language."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
@@ -47,6 +47,7 @@ huggingface = [
     "protobuf==4.21.6",
     "einops==0.6.1",
     "bitsandbytes==0.45.3",
+    "peft==0.15.2",
     "transformers==4.51.1", # nltk<=3.8.1 torch>=2.0 sentencepiece>=0.1.91,!=0.1.92 accelerate>=0.26.0 protobuf
     "torchvision==0.16.1",  # needs to be kept in synch with torch
     "timm>=1.0.15"
@@ -67,7 +68,10 @@ Homepage = "https://github.com/clp-research/clemcore"
 clemcore = [
     "clemcore/utils/logging.yaml",
     "clemcore/utils/chat-two-tracks.css",
-    "clemcore/backends/model_registry.json"
+    "clemcore/backends/model_registry.json",
+    "clemcore/resources/slurk_api/bot_permissions.json",
+    "clemcore/resources/slurk_api/task_room_layout.json",
+    "clemcore/resources/slurk_api/user_permissions.json"
 ]
 
 [tool.setuptools]

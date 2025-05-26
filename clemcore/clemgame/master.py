@@ -1,17 +1,18 @@
 import abc
 import collections
+import logging
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, final
+from typing import List, Dict, Tuple, Any, Union, final, Optional
 
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
 from clemcore.clemgame.player import Player
 from clemcore.clemgame.recorder import NoopGameRecorder
 from clemcore.clemgame.resources import GameResourceLocator
-from clemcore.utils import format_json, setup_logger
+from clemcore.utils.string_utils import to_pretty_json
 
-logger = setup_logger(__name__)
+module_logger = logging.getLogger(__name__)
 
 
 class ResponseError(Exception):
@@ -128,8 +129,8 @@ class GameMaster(abc.ABC):
     def log_key(self, key: str, value: Any):
         self._game_recorder.log_key(key, value)
 
-    def log_players(self, players_dict):
-        self._game_recorder.log_players(players_dict)
+    def log_player(self, player: Player):
+        self._game_recorder.log_player(player.name, player.game_role, player.model.get_name())
 
     def log_next_round(self):
         self._game_recorder.log_next_round()
@@ -238,15 +239,14 @@ class DialogueGameMaster(GameMaster):
             self.game_recorder
         )  # player should record to the same interaction log
         player.initial_prompt = initial_prompt
-        player.name = (
-            f"Player {len(self.players_by_names) + 1} ({player.__class__.__name__})"
-        )
+        player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(
                 f"Player names must be unique, "
                 f"but there is already a player registered with name '{player.name}'."
             )
         self.players_by_names[player.name] = player
+        self.log_player(player)
         if initial_context is not None:
             assert isinstance(
                 initial_context, (str, dict)
@@ -276,15 +276,7 @@ class DialogueGameMaster(GameMaster):
                 read from the game's instances.json.
         """
         self._on_setup(**kwargs)
-        # log players
-        players_descriptions = collections.OrderedDict(
-            GM=f"Game master for {self.game_name}"
-        )
-        for name, player in self.players_by_names.items():
-            players_descriptions[name] = player.get_description()
-        self.log_players(players_descriptions)
         self._current_player = self.get_players()[self._current_player_idx]
-        # call game hooks
         self._on_before_game()
         self._on_before_round()
 
@@ -565,11 +557,7 @@ class EnvGameMaster(GameMaster):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for (
-            player
-        ) in (
-            self.players_by_names.values()
-        ):  # sync game recorders (not copied in Player)
+        for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
             player.game_recorder = self.game_recorder
 
     def get_players(self) -> List[Player]:
@@ -579,11 +567,7 @@ class EnvGameMaster(GameMaster):
         """
         return list(self.players_by_names.values())
 
-    def add_player(
-        self,
-        player: Player,
-        # initial_content: str = "",
-    ):
+    def add_player(self, player: Player):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
 
@@ -592,19 +576,13 @@ class EnvGameMaster(GameMaster):
         Args:
             player: The player to be added to the game. The player's name must be unique.
         """
-        player.game_recorder = (
-            self.game_recorder
-        )  # player should record to the same interaction log
-
-        player.name = (
-            f"Player {len(self.players_by_names) + 1} ({player.__class__.__name__})"
-        )
+        player.game_recorder = self.game_recorder  # player should record to the same interaction log
+        player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
-            raise ValueError(
-                f"Player names must be unique, "
-                f"but there is already a player registered with name '{player.name}'."
-            )
+            raise ValueError(f"Player names must be unique, "
+                             f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
+        self.log_player(player)
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -617,14 +595,7 @@ class EnvGameMaster(GameMaster):
                 read from the game's instances.json.
         """
         self._on_setup(**kwargs)
-        players_descriptions = collections.OrderedDict(
-            GM=f"Game master for {self.game_name}"
-        )
-        for name, player in self.players_by_names.items():
-            players_descriptions[name] = player.get_description()
-        self.log_players(players_descriptions)
-
-        if self.players_by_names:
+        if self.players_by_names: # todo: why should this be empty here?
             self.current_player = self.get_players()[self.current_player_idx]
 
     @abc.abstractmethod
@@ -650,26 +621,26 @@ class EnvGameMaster(GameMaster):
         Main play loop method. This method is called to run the game for benchmarking.
         This implementation uses the game environment for state management.
         """
-        logger.debug(
+        module_logger.debug(
             f"[_play] Starting game with current player: {self.current_player}"
         )
         if self.current_player is None:
-            logger.warning("No current player set, ending game.")
+            module_logger.warning("No current player set, ending game.")
             return
 
         while not self.game_environment.state["terminated"]:
             self._on_before_round()
 
             observation = self.game_environment.get_observation(self.current_player)
-            logger.info(f"[_play] Player {self.current_player.name}")
-            logger.info(f"[_play] Observation: \n{format_json(observation)}")
+            module_logger.info(f"[_play] Player {self.current_player.name}")
+            module_logger.info(f"[_play] Observation: \n{to_pretty_json(observation)}")
 
             response = self.current_player(observation)
-            logger.info(f"[_play] Response: {response}")
+            module_logger.info(f"[_play] Response: {response}")
 
             # TODO: now that we have _validate_action in the game_environment, do we still need this?
             if not self._validate_player_response(self.current_player, response):
-                logger.warning(
+                module_logger.warning(
                     f"[_play] Player {self.current_player.name} response is invalid"
                 )
                 terminated = self._should_terminate_on_invalid_response()
@@ -679,7 +650,7 @@ class EnvGameMaster(GameMaster):
 
             action = self.parse_action_from_response(response)
 
-            logger.debug(f"[_play] Action: {action}")
+            module_logger.debug(f"[_play] Action: {action}")
             self.game_environment.step(self.current_player, action)
 
             if self.game_environment.state["terminated"]:
@@ -809,6 +780,8 @@ class EnvGameMaster(GameMaster):
 
         Hook: Modify this method for game-specific functionality.
         """
+        # todo this is supposed to be a hook; users might accidentally overwrite which ignoes the call to _add_logs
+        # I also think the DGM is already doing this now (to see an example; shouldn't diverge too much)
         self._add_logs_to_episode_scores()
 
     def _add_logs_to_episode_scores(self):
@@ -818,15 +791,15 @@ class EnvGameMaster(GameMaster):
 
         This method is useful to process and log/record overall game results.
         """
-        logger.info("[_on_after_game] Game completed, processing final state")
+        module_logger.info("[_on_after_game] Game completed, processing final state")
 
         final_state = self.game_environment.state
 
-        logger.debug(f"Final game state: \n{format_json(final_state)}")
+        module_logger.debug(f"Final game state: \n{to_pretty_json(final_state)}")
 
         for key, value in final_state.items():
             self.log_key(key, value)
 
         self.log_key("episode_score", self.compute_episode_score())
 
-        logger.info(f"[_on_after_game] Game completed")
+        module_logger.info(f"[_on_after_game] Game completed")

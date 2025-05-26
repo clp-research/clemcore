@@ -6,12 +6,14 @@ from typing import List, Dict, Tuple, Any, Union
 import torch
 import re
 from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig
+from peft import PeftModel
 from jinja2 import TemplateError
 
 import clemcore.backends as backends
 from clemcore.backends.utils import ensure_alternating_roles
 
 logger = logging.getLogger(__name__)
+stdout_logger = logging.getLogger("clemcore.cli")
 
 FALLBACK_CONTEXT_SIZE = 256
 
@@ -104,15 +106,23 @@ def load_model(model_spec: backends.ModelSpec) -> Any:
     """
     logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
 
-    hf_model_str = model_spec['huggingface_id']
+    model_args = dict(device_map="auto", torch_dtype="auto")
+    if "load_in_8bit" in model_spec.model_config:
+        model_args["load_in_8bit"] = model_spec.model_config["load_in_8bit"]
+    if "load_in_4bit" in model_spec.model_config:
+        model_args["load_in_4bit"] = model_spec.model_config["load_in_4bit"]
     if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
         # load HF API key:
         creds = backends.load_credentials("huggingface")
-        api_key = creds["huggingface"]["api_key"]
-        # load model using its default configuration:
-        model = AutoModelForCausalLM.from_pretrained(hf_model_str, token=api_key, device_map="auto", torch_dtype="auto")
-    else:
-        model = AutoModelForCausalLM.from_pretrained(hf_model_str, device_map="auto", torch_dtype="auto")
+        model_args["token"] = creds["huggingface"]["api_key"]
+
+    hf_model_str = model_spec['huggingface_id']
+    model = AutoModelForCausalLM.from_pretrained(hf_model_str, **model_args)
+
+    if "peft_model" in model_spec.model_config:
+        adapter_model = model_spec.model_config["peft_model"]  # can be a path or name
+        stdout_logger.info(f"Load PeftModel adapters from {adapter_model}")
+        model = PeftModel.from_pretrained(model, adapter_model)
 
     logger.info(f"Finished loading huggingface model: {model_spec.model_name}")
     logger.info(f"Model device map: {model.hf_device_map}")

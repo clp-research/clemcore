@@ -17,7 +17,7 @@ class ModelSpec(SimpleNamespace):
     Holds all necessary information to make a model available for clembench: Responsible backend and any arbitrary data
     required by the backend. Also covers non-LLM 'models' like programmatic, slurk and direct user input.
     """
-    PROGRAMMATIC_SPECS = ["mock", "dry_run", "programmatic", "custom", "_slurk_response"]
+    PROGRAMMATIC_SPECS = ["mock", "programmatic"]
     HUMAN_SPECS = ["human", "terminal"]
 
     def __init__(self, **kwargs):

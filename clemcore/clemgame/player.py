@@ -17,15 +17,15 @@ class Player(abc.ABC):
     - backend players are called via the generate_response() method of a backend
     """
 
-    def __init__(self, model: backends.Model, name: str = None, game_recorder: GameRecorder = None,
-                 initial_prompt: Union[str, Dict] = None, forget_extras: List[str] = None):
+    def __init__(self, model: backends.Model, name: str = None, game_role: str = None,
+                 game_recorder: GameRecorder = None, initial_prompt: Union[str, Dict] = None,
+                 forget_extras: List[str] = None):
         """
         Args:
             model: The model used by this player.
-            name: The player's name (optional). DialogueGameMaster assigns a name like "Player 1 (Class)", overriding
-                any name given here.
-            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder. DialogueGameMaster
-                assigns its corresponding GameRecorder, overriding any given here.
+            name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
+            game_role: The player's game role (optional). If not given, then automatically resolves to the class name.
+            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
             initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
                             set before the player is called the first time. If set, then on the first player call
                             the initial prompt will be added to the player's message history and logged as a
@@ -39,6 +39,7 @@ class Player(abc.ABC):
         """
         self._model: backends.Model = model
         self._name: str = name  # set by master
+        self._game_role = game_role or self.__class__.__name__
         self._game_recorder = game_recorder or NoopGameRecorder()  # set by master
         self._is_initial_call: bool = True
         self._initial_prompt: Dict = None if initial_prompt is None else self.__validate_initial_prompt(initial_prompt)
@@ -100,6 +101,10 @@ class Player(abc.ABC):
         self._name = name
 
     @property
+    def game_role(self):
+        return self._game_role
+
+    @property
     def model(self):
         return self._model
 
@@ -159,20 +164,11 @@ class Player(abc.ABC):
             self._messages.append(memorized_initial_prompt)  # merged with context in ensure_alternating_roles (backend)
             self.__log_send_context_event(memorized_initial_prompt["content"], label="initial prompt")
 
-        self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
-        call_start = datetime.now()
         self._last_context = deepcopy(context)
-        self._prompt, self._response_object, response_text = self.__call_model(context)
-        # TODO: add default ContextExceededError handling here or below
-        call_duration = datetime.now() - call_start
-        self.__log_response_received_event(response_text, label="response" if memorize else "forget")
 
-        self._response_object["clem_player"] = {
-            "call_start": str(call_start),
-            "call_duration": str(call_duration),
-            "response": response_text,
-            "model_name": self.model.get_name()
-        }
+        self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
+        self._prompt, self._response_object, response_text = self.__call_model(context)
+        self.__log_response_received_event(response_text, label="response" if memorize else "forget")
 
         # Copy context, so that original context given to the player is kept on forget extras. This is, for
         # example, necessary to collect the original contexts in the rollout buffer for playpen training.
@@ -193,6 +189,7 @@ class Player(abc.ABC):
         return response_text
 
     def __call_model(self, context: Dict):
+        call_start = datetime.now()
         response_object = dict()
         prompt = context
         if isinstance(self.model, backends.CustomResponseModel):
@@ -202,7 +199,14 @@ class Player(abc.ABC):
         else:
             prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
             # TODO: add default ContextExceededError handling here or above
+        call_duration = datetime.now() - call_start
         self._game_recorder.count_request()
+        response_object["clem_player"] = {
+            "call_start": str(call_start),
+            "call_duration": str(call_duration),
+            "response": response_text,
+            "model_name": self.model.get_name()
+        }
         return prompt, response_object, response_text
 
     def _terminal_response(self, context: Dict) -> str:

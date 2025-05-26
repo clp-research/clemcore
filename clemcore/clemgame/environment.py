@@ -1,5 +1,5 @@
 """
-Base class for all clembench environments.
+Base class for clembench game environments.
 
 Environments:
 - are self-contained systems that manage their own state
@@ -7,16 +7,14 @@ Environments:
 - include an observation space of observations that can be made of the state of the environment
 - include a termination condition that defines when the environment is finished
 """
-
+import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Literal, Optional, TypedDict
 
-from clemcore.utils import format_json, setup_logger
+from clemcore.clemgame.player import Player
+from clemcore.utils.string_utils import to_pretty_json
 
-from .player import Player
-
-logger = setup_logger(__name__)
-
+logger = logging.getLogger(__name__)
 
 ActionType = str
 
@@ -134,7 +132,8 @@ class GameEnvironment(ABC):
 
         self._update_state_through_action(player, action)
 
-        logger.debug(f"[step] New game state: \n{format_json(self.state)}")
+        logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
+
         if self.state["aborted"]:
             logger.warning(f"[step] Action aborted: {action}")
         elif self.state["success"]:
@@ -190,8 +189,8 @@ class GameEnvironment(ABC):
         Args:
             player: The player to set the observation for
         """
-        observation = {"role": "user", "content": self.state}
-
+        observation: Observation = {"role": "user", "content": self.state}
+        
         self.observations[player.name] = observation
 
         logger.info(

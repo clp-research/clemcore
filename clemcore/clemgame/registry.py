@@ -86,7 +86,7 @@ class GameSpec(SimpleNamespace):
             game_dict = json.loads(game_string)
             return GameSpec.from_dict(game_dict, allow_underspecified=True)
         except Exception as e:  # likely not a json
-            return GameSpec.from_name(game_string, allow_underspecified=True)
+            return GameSpec.from_name(game_string)
 
     @classmethod
     def from_directory(cls, dir_path: str) -> List["GameSpec"]:
@@ -210,6 +210,9 @@ class GameRegistry:
     def register_from_list(self, game_specs: List[Dict], lookup_source: str = None) -> "GameRegistry":
         for game_spec_dict in game_specs:
             try:
+                if "benchmark_path" in game_spec_dict:
+                    self.register_from_directories(game_spec_dict["benchmark_path"], 0)
+                    continue
                 if lookup_source and ("lookup_source" not in game_spec_dict):
                     game_spec_dict["lookup_source"] = lookup_source
                 game_spec = GameSpec.from_dict(game_spec_dict)
@@ -218,9 +221,9 @@ class GameRegistry:
                 stdout_logger.warning("Game spec could not be loaded because: %s", e)
         return self
 
-    def register_from_directories(self, current_directory: str, depth, max_depth=3):
+    def register_from_directories(self, current_directory: str, current_depth, max_depth=3):
         # deep first search to keep order of sorted directory names
-        if depth > max_depth:
+        if current_depth > max_depth:
             return
         candidate_file_path = os.path.join(current_directory, "clemgame.json")
         try:
@@ -237,7 +240,7 @@ class GameRegistry:
                 if current_file in ["venv", "__pycache__", "docs",
                                     "in", "resources", "utils", "evaluation", "files"]:
                     continue
-                self.register_from_directories(file_path, depth + 1, max_depth)
+                self.register_from_directories(file_path, current_depth + 1, max_depth)
         except PermissionError:
             pass  # ignore
         except Exception as e:  # most likely a problem with the json file

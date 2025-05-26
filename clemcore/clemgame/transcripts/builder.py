@@ -80,6 +80,7 @@ def build_transcript(interactions: Dict):
         dialogue_pair: The model pair descriptor string for the Players.
     """
     meta = interactions["meta"]
+    players = interactions["players"]
     transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
             f"episode {meta['game_id']} with {meta['dialogue_pair']}."
@@ -91,9 +92,16 @@ def build_transcript(interactions: Dict):
         msg_content = event['action']['content']
         msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
         if event['from'] == 'GM' and event['to'] == 'GM':
-            speaker = f'Game Master: {event["action"]["type"]}'
+            speaker_attr = f'Game Master: {event["action"]["type"]}'
         else:
-            speaker = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
+            from_player = event['from']
+            to_player = event['to']
+            if "game_role" in players[from_player] and "game_role" in players[to_player]:
+                from_game_role = players[from_player]["game_role"]
+                to_game_role = players[to_player]["game_role"]
+                speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
+            else: # old mode (before 2.4)
+                speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
         # in case the content is a json BUT given as a string!
         # we still want to check for image entry
         if isinstance(msg_content, str):
@@ -105,7 +113,7 @@ def build_transcript(interactions: Dict):
         # in case the content is a json with an image entry
         if isinstance(msg_content, dict):
             if "image" in msg_content:
-                transcript += f'<div speaker="{speaker}" class="msg {class_name}" style="{style}">\n'
+                transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
                 transcript += f'  <p>{msg_raw}</p>\n'
                 for image_src in msg_content["image"]:
                     if not image_src.startswith("http"):  # take the web url as it is
@@ -119,9 +127,9 @@ def build_transcript(interactions: Dict):
                                    f'</a>\n')
                 transcript += '</div>\n'
             else:
-                transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, style, msg_raw)
+                transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
         else:
-            transcript += patterns.HTML_TEMPLATE.format(speaker, class_name, style, msg_raw)
+            transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
     transcript += patterns.HTML_FOOTER
     return transcript
 

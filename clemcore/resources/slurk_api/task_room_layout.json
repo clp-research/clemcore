@@ -1,0 +1,84 @@
+{
+  "title": "Game Room",
+  "html": [
+    {
+      "layout-type": "div",
+      "id": "typing",
+      "style": "margin: 5px 10px; min-height: 20px"
+    },
+    {
+      "layout-type": "div",
+      "class": "card",
+      "layout-content": [
+        {
+          "layout-type": "div",
+          "layout-content": [
+            {
+              "layout-type": "b",
+              "layout-content": [
+                {
+                  "layout-type": "lighter",
+                  "id": "instr_title",
+                  "style": "min-height: 20px"
+                }
+              ]
+            }
+          ],
+          "style": "color: #abb2b9;"
+        },
+        {
+          "layout-type": "hr",
+          "layout-content": "",
+          "style": "margin: 2px; background-color: #abb2b9; opacity: .50;"
+        },
+        {
+          "layout-type": "div",
+          "id": "instr",
+          "style": "white-space: pre-wrap;"
+        },
+        {
+          "layout-type": "div",
+          "id": "image-area",
+          "layout-content": [
+            {
+              "layout-type": "image",
+              "id": "current-image",
+              "style": "min-width: 70vmin; max-width: 90vmax; object-fit: contain; padding: 2%;"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "css": {
+    ".card": {
+      "position": "relative",
+      "display": "flex",
+      "flex-direction": "column",
+      "min-width": "0",
+      "background-color": "#fff",
+      "background-clip": "border-box",
+      "border": "1px solid rgba(0,0,0,.125)",
+      "border-radius": ".25rem",
+      "height": "100vh!important",
+      "margin": "0px 15px",
+      "padding": "20px"
+    },
+    "time:before": {
+      "content": "''"
+    },
+    "#image-area": {
+      "margin": "0 auto"
+    }
+  },
+  "scripts": {
+    "incoming-text": "markdown",
+    "incoming-image": "display-image",
+    "submit-message": "send-message",
+    "print-history": [
+      "attribute-history",
+      "markdown-history"
+    ],
+    "typing-users": "typing-users"
+  }
+}

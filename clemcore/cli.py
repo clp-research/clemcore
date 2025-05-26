@@ -7,9 +7,10 @@ from datetime import datetime
 from typing import Dict, List, Union
 
 import clemcore.backends as backends
-from clemcore import clemeval
-from clemcore.backends import BackendRegistry, ModelRegistry
-from clemcore.clemgame import GameRegistry, GameSpec, benchmark
+from clemcore.backends import ModelRegistry, BackendRegistry
+from clemcore.clemgame import GameRegistry, GameSpec
+from clemcore.clemgame import benchmark
+from clemcore import clemeval, get_version
 from clemcore.clemgame.transcripts.builder import build_transcripts
 
 logger = logging.getLogger(__name__)
@@ -269,6 +270,7 @@ def main():
         args: CLI arguments as passed via argparse.
     """
     parser = argparse.ArgumentParser()
+    parser.add_argument('--version', action='version', version=f'%(prog)s {get_version()}')
     sub_parsers = parser.add_subparsers(dest="command_name")
     list_parser = sub_parsers.add_parser("list")
     list_parser.add_argument("mode", choices=["games", "models", "backends"],
