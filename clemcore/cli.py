@@ -1,6 +1,4 @@
 import argparse
-import inspect
-import os
 import textwrap
 import logging
 from datetime import datetime
@@ -227,7 +225,7 @@ def cli(args: argparse.Namespace):
 
     To list available models: 
     $> clem list models
-    
+
     To list available backends: 
     $> clem list backends
 
