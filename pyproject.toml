@@ -28,7 +28,7 @@ dependencies = [
     "anthropic==0.47.1",
     "cohere==4.48",
     "google-generativeai==0.8.4",
-    "mistralai==0.0.12",
+    "mistralai==1.8.0",
     "matplotlib==3.7.1",
     "pandas==2.0.1",
     "seaborn==0.12.2"
