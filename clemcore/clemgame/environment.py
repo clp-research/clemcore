@@ -7,6 +7,7 @@ Environments:
 - include an observation space of observations that can be made of the state of the environment
 - include a termination condition that defines when the environment is finished
 """
+
 import logging
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Literal, Optional, TypedDict
@@ -33,6 +34,7 @@ class GameState(TypedDict):
     terminated: bool
     success: bool
     aborted: bool
+    moves: int
     # add fields for game-specific state on inheritance
 
 
@@ -89,8 +91,11 @@ class GameEnvironment(ABC):
             "terminated": False,
             "success": False,
             "aborted": False,
+            "moves": 0,
             # add fields for game-specific state on inheritance
         }
+
+        self.players: List[Player] = []
 
     def reset(
         self,
@@ -106,6 +111,7 @@ class GameEnvironment(ABC):
             "terminated": False,
             "success": False,
             "aborted": False,
+            "moves": 0,
             # add fields for game-specific state on inheritance
         }
         if initial_observations is not None:
@@ -141,7 +147,9 @@ class GameEnvironment(ABC):
         else:
             logger.warning(f"[step] Action was unsuccessful: {action}")
 
-        self.update_observation(player)
+        self.update_observations()
+
+        self.state["moves"] += 1
 
         logger.debug(
             f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
@@ -182,7 +190,13 @@ class GameEnvironment(ABC):
         """
         return True
 
-    def update_observation(self, player: Player):
+    def add_player(self, player: Player):
+        """
+        Add a player to the environment.
+        """
+        self.players.append(player)
+
+    def update_observations(self):
         """
         Set the observation for a specific player.
 
@@ -190,12 +204,10 @@ class GameEnvironment(ABC):
             player: The player to set the observation for
         """
         observation: Observation = {"role": "user", "content": self.state}
-        
-        self.observations[player.name] = observation
+        for player in self.players:
+            self.observations[player.name] = observation
 
-        logger.info(
-            f"[update_observation] Updated observation for player: {player.name}"
-        )
+        logger.info(f"[update_observations] Updated observations")
 
     def get_observation(self, player: Player) -> Observation:
         """

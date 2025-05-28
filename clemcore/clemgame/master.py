@@ -3,7 +3,7 @@ import collections
 import logging
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, Union, final, Optional
+from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
@@ -534,7 +534,7 @@ class EnvGameMaster(GameMaster):
         path: str,
         experiment: dict,
         player_models: List[backends.Model],
-        game_environment: GameEnvironment,
+        game_environment: Optional[GameEnvironment] = None,
     ):
         """
         Args:
@@ -545,7 +545,8 @@ class EnvGameMaster(GameMaster):
             game_environment: The environment that maintains the game state.
         """
         super().__init__(name, path, experiment, player_models)
-        self.game_environment = game_environment
+        if game_environment is not None:
+            self.game_environment = game_environment
 
         # set players
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
@@ -557,7 +558,7 @@ class EnvGameMaster(GameMaster):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
+        for player in self.players_by_names.values():
             player.game_recorder = self.game_recorder
 
     def get_players(self) -> List[Player]:
@@ -576,13 +577,17 @@ class EnvGameMaster(GameMaster):
         Args:
             player: The player to be added to the game. The player's name must be unique.
         """
-        player.game_recorder = self.game_recorder  # player should record to the same interaction log
+        player.game_recorder = self.game_recorder
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
-            raise ValueError(f"Player names must be unique, "
-                             f"but there is already a player registered with name '{player.name}'.")
+            raise ValueError(
+                f"Player names must be unique, "
+                f"but there is already a player registered with name '{player.name}'."
+            )
         self.players_by_names[player.name] = player
         self.log_player(player)
+
+        self.game_environment.add_player(player)
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -595,7 +600,7 @@ class EnvGameMaster(GameMaster):
                 read from the game's instances.json.
         """
         self._on_setup(**kwargs)
-        if self.players_by_names: # todo: why should this be empty here?
+        if self.players_by_names:  # todo: why should this be empty here?
             self.current_player = self.get_players()[self.current_player_idx]
 
     @abc.abstractmethod
