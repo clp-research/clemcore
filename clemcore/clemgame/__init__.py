@@ -6,14 +6,32 @@ from clemcore.clemgame.environment import (
     GameState,
     Observation,
 )
+from clemcore.clemgame.grid_environment import (
+    Grid,
+    GridCell,
+    GridEnvironment,
+    GridObservation,
+    GridState,
+    Object,
+    PlayerObject,
+    Portal,
+    ProjectedWall,
+    Switch,
+    Wall,
+)
 from clemcore.clemgame.instances import GameInstanceGenerator
-from clemcore.clemgame.resources import GameResourceLocator
-from clemcore.clemgame.master import GameMaster, DialogueGameMaster, EnvGameMaster, Player, GameError, ParseError
+from clemcore.clemgame.master import (
+    DialogueGameMaster,
+    EnvGameMaster,
+    GameError,
+    GameMaster,
+    ParseError,
+    Player,
+)
 from clemcore.clemgame.metrics import GameScorer
 from clemcore.clemgame.recorder import DefaultGameRecorder, GameRecorder
-from clemcore.clemgame.registry import GameSpec, GameRegistry
-from clemcore.clemgame.benchmark import GameBenchmark, GameInstanceIterator
-from clemcore.clemgame.environment import Action, ActionSpace, GameEnvironment, GameState, Observation
+from clemcore.clemgame.registry import GameRegistry, GameSpec
+from clemcore.clemgame.resources import GameResourceLocator
 
 __all__ = [
     "GameBenchmark",
@@ -23,6 +41,17 @@ __all__ = [
     "Action",
     "ActionSpace",
     "Observation",
+    "Grid",
+    "GridCell",
+    "GridObservation",
+    "GridEnvironment",
+    "GridState",
+    "Object",
+    "PlayerObject",
+    "Portal",
+    "ProjectedWall",
+    "Switch",
+    "Wall",
     "GameMaster",
     "DialogueGameMaster",
     "EnvGameMaster",
