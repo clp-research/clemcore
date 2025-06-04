@@ -157,12 +157,12 @@ class GameEnvironment(ABC):
 
     def _validate_action(self, player: Player, action: Action) -> bool:
         """
-        Validate if an action is legal in the current state.
+        Validate if an action is allowed in the current state.
         """
-        action_type = action["action_type"]
-        if action_type not in self.action_spaces[player.name]:
+        action_type = action.get("action_type")
+        if action_type is None or action_type not in self.action_spaces[player.name]:
             return False
-        if not self._is_action_valid_in_state(player, action_type):
+        if not self._is_action_valid_in_state(player, action):
             return False
         return True
 
@@ -182,7 +182,7 @@ class GameEnvironment(ABC):
         """Subclasses must implement this method to perform the actual state update."""
         raise NotImplementedError
 
-    def _is_action_valid_in_state(self, player: Player, action_type: str) -> bool:
+    def _is_action_valid_in_state(self, player: Player, action: Action) -> bool:
         """
         Validate if an action is legal in the current state.
 

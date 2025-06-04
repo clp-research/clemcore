@@ -22,7 +22,7 @@ class Object(ABC):
     """Base class for all objects in the grid environment."""
     position: Position
     name: str
-    symbol: str  # Character representation in the grid
+    symbol: str  # char to be shown in the grid
 
     def __str__(self) -> str:
         return f"{self.name} at {self.position}"
@@ -43,7 +43,7 @@ class GridCell(TypedDict):
     position: Position
 
 
-Grid = List[List[List[GridCell]]]
+Grid = list[list[GridCell]]
 
 
 class GridState(GameState):
@@ -64,66 +64,11 @@ class GridObservation(Observation):
     grid: Grid
 
 
-class Wall(Object):
-    """A solid wall that blocks movement."""
-
-    def __init__(self, position: Position):
-        super().__init__(position, "Wall", "█")
-
-    def can_interact_with(self, other: Object) -> bool:
-        return False
-
-    def interact_with(self, other: Object) -> None:
-        pass
-
-
-class ProjectedWall(Object):
-    """A wall that exists only in description but not in reality."""
-
-    def __init__(self, position: Position):
-        super().__init__(position, "ProjectedWall", "░")
-
-    def can_interact_with(self, other: Object) -> bool:
-        return False
-
-    def interact_with(self, other: Object) -> None:
-        pass
-
-
-class Switch(Object):
-    """A switch that can be activated by stepping on it."""
-
-    def __init__(self, position: Position):
-        super().__init__(position, "Switch", "⚡")
-        self.activated = False
-
-    def can_interact_with(self, other: Object) -> bool:
-        return isinstance(other, PlayerObject)
-
-    def interact_with(self, other: Object) -> None:
-        if isinstance(other, PlayerObject):
-            self.activated = True
-
-
-class Portal(Object):
-    """The goal object that players try to reach."""
-
-    def __init__(self, position: Position):
-        super().__init__(position, "Portal", "○")
-
-    def can_interact_with(self, other: Object) -> bool:
-        return isinstance(other, PlayerObject)
-
-    def interact_with(self, other: Object) -> None:
-        if isinstance(other, PlayerObject):
-            pass
-
-
 class PlayerObject(Object):
     """Represents a player in the grid."""
 
     def __init__(self, position: Position, player: Player):
-        super().__init__(position, f"Player_{player.name}", "P")
+        super().__init__(position, f"Player_{player.name}", "👤")
         self.player = player
 
     def can_interact_with(self, other: Object) -> bool:
@@ -266,6 +211,6 @@ class GridEnvironment(GameEnvironment):
         """Update the game state based on a player's action."""
         raise NotImplementedError
 
-    def _is_action_valid_in_state(self, player: Player, action_type: str) -> bool:
+    def _is_action_valid_in_state(self, player: Player, action: Action) -> bool:
         """Check if an action is valid in the current state."""
         raise NotImplementedError

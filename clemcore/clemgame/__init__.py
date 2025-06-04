@@ -14,10 +14,6 @@ from clemcore.clemgame.grid_environment import (
     GridState,
     Object,
     PlayerObject,
-    Portal,
-    ProjectedWall,
-    Switch,
-    Wall,
 )
 from clemcore.clemgame.instances import GameInstanceGenerator
 from clemcore.clemgame.master import (
@@ -48,10 +44,6 @@ __all__ = [
     "GridState",
     "Object",
     "PlayerObject",
-    "Portal",
-    "ProjectedWall",
-    "Switch",
-    "Wall",
     "GameMaster",
     "DialogueGameMaster",
     "EnvGameMaster",
