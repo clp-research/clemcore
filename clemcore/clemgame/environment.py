@@ -35,6 +35,7 @@ class GameState(TypedDict):
     success: bool
     aborted: bool
     moves: int
+    warning: str
     # add fields for game-specific state on inheritance
 
 
@@ -92,10 +93,14 @@ class GameEnvironment(ABC):
             "success": False,
             "aborted": False,
             "moves": 0,
+            "warning": "",
             # add fields for game-specific state on inheritance
         }
 
         self.players: List[Player] = []
+
+        self.max_moves = self.config.get("max_moves", None)
+        logger.info(f"[_init] Max moves: {self.max_moves}")
 
     def reset(
         self,
@@ -112,6 +117,7 @@ class GameEnvironment(ABC):
             "success": False,
             "aborted": False,
             "moves": 0,
+            "warning": "",
             # add fields for game-specific state on inheritance
         }
         if initial_observations is not None:
@@ -136,59 +142,105 @@ class GameEnvironment(ABC):
                 f"[step] No observation or action space for player: {player.name}"
             )
 
-        self._update_state_through_action(player, action)
+        self.state["moves"] += 1
 
-        logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
+        if not self._max_moves_reached():
+            if self._is_action_valid(player, action):
+                self._update_state_through_action(player, action)
+                logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
+
+            self.update_observations()
+            logger.debug(
+                f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
+            )
 
         if self.state["aborted"]:
             logger.warning(f"[step] Action aborted: {action}")
         elif self.state["success"]:
-            logger.info(f"[step] Action was successful: {action}")
+            logger.info(f"[step] Action successful: {action}")
         else:
-            logger.warning(f"[step] Action was unsuccessful: {action}")
+            logger.warning(f"[step] Action unsuccessful: {action}")
 
-        self.update_observations()
-
-        self.state["moves"] += 1
-
-        logger.debug(
-            f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
-        )
-
-    def _validate_action(self, player: Player, action: Action) -> bool:
+    def _max_moves_reached(self) -> bool:
         """
-        Validate if an action is allowed in the current state.
+        Check if the maximum number of moves has been reached.
         """
-        action_type = action.get("action_type")
-        if action_type is None or action_type not in self.action_spaces[player.name]:
+        if self.max_moves is not None and self.state["moves"] >= self.max_moves:
+            logger.warning(f"[_max_moves_reached] Max moves reached — will abort and terminate")
+            self.state["terminated"] = True
+            self.state["aborted"] = True
+            self.state["success"] = False
+            return True
+        return False
+
+    def _is_action_valid(self, player: Player, action: Action) -> bool:
+        if action.get("action_type") is None:
+            raise ValueError(f"[step] No action type in action: {action}")
+
+        if (
+            self._action_violates_format(action)
+            or self._action_not_in_action_space(player, action)
+            or self._action_invalid_in_state(player, action)
+        ):
             return False
-        if not self._is_action_valid_in_state(player, action):
-            return False
+
         return True
 
+    def _action_violates_format(self, action: Action) -> bool:
+        """
+        Check if an action violates the format.
+        """
+        if action["action_type"] == "violated_format":
+            self.state["terminated"] = False
+            self.state["aborted"] = True
+            self.state["success"] = False
+            self.state["warning"] = "Your response violated the format. Please try again."
+            return True
+        return False
+
+    def _action_not_in_action_space(self, player: Player, action: Action) -> bool:
+        """
+        Check if an action is not in the action space.
+        """
+        if action["action_type"] not in self.action_spaces[player.name]:
+            self.state["terminated"] = False
+            self.state["aborted"] = True
+            self.state["success"] = False
+            self.state["warning"] = "You cannot do that. Please try again."
+            return True
+        return False
+
+    def _action_invalid_in_state(self, player: Player, action: Action) -> bool:
+        """
+        Check if an action is invalid in the current state.
+        """
+        if not self._is_action_valid_in_state(player, action):
+            self.state["terminated"] = False
+            self.state["aborted"] = True
+            self.state["success"] = False
+            self.state["warning"] = "You cannot do that in the current environment. Please try again."
+            return True
+        return False
+
+    @abstractmethod
     def _update_state_through_action(self, player: Player, action: Action):
         """
         Update the state after an action is taken.
 
         This method should update state["terminated"], state["success"], state["aborted"], as well as any other game-specific state fields.
         """
-        logger.debug("[_update_state_through_action] Validating action")
-        if not self._validate_action(player, action):
-            raise ValueError(f"[step] Invalid action: {action}")
-        self._do_update_state(player, action)
-
-    @abstractmethod
-    def _do_update_state(self, player: Player, action: Action):
-        """Subclasses must implement this method to perform the actual state update."""
         raise NotImplementedError
 
+    @abstractmethod
     def _is_action_valid_in_state(self, player: Player, action: Action) -> bool:
         """
         Validate if an action is legal in the current state.
 
         Overwrite this method in your subclass to implement custom validation logic based on the current state.
+
+        Make sure you set state["warning"] in here if the action is invalid, so that the player can get appropriate feedback.
         """
-        return True
+        raise NotImplementedError
 
     def add_player(self, player: Player):
         """
@@ -196,18 +248,14 @@ class GameEnvironment(ABC):
         """
         self.players.append(player)
 
+    @abstractmethod
     def update_observations(self):
         """
-        Set the observation for a specific player.
+        Set the new observations for all players.
 
-        Args:
-            player: The player to set the observation for
+        Make sure you include state["warning"] in the observations if the action is invalid, so that the player can get appropriate feedback.
         """
-        observation: Observation = {"role": "user", "content": self.state}
-        for player in self.players:
-            self.observations[player.name] = observation
-
-        logger.info(f"[update_observations] Updated observations")
+        raise NotImplementedError
 
     def get_observation(self, player: Player) -> Observation:
         """

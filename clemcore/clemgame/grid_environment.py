@@ -207,10 +207,7 @@ class GridEnvironment(GameEnvironment):
 
         logger.info("[update_observations] Updated observations for all players")
 
-    def _do_update_state(self, player: Player, action: Action) -> None:
-        """Update the game state based on a player's action."""
-        raise NotImplementedError
-
-    def _is_action_valid_in_state(self, player: Player, action: Action) -> bool:
-        """Check if an action is valid in the current state."""
+    @abstractmethod
+    def render_state(self, player_name: Optional[str] = None) -> str:
+        """Render the current state of the environment."""
         raise NotImplementedError

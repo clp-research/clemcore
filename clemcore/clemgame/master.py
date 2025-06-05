@@ -1,5 +1,6 @@
 import abc
 import collections
+import json
 import logging
 from copy import deepcopy
 from pathlib import Path
@@ -76,6 +77,20 @@ class NotApplicableError(GameError):
     """Raised when a verbal action of a player cannot be applied to advance the game state."""
 
     pass
+
+
+class GameStateEncoder(json.JSONEncoder):
+    """Custom JSON encoder for game state objects."""
+
+    def default(self, obj):
+        # If the object has a __dict__ attribute, convert it to a dict
+        if hasattr(obj, '__dict__'):
+            return obj.__dict__
+        # If the object has a __str__ method, use its string representation
+        elif hasattr(obj, '__str__'):
+            return str(obj)
+        # For any other type, let the base class handle it
+        return super().default(obj)
 
 
 class GameMaster(abc.ABC):
@@ -633,6 +648,8 @@ class EnvGameMaster(GameMaster):
             module_logger.warning("No current player set, ending game.")
             return
 
+        self._on_before_game()
+
         while not self.game_environment.state["terminated"]:
             self._on_before_round()
 
@@ -643,23 +660,19 @@ class EnvGameMaster(GameMaster):
             response = self.current_player(observation)
             module_logger.info(f"[_play] Response: {response}")
 
-            # TODO: now that we have _validate_action in the game_environment, do we still need this?
-            if not self._validate_player_response(self.current_player, response):
+            if not self._player_response_in_expected_format(self.current_player, response):
                 module_logger.warning(
                     f"[_play] Player {self.current_player.name} response is invalid"
                 )
-                terminated = self._should_terminate_on_invalid_response()
-                if terminated:
-                    self._on_after_game()
+                if self._should_terminate_on_invalid_response():
+                    self._end_game()
                     break
 
-            action = self.parse_action_from_response(response)
-
-            module_logger.debug(f"[_play] Action: {action}")
+            action = self._create_action_from_response(response)
             self.game_environment.step(self.current_player, action)
 
             if self.game_environment.state["terminated"]:
-                self._on_after_game()
+                self._end_game()
                 break
 
             if self._should_pass_turn():
@@ -721,13 +734,9 @@ class EnvGameMaster(GameMaster):
         return True
 
     @abc.abstractmethod
-    def _validate_player_response(self, player: Player, response: str) -> bool:
+    def _player_response_in_expected_format(self, player: Player, response: str) -> bool:
         """
-        Decide if a player response is valid. An invalid response breaks the game rules and might end the game.
-
-        Note: If the response is not valid, then _parse_response() and on_valid_player_response() will not be called.
-
-        However, game developers can decide to give the player another turn by letting _should_pass_turn() return False.
+        Decide if a player response is valid. An invalid response breaks the game rules. In this case, depending on _should_terminate_on_invalid_response(), the game might be terminated.
 
         Args:
             player: The player that gave the response.
@@ -737,19 +746,35 @@ class EnvGameMaster(GameMaster):
         """
         raise NotImplementedError
 
-    def parse_action_from_response(self, response: str) -> Action:
-        """Create an action from a player's response.
+    def _create_action_from_response(self, response: str) -> Action:
+        """
+        Create an action from a player's response.
+        """
+        try:
+            return self._parse_action_from_response(response)
+        except Exception as e:
+            module_logger.warning(f"[_get_action] Error parsing action from response: {e}")
+            return self._violated_format_action()
 
-        Default: return action
+    def _violated_format_action(self) -> Action:
+        """
+        Create an action that represents a response that violates the format.
+        """
+        return {"action_type": "violated_format"}
+
+    @abc.abstractmethod
+    def _parse_action_from_response(self, response: str) -> Action:
+        """Create an action from a player's response.
 
         Args:
             response: The textual response from the player
-            action_type: The type of action to create
 
         Returns:
-            {"action_type": "verbal_response", "message": response}
+            An action dictionary with:
+                - action_type: The type of action
+                - body: The text response from the player
         """
-        return {"action_type": "verbal_response", "message": response}
+        raise NotImplementedError
 
     def _should_terminate_on_invalid_response(self) -> bool:
         """
@@ -774,23 +799,28 @@ class EnvGameMaster(GameMaster):
         pass
 
     def _on_before_game(self):
-        """Executed once at the start, before entering the play loop.
+        """Executed once at the start, at the start of the play loop.
 
         Hook: Modify this method for game-specific functionality.
         """
         pass
 
+    def _end_game(self):
+        """
+        Finishes the game by adding the episode scores to the logs and calling the after game hook.
+        """
+        self._add_episode_scores_to_logs()
+        self._on_after_game()
+
     def _on_after_game(self):
-        """Executed once at the end, after exiting the play loop.
+        """Executed once at the end, at the end of the play loop.
 
         Hook: Modify this method for game-specific functionality.
         """
-        # todo this is supposed to be a hook; users might accidentally overwrite which ignoes the call to _add_logs
-        # I also think the DGM is already doing this now (to see an example; shouldn't diverge too much)
-        self._add_logs_to_episode_scores()
+        pass
 
-    def _add_logs_to_episode_scores(self):
-        """Executed once at the end, after exiting the play loop.
+    def _add_episode_scores_to_logs(self):
+        """Executed once at the end, at the end of the play loop.
 
         Hook: Modify this method for game-specific functionality.
 
@@ -800,9 +830,10 @@ class EnvGameMaster(GameMaster):
 
         final_state = self.game_environment.state
 
-        module_logger.debug(f"Final game state: \n{to_pretty_json(final_state)}")
+        serializable_state = json.loads(json.dumps(final_state, cls=GameStateEncoder))
+        module_logger.debug(f"Final game state: \n{to_pretty_json(serializable_state)}")
 
-        for key, value in final_state.items():
+        for key, value in serializable_state.items():
             self.log_key(key, value)
 
         self.log_key("episode_score", self.compute_episode_score())
