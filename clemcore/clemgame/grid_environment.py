@@ -68,7 +68,7 @@ class PlayerObject(Object):
     """Represents a player in the grid."""
 
     def __init__(self, position: Position, player: Player):
-        super().__init__(position, f"Player_{player.name}", "👤")
+        super().__init__(position, f"Player_{player.name}", "player")
         self.player = player
 
     def can_interact_with(self, other: Object) -> bool:
@@ -87,7 +87,8 @@ class GridEnvironment(GameEnvironment):
         width: int,
         height: int,
         partial_observability: bool = False,
-        config: Optional[Dict] = None
+        config: Optional[Dict] = None,
+        limited_visibility: bool = False
     ):
         """Initialize the grid environment.
 
@@ -96,12 +97,14 @@ class GridEnvironment(GameEnvironment):
             height: Height of the grid
             partial_observability: Whether to enable partial observability
             config: Additional configuration options
+            limited_
         """
         super().__init__(config)
 
         self.width = width
         self.height = height
         self.grid: Grid = [[GridCell(object=None, position=(x, y)) for x in range(width)] for y in range(height)]
+        self.limited_visibility = limited_visibility
 
         self.state: GridState = {
             "grid": self.grid,
@@ -179,35 +182,60 @@ class GridEnvironment(GameEnvironment):
         logger.debug(f"[observe_for] Observation for {player.name}: {observation}")
         return observation
 
+    @abstractmethod
     def update_observations(self):
         """Update observations for all players based on their current positions.
 
         This method is called after each step to ensure all players have up-to-date observations
         based on their current positions in the grid.
+
+        Should use render_state per player.
         """
-        for player in self.players:
-            if not self.state["partial_observability"]:
-                visible_grid = self.grid
-            else:
-                visible_grid = [[[] for _ in range(self.width)] for _ in range(self.height)]
-                pos = self.state["player_positions"][player.name]
-                visible_positions = {pos} | set(self.get_adjacent_positions(pos))
-
-                for y in range(self.height):
-                    for x in range(self.width):
-                        if (x, y) in visible_positions:
-                            visible_grid[y][x] = self.grid[y][x]
-
-            observation: GridObservation = {
-                "role": "user",
-                "grid": visible_grid,
-                # add "content" in inheriting classes and use the visible_grid in there
-            }
-            self.observations[player.name] = observation
-
-        logger.info("[update_observations] Updated observations for all players")
-
-    @abstractmethod
-    def render_state(self, player_name: Optional[str] = None) -> str:
-        """Render the current state of the environment."""
         raise NotImplementedError
+
+    def render_state(self, player_name: Optional[str] = None) -> str:
+        """Format the grid for display as string.
+
+        Args:
+            player_name: Optional player name. If provided, uses the explored map of that player
+                to render explored vs unexplored cells and marks the player's current position with 'player'.
+                If None, shows the entire grid without fog of war.
+        """
+        grid_str = ""
+        player_pos = None
+        explored = None
+        if player_name is not None:
+            player_pos = self.state["player_positions"][player_name]
+            explored = self.explored[player_name]
+
+        if self.limited_visibility and player_pos is not None:
+            row, col = player_pos
+            for i in range(max(0, row - 1), min(self.height, row + 2)):
+                row_str = ""
+                for j in range(max(0, col - 1), min(self.width, col + 2)):
+                    cell = self.state["grid"][i][j]
+                    cell_content = "player" if (i, j) == player_pos else (
+                        cell["object"].symbol if cell["object"] is not None else "empty"
+                    )
+                    row_str += f"({i},{j}) is {cell_content}, "
+                grid_str += row_str.lstrip() + "\n"
+            return grid_str
+
+        for i in range(self.height):
+            row_str = ""
+            for j in range(self.width):
+                cell = self.state["grid"][i][j]
+                if explored is not None:
+                    if explored[i][j]:
+                        cell_content = "player" if (i, j) == player_pos else (
+                            cell["object"].symbol if cell["object"] is not None else "empty"
+                        )
+                    else:
+                        cell_content = "❓"
+                else:
+                    cell_content = "player" if (player_pos is not None and (i, j) == player_pos) else (
+                        cell["object"].symbol if cell["object"] is not None else "empty"
+                    )
+                row_str += f"({i},{j}) is {cell_content}, "
+            grid_str += row_str.lstrip() + "\n"
+        return grid_str

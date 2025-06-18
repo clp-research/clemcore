@@ -10,7 +10,7 @@ Environments:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Literal, Optional, TypedDict
+from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict
 
 from clemcore.clemgame.player import Player
 from clemcore.utils.string_utils import to_pretty_json
@@ -214,11 +214,12 @@ class GameEnvironment(ABC):
         """
         Check if an action is invalid in the current state.
         """
-        if not self._is_action_valid_in_state(player, action):
+        is_valid, warning = self._is_action_valid_in_state(player, action)
+        if not is_valid:
             self.state["terminated"] = False
             self.state["aborted"] = True
             self.state["success"] = False
-            self.state["warning"] = "You cannot do that in the current environment. Please try again."
+            self.state["warning"] = warning
             return True
         return False
 
@@ -232,7 +233,7 @@ class GameEnvironment(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def _is_action_valid_in_state(self, player: Player, action: Action) -> bool:
+    def _is_action_valid_in_state(self, player: Player, action: Action) -> Tuple[bool, str]:
         """
         Validate if an action is legal in the current state.
 
