@@ -291,3 +291,9 @@ class GameEnvironment(ABC):
             action_space: The action space to set
         """
         self.action_spaces[player.name] = action_space
+
+    def pretty_print_state(self) -> str:
+        """
+        Pretty print the game state.
+        """
+        raise NotImplementedError

@@ -23,6 +23,7 @@ class Object(ABC):
     position: Position
     name: str
     symbol: str  # char to be shown in the grid
+    pretty_symbol: str  # emoji to be shown in the grid on pretty_print_state
 
     def __str__(self) -> str:
         return f"{self.name} at {self.position}"
@@ -39,7 +40,7 @@ class Object(ABC):
 
 
 class GridCell(TypedDict):
-    object: Optional[Object]
+    objects: List[Object]
     position: Position
 
 
@@ -59,16 +60,11 @@ class GridState(GameState):
     partial_observability: bool
 
 
-class GridObservation(Observation):
-    """Observation for the grid environment."""
-    grid: Grid
-
-
 class PlayerObject(Object):
     """Represents a player in the grid."""
 
     def __init__(self, position: Position, player: Player):
-        super().__init__(position, f"Player_{player.name}", "player")
+        super().__init__(position, f"Player_{player.name}", "player", "👤")
         self.player = player
 
     def can_interact_with(self, other: Object) -> bool:
@@ -103,7 +99,7 @@ class GridEnvironment(GameEnvironment):
 
         self.width = width
         self.height = height
-        self.grid: Grid = [[GridCell(object=None, position=(x, y)) for x in range(width)] for y in range(height)]
+        self.grid: Grid = [[GridCell(objects=[], position=(x, y)) for x in range(width)] for y in range(height)]
         self.limited_visibility = limited_visibility
 
         self.state: GridState = {
@@ -114,13 +110,13 @@ class GridEnvironment(GameEnvironment):
 
     def reset(
         self,
-        initial_observations: Optional[Dict[str, GridObservation]] = None,
+        initial_observations: Optional[Dict[str, Observation]] = None,
         initial_action_spaces: Optional[Dict[str, ActionSpace]] = None,
     ):
         """Reset the environment to its initial state."""
         super().reset(initial_observations, initial_action_spaces)
 
-        self.grid = [[GridCell(object=None, position=(x, y)) for x in range(self.width)] for y in range(self.height)]
+        self.grid = [[GridCell(objects=[], position=(x, y)) for x in range(self.width)] for y in range(self.height)]
         self.state["grid"] = self.grid
         self.state["player_positions"] = {}
 
@@ -128,21 +124,21 @@ class GridEnvironment(GameEnvironment):
         """Add an object to the grid at its position."""
         x, y = obj.position
         if 0 <= x < self.width and 0 <= y < self.height:
-            self.grid[y][x]["object"] = obj
+            self.grid[y][x]["objects"].append(obj)
         else:
             raise ValueError(f"Position {obj.position} is out of bounds")
 
     def remove_object(self, obj: Object) -> None:
         """Remove an object from the grid."""
         x, y = obj.position
-        if self.grid[y][x]["object"] == obj:
-            self.grid[y][x]["object"] = None
+        if obj in self.grid[y][x]["objects"]:
+            self.grid[y][x]["objects"].remove(obj)
 
-    def get_objects_at(self, position: Position) -> Optional[Object]:
+    def get_objects_at(self, position: Position) -> Optional[List[Object]]:
         """Get all objects at a given position."""
         x, y = position
         if 0 <= x < self.width and 0 <= y < self.height:
-            return self.grid[y][x]["object"]
+            return self.grid[y][x]["objects"]
         return None
 
     def is_position_valid(self, position: Position) -> bool:
@@ -159,7 +155,7 @@ class GridEnvironment(GameEnvironment):
         ]
         return [pos for pos in adjacent if self.is_position_valid(pos)]
 
-    def get_observation(self, player: Player) -> GridObservation:
+    def get_observation(self, player: Player) -> Observation:
         """Get the current observation for a specific player.
 
         Args:
@@ -208,34 +204,42 @@ class GridEnvironment(GameEnvironment):
             player_pos = self.state["player_positions"][player_name]
             explored = self.explored[player_name]
 
+        # render visible area of player if limited visibility is enabled
         if self.limited_visibility and player_pos is not None:
             row, col = player_pos
             for i in range(max(0, row - 1), min(self.height, row + 2)):
                 row_str = ""
                 for j in range(max(0, col - 1), min(self.width, col + 2)):
                     cell = self.state["grid"][i][j]
-                    cell_content = "player" if (i, j) == player_pos else (
-                        cell["object"].symbol if cell["object"] is not None else "empty"
-                    )
+                    cell_content = cell["objects"][-1].symbol if cell["objects"] != [] else "empty"
                     row_str += f"({i},{j}) is {cell_content}, "
                 grid_str += row_str.lstrip() + "\n"
             return grid_str
 
+        # render full grid
         for i in range(self.height):
             row_str = ""
             for j in range(self.width):
                 cell = self.state["grid"][i][j]
                 if explored is not None:
                     if explored[i][j]:
-                        cell_content = "player" if (i, j) == player_pos else (
-                            cell["object"].symbol if cell["object"] is not None else "empty"
-                        )
+                        cell_content = cell["objects"][-1].symbol if cell["objects"] != [] else "empty"
                     else:
                         cell_content = "❓"
                 else:
-                    cell_content = "player" if (player_pos is not None and (i, j) == player_pos) else (
-                        cell["object"].symbol if cell["object"] is not None else "empty"
-                    )
+                    cell_content = cell["objects"][-1].symbol if cell["objects"] != [] else "empty"
                 row_str += f"({i},{j}) is {cell_content}, "
             grid_str += row_str.lstrip() + "\n"
         return grid_str
+
+    def pretty_print_state(self) -> str:
+        """
+        Pretty print the grid state.
+        """
+        pretty_grid = ""
+        for row in self.state["grid"]:
+            row_str = ""
+            for cell in row:
+                row_str += f"{cell['objects'][-1].pretty_symbol if cell['objects'] != [] else '⬜️'}"
+            pretty_grid += row_str.lstrip() + "\n"
+        return f"{pretty_grid}"

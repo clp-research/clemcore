@@ -85,7 +85,17 @@ class GameStateEncoder(json.JSONEncoder):
     def default(self, obj):
         # If the object has a __dict__ attribute, convert it to a dict
         if hasattr(obj, '__dict__'):
-            return obj.__dict__
+            # Filter out non-serializable attributes
+            serializable_dict = {}
+            for key, value in obj.__dict__.items():
+                try:
+                    # Try to serialize the value to JSON to check if it's serializable
+                    json.dumps(value)
+                    serializable_dict[key] = value
+                except (TypeError, OverflowError):
+                    # If not serializable, convert to string
+                    serializable_dict[key] = str(value)
+            return serializable_dict
         # If the object has a __str__ method, use its string representation
         elif hasattr(obj, '__str__'):
             return str(obj)
@@ -670,6 +680,7 @@ class EnvGameMaster(GameMaster):
 
             action = self._create_action_from_response(response)
             self.game_environment.step(self.current_player, action)
+            self.log_to_self("state", self.game_environment.pretty_print_state())
 
             if self.game_environment.state["terminated"]:
                 self._end_game()
