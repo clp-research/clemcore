@@ -1,7 +1,7 @@
 import abc
 import collections
 import random
-from typing import Dict, List, Tuple, final
+from typing import Dict, final
 
 import numpy as np
 
@@ -34,7 +34,7 @@ class GameInstanceGenerator(GameResourceLocator):
         self.instances = dict(experiments=list())
 
     @final
-    def add_experiment(self, experiment_name: str, dialogue_partners: List[Tuple[str, str]] = None) -> Dict:
+    def add_experiment(self, experiment_name: str) -> Dict:
         """Add an experiment to the game benchmark.
         Experiments are sets of instances, usually with different experimental variables than other experiments in a
         game benchmark.
@@ -42,13 +42,10 @@ class GameInstanceGenerator(GameResourceLocator):
         For game instances use add_game_instance!
         Args:
             experiment_name: Name of the new game experiment.
-            dialogue_partners: A list of partner definitions for which the experiment will run.
         Returns:
             A new game experiment dict.
         """
         experiment = collections.OrderedDict(name=experiment_name)
-        if dialogue_partners:
-            experiment["dialogue_partners"] = dialogue_partners
         experiment["game_instances"] = list()
         self.instances["experiments"].append(experiment)
         return experiment
