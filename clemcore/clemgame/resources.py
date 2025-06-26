@@ -42,6 +42,8 @@ def store_file(data, file_name: str, dir_path: Union[str, Path], sub_dir: str = 
 
 
 def store_json(data, file_name: str, dir_path: Union[Path, str], *, ensure_ascii: bool = False, indent: int = 2):
+    if not os.path.exists(dir_path):
+        os.makedirs(dir_path)
     file_path = os.path.join(dir_path, file_name)
     with open(file_path, "w", encoding='utf-8') as f:
         json.dump(data, f, ensure_ascii=ensure_ascii, indent=indent)
