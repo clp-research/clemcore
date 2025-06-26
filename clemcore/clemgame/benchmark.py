@@ -75,6 +75,10 @@ def to_model_results_folder(player_models: List[backends.Model]):
     return f"group-{len(player_models)}p-{_hash}"
 
 
+def to_player_model_infos(player_models: List[backends.Model]):
+    return {idx: m.model_spec.to_dict() for idx, m in enumerate(player_models)}
+
+
 class GameBenchmark(GameResourceLocator):
     """Organizes the run of a particular collection of game instances which compose a benchmark for the game.
     Supports different experiment conditions for games.
@@ -175,7 +179,7 @@ class GameBenchmark(GameResourceLocator):
             module_logger.warning(f"{self.game_name}: No experiments for %s", self.game_name)
             return
         player_models_folder = to_model_results_folder(player_models)
-        player_models_infos = {idx: m.model_spec.to_dict() for idx, m in enumerate(player_models)}
+        player_models_infos = to_player_model_infos(player_models)
         store_json(player_models_infos, "player_models.json", os.path.join(results_dir, player_models_folder))
         total_experiments = len(experiments)
         for experiment_idx, experiment in enumerate(experiments):
@@ -221,7 +225,8 @@ class GameBenchmark(GameResourceLocator):
                 game_recorder = DefaultGameRecorder(self.game_name,
                                                     experiment_config["name"],  # meta info for transcribe
                                                     task_id,  # meta info for transcribe
-                                                    player_models_folder)  # meta info for transcribe
+                                                    player_models_folder,  # meta info for transcribe
+                                                    player_models_infos)
                 try:
                     game_master = self.create_game_master(experiment_config, player_models)
                     game_master.game_recorder = game_recorder
