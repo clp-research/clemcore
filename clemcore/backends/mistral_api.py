@@ -64,9 +64,9 @@ class MistralModel(backends.Model):
             The generated response message returned by the Mistral remote API.
         """
         api_response = self.client.chat.complete(model=self.model_spec.model_id,
-                                        messages=messages,
-                                        temperature=self.get_temperature(),
-                                        max_tokens=self.get_max_tokens())
+                                                 messages=messages,
+                                                 temperature=self.temperature,
+                                                 max_tokens=self.max_tokens)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")

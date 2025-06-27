@@ -241,7 +241,7 @@ class HuggingfaceMultimodalModel(backends.Model):
         else:
             raise AttributeError("Neither 'tokenizer.tokenize' nor 'processor.tokenize' exists.")
 
-        context_check = check_context_limit(self.context_size, prompt_tokens, max_new_tokens=self.get_max_tokens())
+        context_check = check_context_limit(self.context_size, prompt_tokens, max_new_tokens=self.max_tokens)
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
@@ -250,7 +250,7 @@ class HuggingfaceMultimodalModel(backends.Model):
                                                 tokens_used=context_check[1], tokens_left=context_check[2],
                                                 context_size=context_check[3])
 
-        prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(), "temperature": self.get_temperature()}
+        prompt = {"inputs": prompt_text, "max_new_tokens": self.max_tokens, "temperature": self.temperature}
 
         stdout_logger.info(f" INPUT PROMPT : \n\n{prompt_text} \n\n")
         response_method = import_method(self.response_method)
@@ -260,7 +260,7 @@ class HuggingfaceMultimodalModel(backends.Model):
             'device': self.device,
             'do_sample': self.do_sample,
             'messages': messages,
-            'max_tokens': self.get_max_tokens(),
+            'max_tokens': self.max_tokens,
             'model_name': self.model_name
         }
         generated_response = response_method(**response_kwargs)

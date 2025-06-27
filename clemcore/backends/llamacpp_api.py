@@ -184,14 +184,14 @@ class LlamaCPPLocalModel(backends.Model):
         # use llama.cpp jinja to apply chat template for prompt:
         prompt_text = self.chat_formatter(messages=current_messages).prompt
 
-        prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
-                  "temperature": self.get_temperature(), "return_full_text": return_full_text}
+        prompt = {"inputs": prompt_text, "max_new_tokens": self.max_tokens,
+                  "temperature": self.temperature, "return_full_text": return_full_text}
 
         prompt_tokens = self.model.tokenize(prompt_text.encode(), add_bos=False)  # BOS expected in template
 
         # check context limit:
         check_context_limit_generic(self.context_size, prompt_tokens, self.model_spec.model_name,
-                                    max_new_tokens=self.get_max_tokens())
+                                    max_new_tokens=self.max_tokens)
 
         # NOTE: HF transformers models come with their own generation configs, but llama.cpp doesn't seem to have a
         # feature like that. There are default sampling parameters, and clembench only handles two of them so far, which
@@ -202,8 +202,8 @@ class LlamaCPPLocalModel(backends.Model):
 
         model_output = self.model(
             prompt_text,
-            temperature=self.get_temperature(),
-            max_tokens=self.get_max_tokens()
+            temperature=self.temperature,
+            max_tokens=self.max_tokens
         )
 
         response = {'response': model_output}

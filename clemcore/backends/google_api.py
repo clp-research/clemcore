@@ -171,8 +171,8 @@ class GoogleModel(backends.Model):
         """
 
         generation_config = {
-            "temperature": self.get_temperature(),
-            "max_output_tokens": self.get_max_tokens(),
+            "temperature": self.temperature,
+            "max_output_tokens": self.max_tokens,
             "response_mime_type": "text/plain",
         }
 

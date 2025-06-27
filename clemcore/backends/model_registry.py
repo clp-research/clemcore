@@ -259,6 +259,31 @@ class Model(abc.ABC):
     def name(self):
         return self.model_spec.model_name
 
+    @property
+    def temperature(self):
+        """Get the value of the temperature text generation inference parameter for this model.
+        Returns:
+            The sampling temperature used for the generation process.
+        """
+        return self.get_gen_arg("temperature")
+
+    @property
+    def max_tokens(self):
+        """Get the value of the maximum number of tokens text generation inference parameter for this model.
+        Returns:
+            The maximum number of tokens generated during the generation process.
+        """
+        return self.get_gen_arg("max_tokens")
+
+    def get_gen_arg(self, arg_name):
+        """Get the value of a text generation inference parameter for this model.
+        Currently implemented: Temperature and maximum number of tokens to generate.
+        Args:
+            arg_name: The name of the generation inference parameter.
+        """
+        assert arg_name in self.__gen_args, f"No '{arg_name}' in gen_args given but is expected"
+        return self.__gen_args[arg_name]
+
     def set_gen_args(self, **gen_args):
         """Set text generation inference parameters for this model.
         Currently implemented: Temperature and maximum number of tokens to generate.
@@ -275,29 +300,6 @@ class Model(abc.ABC):
             arg_value: The value of the generation inference parameter.
         """
         self.__gen_args[arg_name] = arg_value
-
-    def get_gen_arg(self, arg_name):
-        """Get the value of a text generation inference parameter for this model.
-        Currently implemented: Temperature and maximum number of tokens to generate.
-        Args:
-            arg_name: The name of the generation inference parameter.
-        """
-        assert arg_name in self.__gen_args, f"No '{arg_name}' in gen_args given but is expected"
-        return self.__gen_args[arg_name]
-
-    def get_temperature(self):
-        """Get the value of the temperature text generation inference parameter for this model.
-        Returns:
-            The sampling temperature used for the generation process.
-        """
-        return self.get_gen_arg("temperature")
-
-    def get_max_tokens(self):
-        """Get the value of the maximum number of tokens text generation inference parameter for this model.
-        Returns:
-            The maximum number of tokens generated during the generation process.
-        """
-        return self.get_gen_arg("max_tokens")
 
     def __repr__(self):
         """Get a string representation of this Model instance."""

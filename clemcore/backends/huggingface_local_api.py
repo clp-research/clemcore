@@ -199,12 +199,12 @@ class HuggingfaceLocalModel(backends.Model):
         prompt_tokens = prompt_tokens.to(self.device)
 
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
-        prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
-                  "temperature": self.get_temperature(), "return_full_text": return_full_text}
+        prompt = {"inputs": prompt_text, "max_new_tokens": self.max_tokens,
+                  "temperature": self.temperature, "return_full_text": return_full_text}
 
         # check context limit:
         context_check = _check_context_limit(self.context_size, prompt_tokens[0],
-                                             max_new_tokens=self.get_max_tokens())
+                                             max_new_tokens=self.max_tokens)
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
@@ -215,20 +215,20 @@ class HuggingfaceLocalModel(backends.Model):
 
         # greedy decoding:
         do_sample: bool = False
-        if self.get_temperature() > 0.0:
+        if self.temperature > 0.0:
             do_sample = True
 
         if do_sample:
             model_output_ids = self.model.generate(
                 prompt_tokens,
-                temperature=self.get_temperature(),
-                max_new_tokens=self.get_max_tokens(),
+                temperature=self.temperature,
+                max_new_tokens=self.max_tokens,
                 do_sample=do_sample
             )
         else:
             model_output_ids = self.model.generate(
                 prompt_tokens,
-                max_new_tokens=self.get_max_tokens(),
+                max_new_tokens=self.max_tokens,
                 do_sample=do_sample
             )
 
