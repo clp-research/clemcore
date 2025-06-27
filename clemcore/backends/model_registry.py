@@ -255,6 +255,10 @@ class Model(abc.ABC):
         self.model_spec = model_spec
         self.__gen_args = dict()
 
+    @property
+    def name(self):
+        return self.model_spec.model_name
+
     def set_gen_args(self, **gen_args):
         """Set text generation inference parameters for this model.
         Currently implemented: Temperature and maximum number of tokens to generate.
@@ -295,13 +299,6 @@ class Model(abc.ABC):
         """
         return self.get_gen_arg("max_tokens")
 
-    def get_name(self) -> str:
-        """Get the name of this model.
-        Returns:
-            The name of the model as a string.
-        """
-        return self.model_spec.model_name
-
     def __repr__(self):
         """Get a string representation of this Model instance."""
         return str(self)
@@ -311,7 +308,7 @@ class Model(abc.ABC):
         Returns:
             The name of the model as a string.
         """
-        return self.get_name()
+        return self.name
 
     def __eq__(self, other: "Model"):
         """Check if another assumed Model instance has the same model.
@@ -324,7 +321,7 @@ class Model(abc.ABC):
         """
         if not isinstance(other, Model):
             return False
-        return self.get_name() == other.get_name()
+        return self.name == other.name
 
     @abc.abstractmethod
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:

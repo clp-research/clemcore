@@ -37,7 +37,7 @@ class GameMaster(abc.ABC):
             player_models = [player_models[0]] * game_spec.players  # keeps original list untouched
         if len(player_models) != game_spec.players:
             raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
-                             f"but {len(player_models)} were given: {[m.model_name for m in player_models]}")
+                             f"but {len(player_models)} were given: {[m.name for m in player_models]}")
         self.player_models: List[backends.Model] = player_models
         self._game_recorder = NoopGameRecorder()
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
@@ -70,7 +70,7 @@ class GameMaster(abc.ABC):
         self._game_recorder.log_key(key, value)
 
     def log_player(self, player: Player):
-        self._game_recorder.log_player(player.name, player.game_role, player.model.get_name())
+        self._game_recorder.log_player(player.name, player.game_role, player.model.name)
 
     def log_next_round(self):
         self._game_recorder.log_next_round()

@@ -178,7 +178,7 @@ class Player(abc.ABC):
             "call_start": str(call_start),
             "call_duration": str(call_duration),
             "response": response_text,
-            "model_name": self.model.get_name()
+            "model_name": self.model.name
         }
         return prompt, response_object, response_text
 

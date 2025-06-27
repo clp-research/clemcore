@@ -65,7 +65,7 @@ class GameInstanceIterator:
 
 def to_model_results_folder(player_models: List[backends.Model]):
     def to_descriptor(model: backends.Model):
-        return f"{model.get_name()}-t{model.get_temperature()}"
+        return f"{model.name}-t{model.get_temperature()}"
 
     model_descriptors = [to_descriptor(m) for m in player_models]
     folder_name = "--".join(model_descriptors)
