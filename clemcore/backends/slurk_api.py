@@ -108,6 +108,7 @@ class Slurk(backends.RemoteBackend):
         self.client.join_room(bot_id, room_id)  # todo why do we need this?
 
         stdout_logger.info(f"SLURK_USER_TOKEN={user_token}")
+        stdout_logger.info(f"{self.client.slurk_host}/login?name=player&token={user_token}")
         slurk_model.wait_for_participant()
         stdout_logger.info("Slurk user joined")
         return slurk_model
