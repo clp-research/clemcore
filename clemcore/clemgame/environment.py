@@ -39,16 +39,20 @@ class GameState(TypedDict):
     # add fields for game-specific state on inheritance
 
 
-class Observation(TypedDict):
+class Observation(TypedDict, total=False):
     """Base type definition for the game environment's observation with required fields.
 
     Required fields:
     - role: The role of the player
     - content: The string content (prompt) that will be sent to the model
+    
+    Optional fields:
+    - image: List of image data (base64 strings or URLs) for multimodal models
     """
 
     role: Literal["user"]
     content: str
+    image: List[str]
 
 
 class Action(TypedDict):

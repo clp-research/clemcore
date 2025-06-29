@@ -100,7 +100,7 @@ def build_transcript(interactions: Dict):
                 from_game_role = players[from_player]["game_role"]
                 to_game_role = players[to_player]["game_role"]
                 speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
-            else: # old mode (before 2.4)
+            else:  # old mode (before 2.4)
                 speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
         # in case the content is a json BUT given as a string!
         # we still want to check for image entry

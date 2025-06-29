@@ -1,7 +1,13 @@
+import base64
+import io
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple, TypedDict
+from typing import Dict, List, Optional, Set, Tuple, TypedDict, Union
+
+import matplotlib.patches as patches
+import matplotlib.pyplot as plt
+from matplotlib.figure import Figure
 
 from clemcore.clemgame.environment import (
     Action,
@@ -53,11 +59,9 @@ class GridState(GameState):
     Additional fields:
     - grid: The 2D grid of objects
     - player_positions: Dictionary mapping player names to their positions
-    - partial_observability: Whether partial observability is enabled
     """
     grid: Grid
     player_positions: Dict[str, Position]
-    partial_observability: bool
 
 
 class PlayerObject(Object):
@@ -80,32 +84,28 @@ class GridEnvironment(GameEnvironment):
 
     def __init__(
         self,
-        width: int,
-        height: int,
-        partial_observability: bool = False,
         config: Optional[Dict] = None,
-        limited_visibility: bool = False
     ):
         """Initialize the grid environment.
 
         Args:
-            width: Width of the grid
-            height: Height of the grid
-            partial_observability: Whether to enable partial observability
             config: Additional configuration options
-            limited_
         """
         super().__init__(config)
 
-        self.width = width
-        self.height = height
-        self.grid: Grid = [[GridCell(objects=[], position=(x, y)) for x in range(width)] for y in range(height)]
-        self.limited_visibility = limited_visibility
+        self.width = config.get("width", 10)
+        self.height = config.get("height", 10)
+        self.limited_visibility = config.get("limited_visibility", False)
+        self.render_as_image = config.get("render_as_image", False)
+
+        self.grid: Grid = [
+            [GridCell(objects=[], position=(x, y)) for x in range(self.width)]
+            for y in range(self.height)
+        ]
 
         self.state: GridState = {
             "grid": self.grid,
             "player_positions": {},
-            "partial_observability": partial_observability
         }
 
     def reset(
@@ -189,7 +189,24 @@ class GridEnvironment(GameEnvironment):
         """
         raise NotImplementedError
 
-    def render_state(self, player_name: Optional[str] = None) -> str:
+    def render_state(self, player_name: Optional[str] = None) -> Union[str, bytes]:
+        """Format the grid for display as string or image.
+
+        Args:
+            player_name: Optional player name. If provided, uses the explored map of that player
+                to render explored vs unexplored cells and marks the player's current position with 'player'.
+                If None, shows the entire grid without fog of war.
+
+        Returns:
+            Either a string representation of the grid (if render_as_image is False),
+            or a base64-encoded PNG image data (if render_as_image is True)
+        """
+        if self.render_as_image:
+            return self._render_state_as_image(player_name)
+        else:
+            return self._render_state_as_string(player_name)
+
+    def _render_state_as_string(self, player_name: Optional[str] = None) -> str:
         """Format the grid for display as string.
 
         Args:
@@ -231,6 +248,87 @@ class GridEnvironment(GameEnvironment):
                 row_str += f"({i},{j}) is {cell_content}, "
             grid_str += row_str.lstrip() + "\n"
         return grid_str
+
+    def _render_state_as_image(self, player_name: Optional[str] = None) -> bytes:
+        """Format the grid for display as image.
+
+        Args:
+            player_name: Optional player name. If provided, uses the explored map of that player
+                to render explored vs unexplored cells and marks the player's current position with 'player'.
+                If None, shows the entire grid without fog of war.
+
+        Returns:
+            Base64-encoded PNG image data
+        """
+        fig, ax = plt.subplots(figsize=(max(6, self.width * 0.8), max(4, self.height * 0.6)))
+        ax.set_xlim(0, self.width)
+        ax.set_ylim(0, self.height)
+        ax.set_aspect('equal')
+
+        ax.set_xticks([])
+        ax.set_yticks([])
+
+        ax.set_facecolor('white')
+
+        player_pos = None
+        explored = None
+        if player_name is not None:
+            player_pos = self.state["player_positions"][player_name]
+            explored = self.explored[player_name]
+
+        for i in range(self.height):
+            for j in range(self.width):
+                cell = self.state["grid"][i][j]
+
+                if explored is not None and not explored[i][j]:
+                    cell_content = "❓"
+                    cell_color = 'lightgray'
+                else:
+                    if cell["objects"]:
+                        cell_content = cell["objects"][-1].pretty_symbol
+                        if isinstance(cell["objects"][-1], PlayerObject):
+                            cell_color = 'lightblue'
+                        else:
+                            cell_color = 'lightgreen'
+                    else:
+                        cell_content = "⬜️"
+                        cell_color = 'white'
+
+                rect = patches.Rectangle((j, self.height - 1 - i), 1, 1,
+                                         linewidth=1, edgecolor='black',
+                                         facecolor=cell_color)
+                ax.add_patch(rect)
+
+                ax.text(j + 0.5, self.height - 1 - i + 0.5, cell_content,
+                        ha='center', va='center', fontsize=12)
+
+        if player_pos is not None:
+            row, col = player_pos
+            rect = patches.Rectangle((col, self.height - 1 - row), 1, 1,
+                                     linewidth=3, edgecolor='red',
+                                     facecolor='none')
+            ax.add_patch(rect)
+
+        # if limited visibility, darken cells outside visible range
+        if self.limited_visibility and player_pos is not None:
+            row, col = player_pos
+            for i in range(self.height):
+                for j in range(self.width):
+                    if abs(i - row) > 1 or abs(j - col) > 1:
+                        rect = patches.Rectangle((j, self.height - 1 - i), 1, 1,
+                                                 linewidth=1, edgecolor='black',
+                                                 facecolor='darkgray', alpha=0.7)
+                        ax.add_patch(rect)
+
+        plt.tight_layout()
+
+        # convert to base64-encoded PNG
+        buffer = io.BytesIO()
+        plt.savefig(buffer, format='png', dpi=150, bbox_inches='tight')
+        buffer.seek(0)
+        plt.close(fig)
+
+        return buffer.getvalue()
 
     def pretty_print_state(self) -> str:
         """
