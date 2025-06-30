@@ -178,7 +178,9 @@ class ModelRegistry:
             module_logger.warning("Package lookup failed with exception: %s", e)
         return registry
 
-    def register_from_list(self, model_specs: List[Dict], lookup_source: str = None) -> "ModelRegistry":
+    def register_from_list(self, model_specs: List[Dict] | Dict, lookup_source: str = None) -> "ModelRegistry":
+        if isinstance(model_specs, Dict):
+            model_specs = [model_specs]
         for model_spec_dict in model_specs:
             if lookup_source:
                 if "lookup_source" not in model_spec_dict:
