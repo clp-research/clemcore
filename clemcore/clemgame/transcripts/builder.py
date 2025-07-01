@@ -75,15 +75,13 @@ def build_transcript(interactions: Dict):
     The file is stored in the corresponding episode directory.
     Args:
         interactions: An episode interaction record dict.
-        experiment_config: An experiment configuration dict.
-        game_instance: The instance dict the episode interaction record is based on.
-        dialogue_pair: The model pair descriptor string for the Players.
     """
     meta = interactions["meta"]
     players = interactions["players"]
     transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
+    pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
-            f"episode {meta['game_id']} with {meta['dialogue_pair']}."
+            f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
     for turn_idx, turn in enumerate(interactions['turns']):
         transcript += f'<div class="game-round" data-round="{turn_idx}">'
