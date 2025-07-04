@@ -6,35 +6,103 @@ import html
 from pathlib import Path
 from typing import Dict, List
 from tqdm import tqdm
+import hashlib
 
-import clemcore.clemgame.transcripts.constants as constants
 import clemcore.clemgame.transcripts.patterns as patterns
 from clemcore.utils import file_utils
 from clemcore.clemgame.resources import store_file, load_json
+from clemcore.clemgame.resources import load_packaged_file
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
 
 
-def _get_class_name(event):
-    """Get a string representation of the direction of a message.
-    Example: A message from the game's GM to Player 1 is represented by the string 'gm-a'.
+def _get_class_name(event, players):
+    """
+    Get a string representation of the direction of a message.
+
+    Example:
+        A message from the game's GM to Player 1 is represented by the string 'gm-player_1'.
+
     Args:
         event: The interaction record event to get the message direction for.
+        players: A dictionary of players as given in the game config.
+
     Returns:
-        The string representation of the direction of the message in the passed interaction event.
+        The string representation of the direction of the message.
     """
-    if event['from'] == 'GM' and event['to'].startswith('Player 1'):
-        return "gm-a"
-    if event['from'] == 'GM' and event['to'].startswith('Player 2'):
-        return "gm-b"
-    if event['from'].startswith('Player 1') and event['to'] == 'GM':
-        return "a-gm"
-    if event['from'].startswith('Player 2') and event['to'] == 'GM':
-        return "b-gm"
-    if event['from'] == 'GM' and event['to'] == 'GM':
-        return "gm-gm"
-    raise RuntimeError(f"Cannot handle event entry {event}")
+    def normalize(name):
+        if name == "GM":
+            return "gm"
+        elif name in players:
+            return name.lower().replace(" ", "_")
+        else:
+            raise RuntimeError(f"Cannot handle event entry {event}. Unknown player name: {name}")
+
+    from_label = normalize(event["from"])
+    to_label = normalize(event["to"])
+    return f"{from_label}-{to_label}"
+
+
+class TranscriptStyles:
+    def __init__(self, players: Dict[str, Dict]):
+        self.players = players
+        self.css_base = load_packaged_file("utils/chat-two-tracks.css")
+        self.tex_params = self._generate_tex_params()
+        self.generated_css = self._generate_css()
+
+    def _hash_to_rgb(self, label: str) -> str:
+        """Generate a unique pastel RGB color in decimal format from a string label."""
+        hash_bytes = hashlib.md5(label.encode()).digest()
+        r = 0.6 + (hash_bytes[0] / 255) * 0.3
+        g = 0.6 + (hash_bytes[1] / 255) * 0.3
+        b = 0.6 + (hash_bytes[2] / 255) * 0.3
+        return f"{round(r, 2)},{round(g, 2)},{round(b, 2)}"
+
+    def _add_direction(self, from_p, to_p):
+        """Add bubble style only for gm-player or player-gm directions."""
+        if from_p == "gm" and to_p != "gm":
+            rgb = "0.9,0.9,0.9"
+            speakers = f"GM$\\rangle${to_p.replace('_', ' ').title()}"
+            cols_init, cols_end = "& &", "&"
+        elif to_p == "gm" and from_p != "gm":
+            rgb = self._hash_to_rgb(from_p)
+            speakers = f"{from_p.replace('_', ' ').title()}$\\rangle$GM"
+            cols_init, cols_end = "&", "& &"
+        else:
+            return {}
+        return {f"{from_p}-{to_p}": (rgb, speakers, cols_init, cols_end, 4, 0.6)}
+
+    def _generate_tex_params(self):
+        """Generate LaTeX-style parameters for color, speaker format, and layout based on participants."""
+        tex_params = {
+            "gm-gm": ("0.95,0.95,0.95", "GM$|$GM", "& & &", "& &", 2, 0.3)
+        }
+        for player in self.players:
+            if player == "GM":
+                continue
+            normalized = player.lower().replace(" ", "_")
+            tex_params.update(self._add_direction("gm", normalized))
+            tex_params.update(self._add_direction(normalized, "gm"))
+        return tex_params
+
+    def _generate_css(self):
+        """Generate CSS rules for message bubbles using color parameters shared with LaTeX output."""
+        rules = []
+        for class_name, (rgb, *_rest) in self.tex_params.items():
+            rgb_vals = [int(float(x) * 255) for x in rgb.split(",")]
+            rgb_str = f"rgb({rgb_vals[0]},{rgb_vals[1]},{rgb_vals[2]})"
+            rules.append(f""".{class_name} {{
+                background-color: {rgb_str};
+                color: black;
+                padding: 12px 16px;
+                border-radius: 10px;
+                margin: 20px 0;
+                clear: both;
+                overflow-wrap: break-word;
+                display: block;
+            }}""")
+        return self.css_base + "\n" + "\n".join(rules)
 
 
 def build_transcripts(top_dir: str, filter_games: List = None):
@@ -59,11 +127,12 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         try:
             game_interactions = load_json(interaction_file)
             interactions_dir = Path(interaction_file).parent
+            players = game_interactions["players"]
             transcript = build_transcript(game_interactions)
             store_file(transcript, "transcript.html", interactions_dir)
-            transcript_tex = build_tex(game_interactions)
+            transcript_tex = build_tex(game_interactions, players)
             store_file(transcript_tex, "transcript.tex", interactions_dir)
-        except Exception:  # continue with other episodes if something goes wrong
+        except Exception:
             module_logger.exception(f"Cannot transcribe {interaction_file} (but continue)")
             error_count += 1
     if error_count > 0:
@@ -71,7 +140,8 @@ def build_transcripts(top_dir: str, filter_games: List = None):
 
 
 def build_transcript(interactions: Dict):
-    """Create an HTML file with the interaction transcript.
+    """
+    Create an HTML file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
         interactions: An episode interaction record dict.
@@ -81,14 +151,17 @@ def build_transcript(interactions: Dict):
     """
     meta = interactions["meta"]
     players = interactions["players"]
-    transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
+    styles = TranscriptStyles(players)
+    TEX_BUBBLE_PARAMS = styles.tex_params
+    combined_css = styles.generated_css
+    transcript = patterns.HTML_HEADER.format(combined_css)
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
             f"episode {meta['game_id']} with {meta['dialogue_pair']}."
     transcript += patterns.TOP_INFO.format(title)
     for turn_idx, turn in enumerate(interactions['turns']):
         transcript += f'<div class="game-round" data-round="{turn_idx}">'
         for event in turn:
-            class_name = _get_class_name(event)
+            class_name = _get_class_name(event, players)
             msg_content = event['action']['content']
             msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
             if event['from'] == 'GM' and event['to'] == 'GM':
@@ -135,21 +208,25 @@ def build_transcript(interactions: Dict):
     return transcript
 
 
-def build_tex(interactions: Dict):
-    """Create a LaTeX .tex file with the interaction transcript.
+def build_tex(interactions: Dict, players: Dict):
+    """
+    Create a LaTeX .tex file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
         interactions: An episode interaction record dict.
     """
+
+    styles = TranscriptStyles(players)
+    TEX_BUBBLE_PARAMS = styles.tex_params
+
     tex = patterns.TEX_HEADER
-    # Collect all events over all turns (ignore turn boundaries here)
     events = [event for turn in interactions['turns'] for event in turn]
     for event in events:
-        class_name = _get_class_name(event).replace('msg ', '')
+        class_name = _get_class_name(event, players).replace('msg ', '')
         msg_content = event['action']['content']
         if isinstance(msg_content, str):
-            msg_content = msg_content.replace('\n', '\\\\ \\tt ')
-        rgb, speakers, cols_init, cols_end, ncols, width = constants.TEX_BUBBLE_PARAMS[class_name]
+            msg_content = msg_content.replace('\n', '\\ \\tt ')
+        rgb, speakers, cols_init, cols_end, ncols, width = TEX_BUBBLE_PARAMS[class_name]
         tex += patterns.TEX_TEMPLATE.substitute(cols_init=cols_init,
                                                 rgb=rgb,
                                                 speakers=speakers,
