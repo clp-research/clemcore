@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import html
+import shutil
 from pathlib import Path
 from typing import Dict, List
 from tqdm import tqdm
@@ -59,7 +60,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         try:
             game_interactions = load_json(interaction_file)
             interactions_dir = Path(interaction_file).parent
-            transcript = build_transcript(game_interactions)
+            transcript = build_transcript(game_interactions, interactions_dir)
             store_file(transcript, "transcript.html", interactions_dir)
             transcript_tex = build_tex(game_interactions)
             store_file(transcript_tex, "transcript.tex", interactions_dir)
@@ -70,14 +71,12 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         stdout_logger.error(f"'{error_count}' exceptions occurred: See clembench.log for details.")
 
 
-def build_transcript(interactions: Dict):
+def build_transcript(interactions: Dict, episode_dir: Path):
     """Create an HTML file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
         interactions: An episode interaction record dict.
-        experiment_config: An experiment configuration dict.
-        game_instance: The instance dict the episode interaction record is based on.
-        dialogue_pair: The model pair descriptor string for the Players.
+        episode_dir: The episode directory.
     """
     meta = interactions["meta"]
     players = interactions["players"]
@@ -85,8 +84,16 @@ def build_transcript(interactions: Dict):
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
             f"episode {meta['game_id']} with {meta['dialogue_pair']}."
     transcript += patterns.TOP_INFO.format(title)
+
+    if episode_dir.exists():
+        images_dir = episode_dir / "images"
+        images_dir.mkdir(exist_ok=True)
+    else:
+        images_dir = None
+
     # Collect all events over all turns (ignore turn boundaries here)
     events = [event for turn in interactions['turns'] for event in turn]
+    image_counter = 0
     for event in events:
         class_name = _get_class_name(event)
         msg_content = event['action']['content']
@@ -110,24 +117,59 @@ def build_transcript(interactions: Dict):
             except:
                 ...
         style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
-        # in case the content is a json with an image entry
-        if isinstance(msg_content, dict):
-            if "image" in msg_content:
-                transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
-                transcript += f'  <p>{msg_raw}</p>\n'
-                for image_src in msg_content["image"]:
-                    if not image_src.startswith("http"):  # take the web url as it is
-                        if "IMAGE_ROOT" in os.environ:
-                            image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
-                        else:
-                            # CAUTION: this only works when the project is checked out (dev mode)
-                            image_src = os.path.join(file_utils.project_root(), image_src)
-                    transcript += (f'  <a title="{image_src}">'
-                                   f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
-                                   f'</a>\n')
-                transcript += '</div>\n'
-            else:
-                transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
+
+        has_images = False
+        image_list = []
+
+        # check if images are in the action dict (new structure)
+        if "image" in event["action"]:
+            has_images = True
+            image_list = event["action"]["image"]
+        # check if images are in the content field (old structure)
+        elif isinstance(msg_content, dict) and "image" in msg_content:
+            has_images = True
+            image_list = msg_content["image"]
+
+        if has_images:
+            transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
+            transcript += f'  <p>{msg_raw}</p>\n'
+            for image_src in image_list:
+                if "interaction_images" in image_src:
+                    source_image_path = Path(image_src)
+                    if source_image_path.exists():
+                        persistent_image_name = f"image_{image_counter}.png"
+                        persistent_image_path = images_dir / persistent_image_name
+                        try:
+                            shutil.copy2(source_image_path, persistent_image_path)
+                            # relative path for browser compatibility
+                            image_src = f"images/{persistent_image_name}"
+                            module_logger.info(
+                                f"Copied portalgame image {source_image_path} to {persistent_image_path}")
+                            image_counter += 1
+                            # delete source image after copying
+                            os.remove(source_image_path)
+                        except Exception as e:
+                            module_logger.warning(f"Failed to copy portalgame image {source_image_path}: {e}")
+
+                if not image_src.startswith("http"):  # take the web url as it is
+                    if "IMAGE_ROOT" in os.environ:
+                        image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
+                    else:
+                        # For relative paths, use as-is; for absolute paths, make them relative
+                        if os.path.isabs(image_src) and not image_src.startswith("http"):
+                            # Try to make absolute path relative to the transcript directory
+                            try:
+                                image_path = Path(image_src)
+                                if image_path.exists():
+                                    # Make it relative to the interactions directory
+                                    image_src = str(image_path.relative_to(episode_dir))
+                            except ValueError:
+                                # If we can't make it relative, keep the absolute path
+                                pass
+                transcript += (f'  <a title="{image_src}">'
+                               f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
+                               f'</a>\n')
+            transcript += '</div>\n'
         else:
             transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
     transcript += patterns.HTML_FOOTER

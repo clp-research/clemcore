@@ -123,10 +123,12 @@ class Player(abc.ABC):
         """
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
-    def __log_send_context_event(self, content: str, label=None):
+    def __log_send_context_event(self, context: dict, label=None):
         """Record a 'send message' event with the current message content."""
         assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        action = {'type': 'send message', 'content': content, 'label': label}
+        action = {'type': 'send message', 'content': context["content"], 'label': label}
+        if "image" in context:
+            action["image"] = context["image"]
         self._game_recorder.log_event(from_='GM', to=self.name, action=action)
 
     def __log_response_received_event(self, response, label=None):
@@ -162,11 +164,11 @@ class Player(abc.ABC):
                                               "on the first call, when the initial prompt is set.")
             memorized_initial_prompt = deepcopy(self._initial_prompt)  # see explanation below
             self._messages.append(memorized_initial_prompt)  # merged with context in ensure_alternating_roles (backend)
-            self.__log_send_context_event(memorized_initial_prompt["content"], label="initial prompt")
+            self.__log_send_context_event({"content": memorized_initial_prompt}, label="initial prompt")
 
         self._last_context = deepcopy(context)
 
-        self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
+        self.__log_send_context_event(context, label="context" if memorize else "forget")
         self._prompt, self._response_object, response_text = self.__call_model(context)
         self.__log_response_received_event(response_text, label="response" if memorize else "forget")
 

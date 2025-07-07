@@ -639,13 +639,6 @@ class EnvGameMaster(GameMaster):
         """
         raise NotImplementedError
 
-    def get_environment_state(self):
-        """Get the current game state from the environment."""
-        return self.game_environment.state
-
-    def get_current_player(self) -> Optional[Player]:
-        return self.current_player
-
     def play(self) -> None:
         """
         Main play loop method. This method is called to run the game for benchmarking.
@@ -820,7 +813,7 @@ class EnvGameMaster(GameMaster):
         """
         Finishes the game by adding the episode scores to the logs and calling the after game hook.
         """
-        self._add_episode_scores_to_logs()
+        self._log_keys()
         self._on_after_game()
 
     def _on_after_game(self):
@@ -830,7 +823,7 @@ class EnvGameMaster(GameMaster):
         """
         pass
 
-    def _add_episode_scores_to_logs(self):
+    def _log_keys(self):
         """Executed once at the end, at the end of the play loop.
 
         Hook: Modify this method for game-specific functionality.

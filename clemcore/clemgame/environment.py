@@ -45,9 +45,9 @@ class Observation(TypedDict, total=False):
     Required fields:
     - role: The role of the player
     - content: The string content (prompt) that will be sent to the model
-    
+
     Optional fields:
-    - image: List of image data (base64 strings or URLs) for multimodal models
+    - image: List of image paths
     """
 
     role: Literal["user"]
