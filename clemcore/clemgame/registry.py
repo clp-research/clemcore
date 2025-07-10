@@ -1,4 +1,4 @@
-import collections
+import copy
 import json
 import os.path
 from typing import List, Dict, Union
@@ -26,6 +26,14 @@ class GameSpec(SimpleNamespace):
                 raise KeyError(f"No game path specified in {kwargs}")
             if "players" not in self:
                 raise KeyError(f"No players specified in {kwargs}")
+
+    def __deepcopy__(self, memo):
+        # Create a new blank instance without triggering __init__ which will lead to KeyErrors
+        _copy = type(self).__new__(self.__class__)
+        memo[id(self)] = _copy
+        for k, v in self.__dict__.items():
+            setattr(_copy, k, copy.deepcopy(v, memo))
+        return _copy
 
     def __repr__(self):
         """Returns string representation of this GameSpec."""
