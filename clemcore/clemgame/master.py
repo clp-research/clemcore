@@ -21,17 +21,19 @@ class ResponseError(Exception):
     General error class for problems with the player response.
 
     Developers can introduce more specific error types by subclassing this error.
-    Alternatively, the 'reason' attribute can be used to define more granular error types.
+    Alternatively, the 'key' attribute can be used to define more granular error types.
     """
 
-    def __init__(self, reason: str = None, response: str = None):
+    def __init__(self, reason: Optional[str] = None, response: Optional[str] = None, key: Optional[str] = None):
         """
         :param reason: (optional) a brief description of the cause
         :param response: (optional) the player's response
+        :param key: (optional) a key word
         """
         super().__init__(reason)
         self.reason = reason
         self.response = response
+        self.key = key
 
     def __str__(self):
         return f"{self.__class__.__name__}: {self.reason}"
@@ -138,7 +140,7 @@ class GameMaster(abc.ABC):
     @abc.abstractmethod
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
-        Needs to log the players dictionary via self.log_players(players_dict).
+        Needs to log the player infos via self.log_player().
         Called by the game's GameBenchmark run method for each game instance.
         Args:
             kwargs: Keyword arguments used to set up the GameMaster instance.
@@ -348,7 +350,7 @@ class DialogueGameMaster(GameMaster):
         Default: The gamer master passes the turn to the next player in the player list (order as added).
         Starting again with the first player, when all players have had their turn(s).
 
-        :return: the new current player
+        :return: the next (current) player
         """
         self._current_player_idx = (self._current_player_idx + 1) % len(self.players_by_names)
         return self.get_players()[self._current_player_idx]
@@ -359,15 +361,11 @@ class DialogueGameMaster(GameMaster):
 
         Default: Start next round when we cycled through the whole list i.e. it is again the first player's turn.
 
-        :return: True, when it's the first player's turn to start a new round
+        :return: True, when to start a new round
         """
         return self._current_player_idx == 0
 
     def __prepare_next_round(self):
-        """
-        Logs moving to next round and calls self._on_before_round().
-        Do not override.
-        """
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 

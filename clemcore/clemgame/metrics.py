@@ -174,7 +174,7 @@ class GameScorer:
 
     @final
     def log_episode_score(self, score_name, score_value):
-        """Helper method to tecord an episode-level score/metric for the whole episode.
+        """Helper method to record an episode-level score/metric for the whole episode.
         Args:
             score_name: The name of the episode-level score/metric to record.
             score_value: The value to be recorded for the episode-level score/metric.
