@@ -235,10 +235,10 @@ class DialogueGameMaster(GameMaster):
         while not done:
             context = self.get_context_for(self.current_player)
             response = self.current_player(context)
-            done, _ = self.process_turn(response)
+            done, _ = self.step(response)
 
     @final
-    def process_turn(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> Tuple[bool, Dict]:
         """
         Verifies the response and transitions the game by applying the current player's response for the turn.
 
