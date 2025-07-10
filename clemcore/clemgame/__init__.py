@@ -1,6 +1,7 @@
+from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError
 from clemcore.clemgame.instances import GameInstanceGenerator
 from clemcore.clemgame.resources import GameResourceLocator
-from clemcore.clemgame.master import GameMaster, DialogueGameMaster, EnvGameMaster, Player, GameError, ParseError, RuleViolationError
+from clemcore.clemgame.master import GameMaster, DialogueGameMaster, EnvGameMaster, Player
 from clemcore.clemgame.metrics import GameScorer
 from clemcore.clemgame.recorder import DefaultGameRecorder, GameRecorder
 from clemcore.clemgame.registry import GameSpec, GameRegistry
