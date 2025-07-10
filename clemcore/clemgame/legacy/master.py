@@ -111,9 +111,6 @@ class DialogueGameMaster(GameMaster):
     def get_game_state(self):
         return None
 
-    def get_current_player(self) -> Player:
-        return self.current_player
-
     def set_context_for(self, player: Player, content: str, **extras):
         """
         Set the context for the specified Player. The player will be prompted with the context on its next turn.
