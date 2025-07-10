@@ -91,6 +91,7 @@ class DialogueGameMaster(GameMaster):
             kwargs: Keyword arguments used to set up the GameMaster instance. This is usually a game instance object
                 read from the game's instances.json.
         """
+        self.game_recorder.auto_count_logging = False  # legacy games usually count and store themselves
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
         self._on_before_game()

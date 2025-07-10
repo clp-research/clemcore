@@ -79,6 +79,7 @@ class NoopGameRecorder(GameRecorder):
     def __init__(self):
         self.interactions = []
         self.requests = []
+        self.auto_count_logging = False  # see DefaultGameRecorder
 
     def log_next_round(self):
         pass
@@ -127,6 +128,9 @@ class DefaultGameRecorder(GameRecorder):
         self.requests_counts = [0]  # count per round (initially zero)
         self.violated_requests_counts = [0]  # count per round (initially zero)
         self.successful_requests_counts = [0]  # count per round (initially zero)
+        # For legacy games, the counts were logged by the games.
+        # New games can rely on the count logging by the recorder.
+        self.auto_count_logging = True
 
     def log_next_round(self):
         """Call this method to group interactions per turn."""
@@ -232,9 +236,10 @@ class DefaultGameRecorder(GameRecorder):
             module_logger.warning(f"No calls logged!")
 
         # add default framework metrics
-        self.log_key(METRIC_REQUEST_COUNT, self.requests_counts)
-        self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_requests_counts)
-        self.log_key(METRIC_REQUEST_COUNT_PARSED, self.successful_requests_counts)
+        if self.auto_count_logging:
+            self.log_key(METRIC_REQUEST_COUNT, self.requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_PARSED, self.successful_requests_counts)
 
         store_results_file(self._game_name, self.interactions,
                            "interactions.json",
