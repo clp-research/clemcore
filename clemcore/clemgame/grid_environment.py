@@ -134,26 +134,12 @@ class GridEnvironment(GameEnvironment):
         if obj in self.grid[y][x]["objects"]:
             self.grid[y][x]["objects"].remove(obj)
 
-    def get_objects_at(self, position: Position) -> Optional[List[Object]]:
+    def get_objects_at(self, position: Position) -> List[Object]:
         """Get all objects at a given position."""
         x, y = position
         if 0 <= x < self.width and 0 <= y < self.height:
             return self.grid[y][x]["objects"]
-        return None
-
-    def is_position_valid(self, position: Position) -> bool:
-        """Check if a position is within the grid bounds."""
-        x, y = position
-        return 0 <= x < self.width and 0 <= y < self.height
-
-    def get_adjacent_positions(self, position: Position) -> List[Position]:
-        """Get all valid adjacent positions."""
-        x, y = position
-        adjacent = [
-            (x + 1, y), (x - 1, y),
-            (x, y + 1), (x, y - 1)
-        ]
-        return [pos for pos in adjacent if self.is_position_valid(pos)]
+        return []
 
     def get_observation(self, player: Player) -> Observation:
         """Get the current observation for a specific player.
@@ -188,23 +174,6 @@ class GridEnvironment(GameEnvironment):
         Should use render_state per player.
         """
         raise NotImplementedError
-
-    def render_state(self, player_name: Optional[str] = None) -> Union[str, bytes]:
-        """Format the grid for display as string or image.
-
-        Args:
-            player_name: Optional player name. If provided, uses the explored map of that player
-                to render explored vs unexplored cells and marks the player's current position with 'player'.
-                If None, shows the entire grid without fog of war.
-
-        Returns:
-            Either a string representation of the grid (if render_as_image is False),
-            or a base64-encoded PNG image data (if render_as_image is True)
-        """
-        if self.render_as_image:
-            return self._render_state_as_image(player_name)
-        else:
-            return self._render_state_as_string(player_name)
 
     def _render_state_as_string(self, player_name: Optional[str] = None) -> str:
         """Format the grid for display as string.

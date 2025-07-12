@@ -142,7 +142,7 @@ class GameEnvironment(ABC):
         Args:
             player: The player making the action
             action: Action dictionary with:
-                - action_type: Type of action (always 'text' for this game)
+                - action_type: Type of action
                 - body: The text response from the player
         """
         logger.info(f"[step] Environment step with player: {player.name}")
@@ -266,6 +266,53 @@ class GameEnvironment(ABC):
         Set the new observations for all players.
 
         Make sure you include state["warning"] in the observations if the action is invalid, so that the player can get appropriate feedback.
+        """
+        raise NotImplementedError
+
+    def _store_image(self, image_data: bytes, filename: str) -> Optional[str]:
+        """Store an image using the game recorder.
+
+        Args:
+            image_data: The image data as bytes.
+            filename: The filename for the image.
+
+        Returns:
+            The path to the stored image file, or None if storage failed.
+        """
+        if not self.players:
+            logger.warning("No players available to access game recorder")
+            return None
+
+        game_recorder = self.players[0].game_recorder
+
+        return game_recorder.store_image(image_data, filename)
+
+    def render_state(self, player_name: Optional[str] = None) -> Union[str, bytes]:
+        """Format the state for display as string or image.
+
+        Args:
+            player_name: Optional player name. If provided, uses the state of that player
+                to render the state.
+                If None, shows the entire state.
+
+        Returns:
+            Either a string representation of the grid (if render_as_image is False),
+            or a base64-encoded PNG image data (if render_as_image is True)
+        """
+        if self.render_as_image:
+            return self._render_state_as_image(player_name)
+        else:
+            return self._render_state_as_string(player_name)
+
+    @abstractmethod
+    def _render_state_as_string(self, player_name: Optional[str] = None) -> str:
+        """Format the state for display as string.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _render_state_as_image(self, player_name: Optional[str] = None) -> bytes:
+        """Format the state for display as image.
         """
         raise NotImplementedError
 
