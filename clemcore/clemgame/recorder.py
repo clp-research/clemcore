@@ -1,6 +1,7 @@
 import collections
 import copy
 import logging
+import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Any, List
@@ -73,6 +74,17 @@ class GameRecorder(ABC):
         """
         pass
 
+    @abstractmethod
+    def store_image(self, image_data: bytes, filename: str) -> str:
+        """Store an image in the results directory.
+        Args:
+            image_data: The image data as bytes.
+            filename: The filename for the image.
+        Returns:
+            The path to the stored image file.
+        """
+        pass
+
 
 class NoopGameRecorder(GameRecorder):
     """Placeholder class for GameMaster initialization, does not actually record anything."""
@@ -102,11 +114,14 @@ class NoopGameRecorder(GameRecorder):
     def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
         pass
 
+    def store_image(self, image_data: bytes, filename: str) -> str:
+        return ""
+
 
 class DefaultGameRecorder(GameRecorder):
     """Default game recorder with common methods for recording game episodes."""
 
-    def __init__(self, game_name: str, experiment_name: str, game_id: int, dialogue_pair: str):
+    def __init__(self, game_name: str, experiment_name: str, game_id: int, dialogue_pair: str, episode_dir: str = None):
         self._game_name = game_name
         self._current_round = 0
         """ Stores players and turn during the runs """
@@ -115,6 +130,7 @@ class DefaultGameRecorder(GameRecorder):
                          experiment_name=experiment_name,
                          game_id=game_id,
                          dialogue_pair=dialogue_pair,
+                         episode_dir=episode_dir,
                          clem_version=get_version()),
             # already add Game Master
             "players": collections.OrderedDict(GM=dict(game_role="Game Master", model_name="programmatic")),
@@ -211,6 +227,38 @@ class DefaultGameRecorder(GameRecorder):
         elif isinstance(call_obj, str):
             return call_obj[:]
         return call_obj
+
+    def store_image(self, image_data: bytes, filename: str) -> str:
+        """Store an image in the results directory.
+
+        Args:
+            image_data: The image data as bytes.
+            filename: The filename for the image.
+
+        Returns:
+            The path to the stored image file.
+        """
+        try:
+            meta = self.interactions["meta"]
+            dialogue_pair = meta.get("dialogue_pair")
+            game_name = meta.get("game_name", "portalgame")
+            results_dir = "results"
+            episode_dir = meta.get("episode_dir")
+
+            images_dir = os.path.join(results_dir, dialogue_pair, game_name, episode_dir, "images")
+            os.makedirs(images_dir, exist_ok=True)
+
+            filepath = os.path.join(images_dir, filename)
+
+            with open(filepath, 'wb') as f:
+                f.write(image_data)
+
+            module_logger.info(f"{self._game_name}: Stored image to {filepath}")
+            return filepath
+
+        except Exception as e:
+            module_logger.error(f"{self._game_name}: Failed to store image {filename}: {e}")
+            return ""
 
     def store_records(self, results_root: str, dialogue_pair_desc: str, game_record_dir: str):
         """Store benchmark records.

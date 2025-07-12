@@ -215,7 +215,8 @@ class GameBenchmark(GameResourceLocator):
                 game_recorder = DefaultGameRecorder(self.game_name,
                                                     experiment_name,  # meta info for transcribe
                                                     game_id,  # meta info for transcribe
-                                                    dialogue_pair_desc)  # meta info for transcribe
+                                                    dialogue_pair_desc, # meta info for transcribe
+                                                    episode_dir)  # meta info for transcribe
                 try:
                     game_master = self.create_game_master(experiment_config, player_models)
                     game_master.game_recorder = game_recorder
