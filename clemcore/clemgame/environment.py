@@ -296,13 +296,18 @@ class GameEnvironment(ABC):
                 If None, shows the entire state.
 
         Returns:
-            Either a string representation of the grid (if render_as_image is False),
-            or a base64-encoded PNG image data (if render_as_image is True)
+            Either a string representation of the grid (if render_as is "string"),
+            or a base64-encoded PNG image data (if render_as is "image")
+            or a pretty-printed string representation of the grid (if render_as is "human-readable")
         """
-        if self.render_as_image:
+        if self.render_as == "image":
             return self._render_state_as_image(player_name)
-        else:
+        elif self.render_as == "string":
             return self._render_state_as_string(player_name)
+        elif self.render_as == "human-readable":
+            return self._render_state_as_human_readable(player_name)
+        else:
+            raise ValueError(f"Invalid render_as value: {self.render_as}")
 
     @abstractmethod
     def _render_state_as_string(self, player_name: Optional[str] = None) -> str:
@@ -316,11 +321,17 @@ class GameEnvironment(ABC):
         """
         raise NotImplementedError
 
+    @abstractmethod
+    def _render_state_as_human_readable(self, player_name: Optional[str] = None) -> str:
+        """Format the state for display as human-readable string.
+        """
+        raise NotImplementedError
+
     def _create_observation(self, text_content: str, rendered_state: Union[str, bytes]) -> Observation:
         """
         Create an observation for a specific player.
         """
-        if self.config.get("render_as_image", False):
+        if self.render_as == "image":
             image_filename = f"image_{self.image_counter}.png"
 
             stored_path = self._store_image(rendered_state, image_filename)
@@ -375,9 +386,3 @@ class GameEnvironment(ABC):
             action_space: The action space to set
         """
         self.action_spaces[player.name] = action_space
-
-    def pretty_print_state(self) -> str:
-        """
-        Pretty print the game state.
-        """
-        raise NotImplementedError

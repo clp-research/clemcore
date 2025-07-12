@@ -29,7 +29,7 @@ class Object(ABC):
     position: Position
     name: str
     symbol: str  # char to be shown in the grid
-    pretty_symbol: str  # emoji to be shown in the grid on pretty_print_state
+    pretty_symbol: str  # emoji to be shown in the grid on render_state_as_human_readable
 
     def __str__(self) -> str:
         return f"{self.name} at {self.position}"
@@ -96,10 +96,10 @@ class GridEnvironment(GameEnvironment):
         self.width = config.get("width", 10)
         self.height = config.get("height", 10)
         self.limited_visibility = config.get("limited_visibility", False)
-        self.render_as_image = config.get("render_as_image", False)
+        self.render_as = config.get("render_as", "string")
 
         self.grid: Grid = [
-            [GridCell(objects=[], position=(x, y)) for x in range(self.width)]
+            [GridCell(objects=[], position=(y, x)) for x in range(self.width)]
             for y in range(self.height)
         ]
 
@@ -116,29 +116,29 @@ class GridEnvironment(GameEnvironment):
         """Reset the environment to its initial state."""
         super().reset(initial_observations, initial_action_spaces)
 
-        self.grid = [[GridCell(objects=[], position=(x, y)) for x in range(self.width)] for y in range(self.height)]
+        self.grid = [[GridCell(objects=[], position=(y, x)) for x in range(self.width)] for y in range(self.height)]
         self.state["grid"] = self.grid
         self.state["player_positions"] = {}
 
     def add_object(self, obj: Object) -> None:
         """Add an object to the grid at its position."""
-        x, y = obj.position
+        y, x = obj.position
         if 0 <= x < self.width and 0 <= y < self.height:
-            self.grid[y][x]["objects"].append(obj)
+            self.state["grid"][y][x]["objects"].append(obj)
         else:
             raise ValueError(f"Position {obj.position} is out of bounds")
 
     def remove_object(self, obj: Object) -> None:
         """Remove an object from the grid."""
-        x, y = obj.position
-        if obj in self.grid[y][x]["objects"]:
-            self.grid[y][x]["objects"].remove(obj)
+        y, x = obj.position
+        if obj in self.state["grid"][y][x]["objects"]:
+            self.state["grid"][y][x]["objects"].remove(obj)
 
     def get_objects_at(self, position: Position) -> List[Object]:
         """Get all objects at a given position."""
-        x, y = position
+        y, x = position
         if 0 <= x < self.width and 0 <= y < self.height:
-            return self.grid[y][x]["objects"]
+            return self.state["grid"][y][x]["objects"]
         return []
 
     def get_observation(self, player: Player) -> Observation:
@@ -192,11 +192,12 @@ class GridEnvironment(GameEnvironment):
 
         # render visible area of player if limited visibility is enabled
         if self.limited_visibility and player_pos is not None:
-            row, col = player_pos
-            for i in range(max(0, row - 1), min(self.height, row + 2)):
+            y, x = player_pos
+            for i in range(max(0, y - 1), min(self.height, y + 2)):
                 row_str = ""
-                for j in range(max(0, col - 1), min(self.width, col + 2)):
+                for j in range(max(0, x - 1), min(self.width, x + 2)):
                     cell = self.state["grid"][i][j]
+                    logger.warning(f"Cell {i},{j} has objects: {cell['objects']}")
                     cell_content = cell["objects"][-1].symbol if cell["objects"] != [] else "empty"
                     row_str += f"({i},{j}) is {cell_content}, "
                 grid_str += row_str.lstrip() + "\n"
@@ -299,10 +300,14 @@ class GridEnvironment(GameEnvironment):
 
         return buffer.getvalue()
 
-    def pretty_print_state(self) -> str:
+    def _render_state_as_human_readable(self, player_name: Optional[str] = None) -> str:
         """
         Pretty print the grid state.
         """
+        if player_name is not None:
+            player_pos = self.state["player_positions"][player_name]
+            explored = self.explored[player_name]
+
         pretty_grid = ""
         for row in self.state["grid"]:
             row_str = ""

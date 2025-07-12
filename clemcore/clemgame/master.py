@@ -658,7 +658,6 @@ class EnvGameMaster(GameMaster):
 
             observation = self.game_environment.get_observation(self.current_player)
             module_logger.info(f"[_play] Player {self.current_player.name}")
-            module_logger.info(f"[_play] Observation: \n{to_pretty_json(observation)}")
 
             response = self.current_player(observation)
             module_logger.info(f"[_play] Response: {response}")
@@ -673,7 +672,7 @@ class EnvGameMaster(GameMaster):
 
             action = self._create_action_from_response(response)
             self.game_environment.step(self.current_player, action)
-            self.log_to_self("state", self.game_environment.pretty_print_state())
+            self.log_to_self("state", self.game_environment._render_state_as_human_readable())
 
             if self.game_environment.state["terminated"]:
                 self._end_game()
