@@ -10,7 +10,7 @@ Environments:
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict
+from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
 from clemcore.clemgame.player import Player
 from clemcore.utils.string_utils import to_pretty_json
@@ -89,6 +89,7 @@ class GameEnvironment(ABC):
         # string keys represent player names
         self.action_spaces: Dict[str, ActionSpace] = {}
         self.observations: Dict[str, Observation] = {}
+        self.image_counter = 0
 
         self.config = config or {}
 
@@ -124,10 +125,16 @@ class GameEnvironment(ABC):
             "warning": "",
             # add fields for game-specific state on inheritance
         }
+
+        self.observations = {}
+        self.action_spaces = {}
+
         if initial_observations is not None:
             self.observations = initial_observations
         if initial_action_spaces is not None:
             self.action_spaces = initial_action_spaces
+
+        self.image_counter = 0
 
     def step(self, player: Player, action: Action) -> None:
         """Execute one step in the environment.
@@ -261,6 +268,32 @@ class GameEnvironment(ABC):
         Make sure you include state["warning"] in the observations if the action is invalid, so that the player can get appropriate feedback.
         """
         raise NotImplementedError
+
+    def _create_observation(self, text_content: str, rendered_state: Union[str, bytes]) -> Observation:
+        """
+        Create an observation for a specific player.
+        """
+        if self.config.get("render_as_image", False):
+            image_filename = f"image_{self.image_counter}.png"
+
+            stored_path = self._store_image(rendered_state, image_filename)
+            logger.info(f"Stored image to results directory: {stored_path}")
+
+            # add file path to the observation (backends expect file paths, can't work with data URLs)
+            observation: Observation = {
+                "role": "user",
+                "content": text_content + "[State image shown below]",
+                "image": [stored_path],
+            }
+
+            self.image_counter += 1
+        else:
+            observation: Observation = {
+                "role": "user",
+                "content": text_content + rendered_state,
+            }
+
+        return observation
 
     def get_observation(self, player: Player) -> Observation:
         """
