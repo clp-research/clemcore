@@ -58,7 +58,7 @@ class PlayerObject(Object):
     """Represents a player in the grid."""
 
     def __init__(self, position: Position, player: Player):
-        super().__init__(position, f"Player_{player.name}", "player", "👤")
+        super().__init__(position, f"Player_{player.name}", "P", "👤")
         self.player = player
 
 
@@ -180,7 +180,6 @@ class GridEnvironment(GameEnvironment):
                 row_str = ""
                 for j in range(max(0, x - 1), min(self.width, x + 2)):
                     cell = self.state["grid"][i][j]
-                    logger.warning(f"Cell {i},{j} has objects: {cell['objects']}")
                     cell_content = cell["objects"][-1].symbol if cell["objects"] != [] else "empty"
                     row_str += f"({i},{j}) is {cell_content}, "
                 grid_str += row_str.lstrip() + "\n"
@@ -234,17 +233,17 @@ class GridEnvironment(GameEnvironment):
                 cell = self.state["grid"][i][j]
 
                 if explored is not None and not explored[i][j]:
-                    cell_content = "❓"
+                    cell_content = "?"
                     cell_color = 'lightgray'
                 else:
                     if cell["objects"]:
-                        cell_content = cell["objects"][-1].pretty_symbol
+                        cell_content = cell["objects"][-1].symbol
                         if isinstance(cell["objects"][-1], PlayerObject):
                             cell_color = 'lightblue'
                         else:
                             cell_color = 'lightgreen'
                     else:
-                        cell_content = "⬜️"
+                        cell_content = " "
                         cell_color = 'white'
 
                 rect = patches.Rectangle((j, self.height - 1 - i), 1, 1,
@@ -253,7 +252,7 @@ class GridEnvironment(GameEnvironment):
                 ax.add_patch(rect)
 
                 ax.text(j + 0.5, self.height - 1 - i + 0.5, cell_content,
-                        ha='center', va='center', fontsize=12)
+                        ha='center', va='center', fontsize=16, fontweight='bold')
 
         if player_pos is not None:
             row, col = player_pos

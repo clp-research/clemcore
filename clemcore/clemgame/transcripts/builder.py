@@ -134,22 +134,14 @@ def build_transcript(interactions: Dict, episode_dir: Path):
             transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
             transcript += f'  <p>{msg_raw}</p>\n'
             for image_src in image_list:
-                if "interaction_images" in image_src:
+                if image_src.startswith("results/"):
                     source_image_path = Path(image_src)
                     if source_image_path.exists():
-                        persistent_image_name = f"image_{image_counter}.png"
-                        persistent_image_path = images_dir / persistent_image_name
-                        try:
-                            shutil.copy2(source_image_path, persistent_image_path)
-                            # relative path for browser compatibility
-                            image_src = f"images/{persistent_image_name}"
-                            module_logger.info(
-                                f"Copied portalgame image {source_image_path} to {persistent_image_path}")
-                            image_counter += 1
-                            # delete source image after copying
-                            os.remove(source_image_path)
-                        except Exception as e:
-                            module_logger.warning(f"Failed to copy portalgame image {source_image_path}: {e}")
+                        image_filename = source_image_path.name
+                        image_src = f"images/{image_filename}"
+                        module_logger.info(f"Converted full path to relative: {image_src}")
+                    else:
+                        module_logger.warning(f"Image file not found: {source_image_path}")
 
                 if not image_src.startswith("http"):  # take the web url as it is
                     if "IMAGE_ROOT" in os.environ:

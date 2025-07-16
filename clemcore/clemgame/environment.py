@@ -39,7 +39,7 @@ class GameState(TypedDict):
     # add fields for game-specific state on inheritance
 
 
-class Observation(TypedDict, total=False):
+class Observation(TypedDict):
     """Base type definition for the game environment's observation with required fields.
 
     Required fields:
@@ -159,6 +159,8 @@ class GameEnvironment(ABC):
             if self._is_action_valid(player, action):
                 self._update_state_through_action(player, action)
                 logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
+            else:
+                logger.warning(f"[step] Action invalid: {action}")
 
             self.update_observations()
             logger.debug(
