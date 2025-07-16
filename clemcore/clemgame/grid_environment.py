@@ -34,16 +34,6 @@ class Object(ABC):
     def __str__(self) -> str:
         return f"{self.name} at {self.position}"
 
-    @abstractmethod
-    def can_interact_with(self, other: 'Object') -> bool:
-        """Check if this object can interact with another object."""
-        pass
-
-    @abstractmethod
-    def interact_with(self, other: 'Object') -> None:
-        """Interact with another object."""
-        pass
-
 
 class GridCell(TypedDict):
     objects: List[Object]
@@ -70,13 +60,6 @@ class PlayerObject(Object):
     def __init__(self, position: Position, player: Player):
         super().__init__(position, f"Player_{player.name}", "player", "👤")
         self.player = player
-
-    def can_interact_with(self, other: Object) -> bool:
-        return True
-
-    def interact_with(self, other: Object) -> None:
-        if other.can_interact_with(self):
-            other.interact_with(self)
 
 
 class GridEnvironment(GameEnvironment):
