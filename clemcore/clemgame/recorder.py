@@ -104,9 +104,12 @@ class NoopGameRecorder(GameRecorder):
 
 
 class DefaultGameRecorder(GameRecorder):
-    """Default game recorder with common methods for recording game episodes."""
+    """Default game recorder with common methods for recording game episodes.
+        todo: rename to InteractionsRecorder()
+    """
 
-    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str, player_model_infos: Dict):
+    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str,
+                 player_model_infos: Dict):
         self._game_name = game_name
         self._current_round = 0
         """ Stores players and turn during the runs """
@@ -241,11 +244,13 @@ class DefaultGameRecorder(GameRecorder):
             self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_requests_counts)
             self.log_key(METRIC_REQUEST_COUNT_PARSED, self.successful_requests_counts)
 
+        # todo: this can be done by InteractionsFileRecorder
         store_results_file(self._game_name, self.interactions,
                            "interactions.json",
                            dialogue_pair_desc,
                            sub_dir=game_record_dir,
                            results_dir=results_root)
+        # todo: this can be done by InteractionsFileRecorder
         store_results_file(self._game_name, self.requests,
                            "requests.json",
                            dialogue_pair_desc,

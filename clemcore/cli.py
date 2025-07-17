@@ -2,11 +2,13 @@ import argparse
 import textwrap
 import logging
 from datetime import datetime
+from pathlib import Path
 from typing import List, Dict, Union, Callable
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
-from clemcore.clemgame import GameRegistry, GameSpec
+from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
+    InteractionsFileSaver
 from clemcore.clemgame import benchmark
 from clemcore import clemeval, get_version
 from clemcore.clemgame.transcripts.builder import build_transcripts
@@ -77,7 +79,7 @@ def list_games(game_selector: str, verbose: bool):
 
 def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backends.ModelSpec],
         gen_args: Dict, experiment_name: str = None, instances_filename: str = None,
-        results_dir: str = None, task_selector: Callable[[str, str], List[int]] = None):
+        results_dir_path: Path = None, task_selector: Callable[[str, str], List[int]] = None):
     """Run specific model/models with a specified clemgame.
     Args:
         game_selector: Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.
@@ -86,7 +88,7 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
             majority of model backends.
         experiment_name: Name of the experiment to run. Corresponds to the experiment key in the instances JSON file.
         instances_filename: Name of the instances JSON file to use for this benchmark run.
-        results_dir: Path to the results directory in which to store the episode records.
+        results_dir_path: Path to the results directory in which to store the episode records.
         task_selector: Given a game and experiment name returns a list of selected task ids (game ids).
     """
     # check games first
@@ -129,7 +131,10 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
                     game_benchmark.filter_experiment.append(experiment_name)
                 time_start = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
-                game_benchmark.run(player_models=player_models, results_dir=results_dir, task_selector=task_selector)
+                game_benchmark.add_callback(InstanceFileSaver(results_dir_path, player_models))
+                game_benchmark.add_callback(ExperimentFileSaver(results_dir_path, player_models))
+                game_benchmark.add_callback(InteractionsFileSaver(results_dir_path, player_models))
+                game_benchmark.run(player_models=player_models, task_selector=task_selector)
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -206,7 +211,7 @@ def cli(args: argparse.Namespace):
                 gen_args=read_gen_args(args),
                 experiment_name=args.experiment_name,
                 instances_filename=args.instances_filename,
-                results_dir=args.results_dir)
+                results_dir_path=args.results_dir)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
     if args.command_name == "score":
@@ -305,7 +310,7 @@ def main():
                                  "Default: 300.")
     run_parser.add_argument("-i", "--instances_filename", type=str, default=None,
                             help="The instances file name (.json suffix will be added automatically.")
-    run_parser.add_argument("-r", "--results_dir", type=str, default="results",
+    run_parser.add_argument("-r", "--results_dir", type=Path, default="results",
                             help="A relative or absolute path to the results root directory. "
                                  "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
                                  "When not specified, then the results will be located in 'results'")

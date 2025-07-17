@@ -257,6 +257,10 @@ class Model(abc.ABC):
         self.model_spec = model_spec
         self.__gen_args = dict()
 
+    @staticmethod
+    def to_infos(player_models: List["Model"]):
+        return {idx: m.model_spec.to_dict() for idx, m in enumerate(player_models)}
+
     @property
     def name(self):
         return self.model_spec.model_name

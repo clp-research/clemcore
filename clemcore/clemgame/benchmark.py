@@ -14,11 +14,11 @@ from typing import List, Dict, ContextManager, Tuple, Callable
 from tqdm import tqdm
 
 from clemcore import backends
+from clemcore.clemgame import GameBenchmarkCallbackList, GameBenchmarkCallback
 from clemcore.clemgame.master import GameMaster
 from clemcore.clemgame.metrics import GameScorer
-from clemcore.clemgame.recorder import DefaultGameRecorder
 from clemcore.clemgame.registry import GameSpec
-from clemcore.clemgame.resources import GameResourceLocator, store_results_file, load_json, store_json
+from clemcore.clemgame.resources import GameResourceLocator, load_json
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -75,10 +75,6 @@ def to_model_results_folder(player_models: List[backends.Model]):
     return f"group-{len(player_models)}p-{_hash}"
 
 
-def to_player_model_infos(player_models: List[backends.Model]):
-    return {idx: m.model_spec.to_dict() for idx, m in enumerate(player_models)}
-
-
 class GameBenchmark(GameResourceLocator):
     """Organizes the run of a particular collection of game instances which compose a benchmark for the game.
     Supports different experiment conditions for games.
@@ -93,9 +89,25 @@ class GameBenchmark(GameResourceLocator):
         self.game_spec = game_spec
         self.instances = None
         self.filter_experiment: List[str] = []
+        self.callbacks: GameBenchmarkCallbackList = GameBenchmarkCallbackList()
+
+    def add_callback(self, callback: GameBenchmarkCallback):
+        self.callbacks.append(callback)
 
     def setup(self, instances_filename: str = None):
         """Set up a benchmark run of a clemgame.
+
+        There must be an instances.json with the following structure:
+        "experiments": [ # this is required
+            {
+                "name": <experiment-name>, # this is required
+                "param1": "value1", # optional
+                "param2": "value2", # optional
+                "game_instances": [ # this is required
+                    {"game_id": <value>, "initial_prompt": ... },
+                    {"game_id": <value>, "initial_prompt": ... }
+                ]
+            }
         Args:
             instances_filename: Name of the instances JSON file to be used for the benchmark run.
         """
@@ -105,6 +117,13 @@ class GameBenchmark(GameResourceLocator):
             self.instances = self.load_instances(self.game_spec.instances)
         else:
             self.instances = self.load_instances("instances")  # fallback to instances.json default
+        if "experiments" not in self.instances:
+            raise ValueError(f"{self.game_name}: No 'experiments' key in {instances_filename}")
+        experiments = self.instances["experiments"]
+        if not isinstance(experiments, list):
+            raise ValueError(f"{self.game_name}: Experiments in {instances_filename} is not a list")
+        if len(experiments) == 0:
+            raise ValueError(f"{self.game_name}: Experiments list in {instances_filename} is empty")
 
     def create_game_instance_iterator(self, shuffle_instances: bool = False):
         return GameInstanceIterator(self.instances, do_shuffle=shuffle_instances)
@@ -143,42 +162,16 @@ class GameBenchmark(GameResourceLocator):
             stdout_logger.error(
                 f"{self.game_name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def run(self, player_models: List[backends.Model], results_dir: str,
-            task_selector: Callable[[str, str], List[int]] = None):
+    def run(self, player_models: List[backends.Model], task_selector: Callable[[str, str], List[int]] = None):
         """Runs game-play on all game instances for a game.
-        There must be an instances.json with the following structure:
-        "experiments": [ # this is required
-            {
-                "name": <experiment-name>, # this is required
-                "param1": "value1", # optional
-                "param2": "value2", # optional
-                "game_instances": [ # this is required
-                    {"game_id": <value>, "initial_prompt": ... },
-                    {"game_id": <value>, "initial_prompt": ... }
-                ]
-            }
-        ]
-
-        The instances will be automatically stored in "game-name" with the following structure:
-            - results
-                - pairing
-                    - game-name
-                        - experiment_name
-                            - experiment.json
-                            - episode_id
-                                - instance.json
-                                - interaction.json
-
         Args:
             player_models: A list of backends.Model instances to run the game with.
-            results_dir: Path to the results directory.
         """
+        self.callbacks.on_benchmark_start(self)
         experiments: List = self.instances["experiments"]
         if not experiments:
             module_logger.warning(f"{self.game_name}: No experiments for %s", self.game_name)
             return
-        player_models_folder = to_model_results_folder(player_models)
-        player_models_infos = to_player_model_infos(player_models)
         total_experiments = len(experiments)
         for experiment_idx, experiment in enumerate(experiments):
             experiment_name = experiment['name']
@@ -186,58 +179,29 @@ class GameBenchmark(GameResourceLocator):
                 stdout_logger.info(f"Skip experiment {experiment_name} ({experiment_idx + 1}/{total_experiments})")
                 continue
             stdout_logger.info(f"Run experiment {experiment_name} ({experiment_idx + 1}/{total_experiments})")
-
-            experiment_config = {k: experiment[k] for k in experiment if k != 'game_instances'}
-            experiment_config["timestamp"] = datetime.now().isoformat()
-            experiment_config["game_name"] = self.game_name
-            experiment_config["experiment_name"] = experiment_name
-            experiment_config["player_models"] = player_models_infos
-
-            experiment_record_dir = f"{experiment_idx}_{experiment_name}"
-            store_json(experiment_config, "experiment.json",
-                       os.path.join(results_dir, player_models_folder, self.game_name, experiment_record_dir))
-
             episode_counter = 0
             error_count = 0
-            time_experiment_start = datetime.now()
             tasks: List[Dict] = experiment["game_instances"]  # by default run all
             if task_selector is not None:
                 task_ids = task_selector(self.game_name, experiment_name)
                 stdout_logger.info("Sub-select only instances with game_ids: %s", task_ids)
                 tasks = [t for t in tasks if t["game_id"] in task_ids]
-            module_logger.info("Activity: %s Experiment: %s Partners: %s Tasks: %d",
-                               self.game_name, experiment_name, player_models_folder, len(tasks))
-            for task in tqdm(tasks, desc="Playing games"):
-                task_id = task["game_id"]
-                module_logger.info("Activity: %s Experiment: %s Task: %s",
-                                   self.game_name, experiment_name, task_id)
-                episode_dir = experiment_record_dir + f"/episode_{episode_counter}"
-                store_json(task, "instance.json", os.path.join(results_dir, player_models_folder,
-                                                               self.game_name, experiment_record_dir,
-                                                               f"episode_{episode_counter}"))
-                game_recorder = DefaultGameRecorder(self.game_name,
-                                                    experiment_name,  # meta info for transcribe
-                                                    task_id,  # meta info for transcribe
-                                                    player_models_folder,  # meta info for transcribe
-                                                    player_models_infos)
+            for game_instance in tqdm(tasks, desc="Playing games"):
                 try:
-                    game_master = self.create_game_master(experiment_config, player_models)
-                    game_master.game_recorder = game_recorder
-                    game_master.setup(**task)
+                    game_master = self.create_game_master(experiment, player_models)
+                    self.callbacks.on_game_start(game_master, game_instance)
+                    game_master.setup(**game_instance)
                     game_master.play()
-                    game_master.store_records(results_dir, player_models_folder, episode_dir)
+                    self.callbacks.on_game_end(game_master, game_instance)
                 except Exception:  # continue with other episodes if something goes wrong
-                    module_logger.exception(f"{self.game_name}: Exception for task {task_id} (but continue)")
+                    message = f"{self.game_name}: Exception for task {game_instance['game_id']} (but continue)"
+                    module_logger.exception(message)
                     error_count += 1
                 episode_counter += 1
             if error_count > 0:
                 stdout_logger.error(
                     f"{self.game_name}: '{error_count}' exceptions occurred: See clembench.log for details.")
-            # Add experiment duration and overwrite file
-            time_experiment_end = datetime.now() - time_experiment_start
-            experiment_config["duration"] = str(time_experiment_end)
-            store_json(experiment_config, "experiment.json",
-                       os.path.join(results_dir, player_models_folder, self.game_name, experiment_record_dir))
+        self.callbacks.on_benchmark_end(self)
 
     def create_game_master(self, experiment: Dict, player_models: List[backends.Model]) -> GameMaster:
         """Create a game-specific GameMaster subclass instance to run the game with.
