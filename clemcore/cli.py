@@ -9,9 +9,10 @@ from typing import List, Dict, Union, Callable, Optional
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver
+    InteractionsFileSaver, GameBenchmarkCallbackList
 from clemcore.clemgame import benchmark
 from clemcore import clemeval, get_version
+from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
 
 logger = logging.getLogger(__name__)  # by default also logged to console
@@ -153,10 +154,11 @@ def run(game_selector: Union[str, Dict, GameSpec],
                                           sub_selector=sub_selector) as game_benchmark:
                 time_start = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
-                game_benchmark.add_callback(InstanceFileSaver(results_dir_path, player_models))
-                game_benchmark.add_callback(ExperimentFileSaver(results_dir_path, player_models))
-                game_benchmark.add_callback(InteractionsFileSaver(results_dir_path, player_models))
-                game_benchmark.run(player_models=player_models)
+                callbacks = GameBenchmarkCallbackList()
+                callbacks.append(InstanceFileSaver(results_dir_path, player_models))
+                callbacks.append(ExperimentFileSaver(results_dir_path, player_models))
+                callbacks.append(InteractionsFileSaver(results_dir_path, player_models))
+                dispatch.run(game_benchmark, player_models, callbacks=callbacks)
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)

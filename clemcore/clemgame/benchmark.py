@@ -104,29 +104,6 @@ class GameBenchmark(GameResourceLocator):
             stdout_logger.error(
                 f"{self.game_name}: '{error_count}' exceptions occurred: See clembench.log for details.")
 
-    def run(self, player_models: List[backends.Model]):
-        """Runs game-play on all game instances for a game.
-        Args:
-            player_models: A list of backends.Model instances to run the game with.
-        """
-        self.callbacks.on_benchmark_start(self)
-        error_count = 0
-        for experiment, game_instance in tqdm(self.game_instance_iterator, desc="Playing games"):
-            try:
-                game_master = self.create_game_master(experiment, player_models)
-                self.callbacks.on_game_start(game_master, game_instance)
-                game_master.setup(**game_instance)
-                game_master.play()
-                self.callbacks.on_game_end(game_master, game_instance)
-            except Exception:  # continue with other episodes if something goes wrong
-                message = f"{self.game_name}: Exception for task {game_instance['game_id']} (but continue)"
-                module_logger.exception(message)
-                error_count += 1
-        if error_count > 0:
-            stdout_logger.error(
-                f"{self.game_name}: '{error_count}' exceptions occurred: See clembench.log for details.")
-        self.callbacks.on_benchmark_end(self)
-
     def create_game_master(self, experiment: Dict, player_models: List[backends.Model]) -> GameMaster:
         """Create a game-specific GameMaster subclass instance to run the game with.
         Must be implemented!
