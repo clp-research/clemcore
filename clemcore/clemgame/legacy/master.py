@@ -142,11 +142,16 @@ class DialogueGameMaster(GameMaster):
         """
         done = False
         while not done:
-            context = self.get_context_for(self.current_player)
-            response = self.current_player(context)
+            player, context = self.observe()
+            response = player(context)
             done, _ = self.step(response)
         for player in self.get_players():
             player.reset()
+
+    def observe(self) -> Tuple[Player, Dict]:
+        player = self.current_player
+        context = self.get_context_for(player)
+        return player, context
 
     def step(self, response: str) -> Tuple[bool, Dict]:
         """

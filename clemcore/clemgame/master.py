@@ -17,7 +17,21 @@ from clemcore.utils.string_utils import to_pretty_json
 module_logger = logging.getLogger(__name__)
 
 
-class GameMaster(abc.ABC):
+class EnvLike(abc.ABC):
+    """
+    An interface that allows to intervene between observing the state of a game (observe) and making progress (step).
+    """
+
+    @abc.abstractmethod
+    def observe(self) -> Tuple[Player, Dict]:
+        pass
+
+    @abc.abstractmethod
+    def step(self, response: str) -> Tuple[bool, Dict]:
+        pass
+
+
+class GameMaster(EnvLike):
     """Base class to contain game-specific functionality."""
 
     def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
@@ -90,7 +104,7 @@ class GameMaster(abc.ABC):
 
     @abc.abstractmethod
     def play(self) -> None:
-        """Play the game (multiple turns of a specific game instance)."""
+        """Auto-Play the game for multiple turns given game instance."""
         pass
 
 
@@ -228,16 +242,19 @@ class DialogueGameMaster(GameMaster):
 
     @final
     def play(self) -> None:
-        """
-        Main play loop method. This method is called to run the game for benchmarking.
-        """
         done = False
         while not done:
-            context = self.get_context_for(self.current_player)
-            response = self.current_player(context)
+            player, context = self.observe()
+            response = player(context)
             done, _ = self.step(response)
         for player in self.get_players():
             player.reset()
+
+    @final
+    def observe(self) -> Tuple[Player, Dict]:
+        player = self.current_player
+        context = self.get_context_for(player)
+        return player, context
 
     @final
     def step(self, response: str) -> Tuple[bool, Dict]:
