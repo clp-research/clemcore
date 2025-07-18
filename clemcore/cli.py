@@ -2,8 +2,9 @@ import argparse
 import textwrap
 import logging
 from datetime import datetime
+from functools import partial
 from pathlib import Path
-from typing import List, Dict, Union, Callable
+from typing import List, Dict, Union, Callable, Optional
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
@@ -77,9 +78,22 @@ def list_games(game_selector: str, verbose: bool):
             print(game_name, wrapper.fill(game_spec["description"]))
 
 
-def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backends.ModelSpec],
-        gen_args: Dict, experiment_name: str = None, instances_filename: str = None,
-        results_dir_path: Path = None, task_selector: Callable[[str, str], List[int]] = None):
+def experiment_filter(game: str, experiment: str, *, selected_experiment: str, game_ids: Optional[List[int]]):
+    if experiment != selected_experiment:
+        return []  # skip experiment
+    if game_ids is None:
+        return None  # allow all
+    return game_ids
+
+
+def run(game_selector: Union[str, Dict, GameSpec],
+        model_selectors: List[backends.ModelSpec],
+        gen_args: Dict,
+        experiment_name: str = None,
+        instances_filename: str = None,
+        results_dir_path: Path = None,
+        sub_selector: Callable[[str, str], List[int]] = None
+        ):
     """Run specific model/models with a specified clemgame.
     Args:
         game_selector: Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.
@@ -89,9 +103,10 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
         experiment_name: Name of the experiment to run. Corresponds to the experiment key in the instances JSON file.
         instances_filename: Name of the instances JSON file to use for this benchmark run.
         results_dir_path: Path to the results directory in which to store the episode records.
-        task_selector: Given a game and experiment name returns a list of selected task ids (game ids).
+        sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+            If a mapping returns None, then all game instances will be used.
     """
-    # check games first
+    # check games
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_specs = game_registry.get_game_specs_that_unify_with(game_selector)  # throws error when nothing unifies
     # check models are available
@@ -125,16 +140,23 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
     all_start = datetime.now()
     for game_spec in game_specs:
         try:
-            with benchmark.load_from_spec(game_spec, instances_filename=instances_filename) as game_benchmark:
-                if experiment_name:  # leaving this as-is for now, needs discussion conclusions
-                    logger.info("Only running experiment: %s", experiment_name)
-                    game_benchmark.filter_experiment.append(experiment_name)
+            if experiment_name:  # establish experiment filter, if given
+                logger.info("Only running experiment: %s", experiment_name)
+                if sub_selector is None:
+                    sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=None)
+                else:
+                    game_ids = sub_selector(game_spec.game_name, experiment_name)
+                    sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=game_ids)
+
+            with benchmark.load_from_spec(game_spec,
+                                          instances_filename=instances_filename,
+                                          sub_selector=sub_selector) as game_benchmark:
                 time_start = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
                 game_benchmark.add_callback(InstanceFileSaver(results_dir_path, player_models))
                 game_benchmark.add_callback(ExperimentFileSaver(results_dir_path, player_models))
                 game_benchmark.add_callback(InteractionsFileSaver(results_dir_path, player_models))
-                game_benchmark.run(player_models=player_models, task_selector=task_selector)
+                game_benchmark.run(player_models=player_models)
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -204,8 +226,8 @@ def cli(args: argparse.Namespace):
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
     if args.command_name == "run":
+        start = datetime.now()
         try:
-            start = datetime.now()
             run(args.game,
                 model_selectors=backends.ModelSpec.from_strings(args.models),
                 gen_args=read_gen_args(args),

@@ -1,3 +1,4 @@
+import hashlib
 from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, TYPE_CHECKING
@@ -7,9 +8,20 @@ if TYPE_CHECKING:  # to satisfy pycharm
 
 from clemcore.backends import Model
 from clemcore.clemgame.recorder import DefaultGameRecorder
-from clemcore.clemgame.benchmark import to_model_results_folder
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
 from clemcore.clemgame.resources import store_json
+
+
+def to_model_results_folder(player_models: List[Model]):
+    def to_descriptor(model: Model):
+        return f"{model.name}-t{model.temperature}"
+
+    model_descriptors = [to_descriptor(m) for m in player_models]
+    folder_name = "--".join(model_descriptors)
+    if len(player_models) <= 2:
+        return folder_name
+    _hash = hashlib.sha1(folder_name.encode()).hexdigest()[:8]
+    return f"group-{len(player_models)}p-{_hash}"
 
 
 class ResultsFolder:
