@@ -84,6 +84,10 @@ class GameMaster(EnvLike, GameEventSource):
         """Auto-Play the game for multiple turns given game instance."""
         pass
 
+    @abc.abstractmethod
+    def is_done(self) -> bool:
+        pass
+
 
 class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
@@ -375,6 +379,9 @@ class DialogueGameMaster(GameMaster):
             A bool, True if game continues, False if game should stop.
         """
         pass
+
+    def is_done(self) -> bool:
+        return not self._does_game_proceed()
 
     def _on_game_error(self, error: GameError):
         """

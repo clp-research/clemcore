@@ -296,6 +296,9 @@ class DialogueGameMaster(GameMaster):
         """
         return response
 
+    def is_done(self) -> bool:
+        return not self._does_game_proceed()
+
     @abc.abstractmethod
     def _does_game_proceed(self) -> bool:
         """Check if game should proceed.
