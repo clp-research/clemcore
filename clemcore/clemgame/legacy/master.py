@@ -34,7 +34,7 @@ class DialogueGameMaster(GameMaster):
     def __setstate__(self, state):
         self.__dict__.update(state)
         for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
-            player.game_recorder = self.game_recorder
+            player.register_many(self._loggers)
 
     @property
     def current_player(self) -> Player:
@@ -63,14 +63,14 @@ class DialogueGameMaster(GameMaster):
                             to directly react to the initial prompt. Alternatively, overwrite on_before_game() and
                             use set_context_for(player) to set the player context.
         """
-        player.game_recorder = self.game_recorder  # player should record to the same interaction log
+        player.register_many(self._loggers)  # player should record to the same interaction log
         player.initial_prompt = initial_prompt
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
-        self.log_player(player)
+        self.log_player(player.name, player.game_role, player.model.name)
         if initial_context is not None:
             assert isinstance(initial_context, (str, dict)), \
                 f"The initial context must be a str or dict, but is {type(initial_context)}"
@@ -91,7 +91,6 @@ class DialogueGameMaster(GameMaster):
             kwargs: Keyword arguments used to set up the GameMaster instance. This is usually a game instance object
                 read from the game's instances.json.
         """
-        self.game_recorder.auto_count_logging = False  # legacy games usually count and store themselves
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
         self._on_before_game()
@@ -137,9 +136,6 @@ class DialogueGameMaster(GameMaster):
         return context
 
     def play(self) -> None:
-        """
-        Main play loop method. This method is called to run the game for benchmarking.
-        """
         done = False
         while not done:
             player, context = self.observe()
@@ -185,6 +181,7 @@ class DialogueGameMaster(GameMaster):
         done = not self._does_game_proceed()
         if done:
             self._on_after_game()
+            self.log_game_end(auto_count_logging=False)
             self.info["episode_score"] = self.compute_episode_score()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()

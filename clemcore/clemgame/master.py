@@ -8,9 +8,9 @@ from typing import List, Dict, Tuple, Any, Union, final, Optional
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
 from clemcore.clemgame.errors import ParseError, GameError
+from clemcore.clemgame.events import GameEventSource
 from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.player import Player
-from clemcore.clemgame.recorder import NoopGameRecorder
 from clemcore.clemgame.resources import GameResourceLocator
 from clemcore.utils.string_utils import to_pretty_json
 
@@ -31,7 +31,7 @@ class EnvLike(abc.ABC):
         pass
 
 
-class GameMaster(EnvLike):
+class GameMaster(EnvLike, GameEventSource):
     """Base class to contain game-specific functionality."""
 
     def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
@@ -41,6 +41,7 @@ class GameMaster(EnvLike):
             experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
             player_models: Player models to use for one or two players.
         """
+        super().__init__()
         self.game_spec = game_spec
         self.experiment: Dict = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
@@ -50,17 +51,8 @@ class GameMaster(EnvLike):
             raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
                              f"but {len(player_models)} were given: {[m.name for m in player_models]}")
         self.player_models: List[backends.Model] = player_models
-        self._game_recorder = NoopGameRecorder()
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
-
-    @property
-    def game_recorder(self):
-        return self._game_recorder
-
-    @game_recorder.setter
-    def game_recorder(self, game_recorder):
-        self._game_recorder = game_recorder
 
     def load_json(self, file_path: Union[str, Path]):
         return self.game_resources.load_json(file_path)
@@ -75,22 +67,7 @@ class GameMaster(EnvLike):
             type_: The type of the action to be logged.
             value: The content value of the action to be logged. Must be JSON serializable.
         """
-        self._game_recorder.log_event("GM", "GM", {"type": type_, "content": value})
-
-    def log_key(self, key: str, value: Any):
-        self._game_recorder.log_key(key, value)
-
-    def log_player(self, player: Player):
-        self._game_recorder.log_player(player.name, player.game_role, player.model.name)
-
-    def log_next_round(self):
-        self._game_recorder.log_next_round()
-
-    def log_event(self, from_, to, action):
-        self._game_recorder.log_event(from_, to, action)
-
-    def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
-        self._game_recorder.store_records(results_root, dialogue_pair_desc, game_record_dir)
+        self.log_event("GM", "GM", {"type": type_, "content": value})
 
     @abc.abstractmethod
     def setup(self, **kwargs):
@@ -133,7 +110,7 @@ class DialogueGameMaster(GameMaster):
     def __setstate__(self, state):
         self.__dict__.update(state)
         for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
-            player.game_recorder = self.game_recorder
+            player.register_many(self._loggers)
 
     @property
     def game_state(self):
@@ -168,14 +145,14 @@ class DialogueGameMaster(GameMaster):
                             to directly react to the initial prompt. Alternatively, overwrite on_before_game() and
                             use set_context_for(player) to set the player context.
         """
-        player.game_recorder = self.game_recorder  # player should record to the same interaction log
+        player.register_many(self._loggers)  # player should record to the same interaction log
         player.initial_prompt = initial_prompt
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
-        self.log_player(player)
+        self.log_player(player.name, player.game_role, player.model.name)
         if initial_context is not None:
             assert isinstance(initial_context, (str, dict)), \
                 f"The initial context must be a str or dict, but is {type(initial_context)}"
@@ -268,7 +245,7 @@ class DialogueGameMaster(GameMaster):
             parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
             self._advance_game(self.current_player, parsed_response)  # throws GameError
         except ParseError as error:
-            self._game_recorder.count_request_violation()
+            self.count_request_violation()
             self._on_parse_error(error)
         except GameError as error:
             self._on_game_error(error)
@@ -287,6 +264,7 @@ class DialogueGameMaster(GameMaster):
         done = not self._does_game_proceed()
         if done:
             self._on_after_game()
+            self.log_game_end()
             self.info["episode_score"] = self.compute_episode_score()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()

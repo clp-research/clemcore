@@ -7,7 +7,7 @@ from clemcore.clemgame.instances import GameInstanceGenerator, GameInstanceItera
 from clemcore.clemgame.resources import GameResourceLocator
 from clemcore.clemgame.master import GameMaster, DialogueGameMaster, EnvGameMaster, Player
 from clemcore.clemgame.metrics import GameScorer
-from clemcore.clemgame.recorder import DefaultGameRecorder, GameRecorder
+from clemcore.clemgame.recorder import GameInteractionsRecorder
 from clemcore.clemgame.registry import GameSpec, GameRegistry
 from clemcore.clemgame.benchmark import GameBenchmark
 from clemcore.clemgame.environment import Action, ActionSpace, GameEnvironment, GameState, Observation
@@ -30,12 +30,11 @@ __all__ = [
     "GameRegistry",
     "GameInstanceIterator",
     "GameInstanceGenerator",
-    "GameRecorder",
     "ResultsFolder",
     "InstanceFileSaver",
     "ExperimentFileSaver",
     "InteractionsFileSaver",
-    "DefaultGameRecorder",
+    "GameInteractionsRecorder",
     "GameResourceLocator",
     "ResponseError",
     "ProtocolError",

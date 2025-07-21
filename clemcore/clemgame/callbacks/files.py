@@ -7,7 +7,7 @@ if TYPE_CHECKING:  # to satisfy pycharm
     from clemcore.clemgame import GameMaster
 
 from clemcore.backends import Model
-from clemcore.clemgame.recorder import DefaultGameRecorder
+from clemcore.clemgame.recorder import GameInteractionsRecorder
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
 from clemcore.clemgame.resources import store_json
 
@@ -103,7 +103,7 @@ class InteractionsFileSaver(GameBenchmarkCallback):
     def __init__(self, result_dir_path: Path, player_models: List[Model]):
         self.results_folder = ResultsFolder(result_dir_path, player_models)
         self.player_models_infos = Model.to_infos(player_models)
-        self._recorders: Dict[str, DefaultGameRecorder] = {}
+        self._recorders: Dict[str, GameInteractionsRecorder] = {}
 
     @staticmethod
     def to_key(game_name: str, experiment_name: str, game_id: int):
@@ -114,12 +114,12 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         experiment_name = game_master.experiment["name"]
         game_id = game_instance["game_id"]
         # create, inject and register new game recorder
-        game_recorder = DefaultGameRecorder(game_name,
-                                            experiment_name,  # meta info for transcribe
-                                            game_id,  # meta info for transcribe
-                                            self.results_folder.models_dir,  # meta info for transcribe
-                                            self.player_models_infos)
-        game_master.game_recorder = game_recorder
+        game_recorder = GameInteractionsRecorder(game_name,
+                                                 experiment_name,  # meta info for transcribe
+                                                 game_id,  # meta info for transcribe
+                                                 self.results_folder.models_dir,  # meta info for transcribe
+                                                 self.player_models_infos)
+        game_master.register(game_recorder)
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         self._recorders[_key] = game_recorder
 
@@ -129,9 +129,7 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         game_id = game_instance["game_id"]
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         assert _key in self._recorders, f"Recoder must be registered on_game_start, but wasn't for: {_key}"
-        recorder = self._recorders[_key]
-        # todo move store logic from GameRecorder to here directly using store_json
-        episode_dir = f"{experiment_name}/{ResultsFolder.to_instance_dir(game_instance)}"
-        recorder.store_records(str(self.results_folder.to_results_dir_path()),
-                               self.results_folder.models_dir,
-                               episode_dir)
+        recorder = self._recorders.pop(_key)  # auto-remove recorder from registry
+        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+        store_json(recorder.interactions, "interactions.json", instance_dir_path)
+        store_json(recorder.requests, "requests.json", instance_dir_path)

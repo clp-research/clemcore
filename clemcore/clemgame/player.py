@@ -4,10 +4,10 @@ from datetime import datetime
 from typing import List, Dict, Union
 
 from clemcore import backends
-from clemcore.clemgame.recorder import GameRecorder, NoopGameRecorder
+from clemcore.clemgame.events import GameEventSource
 
 
-class Player(abc.ABC):
+class Player(GameEventSource):
     """A participant of a game.
 
     A player can respond via a custom implementation, human input or a language model:
@@ -17,15 +17,19 @@ class Player(abc.ABC):
     - backend players are called via the generate_response() method of a backend
     """
 
-    def __init__(self, model: backends.Model, name: str = None, game_role: str = None,
-                 game_recorder: GameRecorder = None, initial_prompt: Union[str, Dict] = None,
-                 forget_extras: List[str] = None):
+    def __init__(self,
+                 model: backends.Model,
+                 *,
+                 name: str = None,
+                 game_role: str = None,
+                 initial_prompt: Union[str, Dict] = None,
+                 forget_extras: List[str] = None
+                 ):
         """
         Args:
             model: The model used by this player.
             name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
             game_role: The player's game role (optional). If not given, then automatically resolves to the class name.
-            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
             initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
                             set before the player is called the first time. If set, then on the first player call
                             the initial prompt will be added to the player's message history and logged as a
@@ -37,10 +41,10 @@ class Player(abc.ABC):
                            This is useful to not keep image extras in the player's message history,
                            but still to prompt the model with an image given in the context.
         """
+        super().__init__()
         self._model: backends.Model = model
         self._name: str = name  # set by master
         self._game_role = game_role or self.__class__.__name__
-        self._game_recorder = game_recorder or NoopGameRecorder()  # set by master
         self._is_initial_call: bool = True
         self._initial_prompt: Dict = None if initial_prompt is None else self.__validate_initial_prompt(initial_prompt)
         self._forget_extras: List[str] = forget_extras or []  # set by game developer
@@ -59,25 +63,18 @@ class Player(abc.ABC):
 
     def __deepcopy__(self, memo):
         """Deepcopy override method.
-        Deepcopies Player class object, but keeps backend model and game recorder references intact.
+        Deep copies Player class object, but keeps backend model and game recorder references intact.
+        We don't want to multiply the recorders on each deep copy, but have a single set for each game.
         Args:
             memo: Dictionary of objects already copied during the current copying pass. (This is a deepcopy default.)
         """
         _copy = type(self).__new__(self.__class__)
         memo[id(self)] = _copy
         for key, value in self.__dict__.items():
-            if key not in ["_model", "_game_recorder"]:
+            if key not in ["_model", "_loggers"]:
                 setattr(_copy, key, deepcopy(value, memo))
         _copy._model = self._model
         return _copy
-
-    @property
-    def game_recorder(self):
-        return self._game_recorder
-
-    @game_recorder.setter
-    def game_recorder(self, game_recorder: GameRecorder):
-        self._game_recorder = game_recorder
 
     @property
     def initial_prompt(self):
@@ -133,17 +130,15 @@ class Player(abc.ABC):
 
     def __log_send_context_event(self, content: str, label=None):
         """Record a 'send message' event with the current message content."""
-        assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'send message', 'content': content, 'label': label}
-        self._game_recorder.log_event(from_='GM', to=self.name, action=action)
+        self.log_event(from_='GM', to=self.name, action=action)
 
     def __log_response_received_event(self, response, label=None):
         """Record a 'get message' event with the current response content."""
-        assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
         action = {'type': 'get message', 'content': response, 'label': label}
         _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
-        self._game_recorder.log_event(from_=self.name, to="GM", action=action,
-                                      call=(deepcopy(_prompt), deepcopy(_response)))
+        self.log_event(from_=self.name, to="GM", action=action,
+                       call=(deepcopy(_prompt), deepcopy(_response)))
 
     def get_last_call_info(self):
         """Get values of the last player call.
@@ -208,7 +203,7 @@ class Player(abc.ABC):
             prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
             # TODO: add default ContextExceededError handling here or above
         call_duration = datetime.now() - call_start
-        self._game_recorder.count_request()
+        self.count_request()
         response_object["clem_player"] = {
             "call_start": str(call_start),
             "call_duration": str(call_duration),
