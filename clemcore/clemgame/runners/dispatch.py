@@ -3,6 +3,7 @@ from typing import List
 from clemcore.backends import Model
 from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList
 from clemcore.clemgame.runners import sequential, batchwise
+from clemcore.clemgame.runners.batchwise import support_batching
 
 
 def run(game_benchmark: GameBenchmark,
@@ -10,7 +11,17 @@ def run(game_benchmark: GameBenchmark,
         *,
         callbacks: GameBenchmarkCallbackList = None,
         batch_size: int | str = None):
-    """ Runs game-play on the game instances of a game benchmark.
+    """
+        The dispatch run method automatically checks if all models support batching:
+        (1) If all models support batching, then will delegate to the batchwise runner.
+        (2) If at least one of the models does not support batching, then will delegate to the sequential runner.
+            The batchwise runner will use the batch_size parameter of the model is use.
+            You can set the batch size via the model_spec unification mechanism, for example,
+            passing a model spec to the run command like -m '{"model_name": "llama3-8b", "batch_size": 8}'.
+            If batch_size is not given, then the batchwise runner determines the best batch_size automatically.
+        If you want to have more control over the runner selection, then invoke them directly.
+
+        Note: Slurk backends do not support batching, hence will run always sequentially (for now).
     Args:
         game_benchmark: The game benchmark to run.
         player_models: A list of backends.Model instances to run the game with.
@@ -23,7 +34,7 @@ def run(game_benchmark: GameBenchmark,
             Default: None.
     """
     callbacks = callbacks or GameBenchmarkCallbackList()
-    if batch_size is None or batch_size == 1:
-        sequential.run(game_benchmark, player_models, callbacks=callbacks)
-    else:
+    if all(support_batching(player_model) for player_model in player_models):
         batchwise.run(game_benchmark, player_models, callbacks=callbacks, batch_size=batch_size)
+    else:
+        sequential.run(game_benchmark, player_models, callbacks=callbacks)

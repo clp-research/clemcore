@@ -14,6 +14,7 @@ def run(game_benchmark: GameBenchmark,
         player_models: List[Model],
         *,
         callbacks: GameBenchmarkCallbackList):
+    # todo: check if batch_size is set, and log to stdout that it will be ignored
     callbacks.on_benchmark_start(game_benchmark)
     error_count = 0
     for experiment, game_instance in tqdm(game_benchmark.game_instance_iterator, desc="Playing games"):
