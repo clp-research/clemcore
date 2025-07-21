@@ -22,7 +22,6 @@ class Player(GameEventSource):
                  *,
                  name: str = None,
                  game_role: str = None,
-                 initial_prompt: Union[str, Dict] = None,
                  forget_extras: List[str] = None
                  ):
         """
@@ -30,13 +29,6 @@ class Player(GameEventSource):
             model: The model used by this player.
             name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
             game_role: The player's game role (optional). If not given, then automatically resolves to the class name.
-            initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
-                            set before the player is called the first time. If set, then on the first player call
-                            the initial prompt will be added to the player's message history and logged as a
-                            'send message' event without a response event. To properly log this make sure that a proper
-                            game recorder is set. On each player call the initial prompt will be automatically merged
-                            with the first memorized context given to the player (via two newlines) by the backend.
-                            Alternatively, the initial prompt could be part of the first context given to the player.
             forget_extras: A list of context entries (keys) to forget after response generation.
                            This is useful to not keep image extras in the player's message history,
                            but still to prompt the model with an image given in the context.
@@ -45,8 +37,6 @@ class Player(GameEventSource):
         self._model: backends.Model = model
         self._name: str = name  # set by master
         self._game_role = game_role or self.__class__.__name__
-        self._is_initial_call: bool = True
-        self._initial_prompt: Dict = None if initial_prompt is None else self.__validate_initial_prompt(initial_prompt)
         self._forget_extras: List[str] = forget_extras or []  # set by game developer
         self._messages: List[Dict] = []  # internal state
         self._prompt = None  # internal state
@@ -75,27 +65,6 @@ class Player(GameEventSource):
                 setattr(_copy, key, deepcopy(value, memo))
         _copy._model = self._model
         return _copy
-
-    @property
-    def initial_prompt(self):
-        return self._initial_prompt
-
-    @initial_prompt.setter
-    def initial_prompt(self, prompt: Union[str, Dict]):
-        if prompt is None:
-            self._initial_prompt = None  # allow to unset the initial prompt (again)
-            return
-        self._initial_prompt = self.__validate_initial_prompt(prompt)
-
-    def __validate_initial_prompt(self, prompt: Union[str, Dict]) -> Dict:
-        assert self._is_initial_call is True, "The initial prompt can only be set before the first player call"
-        assert isinstance(prompt, (str, dict)), \
-            f"The initial prompt must be a str or dict, but is {type(prompt)}"
-        if isinstance(prompt, dict):
-            assert "role" in prompt and prompt["role"] == "user", \
-                "The initial prompt requires a 'role' entry with value 'user'"
-            return deepcopy(prompt)
-        return dict(role="user", content=prompt)  # by default assume str
 
     @property
     def name(self):
@@ -158,14 +127,6 @@ class Player(GameEventSource):
             The textual response.
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
-        memorized_initial_prompt = None
-        # handle initial/first call, with only the initial prompt user message in history:
-        if self._is_initial_call and self._initial_prompt is not None:
-            assert len(self._messages) == 0, ("There must be no entry in the player's message history "
-                                              "on the first call, when the initial prompt is set.")
-            memorized_initial_prompt = deepcopy(self._initial_prompt)  # see explanation below
-            self._messages.append(memorized_initial_prompt)  # merged with context in ensure_alternating_roles (backend)
-            self.__log_send_context_event(memorized_initial_prompt["content"], label="initial prompt")
 
         self._last_context = deepcopy(context)
 
@@ -181,8 +142,6 @@ class Player(GameEventSource):
         for extra in self._forget_extras:
             if extra in memorized_context:
                 del memorized_context[extra]
-            if memorized_initial_prompt is not None and extra in memorized_initial_prompt:
-                del memorized_initial_prompt[extra]
 
         if memorize:
             self._messages.append(memorized_context)

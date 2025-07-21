@@ -26,6 +26,8 @@ class DialogueGameMaster(GameMaster):
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
+        self.initial_prompt_for_player: Dict[str, Dict] = dict()
+        self.started = False
         self.current_round: int = 0
         self._current_player: Player = None
         self._current_player_idx: int = 0
@@ -47,7 +49,10 @@ class DialogueGameMaster(GameMaster):
         """
         return list(self.players_by_names.values())
 
-    def add_player(self, player: Player, initial_prompt: Union[str, Dict] = None,
+    def add_player(self,
+                   player: Player,
+                   *,
+                   initial_prompt: Union[str, Dict] = None,
                    initial_context: Union[str, Dict] = None):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
@@ -56,7 +61,14 @@ class DialogueGameMaster(GameMaster):
 
         Args:
             player: The player to be added to the game. The player's name must be unique.
-            initial_prompt: The initial prompt given to the player (optional). See Player for more details.
+            initial_prompt: The initial prompt given to the player (optional). This argument works like a lazy prompt
+                            that is only added to the context on the first observe. Hence, the initial prompt must be
+                            set before the player is called the first time. If set, then on the first player call
+                            the initial prompt will be added to the player's message history and logged as a
+                            'send message' event without a response event. On each player call the initial prompt will
+                            be automatically merged with the first memorized context given to the player
+                            (via two newlines) by the backend.
+                            Alternatively, the initial prompt could be part of the first context given to the player.
             initial_context: A context to be immediately set for the player (optional). This is useful for initial
                             prompts that are supposed to be handled as the first context, for example, when adding
                             the other player's response to the prompt is not necessary, but the player is supposed
@@ -64,13 +76,22 @@ class DialogueGameMaster(GameMaster):
                             use set_context_for(player) to set the player context.
         """
         player.register_many(self._loggers)  # player should record to the same interaction log
-        player.initial_prompt = initial_prompt
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
         self.log_player(player.name, player.game_role, player.model.name)
+        if initial_prompt is not None:
+            assert isinstance(initial_prompt, (str, dict)), \
+                f"The initial prompt must be a str or dict, but is {type(initial_prompt)}"
+            if isinstance(initial_prompt, dict):
+                assert "role" in initial_prompt and initial_prompt["role"] == "user", \
+                    "The initial prompt requires a 'role' entry with value 'user'"
+                extras = {k: v for k, v in initial_context.items() if k not in ["role", "content"]}
+                self.set_initial_prompt_for(player, initial_prompt["content"], **extras)
+            else:
+                self.set_initial_prompt_for(player, initial_prompt)
         if initial_context is not None:
             assert isinstance(initial_context, (str, dict)), \
                 f"The initial context must be a str or dict, but is {type(initial_context)}"
@@ -94,6 +115,7 @@ class DialogueGameMaster(GameMaster):
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
         self._on_before_game()
+        self.started = True
         self._on_before_round()
 
     @abc.abstractmethod
@@ -110,6 +132,25 @@ class DialogueGameMaster(GameMaster):
     def get_game_state(self):
         return None
 
+    def set_initial_prompt_for(self, player: Player, content: str, **extras):
+        """
+        Set the initial prompt for the specified Player. The prompt will be prefixed to the player's next turn.
+
+        The context always has a 'role' and 'content' entry where the 'role' is always set to 'user'.
+        Args:
+            player: The player to set the context for.
+            content: The text content to be added to the initial prompt.
+            extras: Additional content to be merged into the context e.g. information about images
+        """
+        if self.has_started():
+            raise RuntimeError("The initial_prompt cannot be set when the game is already running."
+                               "This feature only usable during game setup.")
+        if player is None:
+            raise ValueError("Cannot set initial_prompt because no player is given.")
+        message = {"role": "user", "content": content}
+        initial_prompt = {**extras, **message}
+        self.initial_prompt_for_player[player.name] = initial_prompt
+
     def set_context_for(self, player: Player, content: str, **extras):
         """
         Set the context for the specified Player. The player will be prompted with the context on its next turn.
@@ -121,7 +162,7 @@ class DialogueGameMaster(GameMaster):
             extras: Additional content to be merged into the context e.g. information about images
         """
         if player is None:
-            return
+            raise ValueError("Cannot apply set_context_for because no player is given.")
         message = {"role": "user", "content": content}
         context = {**extras, **message}
         self.context_for_player[player.name] = context
@@ -133,6 +174,11 @@ class DialogueGameMaster(GameMaster):
         assert "role" in context, f"Player context must have a 'role' entry"
         assert context["role"] == "user", f"Role of player context must be 'user'"
         assert "content" in context, f"Player context must have a 'content' entry"
+        initial_prompt = self.initial_prompt_for_player.pop(player.name, None)
+        if initial_prompt is not None:
+            content = context["content"]
+            initial_prompt_content = initial_prompt["content"]
+            context = {**initial_prompt_content, **context, "content": "\n\n".join([initial_prompt_content, content])}
         return context
 
     def play(self) -> None:
@@ -296,9 +342,6 @@ class DialogueGameMaster(GameMaster):
         """
         return response
 
-    def is_done(self) -> bool:
-        return not self._does_game_proceed()
-
     @abc.abstractmethod
     def _does_game_proceed(self) -> bool:
         """Check if game should proceed.
@@ -311,6 +354,12 @@ class DialogueGameMaster(GameMaster):
             A bool, True if game continues, False if game should stop.
         """
         pass
+
+    def is_done(self) -> bool:
+        return not self._does_game_proceed()
+
+    def has_started(self) -> bool:
+        return self.started
 
     def _on_before_round(self):
         """Executed in the play loop before a new round of gameplay starts.
