@@ -64,38 +64,75 @@ def generate_batch_response_per_model(session_ids: List[int],
                                       players: List[Player],
                                       contexts: List[Dict]
                                       ) -> Dict[int, str]:
-    # map models by names (Model is not hashable)
-    model_by_name = {}
-    for player in players:
-        model_by_name[player.model.name] = player.model
+    """
+    Generates responses in batches by grouping players according to their model backend.
 
-    # group contexts by the models that back up the players and keep track of session id
-    prompt_batch_by_model: Dict[str, List[Tuple[int, Dict]]] = defaultdict(list)
+    Each player processes a context to form a prompt (via `perceive()`), and responses are
+    generated in batches using their respective models. Responses are then routed back to
+    the originating players via `update_perspective_with()`.
+
+    Args:
+        session_ids: A list of session identifiers (parallel to players and contexts).
+        players: A list of Player instances.
+        contexts: A list of context dictionaries (one per player).
+
+    Returns:
+        A dictionary mapping session IDs to the textual responses generated.
+    """
+    # Index models by name (since Model objects may not be hashable)
+    model_by_name = {player.model.name: player.model for player in players}
+
+    # Group inputs by model, tracking (session_id, player, perspective)
+    input_batch_by_model: Dict[str, List[Tuple[int, Player, List[Dict]]]] = defaultdict(list)
     for session_id, player, context in zip(session_ids, players, contexts):
-        prompt = player.prepare(context)  # add conversation history to get full prompt
-        prompt_batch_by_model[player.model.name].append((session_id, prompt))
+        perspective = player.perceive_context(context)
+        input_batch_by_model[player.model.name].append((session_id, player, perspective))
 
-    # call models on each batch of prompts
+    # Collect responses per session_id
     response_by_session_id = {}
-    for model_name, batch_prompt in prompt_batch_by_model.items():
-        # keep track of session ids while we run batches for possibly different models
-        session_id_by_prompt_idx = {}
-        for prompt_idx, (session_id, _) in enumerate(batch_prompt):
-            session_id_by_prompt_idx[prompt_idx] = session_id
+    for model_name, batched_inputs in input_batch_by_model.items():
+        # Build input batch and track mapping back to session/player
+        session_map: Dict[int, Tuple[int, Player]] = {}
+        batched_perspectives: List[List[Dict]] = []
+        for prompt_idx, (session_id, player, prompt) in enumerate(batched_inputs):
+            session_map[prompt_idx] = (session_id, player)
+            batched_perspectives.append(prompt)
 
-        # pass the batched prompts to the model to get the responses
+        # Run batched generation (assumes order-preserving)
         model = model_by_name[model_name]
-        responses = model.generate_batch_response(batch_prompt)
+        results = model.generate_batch_response(batched_perspectives)
+        assert len(results) == len(batched_perspectives), "Mismatching batch sizes in model's batched response"
 
-        # map responses back to sessions ids assuming that responses match prompt order
-        for prompt_idx, response in enumerate(responses):
-            session_id = session_id_by_prompt_idx[prompt_idx]
-            response_by_session_id[session_id] = response
+        # Each result is assumed to be (prompt, response_object, response_text)
+        for prompt_idx, (perspective, response_object, response_text) in enumerate(results):
+            session_id, player = session_map[prompt_idx]
+            response_by_session_id[session_id] = response_text
+            metadata = dict(prompt=perspective, response_object=response_object)
+            player.perceive_response(response_text, metadata=metadata)
     return response_by_session_id
 
 
 def support_batching(model: Model):
     return hasattr(model, 'generate_batch_response') and callable(getattr(model, 'generate_batch_response'))
+
+
+def run(game_benchmark: GameBenchmark,
+        player_models: List[Model],
+        *,
+        callbacks: GameBenchmarkCallbackList,
+        batch_size: int | str):
+    # If not all support batching, then this doesn't help, because the models have to wait for the slowest one
+    assert all(support_batching(player_model) for player_model in player_models), \
+        "Not all player models support batching"
+    assert batch_size > 0 or batch_size == "auto", f"batch_size must be >0 or 'auto' but is {batch_size}"
+
+    callbacks.on_benchmark_start(game_benchmark)
+    game_sessions = __prepare_game_sessions(game_benchmark, player_models, callbacks)
+    if len(game_sessions) == 0:
+        message = f"{game_benchmark.game_name}: Could not prepare any game session. See clembench.log for details."
+        stdout_logger.warning(message)
+    __run_game_sessions(game_sessions)
+    callbacks.on_benchmark_end(game_benchmark)
 
 
 def __prepare_game_sessions(game_benchmark: GameBenchmark,
@@ -129,26 +166,6 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
         # Use session_ids to map outputs back to game sessions for stepping
         for sid, response in response_by_session_id.items():
             session = game_sessions[sid]  # assuming session_id is an index (see __prepare_game_sessions)
-            session.game_master.current_player.step(response)
             done, _ = session.game_master.step(response)
             if done:
                 callbacks.on_game_end(session.game_master, session.game_instance)
-
-
-def run(game_benchmark: GameBenchmark,
-        player_models: List[Model],
-        *,
-        callbacks: GameBenchmarkCallbackList,
-        batch_size: int | str):
-    # If not all support batching, then this doesn't help, because the models have to wait for the slowest one
-    assert all(support_batching(player_model) for player_model in player_models), \
-        "Not all player models support batching"
-    assert batch_size > 0 or batch_size == "auto", f"batch_size must be >0 or 'auto' but is {batch_size}"
-
-    callbacks.on_benchmark_start(game_benchmark)
-    game_sessions = __prepare_game_sessions(game_benchmark, player_models, callbacks)
-    if len(game_sessions) == 0:
-        message = f"{game_benchmark.game_name}: Could not prepare any game session. See clembench.log for details."
-        stdout_logger.warning(message)
-    __run_game_sessions(game_sessions)
-    callbacks.on_benchmark_end(game_benchmark)
