@@ -60,58 +60,6 @@ class MultiGameRoundRobinScheduler(IterableDataset):
                 self.exhausted[i] = True
 
 
-def generate_batch_response_per_model(session_ids: List[int],
-                                      players: List[Player],
-                                      contexts: List[Dict]
-                                      ) -> Dict[int, str]:
-    """
-    Generates responses in batches by grouping players according to their model backend.
-
-    Each player processes a context to form a prompt (via `perceive()`), and responses are
-    generated in batches using their respective models. Responses are then routed back to
-    the originating players via `update_perspective_with()`.
-
-    Args:
-        session_ids: A list of session identifiers (parallel to players and contexts).
-        players: A list of Player instances.
-        contexts: A list of context dictionaries (one per player).
-
-    Returns:
-        A dictionary mapping session IDs to the textual responses generated.
-    """
-    # Index models by name (since Model objects may not be hashable)
-    model_by_name = {player.model.name: player.model for player in players}
-
-    # Group inputs by model, tracking (session_id, player, perspective)
-    input_batch_by_model: Dict[str, List[Tuple[int, Player, List[Dict]]]] = defaultdict(list)
-    for session_id, player, context in zip(session_ids, players, contexts):
-        perspective = player.perceive_context(context)
-        input_batch_by_model[player.model.name].append((session_id, player, perspective))
-
-    # Collect responses per session_id
-    response_by_session_id = {}
-    for model_name, batched_inputs in input_batch_by_model.items():
-        # Build input batch and track mapping back to session/player
-        session_map: Dict[int, Tuple[int, Player]] = {}
-        batched_perspectives: List[List[Dict]] = []
-        for prompt_idx, (session_id, player, prompt) in enumerate(batched_inputs):
-            session_map[prompt_idx] = (session_id, player)
-            batched_perspectives.append(prompt)
-
-        # Run batched generation (assumes order-preserving)
-        model = model_by_name[model_name]
-        results = model.generate_batch_response(batched_perspectives)
-        assert len(results) == len(batched_perspectives), "Mismatching batch sizes in model's batched response"
-
-        # Each result is assumed to be (prompt, response_object, response_text)
-        for prompt_idx, (perspective, response_object, response_text) in enumerate(results):
-            session_id, player = session_map[prompt_idx]
-            response_by_session_id[session_id] = response_text
-            metadata = dict(prompt=perspective, response_object=response_object)
-            player.perceive_response(response_text, metadata=metadata)
-    return response_by_session_id
-
-
 def support_batching(model: Model):
     return hasattr(model, 'generate_batch_response') and callable(getattr(model, 'generate_batch_response'))
 
@@ -162,7 +110,7 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
     data_loader = DataLoader(round_robin_scheduler, batch_size=8)
     for batch in data_loader:
         session_ids, batch_players, batch_contexts = batch
-        response_by_session_id = generate_batch_response_per_model(session_ids, batch_players, batch_contexts)
+        response_by_session_id = Player.batch_response(batch_players, batch_contexts, row_ids=session_ids)
         # Use session_ids to map outputs back to game sessions for stepping
         for sid, response in response_by_session_id.items():
             session = game_sessions[sid]  # assuming session_id is an index (see __prepare_game_sessions)
