@@ -1,20 +1,20 @@
 import abc
 from copy import deepcopy
-from datetime import datetime
-from typing import List, Dict, Union
+from typing import List, Dict, Optional
 
 from clemcore import backends
 from clemcore.clemgame.events import GameEventSource
 
 
 class Player(GameEventSource):
-    """A participant of a game.
+    """A participant in a dialogue-based game, capable of generating responses
+    based on a given context. A Player may be human-controlled, programmatic, or model-backed.
 
-    A player can respond via a custom implementation, human input or a language model:
+    Players can interact in three main ways:
 
-    - programmatic players are called via the _custom_response() method
-    - human players are called via the _terminal_response() method
-    - backend players are called via the generate_response() method of a backend
+    - Programmatic players implement `_custom_response(context)`
+    - Human players respond via `_terminal_response(context)`
+    - Model-backed players delegate to the model's `generate_response()` method
     """
 
     def __init__(self,
@@ -39,16 +39,14 @@ class Player(GameEventSource):
         self._game_role = game_role or self.__class__.__name__
         self._forget_extras: List[str] = forget_extras or []  # set by game developer
         self._messages: List[Dict] = []  # internal state
-        self._prompt = None  # internal state
-        self._response_object = None  # internal state
         self._last_context = None  # internal state
 
     def reset(self):
-        """ Called at the end of the interaction.
+        """Reset the player to its initial state.
 
-        This hook can be used to potentially reset the player's state for further interactions.
-
-        By default, we delegate to the underlying model."""
+        Typically called at the end of an interaction round.
+        By default, resets the underlying model if applicable.
+        """
         self._model.reset()
 
     def __deepcopy__(self, memo):
@@ -83,101 +81,124 @@ class Player(GameEventSource):
         return self._model
 
     @property
-    def messages(self):
-        return deepcopy(self._messages)
-
-    @property
     def last_context(self):
-        return deepcopy(self._last_context)
+        return self._last_context
 
     def get_description(self) -> str:
-        """Get a description string for this Player instance.
+        """Returns a human-readable description of the player instance.
+
+        Useful for debugging or display purposes.
+
         Returns:
-            A string describing the player's name given, class and model used.
+            A string including the player's name, class, and model.
         """
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
-    def __log_send_context_event(self, content: str, label=None):
-        """Record a 'send message' event with the current message content."""
-        action = {'type': 'send message', 'content': content, 'label': label}
-        self.log_event(from_='GM', to=self.name, action=action)
+    def get_perspective(self):
+        """Returns the player's current memory of the dialogue.
 
-    def __log_response_received_event(self, response, label=None):
-        """Record a 'get message' event with the current response content."""
-        action = {'type': 'get message', 'content': response, 'label': label}
-        _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
-        self.log_event(from_=self.name, to="GM", action=action,
-                       call=(deepcopy(_prompt), deepcopy(_response)))
+        This reflects the player's internal state (i.e., what it 'remembers').
 
-    def get_last_call_info(self):
-        """Get values of the last player call.
         Returns:
-            Tuple of: Full prompt of the last call, full response of the last call.
+            A list of message dictionaries representing the conversation history.
         """
-        return self._prompt, self._response_object
+        return self._messages
 
-    def __call__(self, context: Dict, memorize: bool = True) -> str:
-        """
-        Let the player respond (act verbally) to a given context.
+    def get_perspective_with(self, context: Dict, *, log_event=True, memorize=True) -> List[Dict]:
+        """Builds the player's perspective on the conversation including a new context message.
+
+        This method is used to prepare an input prompt (for batching or direct generation)
+        without immediately invoking a model.
 
         Args:
-            context: The context to which the player should respond.
-            memorize: Whether the context and response are to be added to the player's message history.
+            context: The newly received message (must have `role='user'`).
+            log_event: Whether to log the message as a game event.
+            memorize: Whether to persist the message in the player's internal memory.
+
         Returns:
-            The textual response.
+            A list of messages including the player's memory plus the new context.
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
-
         self._last_context = deepcopy(context)
-
-        self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
-        self._prompt, self._response_object, response_text = self.__call_model(context)
-        self.__log_response_received_event(response_text, label="response" if memorize else "forget")
-
-        # Copy context, so that original context given to the player is kept on forget extras. This is, for
-        # example, necessary to collect the original contexts in the rollout buffer for playpen training.
-        memorized_context = deepcopy(context)
-        # forget must happen only after the model has been called with the extras
-        # we forget extras here in any case, so that the prompt is also handled
-        for extra in self._forget_extras:
-            if extra in memorized_context:
-                del memorized_context[extra]
-
+        if log_event:
+            action = {'type': 'send message', 'content': context["content"],
+                      'label': "context" if memorize else "forget"}
+            self.log_event(from_='GM', to=self.name, action=action)
+        # Get return value already here, because we change the internal state on memorize
+        perspective = self.get_perspective() + [context]
         if memorize:
+            # Copy context, so that original context given to the player is kept on forget extras. This is, for
+            # example, necessary to collect the original contexts in the rollout buffer for playpen training.
+            memorized_context = deepcopy(context)
+            for extra in self._forget_extras:
+                if extra in memorized_context:
+                    del memorized_context[extra]
             self._messages.append(memorized_context)
-            self._messages.append(dict(role="assistant", content=response_text))
+        return perspective
 
-        self._is_initial_call = False
-        return response_text
+    def update_perspective_with(self, response: str, *, log_event=True, memorize=True, metadata: Optional[Dict] = None):
+        """Updates the player's memory with the given response and optional metadata.
 
-    def __call_model(self, context: Dict):
-        call_start = datetime.now()
-        response_object = dict()
-        prompt = context
+        This is used after the response is generated (either from a model or a human),
+        allowing the Player to log and remember its own output.
+
+        Args:
+            response: The textual response generated by the player.
+            log_event: Whether to log this response as a game event.
+            memorize: Whether to add the response to the player's internal memory.
+            metadata: Optional dictionary with info about the model call (e.g., prompt and raw response object).
+        """
+        if log_event:
+            action = {'type': 'get message', 'content': response,
+                      'label': "response" if memorize else "forget"}
+            call_infos = None
+            if metadata is not None:  # log 'get message' event including backend/API call
+                call_infos = (deepcopy(metadata["prompt"]), deepcopy(metadata["response_object"]))
+            self.log_event(from_=self.name, to="GM", action=action, call=call_infos)
+        self.count_request()
+        if memorize:
+            self._messages.append(dict(role="assistant", content=response))
+
+    def __call__(self, context: Dict, memorize: bool = True) -> str:
+        """Generates a response to the given context message.
+
+        This is the primary method for turning a user message into a player reply.
+        It uses the appropriate backend (custom, human, or model) and optionally
+        updates internal memory and logs the interaction.
+
+        Args:
+            context: A dictionary representing the latest user input (`role='user'`).
+            memorize: Whether to store the context and response in memory.
+
+        Returns:
+            The textual response produced by the player.
+        """
+        perspective = self.get_perspective_with(context, memorize=memorize)
         if isinstance(self.model, backends.CustomResponseModel):
             response_text = self._custom_response(context)
+            response_object = dict(clem_player={"response": response_text, "model_name": self.model.name})
+            metadata = dict(prompt=context, response_object=response_object)
         elif isinstance(self.model, backends.HumanModel):
             response_text = self._terminal_response(context)
+            response_object = dict(clem_player={"response": response_text, "model_name": self.model.name})
+            metadata = dict(prompt=context, response_object=response_object)
         else:
-            prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
+            prompt, response_object, response_text = self.model.generate_response(perspective)
+            metadata = dict(prompt=prompt, response_object=response_object)
             # TODO: add default ContextExceededError handling here or above
-        call_duration = datetime.now() - call_start
-        self.count_request()
-        response_object["clem_player"] = {
-            "call_start": str(call_start),
-            "call_duration": str(call_duration),
-            "response": response_text,
-            "model_name": self.model.name
-        }
-        return prompt, response_object, response_text
+        self.update_perspective_with(response_text, memorize=memorize, metadata=metadata)
+        return response_text
 
     def _terminal_response(self, context: Dict) -> str:
-        """Response for human interaction via terminal.
-        Overwrite this method to customize human inputs (model_name: human, terminal).
+        """Prompts the user via terminal input for a response.
+
+        This is used for human-in-the-loop players.
+
         Args:
-            context: The dialogue context to which the player should respond.
+            context: The message from the GM to respond to.
+
         Returns:
-            The human response as text.
+            The user's textual input.
         """
         latest_response = "Nothing has been said yet."
         if context is not None:
@@ -188,12 +209,15 @@ class Player(GameEventSource):
 
     @abc.abstractmethod
     def _custom_response(self, context: Dict) -> str:
-        """Response for programmatic Player interaction.
+        """Implements custom or programmatic player behavior.
 
-        Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
+        This method must be overridden in subclasses that simulate agent behavior
+        without relying on human or model-based backends (model_name: mock, dry_run, programmatic, custom).
+
         Args:
-            context: The dialogue context to which the player should respond.
+            context: The context to which the player should respond.
+
         Returns:
-            The programmatic response as text.
+            A string containing the player's response.
         """
         pass
