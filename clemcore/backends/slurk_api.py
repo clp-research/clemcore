@@ -8,7 +8,7 @@ from retry import retry
 
 from clemcore import backends
 from clemcore.backends import ModelSpec, Model
-from clemcore.backends.utils import ensure_messages_format
+from clemcore.backends.utils import ensure_messages_format, augment_response_object
 from clemcore.clemgame.resources import load_packaged_file, load_json
 
 logger = logging.getLogger(__name__)
@@ -176,6 +176,7 @@ class SlurkModel(backends.Model):  # todo: make this HumanModel when HumanModel 
                          namespaces="/")
         return self
 
+    @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """

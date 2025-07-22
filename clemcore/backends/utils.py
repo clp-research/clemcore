@@ -1,5 +1,6 @@
 import logging
 import copy
+from datetime import datetime
 from functools import wraps
 from typing import List, Dict, Tuple
 
@@ -84,10 +85,42 @@ def ensure_messages_format(generate_response_fn):
     Returns:
         The generate_response method of a backend class with proper alternating message roles checking.
     """
+
     @wraps(generate_response_fn)
     def wrapped_fn(self, messages, *args, **kwargs):
         _messages = ensure_alternating_roles(messages)
         return generate_response_fn(self, _messages, *args, **kwargs)
+
+    return wrapped_fn
+
+
+def augment_response_object(generate_response_fn):
+    """
+    Wrapper to augment the response object with clem_player metadata.
+
+    Note: If you are using this together with `ensure_messages_format`,
+    make sure to apply this decorator *after* that one , i.e., put
+    `@augment_response_object` above `@ensure_messages_format`.
+
+    Args:
+        generate_response_fn: The original generate_response method of a backend class.
+
+    Returns:
+        A wrapped version of the method that adds clem_player data.
+    """
+
+    @wraps(generate_response_fn)
+    def wrapped_fn(self, messages, *args, **kwargs):
+        call_start = datetime.now()
+        prompt, response_object, response_text = generate_response_fn(self, messages, *args, **kwargs)
+        call_duration = datetime.now() - call_start
+        response_object["clem_player"] = {
+            "call_start": str(call_start),
+            "call_duration": str(call_duration),
+            "response": response_text,
+            "model_name": self.model.name
+        }
+        return prompt, response_object, response_text
 
     return wrapped_fn
 

@@ -10,7 +10,7 @@ from peft import PeftModel
 from jinja2 import TemplateError
 
 import clemcore.backends as backends
-from clemcore.backends.utils import ensure_alternating_roles, ensure_messages_format
+from clemcore.backends.utils import ensure_alternating_roles, ensure_messages_format, augment_response_object
 
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
@@ -168,6 +168,7 @@ class HuggingfaceLocalModel(backends.Model):
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
+    @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict], return_full_text: bool = False) -> Tuple[Any, Any, str]:
         """Generate a response with the loaded HuggingFace transformers model.

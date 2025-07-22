@@ -6,7 +6,7 @@ import aleph_alpha_client
 import anthropic
 import clemcore.backends as backends
 from clemcore.backends import ModelSpec, Model
-from clemcore.backends.utils import ensure_messages_format
+from clemcore.backends.utils import ensure_messages_format, augment_response_object
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +41,7 @@ class AlephAlphaModel(backends.Model):
         self.client = client
 
     @retry(tries=3, delay=0, logger=logger)
+    @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """Request a generated response from the AlephAlpha remote API.
