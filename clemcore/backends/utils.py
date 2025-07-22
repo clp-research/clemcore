@@ -79,16 +79,43 @@ def ensure_alternating_roles(messages: List[Dict], cull_system_message: bool = T
 
 
 def ensure_messages_format(generate_response_fn):
-    """Wrapper function to ensure alternating message roles in backends.
+    """
+    Decorator to ensure messages have properly alternating roles before calling
+    the backend's generate_response or generate_batch_response method.
+
+    This wrapper validates and adjusts the `messages` argument to enforce
+    alternating roles (e.g., user, assistant, user, assistant) for each message
+    or each list of messages in a batch.
+
+    It supports:
+      - Single-response methods: expects `messages` as a list of dicts.
+      - Batch-response methods: expects `messages` as a list of lists of dicts.
+
+    The decorator automatically detects whether the input is batch or single
+    and applies role checks accordingly.
+
+    Note:
+        If used with `augment_response_object`, apply this decorator *before*
+        that one, i.e., put `@ensure_messages_format` below
+        `@augment_response_object` to ensure formatting happens first.
+
     Args:
-        generate_response_fn: The generate_response method of a backend class.
+        generate_response_fn (callable): The original generate_response or
+            generate_batch_response method of a backend class.
+
     Returns:
-        The generate_response method of a backend class with proper alternating message roles checking.
+        callable: A wrapped version of the method that ensures input messages
+        have alternating roles before invoking the original method.
     """
 
     @wraps(generate_response_fn)
     def wrapped_fn(self, messages, *args, **kwargs):
-        _messages = ensure_alternating_roles(messages)
+        if isinstance(messages, list):
+            # Batch mode: apply to each list of messages
+            _messages = [ensure_alternating_roles(message) for message in messages]
+        else:  # Single mode: apply directly
+            _messages = ensure_alternating_roles(messages)
+
         return generate_response_fn(self, _messages, *args, **kwargs)
 
     return wrapped_fn
@@ -96,31 +123,47 @@ def ensure_messages_format(generate_response_fn):
 
 def augment_response_object(generate_response_fn):
     """
-    Wrapper to augment the response object with clem_player metadata.
+    Decorator to augment the response object(s) with `clem_player` metadata.
 
-    Note: If you are using this together with `ensure_messages_format`,
-    make sure to apply this decorator *after* that one , i.e., put
-    `@augment_response_object` above `@ensure_messages_format`.
+    This wrapper works with both single-response methods (returning a tuple)
+    and batch-response methods (returning a list of tuples). It adds metadata
+    about the call start time, call duration, response text, and model name
+    to the `response_object` dictionary inside the returned tuple(s).
+
+    Note:
+        If you are using this decorator together with `ensure_messages_format`,
+        apply this decorator *after* that one, i.e., put
+        `@augment_response_object` above `@ensure_messages_format`.
 
     Args:
-        generate_response_fn: The original generate_response method of a backend class.
+        generate_response_fn (callable): The original generate_response or
+            generate_batch_response method of a backend class.
 
     Returns:
-        A wrapped version of the method that adds clem_player data.
+        callable: A wrapped version of the method that adds `clem_player`
+        metadata to the `response_object`. Returns either a single tuple
+        or a list of tuples, matching the original method's return type.
     """
 
     @wraps(generate_response_fn)
     def wrapped_fn(self, messages, *args, **kwargs):
         call_start = datetime.now()
-        prompt, response_object, response_text = generate_response_fn(self, messages, *args, **kwargs)
+        result = generate_response_fn(self, messages, *args, **kwargs)
         call_duration = datetime.now() - call_start
-        response_object["clem_player"] = {
-            "call_start": str(call_start),
-            "call_duration": str(call_duration),
-            "response": response_text,
-            "model_name": self.model.name
-        }
-        return prompt, response_object, response_text
+
+        def add_clem_player_metadata(t):
+            prompt, response_object, response_text = t
+            response_object["clem_player"] = {
+                "call_start": str(call_start),
+                "call_duration": str(call_duration),
+                "response": response_text,
+                "model_name": self.model.name,
+            }
+            return prompt, response_object, response_text
+
+        if isinstance(result, list):  # batch mode - update each tuple in the list
+            return [add_clem_player_metadata(t) for t in result]
+        return add_clem_player_metadata(result)
 
     return wrapped_fn
 
