@@ -72,7 +72,7 @@ class GameInstanceIterator:
         _copy._queue = copy(self._queue)  # no need to copy the underlying instances
         return _copy
 
-    def reset(self) -> "GameInstanceIterator":
+    def reset(self, verbose: bool = False) -> "GameInstanceIterator":
         self._queue = []
         experiment_names = []
         num_instances = 0
@@ -87,18 +87,21 @@ class GameInstanceIterator:
                 if selected_ids is None:  # use all instances
                     experiment_names.append(experiment["name"])
                 elif len(selected_ids) == 0:
-                    stdout_logger.info("Skip experiment %s for %s", experiment["name"], self._game_name)
+                    if verbose:
+                        stdout_logger.info("Skip experiment %s for %s", experiment["name"], self._game_name)
                 else:
                     experiment_names.append(experiment["name"])
-                    stdout_logger.info("Sub-select for %s experiment %s instances with game_ids: %s",
-                                       self._game_name, experiment["name"], selected_ids)
+                    if verbose:
+                        stdout_logger.info("Sub-select for %s experiment %s instances with game_ids: %s",
+                                           self._game_name, experiment["name"], selected_ids)
             # add instances to queue, if eligible
             for game_instance in experiment["game_instances"]:
                 if selected_ids is None or game_instance["game_id"] in selected_ids:
                     self._queue.append((filtered_experiment, game_instance))
                     num_instances += 1
-        stdout_logger.info("Loaded for %s %s experiments %s and %s instances in total.",
-                           self._game_name, len(experiment_names), experiment_names, num_instances)
+        if verbose:
+            stdout_logger.info("Reset instance queue for %s using %s experiments %s and %s instances in total.",
+                               self._game_name, len(experiment_names), experiment_names, num_instances)
         if self._do_shuffle:
             random.shuffle(self._queue)
         return self
