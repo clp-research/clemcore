@@ -268,7 +268,7 @@ class DialogueGameMaster(GameMaster):
         if initial_prompt is not None:
             content = context["content"]
             initial_prompt_content = initial_prompt["content"]
-            context = {**initial_prompt_content, **context, "content": "\n\n".join([initial_prompt_content, content])}
+            context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
         return context
 
     @final
