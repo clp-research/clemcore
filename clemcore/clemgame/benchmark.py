@@ -194,8 +194,8 @@ class GameBenchmark(GameResourceLocator):
             experiment_config["player_models"] = player_models_infos
 
             experiment_record_dir = f"{experiment_idx}_{experiment_name}"
-            store_json(experiment_config, "experiment.json",
-                       os.path.join(results_dir, player_models_folder, self.game_name, experiment_record_dir))
+            experiment_record_path = os.path.join(results_dir, player_models_folder, self.game_name, experiment_record_dir)
+            store_json(experiment_config, "experiment.json", experiment_record_path)
 
             episode_counter = 0
             error_count = 0
@@ -219,7 +219,8 @@ class GameBenchmark(GameResourceLocator):
                                                     experiment_name,  # meta info for transcribe
                                                     task_id,  # meta info for transcribe
                                                     player_models_folder,  # meta info for transcribe
-                                                    player_models_infos)
+                                                    episode_dir, #  meta info for transcribe
+                                                    player_models_infos)  # meta info for transcribe
                 try:
                     game_master = self.create_game_master(experiment_config, player_models)
                     game_master.game_recorder = game_recorder

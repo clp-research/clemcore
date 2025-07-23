@@ -1,12 +1,14 @@
 import collections
 import copy
 import logging
+import os
 from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Any, List
 
 from clemcore.clemgame.metrics import METRIC_REQUEST_COUNT, METRIC_REQUEST_COUNT_VIOLATED, METRIC_REQUEST_COUNT_PARSED
 from clemcore import get_version
+
 from clemcore.clemgame.resources import store_results_file
 
 module_logger = logging.getLogger(__name__)
@@ -72,6 +74,17 @@ class GameRecorder(ABC):
         """
         pass
 
+    @abstractmethod
+    def store_image(self, image_data: bytes, filename: str) -> str:
+        """Store an image in the results directory.
+        Args:
+            image_data: The image data as bytes.
+            filename: The filename for the image.
+        Returns:
+            The path to the stored image file.
+        """
+        pass
+
 
 class NoopGameRecorder(GameRecorder):
     """Placeholder class for GameMaster initialization, does not actually record anything."""
@@ -102,11 +115,14 @@ class NoopGameRecorder(GameRecorder):
     def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
         pass
 
+    def store_image(self, image_data: bytes, filename: str) -> str:
+        return ""
+
 
 class DefaultGameRecorder(GameRecorder):
     """Default game recorder with common methods for recording game episodes."""
 
-    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str, player_model_infos: Dict):
+    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str, episode_dir: str, player_model_infos: Dict):
         self._game_name = game_name
         self._current_round = 0
         """ Stores players and turn during the runs """
@@ -115,6 +131,7 @@ class DefaultGameRecorder(GameRecorder):
                          experiment_name=experiment_name,
                          game_id=game_id,
                          results_folder=results_folder,
+                         episode_dir=episode_dir,
                          clem_version=get_version()),
             "player_models": player_model_infos,
             # already add Game Master
@@ -155,7 +172,7 @@ class DefaultGameRecorder(GameRecorder):
             value: The content of the entry to be logged.
         """
         self.interactions[key] = value
-        module_logger.info(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
+        module_logger.debug(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
 
     def log_player(self, player_name: str, game_role: str, model_name: str):
         """Log a player of this game episode.
@@ -215,6 +232,38 @@ class DefaultGameRecorder(GameRecorder):
         elif isinstance(call_obj, str):
             return call_obj[:]
         return call_obj
+
+    def store_image(self, image_data: bytes, filename: str) -> str:
+        """Store an image in the results directory.
+
+        Args:
+            image_data: The image data as bytes.
+            filename: The filename for the image.
+
+        Returns:
+            The path to the stored image file.
+        """
+        try:
+            meta = self.interactions["meta"]
+            dialogue_pair = meta.get("dialogue_pair")
+            game_name = meta.get("game_name")
+            results_dir = meta.get("results_folder")
+            episode_dir = meta.get("episode_dir")
+
+            images_dir = os.path.join("results", results_dir, game_name, episode_dir, "images")
+            os.makedirs(images_dir, exist_ok=True)
+
+            filepath = os.path.join(images_dir, filename)
+
+            with open(filepath, 'wb') as f:
+                f.write(image_data)
+
+            module_logger.info(f"{self._game_name}: Stored image to {filepath}")
+            return filepath
+
+        except Exception as e:
+            module_logger.error(f"{self._game_name}: Failed to store image {filename}: {e}")
+            return ""
 
     def store_records(self, results_root: str, dialogue_pair_desc: str, game_record_dir: str):
         """Store benchmark records.
