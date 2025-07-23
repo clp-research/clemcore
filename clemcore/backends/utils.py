@@ -110,7 +110,7 @@ def ensure_messages_format(generate_response_fn):
 
     @wraps(generate_response_fn)
     def wrapped_fn(self, messages, *args, **kwargs):
-        if isinstance(messages, list):
+        if isinstance(messages, list) and all(isinstance(m, list) for m in messages):
             # Batch mode: apply to each list of messages
             _messages = [ensure_alternating_roles(message) for message in messages]
         else:  # Single mode: apply directly
@@ -157,7 +157,7 @@ def augment_response_object(generate_response_fn):
                 "call_start": str(call_start),
                 "call_duration": str(call_duration),
                 "response": response_text,
-                "model_name": self.model.name,
+                "model_name": self.name,
             }
             return prompt, response_object, response_text
 
