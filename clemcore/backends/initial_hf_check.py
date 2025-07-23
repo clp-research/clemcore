@@ -48,7 +48,7 @@ def model_pre_check(args):
             and chat template information is to be printed.
     """
     # load tokenizer:
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name, verbose=False)
+    tokenizer = AutoTokenizer.from_pretrained(args.name, verbose=False)
 
     # tokenizer info:
     if args.tokenizer_info:

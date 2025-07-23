@@ -108,6 +108,7 @@ class Slurk(backends.RemoteBackend):
         self.client.join_room(bot_id, room_id)  # todo why do we need this?
 
         stdout_logger.info(f"SLURK_USER_TOKEN={user_token}")
+        stdout_logger.info(f"{self.client.slurk_host}/login?name=player&token={user_token}")
         slurk_model.wait_for_participant()
         stdout_logger.info("Slurk user joined")
         return slurk_model
@@ -190,3 +191,7 @@ class SlurkModel(backends.Model):  # todo: make this HumanModel when HumanModel 
         """
         response_text = self.wait_for_user_response(messages)
         return messages, {"response": "slurk"}, response_text
+
+    def reset(self):
+        # notify slurk user about the episode's end
+        self.sio.emit("message_command", {"command": "done", "room": self.room_id})

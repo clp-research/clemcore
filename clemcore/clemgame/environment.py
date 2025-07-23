@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Literal, Optional, TypedDict
 from clemcore.clemgame.player import Player
 from clemcore.utils.string_utils import to_pretty_json
 
-logger = logging.getLogger(__name__)
+module_logger = logging.getLogger(__name__)
 
 ActionType = str
 
@@ -68,10 +68,7 @@ class GameEnvironment(ABC):
     This class follows both the Gymnasium interface and the clembench framework.
     """
 
-    def __init__(
-        self,
-        config: Optional[Dict[str, Any]] = None,
-    ):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize a game environment.
 
@@ -128,7 +125,7 @@ class GameEnvironment(ABC):
                 - action_type: Type of action (always 'text' for this game)
                 - body: The text response from the player
         """
-        logger.info(f"[step] Environment step with player: {player.name}")
+        module_logger.info(f"[step] Environment step with player: {player.name}")
 
         # TODO: alternatively, should it check for a bool that is true only if setup was done previously?
         if not self.observations[player.name] or not self.action_spaces[player.name]:
@@ -138,20 +135,20 @@ class GameEnvironment(ABC):
 
         self._update_state_through_action(player, action)
 
-        logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
+        module_logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
 
         if self.state["aborted"]:
-            logger.warning(f"[step] Action aborted: {action}")
+            module_logger.warning(f"[step] Action aborted: {action}")
         elif self.state["success"]:
-            logger.info(f"[step] Action was successful: {action}")
+            module_logger.info(f"[step] Action was successful: {action}")
         else:
-            logger.warning(f"[step] Action was unsuccessful: {action}")
+            module_logger.warning(f"[step] Action was unsuccessful: {action}")
 
         self.update_observations()
 
         self.state["moves"] += 1
 
-        logger.debug(
+        module_logger.debug(
             f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
         )
 
@@ -172,7 +169,7 @@ class GameEnvironment(ABC):
 
         This method should update state["terminated"], state["success"], state["aborted"], as well as any other game-specific state fields.
         """
-        logger.debug("[_update_state_through_action] Validating action")
+        module_logger.debug("[_update_state_through_action] Validating action")
         if not self._validate_action(player, action):
             raise ValueError(f"[step] Invalid action: {action}")
         self._do_update_state(player, action)
@@ -207,7 +204,7 @@ class GameEnvironment(ABC):
         for player in self.players:
             self.observations[player.name] = observation
 
-        logger.info(f"[update_observations] Updated observations")
+        module_logger.info(f"[update_observations] Updated observations")
 
     def get_observation(self, player: Player) -> Observation:
         """
@@ -219,10 +216,10 @@ class GameEnvironment(ABC):
         Returns:
             The observation for the player
         """
-        logger.debug(f"[observe_for] Getting observation for player: {player.name}")
+        module_logger.debug(f"[observe_for] Getting observation for player: {player.name}")
 
         if player.name not in self.observations:
-            logger.warning(
+            module_logger.warning(
                 f"[observe_for] No observation found for player: {player.name}. Creating default."
             )
             raise ValueError(
@@ -230,7 +227,7 @@ class GameEnvironment(ABC):
             )
 
         observation = self.observations[player.name]
-        logger.debug(f"[observe_for] Observation for {player.name}: {observation}")
+        module_logger.debug(f"[observe_for] Observation for {player.name}: {observation}")
         return observation
 
     def set_action_space(self, player: Player, action_space: List[Any]):

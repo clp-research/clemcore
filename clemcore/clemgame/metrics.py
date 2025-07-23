@@ -89,6 +89,8 @@ Record level: episode
 
 module_logger = logging.getLogger(__name__)
 
+KEY_META = "meta"
+KEY_PLAYERS = "players"
 KEY_ROUND_SCORES = "round scores"
 KEY_EPISODE_SCORES = "episode scores"
 
@@ -132,6 +134,8 @@ class GameScorer:
         self.game_instance = game_instance
         """ Stores values of score computation """
         self.scores = {
+            KEY_META: {},
+            KEY_PLAYERS: {},
             KEY_ROUND_SCORES: {},
             KEY_EPISODE_SCORES: {},
         }
@@ -170,7 +174,7 @@ class GameScorer:
 
     @final
     def log_episode_score(self, score_name, score_value):
-        """Helper method to tecord an episode-level score/metric for the whole episode.
+        """Helper method to record an episode-level score/metric for the whole episode.
         Args:
             score_name: The name of the episode-level score/metric to record.
             score_value: The value to be recorded for the episode-level score/metric.
@@ -186,6 +190,12 @@ class GameScorer:
         Args:
             interactions: Dict containing the episode's interactions recorded during a benchmark run.
         """
+        if KEY_META in interactions:  # if given, copy over meta info
+            self.scores[KEY_META] = interactions[KEY_META]
+        if "player_models" in interactions:  # if given, copy over players info
+            self.scores["player_models"] = interactions["player_models"]
+        if KEY_PLAYERS in interactions:  # if given, copy over players info
+            self.scores[KEY_PLAYERS] = interactions[KEY_PLAYERS]
         self.score_rounds(interactions)
         self.score_episode(interactions)
 
