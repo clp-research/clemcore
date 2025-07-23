@@ -60,7 +60,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         try:
             game_interactions = load_json(interaction_file)
             interactions_dir = Path(interaction_file).parent
-            transcript = build_transcript(game_interactions, interactions_dir)
+            transcript = build_transcript(game_interactions)
             store_file(transcript, "transcript.html", interactions_dir)
             transcript_tex = build_tex(game_interactions)
             store_file(transcript_tex, "transcript.tex", interactions_dir)
@@ -71,7 +71,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         stdout_logger.error(f"'{error_count}' exceptions occurred: See clembench.log for details.")
 
 
-def build_transcript(interactions: Dict, episode_dir: Path):
+def build_transcript(interactions: Dict):
     """Create an HTML file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
@@ -86,8 +86,10 @@ def build_transcript(interactions: Dict, episode_dir: Path):
             f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
 
-    if episode_dir.exists():
-        images_dir = episode_dir / "images"
+    episodes_path = Path(f"{pair_descriptor}/{meta['game_name']}/{episode_dir}")
+    module_logger.info(f"episodedir: {episodes_path}, {meta}")
+    if episodes_path.exists():
+        images_dir = episodes_path / "images"
         images_dir.mkdir(exist_ok=True)
     else:
         images_dir = None
@@ -126,6 +128,7 @@ def build_transcript(interactions: Dict, episode_dir: Path):
         if "image" in event["action"]:
             has_images = True
             image_list = event["action"]["image"]
+            module_logger.info("imagelist: {image_list}")
         # check if images are in the content field (old structure)
         elif isinstance(msg_content, dict) and "image" in msg_content:
             has_images = True
@@ -135,16 +138,15 @@ def build_transcript(interactions: Dict, episode_dir: Path):
             transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
             transcript += f'  <p>{msg_raw}</p>\n'
             for image_src in image_list:
-                if image_src.startswith("results/"):
+                if image_src.startswith("results/"): # make path relative to transcript
                     source_image_path = Path(image_src)
                     if source_image_path.exists():
                         image_filename = source_image_path.name
                         image_src = f"images/{image_filename}"
-                        module_logger.info(f"Converted full path to relative: {image_src}")
                     else:
                         module_logger.warning(f"Image file not found: {source_image_path}")
 
-                if not image_src.startswith("http"):  # take the web url as it is
+                elif not image_src.startswith("http"):  # take the web url as it is
                     if "IMAGE_ROOT" in os.environ:
                         image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
                     else:

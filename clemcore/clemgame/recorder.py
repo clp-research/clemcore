@@ -250,7 +250,7 @@ class DefaultGameRecorder(GameRecorder):
             results_dir = meta.get("results_folder")
             episode_dir = meta.get("episode_dir")
 
-            images_dir = os.path.join(results_dir, game_name, episode_dir, "images")
+            images_dir = os.path.join("results", results_dir, game_name, episode_dir, "images")
             os.makedirs(images_dir, exist_ok=True)
 
             filepath = os.path.join(images_dir, filename)

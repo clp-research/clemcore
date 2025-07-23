@@ -334,7 +334,6 @@ class GameEnvironment(ABC):
             image_filename = f"image_{self.image_counter}.png"
 
             stored_path = self._store_image(rendered_state, image_filename)
-            module_logger.info(f"Stored image to results directory: {stored_path}")
 
             # add file path to the observation (backends expect file paths, can't work with data URLs)
             observation: Observation = {
