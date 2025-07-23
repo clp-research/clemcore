@@ -362,6 +362,19 @@ class Model(abc.ABC):
         """ Hook to perform cleanup operations after an interaction, if necessary."""
         pass
 
+    def supports_batching(self):
+        """
+        Check if the given model supports batch generation of responses.
+
+        Returns:
+            bool: True if the model implements `generate_batch_response` as a callable, False otherwise.
+        """
+        return hasattr(self, 'generate_batch_response') and callable(getattr(self, 'generate_batch_response'))
+
+    @staticmethod
+    def all_support_batching(player_models: List["Model"]):
+        return all(player_model.supports_batching for player_model in player_models)
+
 
 class CustomResponseModel(Model):
     """Model child class to handle custom programmatic responses."""
