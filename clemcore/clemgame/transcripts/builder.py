@@ -76,13 +76,14 @@ def build_transcript(interactions: Dict, episode_dir: Path):
     The file is stored in the corresponding episode directory.
     Args:
         interactions: An episode interaction record dict.
-        episode_dir: The episode directory.
     """
     meta = interactions["meta"]
     players = interactions["players"]
     transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
+    pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
+    episode_dir = meta.get("episode_dir")
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
-            f"episode {meta['game_id']} with {meta['dialogue_pair']}."
+            f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
 
     if episode_dir.exists():
@@ -147,17 +148,8 @@ def build_transcript(interactions: Dict, episode_dir: Path):
                     if "IMAGE_ROOT" in os.environ:
                         image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
                     else:
-                        # For relative paths, use as-is; for absolute paths, make them relative
-                        if os.path.isabs(image_src) and not image_src.startswith("http"):
-                            # Try to make absolute path relative to the transcript directory
-                            try:
-                                image_path = Path(image_src)
-                                if image_path.exists():
-                                    # Make it relative to the interactions directory
-                                    image_src = str(image_path.relative_to(episode_dir))
-                            except ValueError:
-                                # If we can't make it relative, keep the absolute path
-                                pass
+                        # CAUTION: this only works when the project is checked out (dev mode)
+                        image_src = os.path.join(file_utils.project_root(), image_src)
                 transcript += (f'  <a title="{image_src}">'
                                f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
                                f'</a>\n')

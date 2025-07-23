@@ -8,6 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
+from clemcore.clemgame.errors import ParseError, GameError
+from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.player import Player
 from clemcore.clemgame.recorder import NoopGameRecorder
 from clemcore.clemgame.resources import GameResourceLocator
@@ -16,117 +18,46 @@ from clemcore.utils.string_utils import to_pretty_json
 module_logger = logging.getLogger(__name__)
 
 
-class ResponseError(Exception):
-    """
-    General error class for problems with the player response.
-
-    Developers can introduce more specific error types by subclassing this error.
-    Alternatively, the 'reason' attribute can be used to define more granular error types.
-    """
-
-    def __init__(self, reason: str = None, response: str = None):
-        """
-        :param reason: (optional) a brief description of the cause
-        :param response: (optional) the player's response
-        """
-        super().__init__(reason)
-        self.reason = reason
-        self.response = response
-
-    def __str__(self):
-        return f"{self.__class__.__name__}: {self.reason}"
-
-
-class ProtocolError(ResponseError):
-    """Raised when a message does not follow the communication protocol expected by the game master."""
-
-    pass
-
-
-class ParseError(ProtocolError):
-    """
-    This error is supposed to be raised when player messages cannot be parsed or understood by the game master e.g.
-    because the response does not start with a specified prefix.
-
-    For example:
-        - taboo: clue giver messages should start with 'CLUE:'
-        - wordle: guesser messages should start with 'GUESS:'
-    """
-
-    pass
-
-
-class GameError(ResponseError):
-    """Raised when a verbal action of a player causes problems for advancing the game."""
-
-    pass
-
-
-class RuleViolationError(GameError):
-    """Raised when a verbal action of a player violates the specified game rules.
-
-    For example:
-        - taboo: mentioning the target word as the clue giver
-        - wordle: guessing words that are not exactly 5 letters long
-    """
-
-    pass
-
-
-class NotApplicableError(GameError):
-    """Raised when a verbal action of a player cannot be applied to advance the game state."""
-
-    pass
-
-
 class GameStateEncoder(json.JSONEncoder):
     """Custom JSON encoder for game state objects."""
 
     def default(self, obj):
-        # If the object has a __dict__ attribute, convert it to a dict
         if hasattr(obj, '__dict__'):
-            # Filter out non-serializable attributes
             serializable_dict = {}
             for key, value in obj.__dict__.items():
                 try:
-                    # Try to serialize the value to JSON to check if it's serializable
                     json.dumps(value)
                     serializable_dict[key] = value
                 except (TypeError, OverflowError):
-                    # If not serializable, convert to string
                     serializable_dict[key] = str(value)
             return serializable_dict
-        # If the object has a __str__ method, use its string representation
         elif hasattr(obj, '__str__'):
             return str(obj)
-        # For any other type, let the base class handle it
         return super().default(obj)
 
 
 class GameMaster(abc.ABC):
     """Base class to contain game-specific functionality."""
 
-    def __init__(
-        self,
-        name: str,
-        path: str,
-        experiment: Dict,
-        player_models: List[backends.Model],
-    ):
+    def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
         """
         Args:
-            name: The name of the game (as specified in game_registry).
-            path: Path to the game (as specified in game_registry).
+            game_spec: the game specifications for this game as given in the clemgame.json file
             experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
             player_models: Player models to use for one or two players.
         """
-        self.game_name = name
+        self.game_spec = game_spec
         self.experiment: Dict = experiment
+        # Automatic player expansion: When only a single model is given, then use this model given for each game role.
+        if len(player_models) == 1 and game_spec.players > 1:
+            player_models = [player_models[0]] * game_spec.players  # keeps original list untouched
+        if len(player_models) != game_spec.players:
+            raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
+                             f"but {len(player_models)} were given: {[m.name for m in player_models]}")
         self.player_models: List[backends.Model] = player_models
         self._game_recorder = NoopGameRecorder()
-        self.game_resources = GameResourceLocator(
-            name, path
-        )  # could be obsolete, when all info is in the instances
+        # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
+        self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
 
     @property
     def game_recorder(self):
@@ -155,7 +86,7 @@ class GameMaster(abc.ABC):
         self._game_recorder.log_key(key, value)
 
     def log_player(self, player: Player):
-        self._game_recorder.log_player(player.name, player.game_role, player.model.get_name())
+        self._game_recorder.log_player(player.name, player.game_role, player.model.name)
 
     def log_next_round(self):
         self._game_recorder.log_next_round()
@@ -171,7 +102,7 @@ class GameMaster(abc.ABC):
     @abc.abstractmethod
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
-        Needs to log the players dictionary via self.log_players(players_dict).
+        Needs to log the player infos via self.log_player().
         Called by the game's GameBenchmark run method for each game instance.
         Args:
             kwargs: Keyword arguments used to set up the GameMaster instance.
@@ -189,13 +120,7 @@ class DialogueGameMaster(GameMaster):
     Has most logging and gameplay procedures implemented, including convenient logging methods.
     """
 
-    def __init__(
-        self,
-        name: str,
-        path: str,
-        experiment: dict,
-        player_models: List[backends.Model],
-    ):
+    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: List[backends.Model]):
         """
         Args:
             name: The name of the game (as specified in game_registry).
@@ -203,7 +128,7 @@ class DialogueGameMaster(GameMaster):
             experiment: The experiment (set of instances) to use.
             player_models: Player models to use for one or two players.
         """
-        super().__init__(name, path, experiment, player_models)
+        super().__init__(game_spec, experiment, player_models)
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.context_for_player: Dict[str, Dict] = (
@@ -354,10 +279,12 @@ class DialogueGameMaster(GameMaster):
         while not done:
             context = self.get_context_for(self.current_player)
             response = self.current_player(context)
-            done, _ = self.process_turn(response)
+            done, _ = self.step(response)
+        for player in self.get_players():
+            player.reset()
 
     @final
-    def process_turn(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> Tuple[bool, Dict]:
         """
         Verifies the response and transitions the game by applying the current player's response for the turn.
 
@@ -381,15 +308,16 @@ class DialogueGameMaster(GameMaster):
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
             self._current_player = self._next_player()
-            if self._start_next_round():
-                self._on_after_round()
-                self.current_round += 1
+
+        if self._start_next_round():
+            self._on_after_round()
+            self.current_round += 1  # already increment here b.c. _does_game_proceed might rely on it
 
         done = not self._does_game_proceed()
         if done:
             self._on_after_game()
             self.info["episode_score"] = self.compute_episode_score()
-        elif self._start_next_round():
+        elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
 
         info = deepcopy(self.info)
@@ -411,7 +339,7 @@ class DialogueGameMaster(GameMaster):
         Default: The gamer master passes the turn to the next player in the player list (order as added).
         Starting again with the first player, when all players have had their turn(s).
 
-        :return: the new current player
+        :return: the next (current) player
         """
         self._current_player_idx = (self._current_player_idx + 1) % len(
             self.players_by_names
@@ -424,15 +352,11 @@ class DialogueGameMaster(GameMaster):
 
         Default: Start next round when we cycled through the whole list i.e. it is again the first player's turn.
 
-        :return: True, when it's the first player's turn to start a new round
+        :return: True, when to start a new round
         """
         return self._current_player_idx == 0
 
     def __prepare_next_round(self):
-        """
-        Logs moving to next round and calls self._on_before_round().
-        Do not override.
-        """
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 
@@ -554,12 +478,11 @@ class EnvGameMaster(GameMaster):
     """Extended GameMaster, integrating a GameEnvironment as self-contained object for state management."""
 
     def __init__(
-        self,
-        name: str,
-        path: str,
-        experiment: dict,
-        player_models: List[backends.Model],
-        game_environment: Optional[GameEnvironment] = None,
+            self,
+            game_spec: GameSpec,
+            experiment: dict,
+            player_models: List[backends.Model],
+            game_environment: Optional[GameEnvironment] = None,
     ):
         """
         Args:
@@ -569,7 +492,7 @@ class EnvGameMaster(GameMaster):
             player_models: Player models to use for one or two players.
             game_environment: The environment that maintains the game state.
         """
-        super().__init__(name, path, experiment, player_models)
+        super().__init__(game_spec, experiment, player_models)
         if game_environment is not None:
             self.game_environment = game_environment
 

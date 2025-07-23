@@ -32,7 +32,7 @@ class PlayedScoreError(Exception):
     pass
 
 
-def save_clem_table(df: pd.DataFrame, path: str) -> None:
+def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
     """Create benchmark results as a table."""
 
     # extract only relevant metrics
@@ -95,7 +95,7 @@ def save_clem_table(df: pd.DataFrame, path: str) -> None:
     df_results.to_csv(Path(path) / f'{TABLE_NAME}.csv')
     df_results.to_html(Path(path) / f'{TABLE_NAME}.html')
     print(f'\n Saved results into {path}/{TABLE_NAME}.csv and .html')
-
+    return df_results
 
 def name_as_tuple(name: dict) -> tuple:
     """Turn the file path name into a tuple."""
@@ -152,7 +152,7 @@ def build_df_episode_scores(scores: dict) -> pd.DataFrame:
     return df_episode_scores
 
 
-def perform_evaluation(results_path: str):
+def perform_evaluation(results_path: str, return_dataframe: bool = False) -> pd.DataFrame | None:
     # Get all episode scores as a pandas dataframe
     scores = load_scores(path=results_path)
     df_episode_scores = build_df_episode_scores(scores)
@@ -171,4 +171,6 @@ def perform_evaluation(results_path: str):
     print(f'\n Saved raw scores into {results_path}/raw.csv')
 
     # save main table
-    save_clem_table(df_episode_scores, results_path)
+    df_episode_scores = save_clem_table(df_episode_scores, results_path)
+    if return_dataframe:
+        return df_episode_scores

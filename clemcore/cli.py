@@ -1,10 +1,7 @@
 import argparse
-import inspect
-import logging
-import os
 import textwrap
 from datetime import datetime
-from typing import Dict, List, Union
+from typing import List, Dict, Union, Callable
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
@@ -13,8 +10,7 @@ from clemcore.clemgame import benchmark
 from clemcore import clemeval, get_version
 from clemcore.clemgame.transcripts.builder import build_transcripts
 
-logger = logging.getLogger(__name__)
-stdout_logger = logging.getLogger("clemcore.cli")
+logger = logging.getLogger(__name__)  # by default also logged to console
 
 
 def list_backends(verbose: bool):
@@ -79,7 +75,8 @@ def list_games(game_selector: str, verbose: bool):
 
 
 def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backends.ModelSpec],
-        gen_args: Dict, experiment_name: str = None, instances_name: str = None, results_dir: str = None):
+        gen_args: Dict, experiment_name: str = None, instances_filename: str = None,
+        results_dir: str = None, task_selector: Callable[[str, str], List[int]] = None):
     """Run specific model/models with a specified clemgame.
     Args:
         game_selector: Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.
@@ -87,8 +84,9 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
         gen_args: Text generation parameters for the backend; output length and temperature are implemented for the
             majority of model backends.
         experiment_name: Name of the experiment to run. Corresponds to the experiment key in the instances JSON file.
-        instances_name: Name of the instances JSON file to use for this benchmark run.
+        instances_filename: Name of the instances JSON file to use for this benchmark run.
         results_dir: Path to the results directory in which to store the episode records.
+        task_selector: Given a game and experiment name returns a list of selected task ids (game ids).
     """
     # check games first
     game_registry = GameRegistry.from_directories_and_cwd_files()
@@ -110,6 +108,7 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
         logger.info(f"Found registry entry for backend {backend_selector} "
                     f"-> {backend_registry.get_first_file_matching(backend_selector)}")
     # ready to rumble, do the heavy lifting only now, that is, loading the additional modules
+    start = datetime.now()
     player_models = []
     for unified_model_spec in unified_model_specs:
         logger.info(f"Dynamically import backend {unified_model_spec.backend}")
@@ -118,24 +117,23 @@ def run(game_selector: Union[str, Dict, GameSpec], model_selectors: List[backend
         model.set_gen_args(**gen_args)  # todo make this somehow available in generate method?
         logger.info(f"Successfully loaded {unified_model_spec.model_name} model")
         player_models.append(model)
+    logger.info("Loading models took: %s", datetime.now() - start)
 
+    all_start = datetime.now()
     for game_spec in game_specs:
         try:
-            with benchmark.load_from_spec(game_spec, instances_name=instances_name) as game_benchmark:
-                logger.info(
-                    f'Running {game_spec["game_name"]} '
-                    f'(models={player_models if player_models is not None else "see experiment configs"})')
-                stdout_logger.info(f"Running game {game_spec['game_name']}")
+            with benchmark.load_from_spec(game_spec, instances_filename=instances_filename) as game_benchmark:
                 if experiment_name:  # leaving this as-is for now, needs discussion conclusions
                     logger.info("Only running experiment: %s", experiment_name)
                     game_benchmark.filter_experiment.append(experiment_name)
                 time_start = datetime.now()
-                game_benchmark.run(player_models=player_models, results_dir=results_dir)
-                time_end = datetime.now()
-                logger.info(f'Running {game_spec["game_name"]} took {str(time_end - time_start)}')
+                logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
+                game_benchmark.run(player_models=player_models, results_dir=results_dir, task_selector=task_selector)
+                logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
-            stdout_logger.exception(e)
+            logger.exception(e)
             logger.error(e, exc_info=True)
+    logger.info("Running all benchmarks took: %s", datetime.now() - all_start)
 
 
 def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
@@ -152,14 +150,12 @@ def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
     game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
     for game_spec in game_specs:
         try:
+            time_start = datetime.now()
             with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
-                time_start = datetime.now()
                 game_benchmark.compute_scores(results_dir)
-                time_end = datetime.now()
-                logger.info(f"Scoring {game_benchmark.game_name} took {str(time_end - time_start)}")
+            logger.info(f"Scoring {game_benchmark.game_name} took: %s", datetime.now() - time_start)
         except Exception as e:
-            stdout_logger.exception(e)
-            logger.error(e, exc_info=True)
+            logger.exception(e)
 
 
 def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
@@ -169,7 +165,6 @@ def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = No
         results_dir: Path to the results directory in which the benchmark records are stored.
     """
     logger.info(f"Transcribing game interactions that match game_selector={game_selector}")
-    stdout_logger.info(f"Transcribing game interactions that match game_selector={game_selector}")
 
     filter_games = []
     if game_selector != "all":
@@ -178,8 +173,7 @@ def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = No
         filter_games = [game_spec.game_name for game_spec in game_specs]
     time_start = datetime.now()
     build_transcripts(results_dir, filter_games)
-    time_end = datetime.now()
-    logger.info(f"Building transcripts took {str(time_end - time_start)}")
+    logger.info(f"Building transcripts took: %s", datetime.now() - time_start)
 
 
 def read_gen_args(args: argparse.Namespace):
@@ -204,12 +198,16 @@ def cli(args: argparse.Namespace):
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
     if args.command_name == "run":
-        run(args.game,
-            model_selectors=backends.ModelSpec.from_strings(args.models),
-            gen_args=read_gen_args(args),
-            experiment_name=args.experiment_name,
-            instances_name=args.instances_name,
-            results_dir=args.results_dir)
+        try:
+            start = datetime.now()
+            run(args.game,
+                model_selectors=backends.ModelSpec.from_strings(args.models),
+                gen_args=read_gen_args(args),
+                experiment_name=args.experiment_name,
+                instances_filename=args.instances_filename,
+                results_dir=args.results_dir)
+        finally:
+            logger.info("clem run took: %s", datetime.now() - start)
     if args.command_name == "score":
         score(args.game, results_dir=args.results_dir)
     if args.command_name == "transcribe":
@@ -226,7 +224,7 @@ def cli(args: argparse.Namespace):
 
     To list available models: 
     $> clem list models
-    
+
     To list available backends: 
     $> clem list backends
 
@@ -300,11 +298,11 @@ def main():
                             required=True, help="A specific game name (see ls), or a GameSpec-like JSON string object.")
     run_parser.add_argument("-t", "--temperature", type=float, default=0.0,
                             help="Argument to specify sampling temperature for the models. Default: 0.0.")
-    run_parser.add_argument("-l", "--max_tokens", type=int, default=100,
+    run_parser.add_argument("-l", "--max_tokens", type=int, default=300,
                             help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
                                  "Be careful with high values which might lead to exceed your API token limits."
-                                 "Default: 100.")
-    run_parser.add_argument("-i", "--instances_name", type=str, default=None,
+                                 "Default: 300.")
+    run_parser.add_argument("-i", "--instances_filename", type=str, default=None,
                             help="The instances file name (.json suffix will be added automatically.")
     run_parser.add_argument("-r", "--results_dir", type=str, default="results",
                             help="A relative or absolute path to the results root directory. "

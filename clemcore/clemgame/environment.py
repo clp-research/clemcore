@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict, Union
 from clemcore.clemgame.player import Player
 from clemcore.utils.string_utils import to_pretty_json
 
-logger = logging.getLogger(__name__)
+module_logger = logging.getLogger(__name__)
 
 ActionType = str
 
@@ -73,10 +73,7 @@ class GameEnvironment(ABC):
     This class follows both the Gymnasium interface and the clembench framework.
     """
 
-    def __init__(
-        self,
-        config: Optional[Dict[str, Any]] = None,
-    ):
+    def __init__(self, config: Optional[Dict[str, Any]] = None):
         """
         Initialize a game environment.
 
@@ -105,7 +102,7 @@ class GameEnvironment(ABC):
         self.players: List[Player] = []
 
         self.max_moves = self.config.get("max_moves", None)
-        logger.info(f"[_init] Max moves: {self.max_moves}")
+        module_logger.info(f"[_init] Max moves: {self.max_moves}")
 
     def reset(
         self,
@@ -145,7 +142,7 @@ class GameEnvironment(ABC):
                 - action_type: Type of action
                 - body: The text response from the player
         """
-        logger.info(f"[step] Environment step with player: {player.name}")
+        module_logger.info(f"[step] Environment step with player: {player.name}")
 
         # TODO: alternatively, should it check for a bool that is true only if setup was done previously?
         if not self.observations[player.name] or not self.action_spaces[player.name]:
@@ -158,28 +155,28 @@ class GameEnvironment(ABC):
         if not self._max_moves_reached():
             if self._is_action_valid(player, action):
                 self._update_state_through_action(player, action)
-                logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
+                module_logger.debug(f"[step] New game state: \n{to_pretty_json(self.state)}")
             else:
-                logger.warning(f"[step] Action invalid: {action}")
+                module_logger.warning(f"[step] Action invalid: {action}")
 
             self.update_observations()
-            logger.debug(
+            module_logger.debug(
                 f"[step] Updated observation for player: {player.name if hasattr(player, 'name') else 'unknown'}"
             )
 
         if self.state["aborted"]:
-            logger.warning(f"[step] Action aborted: {action}")
+            module_logger.warning(f"[step] Action aborted: {action}")
         elif self.state["success"]:
-            logger.info(f"[step] Action successful: {action}")
+            module_logger.info(f"[step] Action was successful: {action}")
         else:
-            logger.warning(f"[step] Action unsuccessful: {action}")
+            module_logger.warning(f"[step] Action was unsuccessful: {action}")
 
     def _max_moves_reached(self) -> bool:
         """
         Check if the maximum number of moves has been reached.
         """
         if self.max_moves is not None and self.state["moves"] >= self.max_moves:
-            logger.warning(f"[_max_moves_reached] Max moves reached — will abort and terminate")
+            module_logger.warning(f"[_max_moves_reached] Max moves reached — will abort and terminate")
             self.state["terminated"] = True
             self.state["aborted"] = True
             self.state["success"] = False
@@ -282,7 +279,7 @@ class GameEnvironment(ABC):
             The path to the stored image file, or None if storage failed.
         """
         if not self.players:
-            logger.warning("No players available to access game recorder")
+            module_logger.warning("No players available to access game recorder")
             return None
 
         game_recorder = self.players[0].game_recorder
@@ -337,7 +334,7 @@ class GameEnvironment(ABC):
             image_filename = f"image_{self.image_counter}.png"
 
             stored_path = self._store_image(rendered_state, image_filename)
-            logger.info(f"Stored image to results directory: {stored_path}")
+            module_logger.info(f"Stored image to results directory: {stored_path}")
 
             # add file path to the observation (backends expect file paths, can't work with data URLs)
             observation: Observation = {
@@ -365,10 +362,10 @@ class GameEnvironment(ABC):
         Returns:
             The observation for the player
         """
-        logger.debug(f"[observe_for] Getting observation for player: {player.name}")
+        module_logger.debug(f"[observe_for] Getting observation for player: {player.name}")
 
         if player.name not in self.observations:
-            logger.warning(
+            module_logger.warning(
                 f"[observe_for] No observation found for player: {player.name}. Creating default."
             )
             raise ValueError(
@@ -376,7 +373,7 @@ class GameEnvironment(ABC):
             )
 
         observation = self.observations[player.name]
-        logger.debug(f"[observe_for] Observation for {player.name}: {observation}")
+        module_logger.debug(f"[observe_for] Observation for {player.name}: {observation}")
         return observation
 
     def set_action_space(self, player: Player, action_space: List[Any]):

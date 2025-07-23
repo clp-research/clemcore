@@ -1,6 +1,5 @@
 import logging
-from mistralai.client import MistralClient
-from mistralai.models.chat_completion import ChatMessage
+from mistralai import Mistral as MistralClient
 from typing import List, Dict, Tuple, Any
 from retry import retry
 import json
@@ -64,13 +63,10 @@ class MistralModel(backends.Model):
         Returns:
             The generated response message returned by the Mistral remote API.
         """
-        prompt = []
-        for m in messages:
-            prompt.append(ChatMessage(role=m['role'], content=m['content']))
-        api_response = self.client.chat(model=self.model_spec.model_id,
-                                        messages=prompt,
-                                        temperature=self.get_temperature(),
-                                        max_tokens=self.get_max_tokens())
+        api_response = self.client.chat.complete(model=self.model_spec.model_id,
+                                                 messages=messages,
+                                                 temperature=self.temperature,
+                                                 max_tokens=self.max_tokens)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")

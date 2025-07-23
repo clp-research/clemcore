@@ -196,12 +196,12 @@ class VLLMLocalModel(backends.Model):
 
         # decode again to get properly formatted prompt text:
         prompt_text = self.tokenizer.batch_decode(prompt_tokens)[0]
-        prompt = {"inputs": prompt_text, "max_new_tokens": self.get_max_tokens(),
-                  "temperature": self.get_temperature(), "return_full_text": return_full_text}
+        prompt = {"inputs": prompt_text, "max_new_tokens": self.max_tokens,
+                  "temperature": self.temperature, "return_full_text": return_full_text}
 
         # check context limit:
         context_check = _check_context_limit(self.context_size, prompt_tokens[0],
-                                             max_new_tokens=self.get_max_tokens())
+                                             max_new_tokens=self.max_tokens)
         if not context_check[0]:  # if context is exceeded, context_check[0] is False
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
@@ -212,10 +212,10 @@ class VLLMLocalModel(backends.Model):
 
         # vLLM sampling parameters:
         sampling_params = vllm.SamplingParams(
-            temperature=self.get_temperature(),
+            temperature=self.temperature,
             # using example value from https://huggingface.co/neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8#use-with-vllm:
             # top_p=0.9,
-            max_tokens=self.get_max_tokens())
+            max_tokens=self.max_tokens)
 
         model_output = self.model.generate(prompt_text, sampling_params)[0].outputs[0].text
 

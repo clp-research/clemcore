@@ -130,16 +130,22 @@ class OpenAIModel(backends.Model):
             The generated response message returned by the OpenAI remote API.
         """
         prompt = self.encode_messages(messages)
-
-        if 'reasoning_model' in self.model_spec.model_config:
-            api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
-                                                               messages=prompt,
-                                                               temperature=1)
-        else:
-            api_response = self.client.chat.completions.create(model=self.model_spec.model_id,
-                                                               messages=prompt,
-                                                               temperature=self.get_temperature(),
-                                                               max_tokens=self.get_max_tokens())
+        gen_kwargs = dict(model=self.model_spec.model_id,
+                          messages=prompt,
+                          temperature=self.temperature,
+                          max_tokens=self.max_tokens)
+        model_config = getattr(self.model_spec, "model_config", {})
+        if 'reasoning_model' in model_config:
+            if not self.temperature > 0:
+                raise ValueError(f"For reasoning models temperature must be >0, but is {self.temperature}."
+                                 f"Please use the -t option to set a temperature and try again.")
+            # Note: For non-reasoning models max_tokens still accounts only for number of tokens (visible output)
+            # sent to the user. However, for reasoning models the new max_completion_tokens must be used, which
+            # accounts for both the reasoning tokens (which remain hidden on the openai backend) and the output.
+            # https://platform.openai.com/docs/guides/reasoning/controlling-costs?api-mode=chat#controlling-costs
+            logger.info("Ignoring max_tokens for reasoning models, because the argument is not supported")
+            del gen_kwargs["max_tokens"]
+        api_response = self.client.chat.completions.create(**gen_kwargs)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")

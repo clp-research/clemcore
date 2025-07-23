@@ -1,4 +1,5 @@
-from clemcore.clemgame.benchmark import GameBenchmark, GameInstanceIterator
+from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError, ResponseError, ProtocolError, \
+    NotApplicableError
 from clemcore.clemgame.environment import (
     Action,
     ActionSpace,
@@ -15,14 +16,8 @@ from clemcore.clemgame.grid_environment import (
     PlayerObject,
 )
 from clemcore.clemgame.instances import GameInstanceGenerator
-from clemcore.clemgame.master import (
-    DialogueGameMaster,
-    EnvGameMaster,
-    GameError,
-    GameMaster,
-    ParseError,
-    Player,
-)
+from clemcore.clemgame.resources import GameResourceLocator
+from clemcore.clemgame.master import GameMaster, DialogueGameMaster, EnvGameMaster, Player
 from clemcore.clemgame.metrics import GameScorer
 from clemcore.clemgame.recorder import DefaultGameRecorder, GameRecorder
 from clemcore.clemgame.registry import GameRegistry, GameSpec
@@ -53,6 +48,10 @@ __all__ = [
     "DefaultGameRecorder",
     "GameResourceLocator",
     "GameInstanceIterator",
-    "GameError",
+    "ResponseError",
+    "ProtocolError",
     "ParseError",
+    "GameError",
+    "RuleViolationError",
+    "NotApplicableError"
 ]

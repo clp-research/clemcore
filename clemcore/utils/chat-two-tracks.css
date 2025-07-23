@@ -111,4 +111,25 @@ body {background-color: rgb(157, 152, 150);}
   .msg.gm-gm::before {
     left: 0px;
   }
-  
+
+.game-round {
+  padding: 20px 0 20px 0;
+  background-color: #f0f8ff; /* light background for content */
+  position: relative; /* Important to position the badge */
+  border-radius: 10px;
+  margin: 10px 0 10px 0;
+  max-width: 800px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge in top-right corner */
+.game-round::before {
+  content: "Round " attr(data-round);
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: #c4c3c3;
+  padding: 0px 2px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}

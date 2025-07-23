@@ -1,5 +1,9 @@
+import abc
 import collections
-from typing import Dict
+import random
+from typing import Dict, final
+
+import numpy as np
 
 from clemcore.clemgame.resources import GameResourceLocator
 
@@ -29,6 +33,7 @@ class GameInstanceGenerator(GameResourceLocator):
         super().__init__(path=path)
         self.instances = dict(experiments=list())
 
+    @final
     def add_experiment(self, experiment_name: str) -> Dict:
         """Add an experiment to the game benchmark.
         Experiments are sets of instances, usually with different experimental variables than other experiments in a
@@ -45,6 +50,7 @@ class GameInstanceGenerator(GameResourceLocator):
         self.instances["experiments"].append(experiment)
         return experiment
 
+    @final
     def add_game_instance(self, experiment: Dict, game_id):
         """Add an instance to an experiment.
         An instance holds all data to run a single episode of a game.
@@ -59,23 +65,30 @@ class GameInstanceGenerator(GameResourceLocator):
         experiment["game_instances"].append(game_instance)
         return game_instance
 
-    def on_generate(self, **kwargs):
+    @abc.abstractmethod
+    def on_generate(self, seed: int, **kwargs):
         """Game-specific instance generation.
         This method is intended for creation of instances and experiments for a game benchmark. Use the add_experiment
         and add_game_instance methods to create the game benchmark.
         Must be implemented!
         Args:
+            seed: The random seed set for `random` and `np.random`. Defaults to None.
             kwargs: Keyword arguments (or dict) with data controlling instance generation.
         """
-        raise NotImplementedError()
+        pass
 
-    def generate(self, filename="instances.json", **kwargs):
+    @final
+    def generate(self, filename="instances.json", seed=None, **kwargs) -> str:
         """Generate the game benchmark and store the instances JSON file.
         Intended to not be modified by inheriting classes, modify on_generate instead.
         Args:
             filename: The name of the instances JSON file to be stored in the 'in' subdirectory. Defaults to
                 'instances.json'.
+            seed: The random seed to be set. Defaults to None.
             kwargs: Keyword arguments (or dict) to pass to the on_generate method.
         """
-        self.on_generate(**kwargs)
-        self.store_file(self.instances, filename, sub_dir="in")
+        random.seed(seed)
+        np.random.seed(seed)
+        self.on_generate(seed, **kwargs)
+        file_path = self.store_file(self.instances, filename, sub_dir="in")
+        return file_path

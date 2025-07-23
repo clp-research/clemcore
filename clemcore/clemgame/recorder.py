@@ -92,6 +92,7 @@ class NoopGameRecorder(GameRecorder):
     def __init__(self):
         self.interactions = []
         self.requests = []
+        self.auto_count_logging = False  # see DefaultGameRecorder
 
     def log_next_round(self):
         pass
@@ -121,7 +122,7 @@ class NoopGameRecorder(GameRecorder):
 class DefaultGameRecorder(GameRecorder):
     """Default game recorder with common methods for recording game episodes."""
 
-    def __init__(self, game_name: str, experiment_name: str, game_id: int, dialogue_pair: str, episode_dir: str = None):
+    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str, episode_dir: str, player_model_infos: Dict):
         self._game_name = game_name
         self._current_round = 0
         """ Stores players and turn during the runs """
@@ -129,9 +130,10 @@ class DefaultGameRecorder(GameRecorder):
             "meta": dict(game_name=game_name,
                          experiment_name=experiment_name,
                          game_id=game_id,
-                         dialogue_pair=dialogue_pair,
+                         results_folder=results_folder,
                          episode_dir=episode_dir,
                          clem_version=get_version()),
+            "player_models": player_model_infos,
             # already add Game Master
             "players": collections.OrderedDict(GM=dict(game_role="Game Master", model_name="programmatic")),
             # already prepare to log the first round of turns
@@ -143,6 +145,9 @@ class DefaultGameRecorder(GameRecorder):
         self.requests_counts = [0]  # count per round (initially zero)
         self.violated_requests_counts = [0]  # count per round (initially zero)
         self.successful_requests_counts = [0]  # count per round (initially zero)
+        # For legacy games, the counts were logged by the games.
+        # New games can rely on the count logging by the recorder.
+        self.auto_count_logging = True
 
     def log_next_round(self):
         """Call this method to group interactions per turn."""
@@ -241,11 +246,11 @@ class DefaultGameRecorder(GameRecorder):
         try:
             meta = self.interactions["meta"]
             dialogue_pair = meta.get("dialogue_pair")
-            game_name = meta.get("game_name", "portalgame")
-            results_dir = "results"
+            game_name = meta.get("game_name")
+            results_dir = meta.get("results_folder")
             episode_dir = meta.get("episode_dir")
 
-            images_dir = os.path.join(results_dir, dialogue_pair, game_name, episode_dir, "images")
+            images_dir = os.path.join(results_dir, game_name, episode_dir, "images")
             os.makedirs(images_dir, exist_ok=True)
 
             filepath = os.path.join(images_dir, filename)
@@ -280,9 +285,10 @@ class DefaultGameRecorder(GameRecorder):
             module_logger.warning(f"No calls logged!")
 
         # add default framework metrics
-        self.log_key(METRIC_REQUEST_COUNT, self.requests_counts)
-        self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_requests_counts)
-        self.log_key(METRIC_REQUEST_COUNT_PARSED, self.successful_requests_counts)
+        if self.auto_count_logging:
+            self.log_key(METRIC_REQUEST_COUNT, self.requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_VIOLATED, self.violated_requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_PARSED, self.successful_requests_counts)
 
         store_results_file(self._game_name, self.interactions,
                            "interactions.json",

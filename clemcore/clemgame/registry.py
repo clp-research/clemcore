@@ -1,4 +1,4 @@
-import collections
+import copy
 import json
 import os.path
 from typing import List, Dict, Union
@@ -10,6 +10,7 @@ import clemcore.utils.file_utils as file_utils
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
 
+ENV_CLEMBENCH_HOME = "CLEMBENCH_HOME"
 
 class GameSpec(SimpleNamespace):
     """Base class for game specifications.
@@ -26,6 +27,14 @@ class GameSpec(SimpleNamespace):
                 raise KeyError(f"No game path specified in {kwargs}")
             if "players" not in self:
                 raise KeyError(f"No players specified in {kwargs}")
+
+    def __deepcopy__(self, memo):
+        # Create a new blank instance without triggering __init__ which will lead to KeyErrors
+        _copy = type(self).__new__(self.__class__)
+        memo[id(self)] = _copy
+        for k, v in self.__dict__.items():
+            setattr(_copy, k, copy.deepcopy(v, memo))
+        return _copy
 
     def __repr__(self):
         """Returns string representation of this GameSpec."""
@@ -186,25 +195,38 @@ class GameRegistry:
     @classmethod
     def from_directories_and_cwd_files(cls):
         """
-        Lookup game specs in the following locations:
-        (1) Look for a (optional) game_registry.json in current working directory (relative to script execution)
-        (2) Look for sub-directories of the current working director that contain a clemgame.json (depth=2)
-        Model specs found in the (1) are listed before (2) allowing to 'favor' the ones in (1).
+        Lookup game specs in the following locations, in order of precedence:
+
+        (1) Look for an optional `game_registry.json` in the current working directory (relative to script execution).
+        (2) Look for subdirectories of the current working directory that contain a `clemgame.json` file.
+            - Both game specs found via (1) or (2) are kept, but (1) are prioritized by order.
+        (3) If neither (1) nor (2) yield results, look for the environment variable `CLEMBENCH_HOME`.
 
         Note:
-        Game specs defined via (1) require the 'game_path' attribute
-        while for game specs found via (2) this is set automatically.
+        Game specs defined via (1) must define either `game_path` or `benchmark_path`.
+        Specs found via (2) and (3) have these paths set automatically.
 
-        :return: model registry with model specs
+        :return: A GameRegistry instance with registered game specs
         """
         game_registry = cls()
+
+        # Step 1: Try loading from game_registry.json
         try:
             game_registry_path = os.path.join(os.getcwd(), "game_registry.json")
             with open(game_registry_path, encoding='utf-8') as f:
                 game_registry.register_from_list(json.load(f), game_registry_path)
         except Exception as e:
-            logger.debug("File lookup failed with exception: %s", e)
-        game_registry.register_from_directories(os.getcwd(), 0)
+            logger.debug("Failed to load game_registry.json: %s", e)
+
+        # Step 2: Additionally, search subdirectories
+        game_registry.register_from_directories(os.getcwd(), 0, max_depth=3)
+
+        # Step 3: Fallback to CLEMBENCH_HOME if registry is still empty
+        if len(game_registry) == 0:
+            home_path = os.getenv(ENV_CLEMBENCH_HOME)
+            if home_path and os.path.isdir(home_path):
+                game_registry.register_from_directories(home_path, 0, max_depth=3)
+
         return game_registry
 
     def register_from_list(self, game_specs: List[Dict], lookup_source: str = None) -> "GameRegistry":

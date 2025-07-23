@@ -143,8 +143,8 @@ class AnthropicModel(backends.Model):
                 messages=prompt,
                 system=system_message,
                 model=self.model_spec.model_id,
-                temperature=self.get_temperature(),
-                max_tokens=self.get_max_tokens()
+                temperature=self.temperature,
+                max_tokens=self.max_tokens
             )
 
             json_output = completion.model_dump_json()
@@ -158,7 +158,7 @@ class AnthropicModel(backends.Model):
                 messages=prompt,
                 system=system_message,
                 model=self.model_spec.model_id,
-                max_tokens=4000 + self.get_max_tokens(),
+                max_tokens=4000 + self.max_tokens,
                 thinking={
                     "type": "enabled",
                     "budget_tokens": 4000
