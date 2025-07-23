@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Callable, Optional, Tuple
 
 import torch
 from tqdm import tqdm
@@ -50,6 +50,16 @@ class GameSession(IterableDataset):
         player, context = self.game_master.observe()
         yield self.session_id, player, context
 
+    @staticmethod
+    def collate_fn(batch) -> Tuple[List[int], List[Player], List[Dict]]:
+        """
+        Collate a batch of (session_id, player, context) tuples into a tuple of lists.
+        Returns:
+            The session ids, players and contexts as separate lists
+        """
+        session_ids, players, contexts = zip(*batch)
+        return list(session_ids), list(players), list(contexts)
+
 
 class MultiGameRoundRobinScheduler(IterableDataset):
     """
@@ -73,22 +83,28 @@ class MultiGameRoundRobinScheduler(IterableDataset):
 
     def __iter__(self):
         """
-        Iterate once over all active sessions, yielding one observation per session if available.
+        Allows iteration over all active game sessions, yielding one observation per session when available.
+
+        This generator method yields the next available observation from each non-exhausted game session in turn.
+        Iteration continues until all sessions have been exhausted (i.e., they raise StopIteration).
 
         Yields:
-            Tuple[int, Player, Dict]: session id, player, and context from each active session.
-        """
-        if all(self.exhausted):
-            return
+            Tuple[int, Player, Dict]: A tuple containing the session index (int), the associated Player object,
+            and a context dictionary (Dict) representing the next observation from the session.
 
-        for i, session in enumerate(self.game_sessions):
-            if self.exhausted[i]:
-                continue
-            try:
-                it = iter(session)
-                yield next(it)
-            except StopIteration:
-                self.exhausted[i] = True
+        Note:
+            - Sessions are assumed to be iterable.
+            - Once a session raises StopIteration, it is marked as exhausted and skipped in subsequent iterations.
+        """
+        while not all(self.exhausted):
+            for i, session in enumerate(self.game_sessions):
+                if self.exhausted[i]:
+                    continue
+                try:
+                    it = iter(session)
+                    yield next(it)
+                except StopIteration:
+                    self.exhausted[i] = True
 
 
 def auto_estimate_batch_size(player_model: Model,
@@ -119,6 +135,9 @@ def auto_estimate_batch_size(player_model: Model,
     while batch_size > 0:
         try:
             batch_inputs = get_batch_inputs_fn(batch_size)
+            # Now, this is only a list of dicts (the contexts), but  to invoke generate_batch_response, we need
+            # proper lists of lists (messages) as used by the Player (messages = memorized perspective + context)
+            batch_inputs = [[context] for context in batch_inputs]
             player_model.generate_batch_response(batch_inputs)
             return batch_size
         except torch.cuda.OutOfMemoryError:
@@ -127,7 +146,9 @@ def auto_estimate_batch_size(player_model: Model,
             batch_size //= 2
 
     # If we get here, even batch size 1 failed
-    raise RuntimeError("Cannot fit any batch_size for model=%s. Model or data is too large for available GPU memory.")
+    raise RuntimeError("Cannot fit any batch_size for model=%s. "
+                       "Model or data is too large for available GPU memory.",
+                       player_model.name)
 
 
 def run(game_benchmark: GameBenchmark,
@@ -180,14 +201,15 @@ def run(game_benchmark: GameBenchmark,
             continue
 
         # Estimate batch size if not specified using initial contexts of the games
-        def __load_initial_contexts(current_batch_size: int):
+        def __load_initial_contexts(_batch_size: int):
             initial_game_sessions = __prepare_game_sessions(game_benchmark, player_models)
             round_robin_scheduler = MultiGameRoundRobinScheduler(initial_game_sessions)
-            data_loader = DataLoader(round_robin_scheduler, batch_size=current_batch_size)
+            data_loader = DataLoader(round_robin_scheduler, collate_fn=GameSession.collate_fn, batch_size=_batch_size)
             batch = next(iter(data_loader))
             _, _, batch_contexts = batch
             return batch_contexts
 
+        stdout_logger.info("Estimate batch_size for model=%s", player_model.name)
         all_game_sessions = __prepare_game_sessions(game_benchmark, player_models)
         model_batch_size = auto_estimate_batch_size(player_model,
                                                     upper_limit=len(all_game_sessions),
@@ -200,18 +222,20 @@ def run(game_benchmark: GameBenchmark,
 
     # Use the smallest batch size to ensure all models can run simultaneously without issue
     batch_size = min(batch_sizes)
-    stdout_logger.info("Use batch_size=%s of %s", batch_size, batch_sizes)
+    if len(player_models) > 1:  # notify only when more than one model; otherwise already mentioned above
+        stdout_logger.info("Use minimal batch_size=%s of %s", batch_size, batch_sizes)
 
     # Begin benchmark run with callbacks
     callbacks.on_benchmark_start(game_benchmark)
-    game_sessions = __prepare_game_sessions(game_benchmark, player_models, callbacks)
+    game_sessions = __prepare_game_sessions(game_benchmark, player_models, callbacks, verbose=True)
     __run_game_sessions(game_sessions, callbacks, batch_size)
     callbacks.on_benchmark_end(game_benchmark)
 
 
 def __prepare_game_sessions(game_benchmark: GameBenchmark,
                             player_models: List[Model],
-                            callbacks: Optional[GameBenchmarkCallbackList] = None):
+                            callbacks: Optional[GameBenchmarkCallbackList] = None,
+                            verbose: bool = False):
     """
     Prepare GameSession instances for each game instance in the benchmark.
 
@@ -234,8 +258,10 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
     callbacks = callbacks or GameBenchmarkCallbackList()
     error_count = 0
     game_sessions: List[GameSession] = []
-    for session_id, experiment, game_instance in enumerate(tqdm(game_benchmark.game_instance_iterator,
-                                                                desc="Prepare game sessions")):
+    # Note: We must reset iterator here, otherwise it is already exhausted after single invocation of prepare.
+    instance_iterator = game_benchmark.game_instance_iterator
+    instance_iterator.reset(verbose=verbose)
+    for session_id, (experiment, game_instance) in enumerate(instance_iterator):
         try:
             game_master = game_benchmark.create_game_master(experiment, player_models)
             callbacks.on_game_start(game_master, game_instance)
@@ -265,8 +291,12 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
         game_sessions: List of active GameSession instances.
         callbacks: Callback list to notify on game end.
     """
+    # Progress bar for completed games (known total)
+    pbar = tqdm(total=len(game_sessions), desc="Completed game instances", dynamic_ncols=True)
+    # Progress bar for total steps (unknown total, so no 'total' arg)
+    pbar_steps = tqdm(desc="Total responses", unit="response", dynamic_ncols=True)
     round_robin_scheduler = MultiGameRoundRobinScheduler(game_sessions)
-    data_loader = DataLoader(round_robin_scheduler, batch_size=batch_size)
+    data_loader = DataLoader(round_robin_scheduler, collate_fn=GameSession.collate_fn, batch_size=batch_size)
     for batch in data_loader:
         session_ids, batch_players, batch_contexts = batch
         response_by_session_id = Player.batch_response(batch_players, batch_contexts, row_ids=session_ids)
@@ -274,5 +304,9 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
         for sid, response in response_by_session_id.items():
             session = game_sessions[sid]  # assuming session_id is an index (see __prepare_game_sessions)
             done, _ = session.game_master.step(response)
+            pbar_steps.update(1)
             if done:
+                pbar.update(1)
                 callbacks.on_game_end(session.game_master, session.game_instance)
+    pbar.close()
+    pbar_steps.close()
