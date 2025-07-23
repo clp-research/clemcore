@@ -94,9 +94,8 @@ def build_transcript(interactions: Dict):
     else:
         images_dir = None
 
-    # Collect all events over all turns (ignore turn boundaries here)
+    # all events over all turns
     events = [event for turn in interactions['turns'] for event in turn]
-    image_counter = 0
     for event in events:
         class_name = _get_class_name(event)
         msg_content = event['action']['content']
