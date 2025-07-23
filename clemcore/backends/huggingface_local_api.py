@@ -88,25 +88,43 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
                 f"bad results.")
 
     if use_api_key:
-        model_config = AutoConfig.from_pretrained(hf_model_str, token=api_key)
+        auto_config = AutoConfig.from_pretrained(hf_model_str, token=api_key)
     else:
-        model_config = AutoConfig.from_pretrained(hf_model_str)
+        auto_config = AutoConfig.from_pretrained(hf_model_str)
 
     # get context token limit for model:
-    if hasattr(model_config, 'max_position_embeddings'):  # this is the standard attribute used by most
-        context_size = model_config.max_position_embeddings
-    elif hasattr(model_config, 'n_positions'):  # some models may have their context size under this attribute
-        context_size = model_config.n_positions
+    if hasattr(auto_config, 'max_position_embeddings'):  # this is the standard attribute used by most
+        context_size = auto_config.max_position_embeddings
+    elif hasattr(auto_config, 'n_positions'):  # some models may have their context size under this attribute
+        context_size = auto_config.n_positions
     else:  # few models, especially older ones, might not have their context size in the config
         context_size = FALLBACK_CONTEXT_SIZE
 
-    # stopping transformers pad_token_id warnings
-    # check if tokenizer has no set pad_token_id:
-    if not tokenizer.pad_token_id:  # if not set, pad_token_id is None
-        # preemptively set pad_token_id to eos_token_id as automatically done to prevent warning at each generation:
+    # Decoder-only models (e.g., GPT, LLaMA) often don't define a pad token explicitly,
+    # since they use causal attention over the entire left-context during generation.
+    # To avoid warnings from Transformers when padding is used, we set the pad token
+    # to the EOS token if it's not already defined.
+    if tokenizer.pad_token_id is None:
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    return tokenizer, model_config, context_size
+    # Many models do not reliably set `padding_side` in their tokenizer configs,
+    # especially decoder-only models where left-padding is needed for correct generation.
+    # We first check for an explicit setting in `model_config`, and fall back to
+    # automatic detection based on the model architecture.
+    padding_side = model_spec.model_config.get("padding_side", None)
+    if padding_side is None:
+        stdout_logger.warning("No 'padding_side' configured in 'model_config' for %s", model_spec.model_name)
+        tokenizer.padding_side = "left" if auto_config.is_decoder and not auto_config.is_encoder_decoder else "right"
+        stdout_logger.warning("Derive padding_size=%s from model architecture (decoder=%s, encoder-decoder=%s)",
+                              tokenizer.padding_side, auto_config.is_decoder, auto_config.is_encoder_decoder)
+    else:
+        padding_side = padding_side.lower()
+        if padding_side not in ("left", "right"):
+            raise ValueError(f"Invalid 'padding_side={padding_side}' configured in 'model_config' "
+                             f"for {model_spec.model_name}. Must be 'left' or 'right'.")
+        tokenizer.padding_side = padding_side
+
+    return tokenizer, auto_config, context_size
 
 
 def load_model(model_spec: backends.ModelSpec) -> Any:
@@ -247,13 +265,11 @@ class HuggingfaceLocalModel(backends.Model):
         # item batches, because here, the padding is not necessary anyway. In the following we first apply
         # the chat template and then use the tokenizer to receive the proper masks, also feasible for batches.
         # Render each chat in the batch (list of messages) to a string prompt
-        rendered_chats = [
-            self.tokenizer.apply_chat_template(
-                messages,
-                add_generation_prompt=True,  # append assistant prompt
-                tokenize=False  # get back the rendered string
-            ) for messages in batch_messages
-        ]
+        rendered_chats = self.tokenizer.apply_chat_template(
+            batch_messages,
+            add_generation_prompt=True,  # append assistant prompt
+            tokenize=False  # get back the rendered string
+        )
 
         # The rendered chat (with system message already removed before) will, for example, look like:
         # <|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nWho won the world series in 2020?<|eot_id|>
@@ -289,8 +305,8 @@ class HuggingfaceLocalModel(backends.Model):
         model_output_ids = self.model.generate(prompt_token_ids, **gen_args)
 
         # Decode all outputs and prompts
-        model_outputs = self.tokenizer.batch_decode(model_output_ids)
-        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids)
+        model_outputs = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)
+        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids, skip_special_tokens=True)
 
         prompts, response_texts, responses = split_and_clean_batch_outputs(self,
                                                                            model_outputs,
@@ -325,10 +341,8 @@ def split_and_clean_batch_outputs(
     prompts = []
     responses = []
     response_texts = []
-    for i in range(len(model_outputs)):
-        model_output = model_outputs[i]
-        prompt_text = prompt_texts[i]
 
+    for model_output, prompt_text in zip(model_outputs, prompt_texts):
         if not return_full_text:
             # Remove prompt from output
             response_text = model_output.replace(prompt_text, '').strip()

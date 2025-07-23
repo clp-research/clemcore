@@ -3632,6 +3632,7 @@
             "url": "https://github.com/meta-llama/llama-models/blob/main/models/llama3_1/LICENSE"
         },
         "model_config": {
+            "padding_side": "left",
             "requires_api_key": true,
             "premade_chat_template": true,
             "eos_to_cull": "<\\|eot_id\\|>"
