@@ -3,6 +3,7 @@ import json
 import logging
 import os
 import html
+import shutil
 from pathlib import Path
 from typing import Dict, List
 from tqdm import tqdm
@@ -80,55 +81,82 @@ def build_transcript(interactions: Dict):
     players = interactions["players"]
     transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
     pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
+    episode_dir = meta.get("episode_dir")
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
             f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
-    for turn_idx, turn in enumerate(interactions['turns']):
-        transcript += f'<div class="game-round" data-round="{turn_idx}">'
-        for event in turn:
-            class_name = _get_class_name(event)
-            msg_content = event['action']['content']
-            msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
-            if event['from'] == 'GM' and event['to'] == 'GM':
-                speaker_attr = f'Game Master: {event["action"]["type"]}'
-            else:
-                from_player = event['from']
-                to_player = event['to']
-                if "game_role" in players[from_player] and "game_role" in players[to_player]:
-                    from_game_role = players[from_player]["game_role"]
-                    to_game_role = players[to_player]["game_role"]
-                    speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
-                else: # old mode (before 2.4)
-                    speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
-            # in case the content is a json BUT given as a string!
-            # we still want to check for image entry
-            if isinstance(msg_content, str):
-                try:
-                    msg_content = json.loads(msg_content)
-                except:
-                    ...
-            style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
-            # in case the content is a json with an image entry
-            if isinstance(msg_content, dict):
-                if "image" in msg_content:
-                    transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
-                    transcript += f'  <p>{msg_raw}</p>\n'
-                    for image_src in msg_content["image"]:
-                        if not image_src.startswith("http"):  # take the web url as it is
-                            if "IMAGE_ROOT" in os.environ:
-                                image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
-                            else:
-                                # CAUTION: this only works when the project is checked out (dev mode)
-                                image_src = os.path.join(file_utils.project_root(), image_src)
-                        transcript += (f'  <a title="{image_src}">'
-                                       f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
-                                       f'</a>\n')
-                    transcript += '</div>\n'
-                else:
-                    transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
-            else:
-                transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
-        transcript += "</div>"
+
+    episodes_path = Path(f"{pair_descriptor}/{meta['game_name']}/{episode_dir}")
+    module_logger.info(f"episodedir: {episodes_path}, {meta}")
+    if episodes_path.exists():
+        images_dir = episodes_path / "images"
+        images_dir.mkdir(exist_ok=True)
+    else:
+        images_dir = None
+
+    # all events over all turns
+    events = [event for turn in interactions['turns'] for event in turn]
+    for event in events:
+        class_name = _get_class_name(event)
+        msg_content = event['action']['content']
+        msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
+        if event['from'] == 'GM' and event['to'] == 'GM':
+            speaker_attr = f'Game Master: {event["action"]["type"]}'
+        else:
+            from_player = event['from']
+            to_player = event['to']
+            if "game_role" in players[from_player] and "game_role" in players[to_player]:
+                from_game_role = players[from_player]["game_role"]
+                to_game_role = players[to_player]["game_role"]
+                speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
+            else:  # old mode (before 2.4)
+                speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
+        # in case the content is a json BUT given as a string!
+        # we still want to check for image entry
+        if isinstance(msg_content, str):
+            try:
+                msg_content = json.loads(msg_content)
+            except:
+                ...
+        style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
+
+        has_images = False
+        image_list = []
+
+        # check if images are in the action dict (new structure)
+        if "image" in event["action"]:
+            has_images = True
+            image_list = event["action"]["image"]
+            module_logger.info("imagelist: {image_list}")
+        # check if images are in the content field (old structure)
+        elif isinstance(msg_content, dict) and "image" in msg_content:
+            has_images = True
+            image_list = msg_content["image"]
+
+        if has_images:
+            transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
+            transcript += f'  <p>{msg_raw}</p>\n'
+            for image_src in image_list:
+                if image_src.startswith("results/"): # make path relative to transcript
+                    source_image_path = Path(image_src)
+                    if source_image_path.exists():
+                        image_filename = source_image_path.name
+                        image_src = f"images/{image_filename}"
+                    else:
+                        module_logger.warning(f"Image file not found: {source_image_path}")
+
+                elif not image_src.startswith("http"):  # take the web url as it is
+                    if "IMAGE_ROOT" in os.environ:
+                        image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
+                    else:
+                        # CAUTION: this only works when the project is checked out (dev mode)
+                        image_src = os.path.join(file_utils.project_root(), image_src)
+                transcript += (f'  <a title="{image_src}">'
+                               f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
+                               f'</a>\n')
+            transcript += '</div>\n'
+        else:
+            transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
     transcript += patterns.HTML_FOOTER
     return transcript
 
