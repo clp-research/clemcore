@@ -68,7 +68,8 @@ class GameBenchmark(GameResourceLocator):
         self.game_instance_iterator = GameInstanceIterator(self.game_name, instances,
                                                            sub_selector=sub_selector,
                                                            do_shuffle=False,
-                                                           reset=True)
+                                                           reset=False  # reset iterator only later during run
+                                                           )
 
     def compute_scores(self, results_dir: str):
         """Compute and store scores for each episode and player pair.

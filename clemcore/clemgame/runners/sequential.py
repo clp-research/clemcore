@@ -17,6 +17,7 @@ def run(game_benchmark: GameBenchmark,
     # todo: check if batch_size is set, and log to stdout that it will be ignored
     callbacks.on_benchmark_start(game_benchmark)
     error_count = 0
+    game_benchmark.game_instance_iterator.reset(verbose=True)  # set up the instance queue to iterate over
     for experiment, game_instance in tqdm(game_benchmark.game_instance_iterator, desc="Playing games"):
         try:
             game_master = game_benchmark.create_game_master(experiment, player_models)
