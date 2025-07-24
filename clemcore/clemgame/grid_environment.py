@@ -91,13 +91,9 @@ class GridEnvironment(GameEnvironment):
             "player_positions": {},
         }
 
-    def reset(
-        self,
-        initial_observations: Optional[Dict[str, Observation]] = None,
-        initial_action_spaces: Optional[Dict[str, ActionSpace]] = None,
-    ):
+    def reset(self):
         """Reset the environment to its initial state."""
-        super().reset(initial_observations, initial_action_spaces)
+        super().reset()
 
         self.grid = [[GridCell(objects=[], position=(y, x)) for x in range(self.width)] for y in range(self.height)]
         self.state["grid"] = self.grid

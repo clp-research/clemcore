@@ -104,11 +104,7 @@ class GameEnvironment(ABC):
         self.max_moves = self.config.get("max_moves", None)
         module_logger.info(f"[_init] Max moves: {self.max_moves}")
 
-    def reset(
-        self,
-        initial_observations: Optional[Dict[str, Observation]] = None,
-        initial_action_spaces: Optional[Dict[str, ActionSpace]] = None,
-    ):
+    def reset(self):
         """
         Reset the environment to its initial state.
 
@@ -125,11 +121,6 @@ class GameEnvironment(ABC):
 
         self.observations = {}
         self.action_spaces = {}
-
-        if initial_observations is not None:
-            self.observations = initial_observations
-        if initial_action_spaces is not None:
-            self.action_spaces = initial_action_spaces
 
         self.image_counter = 0
 
