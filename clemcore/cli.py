@@ -89,11 +89,13 @@ def experiment_filter(game: str, experiment: str, *, selected_experiment: str, g
 
 def run(game_selector: Union[str, Dict, GameSpec],
         model_selectors: List[backends.ModelSpec],
+        *,
         gen_args: Dict,
         experiment_name: str = None,
         instances_filename: str = None,
         results_dir_path: Path = None,
-        sub_selector: Callable[[str, str], List[int]] = None
+        sub_selector: Callable[[str, str], List[int]] = None,
+        force_sequential: bool = False
         ):
     """Run specific model/models with a specified clemgame.
     Args:
@@ -158,7 +160,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
                 callbacks.append(InstanceFileSaver(results_dir_path, player_models))
                 callbacks.append(ExperimentFileSaver(results_dir_path, player_models))
                 callbacks.append(InteractionsFileSaver(results_dir_path, player_models))
-                dispatch.run(game_benchmark, player_models, callbacks=callbacks)
+                dispatch.run(game_benchmark, player_models, callbacks=callbacks, force_sequential=force_sequential)
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -235,7 +237,8 @@ def cli(args: argparse.Namespace):
                 gen_args=read_gen_args(args),
                 experiment_name=args.experiment_name,
                 instances_filename=args.instances_filename,
-                results_dir_path=args.results_dir)
+                results_dir_path=args.results_dir,
+                force_sequential=args.sequential)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
     if args.command_name == "score":
@@ -332,6 +335,8 @@ def main():
                             help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
                                  "Be careful with high values which might lead to exceed your API token limits."
                                  "Default: 300.")
+    run_parser.add_argument("--sequential", action="store_true",
+                            help="Force a sequential run (even when models support batching). Default: False")
 
     run_parser.add_argument("-i", "--instances_filename", type=str, default=None,
                             help="The instances file name (.json suffix will be added automatically.")
