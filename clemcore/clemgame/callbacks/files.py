@@ -67,7 +67,7 @@ class ResultsFolder:
 
     @staticmethod
     def to_instance_dir(game_instance: Dict) -> str:
-        return f"instance_{game_instance['game_id']}"
+        return f"instance_{game_instance['game_id']:05d}"
 
 
 class InstanceFileSaver(GameBenchmarkCallback):
