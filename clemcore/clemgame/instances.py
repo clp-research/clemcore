@@ -100,7 +100,7 @@ class GameInstanceIterator:
                     self._queue.append((filtered_experiment, game_instance))
                     num_instances += 1
         if verbose:
-            stdout_logger.info("Reset instance queue for %s using %s experiments %s and %s instances in total.",
+            stdout_logger.info("Prepared instance queue for %s using %s experiments %s and %s instances in total.",
                                self._game_name, len(experiment_names), experiment_names, num_instances)
         if self._do_shuffle:
             random.shuffle(self._queue)
