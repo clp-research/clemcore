@@ -362,21 +362,28 @@ class Model(abc.ABC):
         """ Hook to perform cleanup operations after an interaction, if necessary."""
         pass
 
-    def supports_batching(self):
+    def supports_batching(self) -> bool:
         """
         Check if the given model supports batch generation of responses.
 
         Returns:
             bool: True if the model implements `generate_batch_response` as a callable, False otherwise.
         """
-        return hasattr(self, 'generate_batch_response') and callable(getattr(self, 'generate_batch_response'))
+        return isinstance(self, BatchGenerativeModel)
 
     @staticmethod
-    def all_support_batching(player_models: List["Model"]):
-        return all(player_model.supports_batching for player_model in player_models)
+    def all_support_batching(player_models: List["Model"]) -> bool:
+        return all(player_model.supports_batching() for player_model in player_models)
 
 
-class CustomResponseModel(Model):
+class BatchGenerativeModel(Model):
+
+    @abc.abstractmethod
+    def generate_batch_response(self, batch_messages: List[List[Dict]]) -> List[Tuple[Any, Any, str]]:
+        pass
+
+
+class CustomResponseModel(BatchGenerativeModel):
     """Model child class to handle custom programmatic responses."""
 
     def __init__(self, model_spec=ModelSpec(model_name="programmatic")):
@@ -384,7 +391,22 @@ class CustomResponseModel(Model):
         self.set_gen_args(temperature=0.0)  # dummy value for get_temperature()
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
-        raise NotImplementedError("This should never be called but is handled in Player for now.")
+        player = self.get_gen_arg("players")[0]
+        result = self._call_player(player, messages)
+        return result
+
+    def generate_batch_response(self, batch_messages: List[List[Dict]]) -> List[Tuple[Any, Any, str]]:
+        players = self.get_gen_arg("players")
+        results = []
+        for player, messages in zip(players, batch_messages):
+            result = self._call_player(player, messages)
+            results.append(result)
+        return results
+
+    def _call_player(self, player, messages):
+        context = messages[-1]
+        response_text = player._custom_response(context)
+        return dict(), dict(), response_text
 
 
 class HumanModel(Model):
