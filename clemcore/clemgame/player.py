@@ -302,6 +302,8 @@ class Player(GameEventSource):
 
             # Run batched generation (assumes order-preserving)
             model = model_by_name[model_name]
+            if model.model_spec.is_programmatic():
+                model.set_gen_arg("players", players)
             results = model.generate_batch_response(batched_perspectives)
             assert len(results) == len(batched_perspectives), (
                 f"Model '{model_name}' returned {len(results)} responses, "
