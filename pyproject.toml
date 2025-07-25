@@ -31,7 +31,8 @@ dependencies = [
     "mistralai==1.8.0",
     "matplotlib==3.7.1",
     "pandas==2.0.1",
-    "seaborn==0.12.2"
+    "seaborn==0.12.2",
+    "sparklines~=0.7.0"
 ]
 
 [project.optional-dependencies]

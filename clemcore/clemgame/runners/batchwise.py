@@ -1,21 +1,20 @@
 import logging
-from typing import List, Dict, Callable, Optional, Tuple
+from typing import List, Dict, Callable, Optional, Tuple, Any, Iterable
 
 import torch
 from tqdm import tqdm
 
 from clemcore.backends import Model, ModelSpec
+from clemcore.backends.model_registry import BatchGenerativeModel
 from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameMaster, Player
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
 
-from torch.utils.data import IterableDataset, DataLoader
 
-
-class GameSession(IterableDataset):
+class GameSession(Iterable):
     """
-    Wraps a single game master instance producing observations as an iterable dataset.
+    Wraps a single game master instance producing observations as an iterable.
 
     Each iteration yields a single observation tuple consisting of:
     - session_id: int, unique identifier of this game session
@@ -61,53 +60,111 @@ class GameSession(IterableDataset):
         return list(session_ids), list(players), list(contexts)
 
 
-class MultiGameRoundRobinScheduler(IterableDataset):
+class SinglePassGameSessionPoller(Iterable):
     """
-    IterableDataset that iterates over multiple GameSession datasets in a round-robin manner.
+    Iterable that yields one item (if available) from each provided GameSession in a single pass.
 
-    - On each iteration, yields at most one item from each active (non-exhausted) session.
-    - Once a session dataset is exhausted (raises StopIteration), it is permanently skipped.
-    - Assumes each GameSession is stateful: calling iter() multiple times resumes where it left off.
-    - Useful for fairly interleaving game observations across multiple concurrent sessions.
+    - Iterates over each GameSession once, yielding at most one observation per session.
+    - If a session is already exhausted (raises StopIteration), it is skipped.
+    - Designed to collect a single snapshot from each session (e.g., initial moves or states).
+    - Does NOT perform full round-robin scheduling or repeated cycling.
     """
 
     def __init__(self, game_sessions: List[GameSession]):
         """
-        Initialize the round-robin scheduler.
+        Initialize the session poller.
 
         Args:
-            game_sessions: List of GameSession instances to interleave.
+            game_sessions: List of GameSession instances to sample from.
         """
         self.game_sessions = game_sessions
         self.exhausted = [False] * len(game_sessions)
 
     def __iter__(self):
         """
-        Allows iteration over all active game sessions, yielding one observation per session when available.
+        Iterates over the game sessions and yields one observation from each, if available.
 
-        This generator method yields the next available observation from each non-exhausted game session in turn.
-        Iteration continues until all sessions have been exhausted (i.e., they raise StopIteration).
-
-        Yields:
-            Tuple[int, Player, Dict]: A tuple containing the session index (int), the associated Player object,
-            and a context dictionary (Dict) representing the next observation from the session.
+        For each GameSession:
+        - Attempts to yield the next item using its iterator.
+        - If the session is exhausted, it is marked as such and skipped.
+        - Sessions are not revisited during this pass.
 
         Note:
-            - Sessions are assumed to be iterable.
-            - Once a session raises StopIteration, it is marked as exhausted and skipped in subsequent iterations.
+            To poll multiple rounds of observations, this iterable must be re-instantiated.
+
+        Yields:
+            Tuple[int, Player, Dict]: A tuple containing:
+                - the index of the session (int),
+                - the Player object,
+                - and a context dictionary (Dict) representing the next observation.
         """
-        while not all(self.exhausted):
-            for i, session in enumerate(self.game_sessions):
-                if self.exhausted[i]:
-                    continue
-                try:
-                    it = iter(session)
-                    yield next(it)
-                except StopIteration:
-                    self.exhausted[i] = True
+        for i, session in enumerate(self.game_sessions):
+            if self.exhausted[i]:
+                continue
+            try:
+                it = iter(session)
+                yield next(it)
+            except StopIteration:
+                self.exhausted[i] = True
 
 
-def auto_estimate_batch_size(player_model: Model,
+class DynamicBatchDataLoader(Iterable):
+    """
+    A custom DataLoader for stateful IterableDatasets that supports dynamically shrinking batch sizes.
+
+    This loader is designed for datasets where sources may be independently exhausted over time,
+    such as multiple concurrently running environments or game sessions. It preserves the internal
+    iterator state of the dataset and gracefully adjusts batch sizes as fewer data sources remain active.
+
+    Key Features:
+        - Supports stateful datasets (e.g., those that resume iteration across calls).
+        - Adapts batch size dynamically: yields smaller batches as individual data sources are exhausted.
+        - Compatible with custom collate functions for flexible batching.
+        - Suitable for use cases like streaming rollouts (e.g., SinglePassGameSessionPoller).
+
+    Note:
+        The final batch in a polling round may be smaller than the specified `batch_size`, especially
+        when few data sources remain. Fixing this to always yield full batches would require additional
+        buffering and coordination logic, which is intentionally avoided here to keep the implementation simple.
+
+    Unlike PyTorch's built-in DataLoader, this implementation:
+        - Avoids resetting dataset iterators on each pass.
+        - Handles partial batches naturally without requiring drop_last logic.
+    """
+
+    def __init__(self, dataset: Any, *, collate_fn: Callable, batch_size: int):
+        """
+         Initialize the dynamic batch loader.
+
+         Args:
+             dataset (IterableDataset): The dataset to draw items from. Must expose an `exhausted` attribute
+                 (e.g., a list of booleans indicating which sub-datasets are still active).
+             batch_size (int): Maximum number of items to include in each batch.
+             collate_fn (Callable): Function used to merge a list of items into a single batch.
+         """
+        self.dataset = dataset
+        self.batch_size = batch_size
+        self.collate_fn = collate_fn
+        self.data_iter = iter(self.dataset)
+
+    def __iter__(self):
+        data_iter = iter(self.dataset)
+        while True:
+            if all(self.dataset.exhausted):
+                break
+            batch_items = []
+            try:
+                for _ in range(self.batch_size):
+                    item = next(data_iter)
+                    batch_items.append(item)
+            except StopIteration:
+                # End of a pass or all sources exhausted; re-initialize for next round
+                data_iter = iter(self.dataset)
+            if batch_items:
+                yield self.collate_fn(batch_items)
+
+
+def auto_estimate_batch_size(player_model: BatchGenerativeModel,
                              *,
                              upper_limit: int,
                              get_batch_inputs_fn: Callable[[int], List[List[Dict]]]) -> int:
@@ -135,9 +192,6 @@ def auto_estimate_batch_size(player_model: Model,
     while batch_size > 0:
         try:
             batch_inputs = get_batch_inputs_fn(batch_size)
-            # Now, this is only a list of dicts (the contexts), but  to invoke generate_batch_response, we need
-            # proper lists of lists (messages) as used by the Player (messages = memorized perspective + context)
-            batch_inputs = [[context] for context in batch_inputs]
             player_model.generate_batch_response(batch_inputs)
             return batch_size
         except torch.cuda.OutOfMemoryError:
@@ -152,7 +206,7 @@ def auto_estimate_batch_size(player_model: Model,
 
 
 def run(game_benchmark: GameBenchmark,
-        player_models: List[Model],
+        player_models: List[BatchGenerativeModel],
         *,
         callbacks: GameBenchmarkCallbackList):
     """
@@ -184,9 +238,6 @@ def run(game_benchmark: GameBenchmark,
     Raises:
         AssertionError: If any model does not support batching or batch_size is invalid.
     """
-    stdout_logger.info("Start batchwise runner for %s with models=[%s]",
-                       game_benchmark.game_name,
-                       ",".join(player_model.name for player_model in player_models))
     # If not all support batching, then this doesn't help, because the models have to wait for the slowest one
     assert Model.all_support_batching(player_models), \
         "Not all player models support batching. Use sequential runner."
@@ -201,13 +252,23 @@ def run(game_benchmark: GameBenchmark,
             continue
 
         # Estimate batch size if not specified using initial contexts of the games
-        def __load_initial_contexts(_batch_size: int):
+        def __load_initial_contexts(_batch_size: int) -> List[List[Dict]]:
             initial_game_sessions = __prepare_game_sessions(game_benchmark, player_models)
-            round_robin_scheduler = MultiGameRoundRobinScheduler(initial_game_sessions)
-            data_loader = DataLoader(round_robin_scheduler, collate_fn=GameSession.collate_fn, batch_size=_batch_size)
+            single_pass_poller = SinglePassGameSessionPoller(initial_game_sessions)
+            data_loader = DynamicBatchDataLoader(
+                single_pass_poller,
+                collate_fn=GameSession.collate_fn,
+                batch_size=_batch_size
+            )
             batch = next(iter(data_loader))
-            _, _, batch_contexts = batch
-            return batch_contexts
+            _, batch_players, batch_contexts = batch
+            if player_model.model_spec.is_programmatic():  # hack to let the mock backend access the player states
+                player_model.set_gen_arg("players", batch_players)
+            # Now, this is only a list of dicts (the contexts), but  to invoke generate_batch_response, we need
+            # proper lists of lists (messages) as used by the Player (messages = memorized perspective + context)
+            batch_messages = [[context] for context in batch_contexts]
+            # Note: Giving the initial context only likely results in an overestimate of the batch_size!
+            return batch_messages
 
         stdout_logger.info("Estimate batch_size for model=%s", player_model.name)
         all_game_sessions = __prepare_game_sessions(game_benchmark, player_models)
@@ -228,12 +289,15 @@ def run(game_benchmark: GameBenchmark,
     # Begin benchmark run with callbacks
     callbacks.on_benchmark_start(game_benchmark)
     game_sessions = __prepare_game_sessions(game_benchmark, player_models, callbacks, verbose=True)
-    __run_game_sessions(game_sessions, callbacks, batch_size)
+    num_sessions = len(game_sessions)
+    if batch_size > num_sessions:
+        stdout_logger.info("Reduce batch_size=%s to number of game sessions %s", batch_size, num_sessions)
+    __run_game_sessions(game_sessions, callbacks, min(batch_size, num_sessions))
     callbacks.on_benchmark_end(game_benchmark)
 
 
 def __prepare_game_sessions(game_benchmark: GameBenchmark,
-                            player_models: List[Model],
+                            player_models: List[BatchGenerativeModel],
                             callbacks: Optional[GameBenchmarkCallbackList] = None,
                             verbose: bool = False):
     """
@@ -261,6 +325,8 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
     # Note: We must reset iterator here, otherwise it is already exhausted after single invocation of prepare.
     instance_iterator = game_benchmark.game_instance_iterator
     instance_iterator.reset(verbose=verbose)
+    if verbose:
+        pbar = tqdm(total=len(instance_iterator), desc="Setup game instances", dynamic_ncols=True)
     for session_id, (experiment, game_instance) in enumerate(instance_iterator):
         try:
             game_master = game_benchmark.create_game_master(experiment, player_models)
@@ -271,6 +337,10 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
             message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"
             module_logger.exception(message)
             error_count += 1
+        if verbose:
+            pbar.update(1)
+    if verbose:
+        pbar.close()
     if error_count > 0:
         message = f"{game_benchmark.game_name}: '{error_count}' exceptions occurred: See clembench.log for details."
         stdout_logger.error(message)
@@ -292,21 +362,53 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
         callbacks: Callback list to notify on game end.
     """
     # Progress bar for completed games (known total)
-    pbar = tqdm(total=len(game_sessions), desc="Completed game instances", dynamic_ncols=True)
+    pbar_instances = tqdm(total=len(game_sessions), desc="Completed game instances", dynamic_ncols=True)
     # Progress bar for total steps (unknown total, so no 'total' arg)
-    pbar_steps = tqdm(desc="Total responses", unit="response", dynamic_ncols=True)
-    round_robin_scheduler = MultiGameRoundRobinScheduler(game_sessions)
-    data_loader = DataLoader(round_robin_scheduler, collate_fn=GameSession.collate_fn, batch_size=batch_size)
+    pbar_responses = tqdm(desc="Total responses", unit="response", dynamic_ncols=True)
+    # Progress bar for batch size (approaching one)
+    pbar_batches = tqdm(bar_format="{desc}", dynamic_ncols=True)
+
+    start_batch_size = batch_size
+    batch_sizes = []
+
+    def scaled_sparkline(values, *, max_val, min_val=1, levels="▁▁▂▂▃▃▄▄▅▅▆▆▇▇██"):
+        span = max_val - min_val or 1
+        return ''.join(
+            levels[int((min(max(v, min_val), max_val) - min_val) / span * (len(levels) - 1))]
+            for v in values
+        )
+
+    round_robin_scheduler = SinglePassGameSessionPoller(game_sessions)
+    data_loader = DynamicBatchDataLoader(
+        round_robin_scheduler,
+        collate_fn=GameSession.collate_fn,
+        batch_size=batch_size
+    )
     for batch in data_loader:
         session_ids, batch_players, batch_contexts = batch
+
+        # Display batch_size
+        current_batch_size = len(session_ids)
+        batch_sizes.append(current_batch_size)
+        trend = scaled_sparkline(batch_sizes[-40:], max_val=start_batch_size)
+        pbar_batches.set_description_str(
+            f"Batch sizes: {trend} [start={start_batch_size}, "
+            f"current={current_batch_size}, "
+            f"mean={sum(batch_sizes) / len(batch_sizes):.2f}]"
+        )
+        pbar_batches.refresh()
+
+        # Apply batch to receives responses
         response_by_session_id = Player.batch_response(batch_players, batch_contexts, row_ids=session_ids)
+
         # Use session_ids to map outputs back to game sessions for stepping
         for sid, response in response_by_session_id.items():
             session = game_sessions[sid]  # assuming session_id is an index (see __prepare_game_sessions)
             done, _ = session.game_master.step(response)
-            pbar_steps.update(1)
+            pbar_responses.update(1)
             if done:
-                pbar.update(1)
+                pbar_instances.update(1)
                 callbacks.on_game_end(session.game_master, session.game_instance)
-    pbar.close()
-    pbar_steps.close()
+    pbar_instances.close()
+    pbar_responses.close()
+    pbar_batches.close()
