@@ -180,7 +180,7 @@ class HuggingfaceLocal(backends.Backend):
         return HuggingfaceLocalModel(model_spec)
 
 
-class HuggingfaceLocalModel(backends.Model):
+class HuggingfaceLocalModel(backends.BatchGenerativeModel):
     """Class for loaded HuggingFace transformers models ready for generation."""
 
     def __init__(self, model_spec: backends.ModelSpec):
