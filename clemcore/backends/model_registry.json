@@ -4487,6 +4487,196 @@
         }
     },
     {
+        "model_name": "Llama-3_3-Nemotron-Super-49B-v1",
+        "huggingface_id": "nvidia/Llama-3_3-Nemotron-Super-49B-v1",
+        "backend": "huggingface_local",
+        "release_date": "2025-03-16",
+        "open_weight": true,
+        "parameters": "49B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "nvidia-open-model-license",
+            "url": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|end_of_text\\|>"
+        }
+    },
+    {
+        "model_name": "Phi-4-mini-reasoning",
+        "huggingface_id": "microsoft/Phi-4-mini-reasoning",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-29",
+        "open_weight": true,
+        "parameters": "3.8B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "cot_output": true,
+            "cot_end_tag": "<\\|end\\|>"
+        }
+    },
+    {
+        "model_name": "DeepSeek-R1-0528-Qwen3-8B",
+        "huggingface_id": "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
+        "backend": "huggingface_local",
+        "release_date": "2025-05-29",
+        "open_weight": true,
+        "parameters": "8B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<｜end▁of▁sentence｜>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "DeepSeek-R1-0528",
+        "huggingface_id": "deepseek-ai/DeepSeek-R1-0528",
+        "backend": "huggingface_local",
+        "release_date": "2025-05-29",
+        "open_weight": true,
+        "parameters": "671B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<｜end▁of▁sentence｜>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "MiniMax-Text-01",
+        "huggingface_id": "MiniMaxAI/MiniMax-Text-01",
+        "backend": "huggingface_local",
+        "release_date": "2025-01-14",
+        "open_weight": true,
+        "parameters": "456B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4M",
+        "license": {
+            "name": "unknown",
+            "url": ""
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<end_of_sentence>"
+        }
+    },
+    {
+        "model_name": "Hunyuan-A13B-Instruct",
+        "huggingface_id": "tencent/Hunyuan-A13B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-01",
+        "open_weight": true,
+        "parameters": "80B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|eos\\|>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "reka-flash-3.1",
+        "huggingface_id": "RekaAI/reka-flash-3.1t",
+        "backend": "huggingface_local",
+        "release_date": "2025-05-28",
+        "open_weight": true,
+        "parameters": "20.9B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "98304",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>"
+        }
+    },
+    {
+        "model_name": "MetaStone-S1-32B",
+        "huggingface_id": "MetaStoneTec/MetaStone-S1-32B",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-05",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "40960",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "Kimi-K2-Instruct",
+        "huggingface_id": "moonshotai/Kimi-K2-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-11",
+        "open_weight": true,
+        "parameters": "1T",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128K",
+        "license": {
+            "name": "modified-mit",
+            "url": ""
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "\\[EOS\\]"
+        }
+    },
+    {
         "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
         "backend": "llamacpp",
         "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
