@@ -4677,6 +4677,169 @@
         }
     },
     {
+        "model_name": "Qwen3-235B-A22B-Instruct-2507",
+        "huggingface_id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-21",
+        "open_weight": true,
+        "parameters": "235B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-Coder-480B-A35B-Instruct",
+        "huggingface_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "480B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-Coder-480B-A35B-Instruct-FP8",
+        "huggingface_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "480B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Kimi-VL-A3B-Instruct",
+        "huggingface_id": "moonshotai/Kimi-VL-A3B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-09",
+        "open_weight": true,
+        "parameters": "16B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128K",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "\\[EOS\\]"
+        }
+    },
+    {
+        "model_name": "EuroLLM-9B-Instruct",
+        "huggingface_id": "utter-project/EuroLLM-9B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2024-11-28",
+        "open_weight": true,
+        "parameters": "9B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-30B-A3B",
+        "huggingface_id": "Qwen/Qwen3-30B-A3B",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-28",
+        "open_weight": true,
+        "parameters": "30B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "32K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-32B",
+        "huggingface_id": "Qwen/Qwen3-32B",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-28",
+        "open_weight": true,
+        "parameters": "30B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "32K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
+        "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
+        "backend": "llamacpp",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "235B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "filename": "*/Q8_0/*Q8_0*.gguf",
+            "premade_chat_template": true,
+            "bos_string": "<s>",
+            "eos_string": "<|im_end|>",
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
         "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
         "backend": "llamacpp",
         "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",
