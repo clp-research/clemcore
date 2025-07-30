@@ -8,10 +8,18 @@ from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
-from clemcore.clemgame.errors import ParseError, GameError
-from clemcore.clemgame.registry import GameSpec
+from clemcore.clemgame.errors import GameError, ParseError
+from clemcore.clemgame.events import GameEventSource
+from clemcore.clemgame.metrics import (
+    METRIC_ABORTED,
+    METRIC_LOSE,
+    METRIC_REQUEST_COUNT,
+    METRIC_REQUEST_COUNT_PARSED,
+    METRIC_REQUEST_COUNT_VIOLATED,
+    METRIC_SUCCESS,
+)
 from clemcore.clemgame.player import Player
-from clemcore.clemgame.recorder import NoopGameRecorder
+from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator
 from clemcore.utils.string_utils import to_pretty_json
 
@@ -36,7 +44,21 @@ class GameStateEncoder(json.JSONEncoder):
         return super().default(obj)
 
 
-class GameMaster(abc.ABC):
+class EnvLike(abc.ABC):
+    """
+    An interface that allows to intervene between observing the state of a game (observe) and making progress (step).
+    """
+
+    @abc.abstractmethod
+    def observe(self) -> Tuple[Player, Dict]:
+        pass
+
+    @abc.abstractmethod
+    def step(self, response: str) -> Tuple[bool, Dict]:
+        pass
+
+
+class GameMaster(EnvLike, GameEventSource):
     """Base class to contain game-specific functionality."""
 
     def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
@@ -46,6 +68,7 @@ class GameMaster(abc.ABC):
             experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
             player_models: Player models to use for one or two players.
         """
+        super().__init__()
         self.game_spec = game_spec
         self.experiment: Dict = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
@@ -55,17 +78,8 @@ class GameMaster(abc.ABC):
             raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
                              f"but {len(player_models)} were given: {[m.name for m in player_models]}")
         self.player_models: List[backends.Model] = player_models
-        self._game_recorder = NoopGameRecorder()
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
-
-    @property
-    def game_recorder(self):
-        return self._game_recorder
-
-    @game_recorder.setter
-    def game_recorder(self, game_recorder):
-        self._game_recorder = game_recorder
 
     def load_json(self, file_path: Union[str, Path]):
         return self.game_resources.load_json(file_path)
@@ -80,24 +94,7 @@ class GameMaster(abc.ABC):
             type_: The type of the action to be logged.
             value: The content value of the action to be logged. Must be JSON serializable.
         """
-        self._game_recorder.log_event("GM", "GM", {"type": type_, "content": value})
-
-    def log_key(self, key: str, value: Any):
-        self._game_recorder.log_key(key, value)
-
-    def log_player(self, player: Player):
-        self._game_recorder.log_player(player.name, player.game_role, player.model.name)
-
-    def log_next_round(self):
-        self._game_recorder.log_next_round()
-
-    def log_event(self, from_, to, action):
-        self._game_recorder.log_event(from_, to, action)
-
-    def store_records(self, results_root, dialogue_pair_desc, game_record_dir):
-        self._game_recorder.store_records(
-            results_root, dialogue_pair_desc, game_record_dir
-        )
+        self.log_event("GM", "GM", {"type": type_, "content": value})
 
     @abc.abstractmethod
     def setup(self, **kwargs):
@@ -111,7 +108,15 @@ class GameMaster(abc.ABC):
 
     @abc.abstractmethod
     def play(self) -> None:
-        """Play the game (multiple turns of a specific game instance)."""
+        """Auto-Play the game for multiple turns given game instance."""
+        pass
+
+    @abc.abstractmethod
+    def is_done(self) -> bool:
+        pass
+
+    @abc.abstractmethod
+    def has_started(self) -> bool:
         pass
 
 
@@ -131,9 +136,9 @@ class DialogueGameMaster(GameMaster):
         super().__init__(game_spec, experiment, player_models)
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
-        self.context_for_player: Dict[str, Dict] = (
-            dict()
-        )  # context entries look like {"role":"user", "content": ...}
+        self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
+        self.initial_prompt_for_player: Dict[str, Dict] = dict()
+        self.started = False
         self.current_round: int = 0
         self._current_player: Player = None
         self._current_player_idx: int = 0
@@ -141,12 +146,8 @@ class DialogueGameMaster(GameMaster):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for (
-            player
-        ) in (
-            self.players_by_names.values()
-        ):  # sync game recorders (not copied in Player)
-            player.game_recorder = self.game_recorder
+        for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
+            player.register_many(self._loggers)
 
     @property
     def game_state(self):
@@ -165,12 +166,11 @@ class DialogueGameMaster(GameMaster):
         return list(self.players_by_names.values())
 
     @final
-    def add_player(
-        self,
-        player: Player,
-        initial_prompt: Union[str, Dict] = None,
-        initial_context: Union[str, Dict] = None,
-    ):
+    def add_player(self,
+                   player: Player,
+                   *,
+                   initial_prompt: Union[str, Dict] = None,
+                   initial_context: Union[str, Dict] = None):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
 
@@ -178,17 +178,21 @@ class DialogueGameMaster(GameMaster):
 
         Args:
             player: The player to be added to the game. The player's name must be unique.
-            initial_prompt: The initial prompt given to the player (optional). See Player for more details.
+            initial_prompt: The initial prompt given to the player (optional). This argument works like a lazy prompt
+                            that is only added to the context on the first observe. Hence, the initial prompt must be
+                            set before the player is called the first time. If set, then on the first player call
+                            the initial prompt will be added to the player's message history and logged as a
+                            'send message' event without a response event. On each player call the initial prompt will
+                            be automatically merged with the first memorized context given to the player
+                            (via two newlines) by the backend.
+                            Alternatively, the initial prompt could be part of the first context given to the player.
             initial_context: A context to be immediately set for the player (optional). This is useful for initial
                             prompts that are supposed to be handled as the first context, for example, when adding
                             the other player's response to the prompt is not necessary, but the player is supposed
                             to directly react to the initial prompt. Alternatively, overwrite on_before_game() and
                             use set_context_for(player) to set the player context.
         """
-        player.game_recorder = (
-            self.game_recorder
-        )  # player should record to the same interaction log
-        player.initial_prompt = initial_prompt
+        player.register_many(self._loggers)  # player should record to the same interaction log
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(
@@ -196,7 +200,17 @@ class DialogueGameMaster(GameMaster):
                 f"but there is already a player registered with name '{player.name}'."
             )
         self.players_by_names[player.name] = player
-        self.log_player(player)
+        self.log_player(player.name, player.game_role, player.model.name)
+        if initial_prompt is not None:
+            assert isinstance(initial_prompt, (str, dict)), \
+                f"The initial prompt must be a str or dict, but is {type(initial_prompt)}"
+            if isinstance(initial_prompt, dict):
+                assert "role" in initial_prompt and initial_prompt["role"] == "user", \
+                    "The initial prompt requires a 'role' entry with value 'user'"
+                extras = {k: v for k, v in initial_context.items() if k not in ["role", "content"]}
+                self.set_initial_prompt_for(player, initial_prompt["content"], **extras)
+            else:
+                self.set_initial_prompt_for(player, initial_prompt)
         if initial_context is not None:
             assert isinstance(
                 initial_context, (str, dict)
@@ -228,6 +242,7 @@ class DialogueGameMaster(GameMaster):
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
         self._on_before_game()
+        self.started = True
         self._on_before_round()
 
     @abc.abstractmethod
@@ -242,6 +257,26 @@ class DialogueGameMaster(GameMaster):
         pass
 
     @final
+    def set_initial_prompt_for(self, player: Player, content: str, **extras):
+        """
+        Set the initial prompt for the specified Player. The prompt will be prefixed to the player's next turn.
+
+        The context always has a 'role' and 'content' entry where the 'role' is always set to 'user'.
+        Args:
+            player: The player to set the context for.
+            content: The text content to be added to the initial prompt.
+            extras: Additional content to be merged into the context e.g. information about images
+        """
+        if self.is_running():
+            raise RuntimeError("The initial_prompt cannot be set when the game is already running."
+                               "This feature only usable during game setup.")
+        if player is None:
+            raise ValueError("Cannot set initial_prompt because no player is given.")
+        message = {"role": "user", "content": content}
+        initial_prompt = {**extras, **message}
+        self.initial_prompt_for_player[player.name] = initial_prompt
+
+    @final
     def set_context_for(self, player: Player, content: str, **extras):
         """
         Set the context for the specified Player. The player will be prompted with the context on its next turn.
@@ -253,7 +288,7 @@ class DialogueGameMaster(GameMaster):
             extras: Additional content to be merged into the context e.g. information about images
         """
         if player is None:
-            return
+            raise ValueError("Cannot apply set_context_for because no player is given.")
         message = {"role": "user", "content": content}
         context = {**extras, **message}
         self.context_for_player[player.name] = context
@@ -268,20 +303,28 @@ class DialogueGameMaster(GameMaster):
         assert "role" in context, f"Player context must have a 'role' entry"
         assert context["role"] == "user", f"Role of player context must be 'user'"
         assert "content" in context, f"Player context must have a 'content' entry"
+        initial_prompt = self.initial_prompt_for_player.pop(player.name, None)
+        if initial_prompt is not None:
+            content = context["content"]
+            initial_prompt_content = initial_prompt["content"]
+            context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
         return context
 
     @final
     def play(self) -> None:
-        """
-        Main play loop method. This method is called to run the game for benchmarking.
-        """
         done = False
         while not done:
-            context = self.get_context_for(self.current_player)
-            response = self.current_player(context)
+            player, context = self.observe()
+            response = player(context)
             done, _ = self.step(response)
         for player in self.get_players():
             player.reset()
+
+    @final
+    def observe(self) -> Tuple[Player, Dict]:
+        player = self.current_player
+        context = self.get_context_for(player)
+        return player, context
 
     @final
     def step(self, response: str) -> Tuple[bool, Dict]:
@@ -297,7 +340,7 @@ class DialogueGameMaster(GameMaster):
             )  # throws ParseError
             self._advance_game(self.current_player, parsed_response)  # throws GameError
         except ParseError as error:
-            self._game_recorder.count_request_violation()
+            self.count_request_violation()
             self._on_parse_error(error)
         except GameError as error:
             self._on_game_error(error)
@@ -316,6 +359,7 @@ class DialogueGameMaster(GameMaster):
         done = not self._does_game_proceed()
         if done:
             self._on_after_game()
+            self.log_game_end()
             self.info["episode_score"] = self.compute_episode_score()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
@@ -429,6 +473,12 @@ class DialogueGameMaster(GameMaster):
         """
         pass
 
+    def is_done(self) -> bool:
+        return not self._does_game_proceed()
+
+    def has_started(self) -> bool:
+        return self.started
+
     def _on_game_error(self, error: GameError):
         """
         Hook to implement consequences for game errors e.g. prepare re-prompting or set game state to failure.
@@ -507,7 +557,7 @@ class EnvGameMaster(GameMaster):
     def __setstate__(self, state):
         self.__dict__.update(state)
         for player in self.players_by_names.values():
-            player.game_recorder = self.game_recorder
+            player.register_many(self._loggers)
 
     def get_players(self) -> List[Player]:
         """Get a list of the players.
@@ -525,7 +575,7 @@ class EnvGameMaster(GameMaster):
         Args:
             player: The player to be added to the game. The player's name must be unique.
         """
-        player.game_recorder = self.game_recorder
+        player.register_many(self._loggers)
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(
@@ -533,9 +583,23 @@ class EnvGameMaster(GameMaster):
                 f"but there is already a player registered with name '{player.name}'."
             )
         self.players_by_names[player.name] = player
-        self.log_player(player)
+        self.log_player(player.name, player.game_role, player.model.name)
 
         self.game_environment.add_player(player)
+
+    def _next_player(self) -> Player:
+        """
+        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
+
+        Default: The gamer master passes the turn to the next player in the player list (order as added).
+        Starting again with the first player, when all players have had their turn(s).
+
+        :return: the next (current) player
+        """
+        self.current_player_idx = (self.current_player_idx + 1) % len(
+            self.players_by_names
+        )
+        return self.get_players()[self.current_player_idx]
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -568,7 +632,7 @@ class EnvGameMaster(GameMaster):
         This implementation uses the game environment for state management.
         """
         module_logger.debug(
-            f"[_play] Starting game with current player: {self.current_player}"
+            f"[play] Starting game with current player: {self.current_player}"
         )
         if self.current_player is None:
             module_logger.warning("No current player set, ending game.")
@@ -579,50 +643,67 @@ class EnvGameMaster(GameMaster):
         while not self.game_environment.state["terminated"]:
             self._on_before_round()
 
-            observation = self.game_environment.get_observation(self.current_player)
-            module_logger.info(f"[_play] Player {self.current_player.name}")
+            player, observation = self.observe()
+            module_logger.info(f"[play] Player {player.name}")
 
-            response = self.current_player(observation)
-            module_logger.info(f"[_play] Response: {response}")
+            response = player(observation)
+            module_logger.info(f"[play] Response: {response}")
 
-            if not self._player_response_in_expected_format(self.current_player, response):
-                module_logger.warning(
-                    f"[_play] Player {self.current_player.name} response is invalid"
-                )
-                if self._should_terminate_on_invalid_response():
-                    self._end_game()
-                    break
-
-            action = self._create_action_from_response(response)
-            self.game_environment.step(self.current_player, action)
-            self.log_to_self("state", self.game_environment._render_state_as_human_readable())
-
-            if self.game_environment.state["terminated"]:
-                self._end_game()
+            done, _ = self.step(response)
+            if done:
                 break
 
-            if self._should_pass_turn():
-                self.current_player = self._next_player()
-                if self._start_next_round():
-                    self._on_after_round()
-                    self.current_round += 1
-                    self.log_next_round()
-
-    def _next_player(self) -> Player:
+    def observe(self) -> Tuple[Player, Dict]:
         """
-        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
-
-        Default: The gamer master passes the turn to the next player in the player list (order as added).
-        Starting again with the first player, when all players have had their turn(s).
-
-        :return: the next (current) player
+        Returns the current player and their observation from the environment.
         """
-        players = self.get_players()
-        if not players:
-            raise ValueError("No players have been added to the game")
+        if self.current_player is None:
+            raise RuntimeError("No current player set in EnvGameMaster.")
+        observation = self.game_environment.get_observation(self.current_player)
+        return self.current_player, observation
 
-        self.current_player_idx = (self.current_player_idx + 1) % len(players)
-        return players[self.current_player_idx]
+    def step(self, response: str) -> Tuple[bool, Dict]:
+        """
+        Applies the player's response as an action in the environment, advances the game, and returns (done, info).
+        """
+        if not self._player_response_in_expected_format(self.current_player, response):
+            if self._should_terminate_on_invalid_response():
+                self._end_game()
+                return True, {"error": "Invalid response format"}
+            action = self._violated_format_action()
+        else:
+            action = self._create_action_from_response(response)
+
+        self.game_environment.step(self.current_player, action)
+        if self.game_environment.state["aborted"]:
+            self.count_request_violation()
+        self.log_to_self("state", self.game_environment._render_state_as_human_readable())
+
+        done = self.is_done()
+        info = deepcopy(self.game_environment.state)
+
+        if done:
+            self._end_game()
+        elif self._should_pass_turn():
+            self.current_player = self._next_player()
+            if self._start_next_round():
+                self._on_after_round()
+                self.current_round += 1
+                self.log_next_round()
+
+        return done, info
+
+    def is_done(self) -> bool:
+        """
+        Returns True if the game is finished (terminated in the environment).
+        """
+        return self.game_environment.state.get("terminated", False)
+
+    def has_started(self) -> bool:
+        """
+        Returns True if the game has started (current_player is set and environment is not in initial state).
+        """
+        return self.current_player is not None and self.game_environment.state is not None
 
     def _start_next_round(self) -> bool:
         """
@@ -635,7 +716,7 @@ class EnvGameMaster(GameMaster):
         return self.current_player_idx == 0
 
     @abc.abstractmethod
-    def compute_response_score(self, response: str, context: Dict):
+    def compute_turn_score(self, response: str, context: Dict):
         """
         Mandatory.
         :param response: The response of the current player.
@@ -735,7 +816,24 @@ class EnvGameMaster(GameMaster):
         """
         Finishes the game by adding the episode scores to the logs and calling the after game hook.
         """
-        self._log_keys()
+        final_state = self.game_environment.state
+
+        serializable_state = json.loads(json.dumps(final_state, cls=GameStateEncoder))
+        module_logger.debug(f"Final game state: \n{to_pretty_json(serializable_state)}")
+
+        aborted = int(final_state.get("aborted", False))
+        success = int(final_state.get("success", False))
+        lose = int(not success and not aborted)
+
+        self.log_key(METRIC_ABORTED, aborted)
+        self.log_key(METRIC_SUCCESS, success)
+        self.log_key(METRIC_LOSE, lose)
+
+        for logger in self._loggers:
+            self.log_key(METRIC_REQUEST_COUNT, logger.requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_PARSED, logger.successful_requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_VIOLATED, logger.violated_requests_counts)
+
         self._on_after_game()
 
     def _on_after_game(self):
@@ -744,24 +842,3 @@ class EnvGameMaster(GameMaster):
         Hook: Modify this method for game-specific functionality.
         """
         pass
-
-    def _log_keys(self):
-        """Executed once at the end, at the end of the play loop.
-
-        Hook: Modify this method for game-specific functionality.
-
-        This method is useful to process and log/record overall game results.
-        """
-        module_logger.info("[_on_after_game] Game completed, processing final state")
-
-        final_state = self.game_environment.state
-
-        serializable_state = json.loads(json.dumps(final_state, cls=GameStateEncoder))
-        module_logger.debug(f"Final game state: \n{to_pretty_json(serializable_state)}")
-
-        for key, value in serializable_state.items():
-            self.log_key(key, value)
-
-        self.log_key("episode_score", self.compute_episode_score())
-
-        module_logger.info(f"[_on_after_game] Game completed")

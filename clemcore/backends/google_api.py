@@ -9,7 +9,7 @@ import tempfile
 import imghdr
 
 import clemcore.backends as backends
-from clemcore.backends.utils import ensure_messages_format
+from clemcore.backends.utils import ensure_messages_format, augment_response_object
 
 logger = logging.getLogger(__name__)
 
@@ -155,6 +155,7 @@ class GoogleModel(backends.Model):
         return encoded_messages, encoded_messages_for_logging
 
     @retry(tries=10, delay=120, logger=logger)
+    @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
         """Request a generated response from the Google remote API.

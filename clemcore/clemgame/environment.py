@@ -9,10 +9,12 @@ Environments:
 """
 
 import logging
+import os
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Literal, Optional, Tuple, TypedDict, Union
 
 from clemcore.clemgame.player import Player
+from clemcore.clemgame.resources import store_image
 from clemcore.utils.string_utils import to_pretty_json
 
 module_logger = logging.getLogger(__name__)
@@ -73,7 +75,7 @@ class GameEnvironment(ABC):
     This class follows both the Gymnasium interface and the clembench framework.
     """
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: Dict[str, Any] = None):
         """
         Initialize a game environment.
 
@@ -88,7 +90,16 @@ class GameEnvironment(ABC):
         self.observations: Dict[str, Observation] = {}
         self.image_counter = 0
 
-        self.config = config or {}
+        self.config = config
+        self.image_counter = 0
+        self.images_dir = None
+        if self.config.get('render_as') == 'image':
+            game_name = self.config.get('game_name', None)
+            if game_name is None:
+                raise ValueError('game_name must be provided in config for image storage')
+            abs_path = os.path.abspath(os.curdir)
+            self.images_dir = os.path.join(abs_path, game_name, 'images')
+            os.makedirs(self.images_dir, exist_ok=True)
 
         self.state: GameState = {
             "terminated": False,
@@ -259,24 +270,6 @@ class GameEnvironment(ABC):
         """
         raise NotImplementedError
 
-    def _store_image(self, image_data: bytes, filename: str) -> Optional[str]:
-        """Store an image using the game recorder.
-
-        Args:
-            image_data: The image data as bytes.
-            filename: The filename for the image.
-
-        Returns:
-            The path to the stored image file, or None if storage failed.
-        """
-        if not self.players:
-            module_logger.warning("No players available to access game recorder")
-            return None
-
-        game_recorder = self.players[0].game_recorder
-
-        return game_recorder.store_image(image_data, filename)
-
     def render_state(self, player_name: Optional[str] = None) -> Union[str, bytes]:
         """Format the state for display as string or image.
 
@@ -291,7 +284,14 @@ class GameEnvironment(ABC):
             or a pretty-printed string representation of the grid (if render_as is "human-readable")
         """
         if self.render_as == "image":
-            return self._render_state_as_image(player_name)
+            image_data = self._render_state_as_image(player_name)
+
+            image_filename = f"image_{self.image_counter}.png"
+            image_path = store_image(image_data, os.path.dirname(self.images_dir), image_filename)
+
+            self._last_image_path = image_path
+            self.image_counter += 1
+            return image_path
         elif self.render_as == "string":
             return self._render_state_as_string(player_name)
         elif self.render_as == "human-readable":
@@ -322,18 +322,12 @@ class GameEnvironment(ABC):
         Create an observation for a specific player.
         """
         if self.render_as == "image":
-            image_filename = f"image_{self.image_counter}.png"
-
-            stored_path = self._store_image(rendered_state, image_filename)
-
-            # add file path to the observation (backends expect file paths, can't work with data URLs)
+            image_path = self._last_image_path
             observation: Observation = {
                 "role": "user",
                 "content": text_content + "[State image shown below]",
-                "image": [stored_path],
+                "image": [image_path],
             }
-
-            self.image_counter += 1
         else:
             observation: Observation = {
                 "role": "user",
