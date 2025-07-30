@@ -10,6 +10,14 @@ from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
 from clemcore.clemgame.errors import GameError, ParseError
 from clemcore.clemgame.events import GameEventSource
+from clemcore.clemgame.metrics import (
+    METRIC_ABORTED,
+    METRIC_LOSE,
+    METRIC_REQUEST_COUNT,
+    METRIC_REQUEST_COUNT_PARSED,
+    METRIC_REQUEST_COUNT_VIOLATED,
+    METRIC_SUCCESS,
+)
 from clemcore.clemgame.player import Player
 from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator
@@ -667,6 +675,8 @@ class EnvGameMaster(GameMaster):
             action = self._create_action_from_response(response)
 
         self.game_environment.step(self.current_player, action)
+        if self.game_environment.state["aborted"]:
+            self.count_request_violation()
         self.log_to_self("state", self.game_environment._render_state_as_human_readable())
 
         done = self.is_done()
@@ -706,7 +716,7 @@ class EnvGameMaster(GameMaster):
         return self.current_player_idx == 0
 
     @abc.abstractmethod
-    def compute_response_score(self, response: str, context: Dict):
+    def compute_turn_score(self, response: str, context: Dict):
         """
         Mandatory.
         :param response: The response of the current player.
@@ -788,6 +798,12 @@ class EnvGameMaster(GameMaster):
         """
         pass
 
+    def _after_round(self):
+        """Executed in the play loop after a round of gameplay starts.
+        """
+        self.log_key("turn_score", self.compute_turn_score())
+        self._on_after_round()
+
     def _on_after_round(self):
         """Executed in the play loop after a round of gameply finished i.e. _start_next_round() resolves to True.
 
@@ -806,7 +822,24 @@ class EnvGameMaster(GameMaster):
         """
         Finishes the game by adding the episode scores to the logs and calling the after game hook.
         """
-        self._log_keys()
+        final_state = self.game_environment.state
+
+        serializable_state = json.loads(json.dumps(final_state, cls=GameStateEncoder))
+        module_logger.debug(f"Final game state: \n{to_pretty_json(serializable_state)}")
+
+        aborted = int(final_state.get("aborted", False))
+        success = int(final_state.get("success", False))
+        lose = int(not success and not aborted)
+
+        self.log_key(METRIC_ABORTED, aborted)
+        self.log_key(METRIC_SUCCESS, success)
+        self.log_key(METRIC_LOSE, lose)
+
+        for logger in self._loggers:
+            self.log_key(METRIC_REQUEST_COUNT, logger.requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_PARSED, logger.successful_requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_VIOLATED, logger.violated_requests_counts)
+
         self._on_after_game()
 
     def _on_after_game(self):
@@ -815,24 +848,3 @@ class EnvGameMaster(GameMaster):
         Hook: Modify this method for game-specific functionality.
         """
         pass
-
-    def _log_keys(self):
-        """Executed once at the end, at the end of the play loop.
-
-        Hook: Modify this method for game-specific functionality.
-
-        This method is useful to process and log/record overall game results.
-        """
-        module_logger.info("[_on_after_game] Game completed, processing final state")
-
-        final_state = self.game_environment.state
-
-        serializable_state = json.loads(json.dumps(final_state, cls=GameStateEncoder))
-        module_logger.debug(f"Final game state: \n{to_pretty_json(serializable_state)}")
-
-        for key, value in serializable_state.items():
-            self.log_key(key, value)
-
-        self.log_key("episode_score", self.compute_episode_score())
-
-        module_logger.info(f"[_on_after_game] Game completed")
