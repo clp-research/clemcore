@@ -798,12 +798,6 @@ class EnvGameMaster(GameMaster):
         """
         pass
 
-    def _after_round(self):
-        """Executed in the play loop after a round of gameplay starts.
-        """
-        self.log_key("turn_score", self.compute_turn_score())
-        self._on_after_round()
-
     def _on_after_round(self):
         """Executed in the play loop after a round of gameply finished i.e. _start_next_round() resolves to True.
 
