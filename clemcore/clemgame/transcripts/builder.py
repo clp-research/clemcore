@@ -1,17 +1,18 @@
 import glob
+import html
 import json
 import logging
 import os
-import html
 import shutil
 from pathlib import Path
 from typing import Dict, List
+
 from tqdm import tqdm
 
 import clemcore.clemgame.transcripts.constants as constants
 import clemcore.clemgame.transcripts.patterns as patterns
+from clemcore.clemgame.resources import load_json, store_file
 from clemcore.utils import file_utils
-from clemcore.clemgame.resources import store_file, load_json
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -81,18 +82,19 @@ def build_transcript(interactions: Dict):
     players = interactions["players"]
     transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
     pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
-    episode_dir = meta.get("episode_dir")
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
             f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
 
-    episodes_path = Path(f"{pair_descriptor}/{meta['game_name']}/{episode_dir}")
-    module_logger.info(f"episodedir: {episodes_path}, {meta}")
-    if episodes_path.exists():
-        images_dir = episodes_path / "images"
-        images_dir.mkdir(exist_ok=True)
-    else:
-        images_dir = None
+    # The images directory is in the same directory as the interactions.json file
+    # We need to construct the path based on the current working directory and the episode structure
+    # The path structure is: results/{pair_descriptor}/{game_name}/{experiment_name}/instance_{game_id}/images/
+    images_dir = Path(
+        f"results/{pair_descriptor}/{meta['game_name']}/{meta['experiment_name']}/instance_{meta['game_id']:05d}/images")
+    has_images = False
+    module_logger.info(f"images_dir: {images_dir}")
+    if images_dir.exists():
+        has_images = True
 
     # all events over all turns
     events = [event for turn in interactions['turns'] for event in turn]
@@ -120,31 +122,27 @@ def build_transcript(interactions: Dict):
                 ...
         style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
 
-        has_images = False
         image_list = []
 
         # check if images are in the action dict (new structure)
         if "image" in event["action"]:
             has_images = True
             image_list = event["action"]["image"]
-            module_logger.info("imagelist: {image_list}")
         # check if images are in the content field (old structure)
         elif isinstance(msg_content, dict) and "image" in msg_content:
             has_images = True
             image_list = msg_content["image"]
 
         if has_images:
+            module_logger.info(f"has images: {image_list}")
             transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
             transcript += f'  <p>{msg_raw}</p>\n'
             for image_src in image_list:
-                if image_src.startswith("results/"): # make path relative to transcript
-                    source_image_path = Path(image_src)
-                    if source_image_path.exists():
-                        image_filename = source_image_path.name
-                        image_src = f"images/{image_filename}"
-                    else:
-                        module_logger.warning(f"Image file not found: {source_image_path}")
-
+                # convert absolute paths to relative paths for the transcript
+                if image_src.startswith("/"):
+                    # extract only the filename from the absolute path
+                    image_filename = Path(image_src).name
+                    image_src = f"images/{image_filename}"
                 elif not image_src.startswith("http"):  # take the web url as it is
                     if "IMAGE_ROOT" in os.environ:
                         image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)

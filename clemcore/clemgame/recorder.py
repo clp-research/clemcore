@@ -16,7 +16,7 @@ module_logger = logging.getLogger(__name__)
 class GameInteractionsRecorder(GameEventLogger):
     """Default game recorder with common methods for recording game interactions during gameplay."""
 
-    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str, episode_dir: str,
+    def __init__(self, game_name: str, experiment_name: str, game_id: int, results_folder: str,
                  player_model_infos: Dict):
         self._game_name = game_name
         self._current_round = 0
@@ -26,7 +26,6 @@ class GameInteractionsRecorder(GameEventLogger):
                          experiment_name=experiment_name,
                          game_id=game_id,
                          results_folder=results_folder,
-                         episode_dir=episode_dir,
                          clem_version=get_version()),
             "player_models": player_model_infos,
             # already add Game Master

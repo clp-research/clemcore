@@ -1,6 +1,6 @@
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameBenchmarkCallbackList
 from clemcore.clemgame.callbacks.files import ResultsFolder, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver
+    InteractionsFileSaver, ImageFileSaver
 from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError, ResponseError, ProtocolError, \
     NotApplicableError
 from clemcore.clemgame.instances import GameInstanceGenerator, GameInstanceIterator
@@ -41,6 +41,7 @@ __all__ = [
     "InstanceFileSaver",
     "ExperimentFileSaver",
     "InteractionsFileSaver",
+    "ImageFileSaver",
     "GameInteractionsRecorder",
     "GameResourceLocator",
     "ResponseError",

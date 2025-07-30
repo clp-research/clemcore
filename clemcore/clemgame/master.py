@@ -8,10 +8,10 @@ from typing import Any, Dict, List, Optional, Tuple, Union, final
 
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
-from clemcore.clemgame.errors import ParseError, GameError
+from clemcore.clemgame.errors import GameError, ParseError
 from clemcore.clemgame.events import GameEventSource
-from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.player import Player
+from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator
 from clemcore.utils.string_utils import to_pretty_json
 
@@ -110,6 +110,7 @@ class GameMaster(EnvLike, GameEventSource):
     @abc.abstractmethod
     def has_started(self) -> bool:
         pass
+
 
 class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
@@ -574,9 +575,23 @@ class EnvGameMaster(GameMaster):
                 f"but there is already a player registered with name '{player.name}'."
             )
         self.players_by_names[player.name] = player
-        self.log_player(player)
+        self.log_player(player.name, player.game_role, player.model.name)
 
         self.game_environment.add_player(player)
+
+    def _next_player(self) -> Player:
+        """
+        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
+
+        Default: The gamer master passes the turn to the next player in the player list (order as added).
+        Starting again with the first player, when all players have had their turn(s).
+
+        :return: the next (current) player
+        """
+        self.current_player_idx = (self.current_player_idx + 1) % len(
+            self.players_by_names
+        )
+        return self.get_players()[self.current_player_idx]
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -609,7 +624,7 @@ class EnvGameMaster(GameMaster):
         This implementation uses the game environment for state management.
         """
         module_logger.debug(
-            f"[_play] Starting game with current player: {self.current_player}"
+            f"[play] Starting game with current player: {self.current_player}"
         )
         if self.current_player is None:
             module_logger.warning("No current player set, ending game.")
@@ -620,50 +635,65 @@ class EnvGameMaster(GameMaster):
         while not self.game_environment.state["terminated"]:
             self._on_before_round()
 
-            observation = self.game_environment.get_observation(self.current_player)
-            module_logger.info(f"[_play] Player {self.current_player.name}")
+            player, observation = self.observe()
+            module_logger.info(f"[play] Player {player.name}")
 
-            response = self.current_player(observation)
-            module_logger.info(f"[_play] Response: {response}")
+            response = player(observation)
+            module_logger.info(f"[play] Response: {response}")
 
-            if not self._player_response_in_expected_format(self.current_player, response):
-                module_logger.warning(
-                    f"[_play] Player {self.current_player.name} response is invalid"
-                )
-                if self._should_terminate_on_invalid_response():
-                    self._end_game()
-                    break
-
-            action = self._create_action_from_response(response)
-            self.game_environment.step(self.current_player, action)
-            self.log_to_self("state", self.game_environment._render_state_as_human_readable())
-
-            if self.game_environment.state["terminated"]:
-                self._end_game()
+            done, _ = self.step(response)
+            if done:
                 break
 
-            if self._should_pass_turn():
-                self.current_player = self._next_player()
-                if self._start_next_round():
-                    self._on_after_round()
-                    self.current_round += 1
-                    self.log_next_round()
-
-    def _next_player(self) -> Player:
+    def observe(self) -> Tuple[Player, Dict]:
         """
-        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
-
-        Default: The gamer master passes the turn to the next player in the player list (order as added).
-        Starting again with the first player, when all players have had their turn(s).
-
-        :return: the next (current) player
+        Returns the current player and their observation from the environment.
         """
-        players = self.get_players()
-        if not players:
-            raise ValueError("No players have been added to the game")
+        if self.current_player is None:
+            raise RuntimeError("No current player set in EnvGameMaster.")
+        observation = self.game_environment.get_observation(self.current_player)
+        return self.current_player, observation
 
-        self.current_player_idx = (self.current_player_idx + 1) % len(players)
-        return players[self.current_player_idx]
+    def step(self, response: str) -> Tuple[bool, Dict]:
+        """
+        Applies the player's response as an action in the environment, advances the game, and returns (done, info).
+        """
+        if not self._player_response_in_expected_format(self.current_player, response):
+            if self._should_terminate_on_invalid_response():
+                self._end_game()
+                return True, {"error": "Invalid response format"}
+            action = self._violated_format_action()
+        else:
+            action = self._create_action_from_response(response)
+
+        self.game_environment.step(self.current_player, action)
+        self.log_to_self("state", self.game_environment._render_state_as_human_readable())
+
+        done = self.is_done()
+        info = deepcopy(self.game_environment.state)
+
+        if done:
+            self._end_game()
+        elif self._should_pass_turn():
+            self.current_player = self._next_player()
+            if self._start_next_round():
+                self._on_after_round()
+                self.current_round += 1
+                self.log_next_round()
+
+        return done, info
+
+    def is_done(self) -> bool:
+        """
+        Returns True if the game is finished (terminated in the environment).
+        """
+        return self.game_environment.state.get("terminated", False)
+
+    def has_started(self) -> bool:
+        """
+        Returns True if the game has started (current_player is set and environment is not in initial state).
+        """
+        return self.current_player is not None and self.game_environment.state is not None
 
     def _start_next_round(self) -> bool:
         """

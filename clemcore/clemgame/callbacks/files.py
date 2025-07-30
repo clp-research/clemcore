@@ -1,14 +1,15 @@
 import hashlib
+import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:  # to satisfy pycharm
     from clemcore.clemgame import GameMaster
 
 from clemcore.backends import Model
-from clemcore.clemgame.recorder import GameInteractionsRecorder
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
+from clemcore.clemgame.recorder import GameInteractionsRecorder
 from clemcore.clemgame.resources import store_json
 
 
@@ -133,3 +134,28 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
         store_json(recorder.requests, "requests.json", instance_dir_path)
+
+
+class ImageFileSaver(GameBenchmarkCallback):
+    def __init__(self, result_dir_path: Path, player_models: List[Model]):
+        self.results_folder = ResultsFolder(result_dir_path, player_models)
+
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
+        game_dir = Path(game_master.game_spec.game_name)
+        local_images_dir = game_dir / "images"
+
+        if not local_images_dir.exists() or not local_images_dir.is_dir():
+            return
+
+        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+        results_images_dir = instance_dir_path / "images"
+        results_images_dir.mkdir(parents=True, exist_ok=True)
+
+        for image_file in local_images_dir.glob("*"):
+            if image_file.is_file():
+                shutil.move(str(image_file), str(results_images_dir / image_file.name))
+
+        try:
+            local_images_dir.rmdir()
+        except OSError:
+            pass

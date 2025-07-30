@@ -1,7 +1,7 @@
 import abc
 from collections import defaultdict
 from copy import deepcopy
-from typing import List, Dict, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from clemcore import backends
 from clemcore.clemgame.events import GameEventSource
@@ -127,6 +127,8 @@ class Player(GameEventSource):
         if log_event:
             action = {'type': 'send message', 'content': context["content"],
                       'label': "context" if memorize else "forget"}
+            if "image" in context:
+                action["image"] = context["image"]
             self.log_event(from_='GM', to=self.name, action=action)
         # Get return value already here, because we might want to forget context extras on memorize
         updated_perspective = self.get_perspective() + [context]
