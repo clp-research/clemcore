@@ -59,7 +59,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         try:
             game_interactions = load_json(interaction_file)
             interactions_dir = Path(interaction_file).parent
-            transcript = build_transcript(game_interactions)
+            transcript = build_transcript(game_interactions, interactions_dir)
             store_file(transcript, "transcript.html", interactions_dir)
             transcript_tex = build_tex(game_interactions)
             store_file(transcript_tex, "transcript.tex", interactions_dir)
@@ -70,7 +70,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         stdout_logger.error(f"'{error_count}' exceptions occurred: See clembench.log for details.")
 
 
-def build_transcript(interactions: Dict):
+def build_transcript(interactions: Dict, interactions_dir: Path):
     """Create an HTML file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
@@ -83,52 +83,73 @@ def build_transcript(interactions: Dict):
     title = f"Interaction Transcript for {meta['experiment_name']}, " \
             f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
-    for turn_idx, turn in enumerate(interactions['turns']):
-        transcript += f'<div class="game-round" data-round="{turn_idx}">'
-        for event in turn:
-            class_name = _get_class_name(event)
-            msg_content = event['action']['content']
-            msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
-            if event['from'] == 'GM' and event['to'] == 'GM':
-                speaker_attr = f'Game Master: {event["action"]["type"]}'
-            else:
-                from_player = event['from']
-                to_player = event['to']
-                if "game_role" in players[from_player] and "game_role" in players[to_player]:
-                    from_game_role = players[from_player]["game_role"]
-                    to_game_role = players[to_player]["game_role"]
-                    speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
-                else: # old mode (before 2.4)
-                    speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
-            # in case the content is a json BUT given as a string!
-            # we still want to check for image entry
-            if isinstance(msg_content, str):
-                try:
-                    msg_content = json.loads(msg_content)
-                except:
-                    ...
-            style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
-            # in case the content is a json with an image entry
-            if isinstance(msg_content, dict):
-                if "image" in msg_content:
-                    transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
-                    transcript += f'  <p>{msg_raw}</p>\n'
-                    for image_src in msg_content["image"]:
-                        if not image_src.startswith("http"):  # take the web url as it is
-                            if "IMAGE_ROOT" in os.environ:
-                                image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
-                            else:
-                                # CAUTION: this only works when the project is checked out (dev mode)
-                                image_src = os.path.join(file_utils.project_root(), image_src)
-                        transcript += (f'  <a title="{image_src}">'
-                                       f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
-                                       f'</a>\n')
-                    transcript += '</div>\n'
-                else:
-                    transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
-            else:
-                transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
-        transcript += "</div>"
+
+    # get images directory from interactions_dir
+    images_dir = interactions_dir / "images"
+    has_images = False
+    module_logger.info(f"images_dir: {images_dir}")
+    if images_dir.exists():
+        has_images = True
+
+    # all events over all turns
+    events = [event for turn in interactions['turns'] for event in turn]
+    for event in events:
+        class_name = _get_class_name(event)
+        msg_content = event['action']['content']
+        msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
+        if event['from'] == 'GM' and event['to'] == 'GM':
+            speaker_attr = f'Game Master: {event["action"]["type"]}'
+        else:
+            from_player = event['from']
+            to_player = event['to']
+            if "game_role" in players[from_player] and "game_role" in players[to_player]:
+                from_game_role = players[from_player]["game_role"]
+                to_game_role = players[to_player]["game_role"]
+                speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
+            else:  # old mode (before 2.4)
+                speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
+        # in case the content is a json BUT given as a string!
+        # we still want to check for image entry
+        if isinstance(msg_content, str):
+            try:
+                msg_content = json.loads(msg_content)
+            except:
+                ...
+        style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
+
+        image_list = []
+
+        # check if images are in the action dict (new structure)
+        if "image" in event["action"]:
+            has_images = True
+            image_list = event["action"]["image"]
+        # check if images are in the content field (old structure)
+        elif isinstance(msg_content, dict) and "image" in msg_content:
+            has_images = True
+            image_list = msg_content["image"]
+
+        if has_images:
+            module_logger.info(f"has images: {image_list}")
+            transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
+            transcript += f'  <p>{msg_raw}</p>\n'
+            for image_src in image_list:
+                # convert absolute paths to relative paths for the transcript
+                if image_src.startswith("/"):
+                    # extract only the filename from the absolute path
+                    image_filename = Path(image_src).name
+                    image_src = f"images/{image_filename}"
+                elif not image_src.startswith("http"):  # take the web url as it is
+                    if "IMAGE_ROOT" in os.environ:
+                        image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
+                    else:
+                        # CAUTION: this only works when the project is checked out (dev mode)
+                        image_src = os.path.join(file_utils.project_root(), image_src)
+                transcript += (f'  <a title="{image_src}">'
+                               f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
+                               f'</a>\n')
+            transcript += '</div>\n'
+        else:
+            transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
     transcript += patterns.HTML_FOOTER
     return transcript
 

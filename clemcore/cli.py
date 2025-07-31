@@ -9,7 +9,7 @@ from typing import List, Dict, Union, Callable, Optional
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver, GameBenchmarkCallbackList
+    InteractionsFileSaver, GameBenchmarkCallbackList, ImageFileSaver
 from clemcore.clemgame import benchmark
 from clemcore import clemeval, get_version
 from clemcore.clemgame.runners import dispatch
@@ -160,6 +160,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
                 callbacks.append(InstanceFileSaver(results_dir_path, player_models))
                 callbacks.append(ExperimentFileSaver(results_dir_path, player_models))
                 callbacks.append(InteractionsFileSaver(results_dir_path, player_models))
+                callbacks.append(ImageFileSaver(results_dir_path, player_models))
                 dispatch.run(game_benchmark, player_models, callbacks=callbacks, force_sequential=force_sequential)
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
