@@ -2,14 +2,14 @@ import hashlib
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Dict, List
+from typing import List, Dict, TYPE_CHECKING
 
 if TYPE_CHECKING:  # to satisfy pycharm
     from clemcore.clemgame import GameMaster
 
 from clemcore.backends import Model
-from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
 from clemcore.clemgame.recorder import GameInteractionsRecorder
+from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
 from clemcore.clemgame.resources import store_json
 
 
