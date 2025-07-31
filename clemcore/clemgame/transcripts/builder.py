@@ -1,18 +1,16 @@
 import glob
-import html
 import json
 import logging
 import os
-import shutil
+import html
 from pathlib import Path
 from typing import Dict, List
-
 from tqdm import tqdm
 
 import clemcore.clemgame.transcripts.constants as constants
 import clemcore.clemgame.transcripts.patterns as patterns
-from clemcore.clemgame.resources import load_json, store_file
 from clemcore.utils import file_utils
+from clemcore.clemgame.resources import store_file, load_json
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
