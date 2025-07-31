@@ -61,7 +61,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         try:
             game_interactions = load_json(interaction_file)
             interactions_dir = Path(interaction_file).parent
-            transcript = build_transcript(game_interactions)
+            transcript = build_transcript(game_interactions, interactions_dir)
             store_file(transcript, "transcript.html", interactions_dir)
             transcript_tex = build_tex(game_interactions)
             store_file(transcript_tex, "transcript.tex", interactions_dir)
@@ -72,7 +72,7 @@ def build_transcripts(top_dir: str, filter_games: List = None):
         stdout_logger.error(f"'{error_count}' exceptions occurred: See clembench.log for details.")
 
 
-def build_transcript(interactions: Dict):
+def build_transcript(interactions: Dict, interactions_dir: Path):
     """Create an HTML file with the interaction transcript.
     The file is stored in the corresponding episode directory.
     Args:
@@ -86,11 +86,8 @@ def build_transcript(interactions: Dict):
             f"episode {meta['game_id']} with {pair_descriptor}."
     transcript += patterns.TOP_INFO.format(title)
 
-    # The images directory is in the same directory as the interactions.json file
-    # We need to construct the path based on the current working directory and the episode structure
-    # The path structure is: results/{pair_descriptor}/{game_name}/{experiment_name}/instance_{game_id}/images/
-    images_dir = Path(
-        f"results/{pair_descriptor}/{meta['game_name']}/{meta['experiment_name']}/instance_{meta['game_id']:05d}/images")
+    # get images directory from interactions_dir
+    images_dir = interactions_dir / "images"
     has_images = False
     module_logger.info(f"images_dir: {images_dir}")
     if images_dir.exists():
