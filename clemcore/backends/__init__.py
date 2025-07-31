@@ -6,10 +6,12 @@ import os
 import importlib.resources as importlib_resources
 import importlib.util as importlib_util
 from typing import Dict, List
-from clemcore.backends.model_registry import ModelSpec, ModelRegistry, Model, HumanModel, CustomResponseModel
+from clemcore.backends.model_registry import (ModelSpec, ModelRegistry, Model, HumanModel, CustomResponseModel,
+                                              BatchGenerativeModel)
 
 __all_ = [
     "Model",
+    "BatchGenerativeModel",
     "ModelSpec",
     "ModelRegistry",
     "HumanModel",

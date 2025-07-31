@@ -1,104 +1,69 @@
 import abc
+from collections import defaultdict
 from copy import deepcopy
-from datetime import datetime
-from typing import List, Dict, Union
+from typing import List, Dict, Optional, Tuple
 
 from clemcore import backends
-from clemcore.clemgame.recorder import GameRecorder, NoopGameRecorder
+from clemcore.clemgame.events import GameEventSource
 
 
-class Player(abc.ABC):
-    """A participant of a game.
+class Player(GameEventSource):
+    """A participant in a dialogue-based game, capable of generating responses
+    based on a given context. A Player may be human-controlled, programmatic, or model-backed.
 
-    A player can respond via a custom implementation, human input or a language model:
+    Players can interact in three main ways:
 
-    - programmatic players are called via the _custom_response() method
-    - human players are called via the _terminal_response() method
-    - backend players are called via the generate_response() method of a backend
+    - Programmatic players implement `_custom_response(context)`
+    - Human players respond via `_terminal_response(context)`
+    - Model-backed players delegate to the model's `generate_response()` method
     """
 
-    def __init__(self, model: backends.Model, name: str = None, game_role: str = None,
-                 game_recorder: GameRecorder = None, initial_prompt: Union[str, Dict] = None,
-                 forget_extras: List[str] = None):
+    def __init__(self,
+                 model: backends.Model,
+                 *,
+                 name: str = None,
+                 game_role: str = None,
+                 forget_extras: List[str] = None
+                 ):
         """
         Args:
             model: The model used by this player.
             name: The player's name (optional). If not given, then automatically assigns a name like "Player 1 (Class)"
             game_role: The player's game role (optional). If not given, then automatically resolves to the class name.
-            game_recorder: The recorder for game interactions (optional). Default: NoopGameRecorder.
-            initial_prompt: The initial prompt given to the player (optional). Note that the initial prompt must be
-                            set before the player is called the first time. If set, then on the first player call
-                            the initial prompt will be added to the player's message history and logged as a
-                            'send message' event without a response event. To properly log this make sure that a proper
-                            game recorder is set. On each player call the initial prompt will be automatically merged
-                            with the first memorized context given to the player (via two newlines) by the backend.
-                            Alternatively, the initial prompt could be part of the first context given to the player.
             forget_extras: A list of context entries (keys) to forget after response generation.
                            This is useful to not keep image extras in the player's message history,
                            but still to prompt the model with an image given in the context.
         """
+        super().__init__()
         self._model: backends.Model = model
         self._name: str = name  # set by master
         self._game_role = game_role or self.__class__.__name__
-        self._game_recorder = game_recorder or NoopGameRecorder()  # set by master
-        self._is_initial_call: bool = True
-        self._initial_prompt: Dict = None if initial_prompt is None else self.__validate_initial_prompt(initial_prompt)
         self._forget_extras: List[str] = forget_extras or []  # set by game developer
         self._messages: List[Dict] = []  # internal state
-        self._prompt = None  # internal state
-        self._response_object = None  # internal state
         self._last_context = None  # internal state
 
     def reset(self):
-        """ Called at the end of the interaction.
+        """Reset the player to its initial state.
 
-        This hook can be used to potentially reset the player's state for further interactions.
-
-        By default, we delegate to the underlying model."""
+        Typically called at the end of an interaction round.
+        By default, resets the underlying model if applicable.
+        """
         self._model.reset()
 
     def __deepcopy__(self, memo):
         """Deepcopy override method.
-        Deepcopies Player class object, but keeps backend model and game recorder references intact.
+        Deep copies Player class object, but keeps backend model and game recorder references intact.
+        We don't want to multiply the recorders on each deep copy, but have a single set for each game.
         Args:
             memo: Dictionary of objects already copied during the current copying pass. (This is a deepcopy default.)
         """
         _copy = type(self).__new__(self.__class__)
         memo[id(self)] = _copy
         for key, value in self.__dict__.items():
-            if key not in ["_model", "_game_recorder"]:
+            if key not in ["_model", "_loggers"]:
                 setattr(_copy, key, deepcopy(value, memo))
         _copy._model = self._model
         return _copy
-
-    @property
-    def game_recorder(self):
-        return self._game_recorder
-
-    @game_recorder.setter
-    def game_recorder(self, game_recorder: GameRecorder):
-        self._game_recorder = game_recorder
-
-    @property
-    def initial_prompt(self):
-        return self._initial_prompt
-
-    @initial_prompt.setter
-    def initial_prompt(self, prompt: Union[str, Dict]):
-        if prompt is None:
-            self._initial_prompt = None  # allow to unset the initial prompt (again)
-            return
-        self._initial_prompt = self.__validate_initial_prompt(prompt)
-
-    def __validate_initial_prompt(self, prompt: Union[str, Dict]) -> Dict:
-        assert self._is_initial_call is True, "The initial prompt can only be set before the first player call"
-        assert isinstance(prompt, (str, dict)), \
-            f"The initial prompt must be a str or dict, but is {type(prompt)}"
-        if isinstance(prompt, dict):
-            assert "role" in prompt and prompt["role"] == "user", \
-                "The initial prompt requires a 'role' entry with value 'user'"
-            return deepcopy(prompt)
-        return dict(role="user", content=prompt)  # by default assume str
 
     @property
     def name(self):
@@ -117,113 +82,133 @@ class Player(abc.ABC):
         return self._model
 
     @property
-    def messages(self):
-        return deepcopy(self._messages)
-
-    @property
     def last_context(self):
-        return deepcopy(self._last_context)
+        return self._last_context
 
     def get_description(self) -> str:
-        """Get a description string for this Player instance.
+        """Returns a human-readable description of the player instance.
+
+        Useful for debugging or display purposes.
+
         Returns:
-            A string describing the player's name given, class and model used.
+            A string including the player's name, class, and model.
         """
         return f"{self.name} ({self.__class__.__name__}): {self.model}"
 
-    def __log_send_context_event(self, content: str, label=None):
-        """Record a 'send message' event with the current message content."""
-        assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        action = {'type': 'send message', 'content': content, 'label': label}
-        self._game_recorder.log_event(from_='GM', to=self.name, action=action)
+    def get_perspective(self):
+        """Returns the player's current memory of the dialogue.
 
-    def __log_response_received_event(self, response, label=None):
-        """Record a 'get message' event with the current response content."""
-        assert self._game_recorder is not None, "Cannot log player event, because game_recorder has not been set"
-        action = {'type': 'get message', 'content': response, 'label': label}
-        _prompt, _response = self.get_last_call_info()  # log 'get message' event including backend/API call
-        self._game_recorder.log_event(from_=self.name, to="GM", action=action,
-                                      call=(deepcopy(_prompt), deepcopy(_response)))
+        This reflects the player's internal state (i.e., what it 'remembers').
 
-    def get_last_call_info(self):
-        """Get values of the last player call.
         Returns:
-            Tuple of: Full prompt of the last call, full response of the last call.
+            A list of message dictionaries representing the conversation history.
         """
-        return self._prompt, self._response_object
+        return self._messages
 
-    def __call__(self, context: Dict, memorize: bool = True) -> str:
-        """
-        Let the player respond (act verbally) to a given context.
+    def perceive_context(self, context: Dict, *, log_event=True, memorize=True) -> List[Dict]:
+        """Processes a new context message and returns the player's updated perspective.
+
+        This method allows the Player to receive and optionally memorize a new user message
+        (e.g., from the GameMaster), without immediately generating a response.
+
+        It is typically used when preparing input for batched or deferred model invocation.
 
         Args:
-            context: The context to which the player should respond.
-            memorize: Whether the context and response are to be added to the player's message history.
+            context: A new user message to process (must have `role='user'`).
+            log_event: Whether to log this context as a game event (e.g., for visualization or tracking).
+            memorize: Whether to integrate the message into the player's internal memory.
+
         Returns:
-            The textual response.
+            A list of messages representing the player's updated perspective on the conversation,
+            including the newly received context.
         """
         assert context["role"] == "user", f"The context must be given by the user role, but is {context['role']}"
-        memorized_initial_prompt = None
-        # handle initial/first call, with only the initial prompt user message in history:
-        if self._is_initial_call and self._initial_prompt is not None:
-            assert len(self._messages) == 0, ("There must be no entry in the player's message history "
-                                              "on the first call, when the initial prompt is set.")
-            memorized_initial_prompt = deepcopy(self._initial_prompt)  # see explanation below
-            self._messages.append(memorized_initial_prompt)  # merged with context in ensure_alternating_roles (backend)
-            self.__log_send_context_event(memorized_initial_prompt["content"], label="initial prompt")
-
         self._last_context = deepcopy(context)
-
-        self.__log_send_context_event(context["content"], label="context" if memorize else "forget")
-        self._prompt, self._response_object, response_text = self.__call_model(context)
-        self.__log_response_received_event(response_text, label="response" if memorize else "forget")
-
-        # Copy context, so that original context given to the player is kept on forget extras. This is, for
-        # example, necessary to collect the original contexts in the rollout buffer for playpen training.
-        memorized_context = deepcopy(context)
-        # forget must happen only after the model has been called with the extras
-        # we forget extras here in any case, so that the prompt is also handled
-        for extra in self._forget_extras:
-            if extra in memorized_context:
-                del memorized_context[extra]
-            if memorized_initial_prompt is not None and extra in memorized_initial_prompt:
-                del memorized_initial_prompt[extra]
-
+        if log_event:
+            action = {'type': 'send message', 'content': context["content"],
+                      'label': "context" if memorize else "forget"}
+            self.log_event(from_='GM', to=self.name, action=action)
+        # Get return value already here, because we might want to forget context extras on memorize
+        updated_perspective = self.get_perspective() + [context]
         if memorize:
+            # Copy context, so that original context given to the player is kept on forget extras. This is, for
+            # example, necessary to collect the original contexts in the rollout buffer for playpen training.
+            memorized_context = deepcopy(context)
+            for extra in self._forget_extras:
+                if extra in memorized_context:
+                    del memorized_context[extra]
             self._messages.append(memorized_context)
-            self._messages.append(dict(role="assistant", content=response_text))
+        return updated_perspective
 
-        self._is_initial_call = False
-        return response_text
+    def perceive_response(self, response: str, *, log_event=True, memorize=True, metadata: Optional[Dict] = None) -> \
+            List[Dict]:
+        """Processes a response generated by the player and updates internal state accordingly.
 
-    def __call_model(self, context: Dict):
-        call_start = datetime.now()
-        response_object = dict()
-        prompt = context
+        This method should be called after a response has been produced (e.g., by a model or human),
+        to optionally log the message and integrate it into the player's memory.
+
+        Args:
+            response: The textual response generated by the player.
+            log_event: Whether to log this response as a game event (including call metadata, if available).
+            memorize: Whether to add the response to the player's internal memory.
+            metadata: Optional metadata containing call details, such as the input prompt and response object.
+
+        Returns:
+            A list of messages representing the player's updated perspective on the conversation,
+            including the response.
+        """
+        if log_event:
+            action = {'type': 'get message', 'content': response,
+                      'label': "response" if memorize else "forget"}
+            call_infos = None
+            if metadata is not None:  # log 'get message' event including backend/API call
+                call_infos = (deepcopy(metadata["prompt"]), deepcopy(metadata["response_object"]))
+            self.log_event(from_=self.name, to="GM", action=action, call=call_infos)
+        self.count_request()
+        if memorize:
+            self._messages.append(dict(role="assistant", content=response))
+        return self.get_perspective()
+
+    def __call__(self, context: Dict, memorize: bool = True) -> str:
+        """Generates a response to the given context message.
+
+        This is the primary method for turning a user message into a player reply.
+        It uses the appropriate backend (custom, human, or model) and optionally
+        updates internal memory and logs the interaction.
+
+        Args:
+            context: A dictionary representing the latest user input (`role='user'`).
+            memorize: Whether to store the context and response in memory.
+
+        Returns:
+            The textual response produced by the player.
+        """
+        perspective = self.perceive_context(context, memorize=memorize)
         if isinstance(self.model, backends.CustomResponseModel):
             response_text = self._custom_response(context)
+            response_object = dict(clem_player={"response": response_text, "model_name": self.model.name})
+            metadata = dict(prompt=context, response_object=response_object)
         elif isinstance(self.model, backends.HumanModel):
             response_text = self._terminal_response(context)
+            response_object = dict(clem_player={"response": response_text, "model_name": self.model.name})
+            metadata = dict(prompt=context, response_object=response_object)
         else:
-            prompt, response_object, response_text = self.model.generate_response(self._messages + [context])
+            prompt, response_object, response_text = self.model.generate_response(perspective)
+            metadata = dict(prompt=prompt, response_object=response_object)
             # TODO: add default ContextExceededError handling here or above
-        call_duration = datetime.now() - call_start
-        self._game_recorder.count_request()
-        response_object["clem_player"] = {
-            "call_start": str(call_start),
-            "call_duration": str(call_duration),
-            "response": response_text,
-            "model_name": self.model.name
-        }
-        return prompt, response_object, response_text
+        self.perceive_response(response_text, memorize=memorize, metadata=metadata)
+        return response_text
 
     def _terminal_response(self, context: Dict) -> str:
-        """Response for human interaction via terminal.
-        Overwrite this method to customize human inputs (model_name: human, terminal).
+        """Prompts the user via terminal input for a response.
+
+        This is used for human-in-the-loop players.
+
         Args:
-            context: The dialogue context to which the player should respond.
+            context: The message from the GM to respond to.
+
         Returns:
-            The human response as text.
+            The user's textual input.
         """
         latest_response = "Nothing has been said yet."
         if context is not None:
@@ -234,12 +219,102 @@ class Player(abc.ABC):
 
     @abc.abstractmethod
     def _custom_response(self, context: Dict) -> str:
-        """Response for programmatic Player interaction.
+        """Implements custom or programmatic player behavior.
 
-        Overwrite this method to implement programmatic behavior (model_name: mock, dry_run, programmatic, custom).
+        This method must be overridden in subclasses that simulate agent behavior
+        without relying on human or model-based backends (model_name: mock, dry_run, programmatic, custom).
+
         Args:
-            context: The dialogue context to which the player should respond.
+            context: The context to which the player should respond.
+
         Returns:
-            The programmatic response as text.
+            A string containing the player's response.
         """
         pass
+
+    @staticmethod
+    def batch_response(players: List["Player"],
+                       contexts: List[Dict],
+                       *,
+                       row_ids: Optional[List[int]] = None,
+                       ) -> Dict[int, str]:
+        """
+        Generates batched responses for a list of players based on their individual models and contexts.
+
+        This method processes each player's context to produce a prompt using the `perceive_context()` method.
+        Players are grouped by the name of their associated model backend to allow batch processing via
+        `generate_batch_response()`. Each batch of responses is then distributed back to the originating
+        players using `perceive_response()`.
+
+        Args:
+            players (List[Player]): A list of `Player` instances that will generate responses.
+            contexts (List[Dict]): A list of context dictionaries, one per player, used to generate prompts.
+            row_ids (List[int]): A list of unique identifiers (e.g., session or row IDs), aligned with the
+                                 `players` and `contexts` lists. These are used to map responses back to sessions.
+
+        Returns:
+            Dict[int, str]: A dictionary mapping each `row_id` to the corresponding response text generated
+                            by the appropriate model backend.
+
+        Raises:
+            AssertionError: If the lengths of `players`, `contexts`, and `row_ids` do not match.
+            AssertionError: If a model returns a number of responses that doesn't match the number of prompts
+                            it was given.
+            AttributeError: If a model does not implement the required `generate_batch_response` method.
+
+        Notes:
+            - Models are grouped by name (not by instance) to avoid issues with unhashable model objects.
+            - The order of inputs is preserved during batch generation to ensure correct mapping of responses
+              to players and session IDs.
+        """
+        if row_ids is None:
+            row_ids = list(range(len(players)))
+        assert len(row_ids) == len(players), (
+            f"`row_ids` and `players` must have the same length: {len(row_ids)} != {len(players)}"
+        )
+        assert len(players) == len(contexts), (
+            f"`players` and `contexts` must have the same length: {len(players)} != {len(contexts)}"
+        )
+        # Assert all models implement `generate_batch_response` up front
+        for player in players:
+            assert hasattr(player.model, "generate_batch_response"), (
+                f"Model '{player.model}' used by player '{player}' does not implement `generate_batch_response()`"
+            )
+
+        # Index models by name (since Model objects may not be hashable)
+        model_by_name = {player.model.name: player.model for player in players}
+
+        # Group inputs by model, tracking (row_id, player, perspective)
+        input_batch_by_model: Dict[str, List[Tuple[int, Player, List[Dict]]]] = defaultdict(list)
+        for row_id, player, context in zip(row_ids, players, contexts):
+            perspective = player.perceive_context(context)
+            input_batch_by_model[player.model.name].append((row_id, player, perspective))
+
+        # Collect responses per row_id
+        response_by_row_id = {}
+        for model_name, batched_inputs in input_batch_by_model.items():
+            # Build input batch and track mapping back to session/player
+            row_mapping: Dict[int, Tuple[int, Player]] = {}
+            batched_perspectives: List[List[Dict]] = []
+            for prompt_idx, (row_id, player, prompt) in enumerate(batched_inputs):
+                row_mapping[prompt_idx] = (row_id, player)
+                batched_perspectives.append(prompt)
+
+            # Run batched generation (assumes order-preserving)
+            model = model_by_name[model_name]
+            if model.model_spec.is_programmatic():
+                model.set_gen_arg("players", players)
+            results = model.generate_batch_response(batched_perspectives)
+            assert len(results) == len(batched_perspectives), (
+                f"Model '{model_name}' returned {len(results)} responses, "
+                f"but {len(batched_perspectives)} prompts were sent."
+            )
+
+            # Each result is assumed to be (prompt, response_object, response_text)
+            for prompt_idx, (perspective, response_object, response_text) in enumerate(results):
+                row_id, player = row_mapping[prompt_idx]
+                response_by_row_id[row_id] = response_text
+                metadata = dict(prompt=perspective, response_object=response_object)
+                player.perceive_response(response_text, metadata=metadata)
+
+        return response_by_row_id
