@@ -1,8 +1,6 @@
 import collections
 import copy
 import logging
-import os
-from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Dict, Tuple, Any, List
 
@@ -63,7 +61,7 @@ class GameInteractionsRecorder(GameEventLogger):
             value: The content of the entry to be logged.
         """
         self.interactions[key] = value
-        module_logger.debug(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
+        module_logger.info(f"{self._game_name}: Logged a game-specific interaction key: {key}.")
 
     def log_player(self, player_name: str, game_role: str, model_name: str):
         """Log a player of this game episode.
