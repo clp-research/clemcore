@@ -1,7 +1,7 @@
 import abc
 from collections import defaultdict
 from copy import deepcopy
-from typing import Dict, List, Optional, Tuple
+from typing import List, Dict, Optional, Tuple
 
 from clemcore import backends
 from clemcore.clemgame.events import GameEventSource
