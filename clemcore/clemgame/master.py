@@ -1,14 +1,13 @@
 import abc
 import collections
-import json
 import logging
 from copy import deepcopy
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple, Union, final
+from typing import List, Dict, Tuple, Any, Union, final, Optional
 
 from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
-from clemcore.clemgame.errors import GameError, ParseError
+from clemcore.clemgame.errors import ParseError, GameError
 from clemcore.clemgame.events import GameEventSource
 from clemcore.clemgame.metrics import (
     METRIC_ABORTED,
@@ -21,27 +20,8 @@ from clemcore.clemgame.metrics import (
 from clemcore.clemgame.player import Player
 from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator
-from clemcore.utils.string_utils import to_pretty_json
 
 module_logger = logging.getLogger(__name__)
-
-
-class GameStateEncoder(json.JSONEncoder):
-    """Custom JSON encoder for game state objects."""
-
-    def default(self, obj):
-        if hasattr(obj, '__dict__'):
-            serializable_dict = {}
-            for key, value in obj.__dict__.items():
-                try:
-                    json.dumps(value)
-                    serializable_dict[key] = value
-                except (TypeError, OverflowError):
-                    serializable_dict[key] = str(value)
-            return serializable_dict
-        elif hasattr(obj, '__str__'):
-            return str(obj)
-        return super().default(obj)
 
 
 class EnvLike(abc.ABC):
@@ -119,7 +99,6 @@ class GameMaster(EnvLike, GameEventSource):
     def has_started(self) -> bool:
         pass
 
-
 class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
     Has most logging and gameplay procedures implemented, including convenient logging methods.
@@ -195,10 +174,8 @@ class DialogueGameMaster(GameMaster):
         player.register_many(self._loggers)  # player should record to the same interaction log
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
-            raise ValueError(
-                f"Player names must be unique, "
-                f"but there is already a player registered with name '{player.name}'."
-            )
+            raise ValueError(f"Player names must be unique, "
+                             f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
         self.log_player(player.name, player.game_role, player.model.name)
         if initial_prompt is not None:
@@ -212,18 +189,11 @@ class DialogueGameMaster(GameMaster):
             else:
                 self.set_initial_prompt_for(player, initial_prompt)
         if initial_context is not None:
-            assert isinstance(
-                initial_context, (str, dict)
-            ), f"The initial context must be a str or dict, but is {type(initial_context)}"
+            assert isinstance(initial_context, (str, dict)), \
+                f"The initial context must be a str or dict, but is {type(initial_context)}"
             if isinstance(initial_context, dict):
-                assert (
-                    "content" in initial_context
-                ), "The initial context requires a content entry"
-                extras = {
-                    k: v
-                    for k, v in initial_context.items()
-                    if k not in ["role", "content"]
-                }
+                assert "content" in initial_context, "The initial context requires a content entry"
+                extras = {k: v for k, v in initial_context.items() if k not in ["role", "content"]}
                 self.set_context_for(player, initial_context["content"], **extras)
             else:
                 self.set_context_for(player, initial_context)
@@ -296,9 +266,7 @@ class DialogueGameMaster(GameMaster):
     @final
     def get_context_for(self, player) -> Dict:
         assert player is not None, "Cannot get player context for 'None'"
-        assert (
-            player.name in self.context_for_player
-        ), f"No context set for {player.name}"
+        assert player.name in self.context_for_player, f"No context set for {player.name}"
         context = self.context_for_player[player.name]
         assert "role" in context, f"Player context must have a 'role' entry"
         assert context["role"] == "user", f"Role of player context must be 'user'"
@@ -335,9 +303,7 @@ class DialogueGameMaster(GameMaster):
         :return: done, info
         """
         try:
-            parsed_response = self._parse_response(
-                self.current_player, response
-            )  # throws ParseError
+            parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
             self._advance_game(self.current_player, parsed_response)  # throws GameError
         except ParseError as error:
             self.count_request_violation()
@@ -385,9 +351,7 @@ class DialogueGameMaster(GameMaster):
 
         :return: the next (current) player
         """
-        self._current_player_idx = (self._current_player_idx + 1) % len(
-            self.players_by_names
-        )
+        self._current_player_idx = (self._current_player_idx + 1) % len(self.players_by_names)
         return self.get_players()[self._current_player_idx]
 
     def _start_next_round(self) -> bool:
@@ -817,9 +781,6 @@ class EnvGameMaster(GameMaster):
         Finishes the game by adding the episode scores to the logs and calling the after game hook.
         """
         final_state = self.game_environment.state
-
-        serializable_state = json.loads(json.dumps(final_state, cls=GameStateEncoder))
-        module_logger.debug(f"Final game state: \n{to_pretty_json(serializable_state)}")
 
         aborted = int(final_state.get("aborted", False))
         success = int(final_state.get("success", False))
