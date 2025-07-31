@@ -1,24 +1,17 @@
 import argparse
-import logging
 import textwrap
+import logging
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import Callable, Dict, List, Optional, Union
+from typing import List, Dict, Union, Callable, Optional
 
 import clemcore.backends as backends
+from clemcore.backends import ModelRegistry, BackendRegistry
+from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
+    InteractionsFileSaver, GameBenchmarkCallbackList, ImageFileSaver
+from clemcore.clemgame import benchmark
 from clemcore import clemeval, get_version
-from clemcore.backends import BackendRegistry, ModelRegistry
-from clemcore.clemgame import (
-    ExperimentFileSaver,
-    GameBenchmarkCallbackList,
-    GameRegistry,
-    GameSpec,
-    ImageFileSaver,
-    InstanceFileSaver,
-    InteractionsFileSaver,
-    benchmark,
-)
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
 
@@ -260,13 +253,13 @@ def cli(args: argparse.Namespace):
 """
     Use good old argparse to run the commands.
 
-    To list available games:
+    To list available games: 
     $> clem list [games]
 
-    To list available models:
+    To list available models: 
     $> clem list models
 
-    To list available backends:
+    To list available backends: 
     $> clem list backends
 
     To run a specific game with a single player:
@@ -331,7 +324,7 @@ def main():
       If the game supports model expansion (using the single specified model for all players):
       $> python3 scripts/cli.py run -g taboo -m mock
 
-      When this option is not given, then the dialogue partners configured in the experiment are used.
+      When this option is not given, then the dialogue partners configured in the experiment are used. 
       Default: None.""")
     run_parser.add_argument("-e", "--experiment_name", type=str,
                             help="Optional argument to only run a specific experiment")
