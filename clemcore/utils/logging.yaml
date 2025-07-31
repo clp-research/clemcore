@@ -1,49 +1,27 @@
 version: 1
 formatters:
-    simple:
-        format: "%(asctime)s - %(name)s.%(funcName)s - %(levelname)s - %(message)s"
-    colored:
-        class: colorlog.ColoredFormatter
-        format: "%(asctime)s | %(name)s.%(funcName)s | %(log_color)s%(levelname)s%(reset)s | %(message)s"
-        log_colors:
-            DEBUG: cyan
-            INFO: green
-            SUCCESS: bold_green
-            WARNING: yellow
-            ERROR: red
-            CRITICAL: bold_red
+  simple:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 handlers:
-    console:
-        class: logging.StreamHandler
-        formatter: colored
-        stream: ext://sys.stdout
-    file_handler:
-        class: logging.FileHandler
-        formatter: simple
-        filename: clembench.log
-        encoding: utf8
+  console:
+    class: logging.StreamHandler
+    formatter: simple
+    stream: ext://sys.stdout
+  file_handler:
+    class: logging.FileHandler
+    formatter: simple
+    filename: clembench.log
+    encoding: utf8
 loggers:
-    "clemcore":
-        level: INFO
-        handlers: [console]
-        propagate: false
-    "clemcore.run":
-        level: INFO
-        handlers: [console]
-        propagate: false
-    "clemcore.cli":
-        level: INFO
-        handlers: [console]
-        propagate: false
-    "clemcore.backends":
-        level: INFO
-        handlers: [console]
-        propagate: false
-    "clemcore.clemgame":
-        level: INFO
-        handlers: [console]
-        propagate: false
-root: # this will catch all other loggers (including external repos)
-    level: INFO
-    handlers: [console, file_handler]
-    propagate: false
+  "clemcore.run":
+    handlers: [ console ]
+  "clemcore.cli":
+    handlers: [ console ]
+  "clemcore.backends":
+    level: WARNING
+    handlers: [ console ]
+  "clemcore.clemgame":
+    level: WARNING
+root:
+  level: INFO
+  handlers: [ file_handler ]
