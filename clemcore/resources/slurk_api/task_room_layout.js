@@ -1,4 +1,3 @@
-// Helper to make the javascript debuggable in web tools
 function injectDebuggableScript(code, name) {
   const script = document.createElement("script");
   script.type = "text/javascript";
@@ -154,4 +153,43 @@ const scrollObserver = new MutationObserver(mutations => {
 scrollObserver.observe(document.querySelector('#chat-area'), {
     childList: true,
     subtree: true
+});
+
+
+// Ersetze <input id="text"> durch <textarea id="text">
+(function() {
+    const oldInput = document.getElementById('text');
+    if (oldInput) {
+        const textarea = document.createElement('textarea');
+        textarea.id = 'text';
+        textarea.placeholder = oldInput.placeholder || 'Enter your message here!';
+        textarea.rows = 3;
+        textarea.style.cssText = oldInput.style.cssText;
+        oldInput.parentNode.replaceChild(textarea, oldInput);
+
+        // Automatisches Anpassen der Höhe beim Tippen
+        textarea.addEventListener('input', function () {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
+    }
+})();
+
+// Absenden mit Enter (Shift+Enter = neue Zeile)
+document.addEventListener('keydown', function (e) {
+    const textarea = document.getElementById('text');
+    if (document.activeElement === textarea) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // Kein Zeilenumbruch
+            textarea.blur(); // Optional
+            const message = textarea.value.trim();
+            if (message) {
+                textarea.value = '';
+                textarea.style.height = 'auto';
+                // GENERISCHER ABSENDEN-CALL – hier ersetzen!
+                console.log("Senden:", message);
+                // Beispiel: socket.emit('message', message);
+            }
+        }
+    }
 });
