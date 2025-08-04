@@ -4616,7 +4616,7 @@
     },
     {
         "model_name": "reka-flash-3.1",
-        "huggingface_id": "RekaAI/reka-flash-3.1t",
+        "huggingface_id": "RekaAI/reka-flash-3.1",
         "backend": "huggingface_local",
         "release_date": "2025-05-28",
         "open_weight": true,
