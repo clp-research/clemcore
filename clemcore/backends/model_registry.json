@@ -4817,6 +4817,46 @@
         }
     },
     {
+        "model_name": "gpt-oss-120b",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "huggingface_local",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>"
+        }
+    },
+    {
+        "model_name": "gpt-oss-20b",
+        "huggingface_id": "openai/gpt-oss-20b",
+        "backend": "huggingface_local",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "20B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>"
+        }
+    },
+    {
         "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
         "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
         "backend": "llamacpp",
