@@ -369,3 +369,25 @@ class GameEnvironment(ABC):
             action_space: The action space to set
         """
         self.action_spaces[player.name] = action_space
+
+    def state_to_log(self):
+        """
+        Log relevant game-specific state of the environment to the game master.
+
+        This method will be called after each step in the environment.
+
+        It should log the current state of the environment to the game master.
+
+        This method is optional. Overwrite it if you need state variables for later computation of scores.
+
+        Example:
+            logs = {
+                "player_positions": self.state["player_positions"],
+                "grid": self.render_state(),
+                "terminated": self.state["terminated"],
+                "success": self.state["success"],
+                "aborted": self.state["aborted"],
+            }
+            return logs
+        """
+        pass

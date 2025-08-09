@@ -613,7 +613,7 @@ class EnvGameMaster(GameMaster):
             response = player(observation)
             module_logger.info(f"[play] Response: {response}")
 
-            done, _ = self.step(response)
+            done = self.step(response)
             if done:
                 break
 
@@ -626,14 +626,14 @@ class EnvGameMaster(GameMaster):
         observation = self.game_environment.get_observation(self.current_player)
         return self.current_player, observation
 
-    def step(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> bool:
         """
         Applies the player's response as an action in the environment, advances the game, and returns (done, info).
         """
         if not self._player_response_in_expected_format(self.current_player, response):
             if self._should_terminate_on_invalid_response():
                 self._end_game()
-                return True, {"error": "Invalid response format"}
+                return True
             action = self._violated_format_action()
         else:
             action = self._create_action_from_response(response)
@@ -641,10 +641,9 @@ class EnvGameMaster(GameMaster):
         self.game_environment.step(self.current_player, action)
         if self.game_environment.state["aborted"]:
             self.count_request_violation()
-        self.log_to_self("state", self.game_environment._render_state_as_human_readable())
+        self.log_to_self("state", self.game_environment.state_to_log())
 
         done = self.is_done()
-        info = deepcopy(self.game_environment.state)
 
         if done:
             self._end_game()
@@ -655,7 +654,7 @@ class EnvGameMaster(GameMaster):
                 self.current_round += 1
                 self.log_next_round()
 
-        return done, info
+        return done
 
     def is_done(self) -> bool:
         """
@@ -678,24 +677,6 @@ class EnvGameMaster(GameMaster):
         :return: True, when to start a new round
         """
         return self.current_player_idx == 0
-
-    @abc.abstractmethod
-    def compute_turn_score(self, response: str, context: Dict):
-        """
-        Mandatory.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: the performance score for a player's response given the context
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def compute_episode_score(self):
-        """
-        Mandatory.
-        :return: the performance of the agent over the whole episode
-        """
-        raise NotImplementedError
 
     def _should_pass_turn(self):
         """
