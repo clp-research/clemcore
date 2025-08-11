@@ -4865,6 +4865,48 @@
         }
     },
     {
+        "model_name": "GLM-4.5",
+        "huggingface_id": "zai-org/GLM-4.5",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-28",
+        "open_weight": true,
+        "parameters": "355B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "GLM-4.5-Air",
+        "huggingface_id": "zai-org/GLM-4.5-Air",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-28",
+        "open_weight": true,
+        "parameters": "106B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
         "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
         "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
         "backend": "llamacpp",
