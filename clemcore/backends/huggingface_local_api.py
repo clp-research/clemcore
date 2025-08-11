@@ -218,8 +218,15 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
 
         # Call batch method without decorators to avoid double invocation of decorators
         results = self._generate_batch_response(batch_messages)
-
-        return results[0]  # Unpack single result to maintain original API
+        # Return result if model is not a CoT output model
+        if not 'cot_output' in self.model.model_spec.model_config \
+            and not self.model.model_spec.model_config['cot_output']:
+            return results[0]  # Unpack single result to maintain original API
+        # Check if CoT output is done
+        elif self.model.tokenizer.eos_token not in results[0][2]['response']:
+            # CoT not done
+            # TODO: append prior outputs to prompt and keep generating
+            pass
 
     @augment_response_object
     @ensure_messages_format
@@ -340,6 +347,9 @@ def split_and_clean_batch_outputs(
             prefix = model.model_spec['model_config']['output_split_prefix']
             if prefix in response_text:
                 response_text = response_text.rsplit(prefix, maxsplit=1)[1]
+        # Check for CoT output and split if present
+        if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
+            rumination, response_text = split_and_clean_cot_output(response_text, model)
         # Remove batch processing padding tokens
         if response_text.startswith(model.tokenizer.pad_token) or response_text.endswith(model.tokenizer.pad_token):
             response_text.replace(model.tokenizer.pad_token, "")
@@ -353,11 +363,36 @@ def split_and_clean_batch_outputs(
             "temperature": model.temperature
         }
         response_info = {'response': model_output}
+        # Add rumination content to response_info
+        if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
+            response_info['rumination'] = rumination
 
         prompts.append(prompt_info)
         responses.append(response_info)
         response_texts.append(response_text)
     return prompts, response_texts, responses
+
+
+def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel) -> Tuple[str, str]:
+    """
+    Splits a CoT-output model's response into rumination and final answer.
+
+    Args:
+        response_text: The response text, without input prompt, but including all special tokens and tags.
+        model: The HuggingfaceLocalModel instance containing model configuration and settings.
+    Returns:
+        Tuple of two strings:
+        - rumination: The cleaned CoT/thinking/reasoning/rumination content.
+        - answer: The cleaned final answer content.
+    """
+    # Cull CoT start tag
+    response_text = response_text.replace(model.model_spec.model_config.cot_start_tag, "")
+    # Split response text at CoT end tag
+    split_cot_response = response_text.split(model.model_spec.model_config.cot_start_tag)
+    rumination = split_cot_response[0]
+    answer = split_cot_response[1]
+
+    return rumination, answer
 
 
 def assert_context_limits(model: HuggingfaceLocalModel, prompt_token_ids):
