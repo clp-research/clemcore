@@ -27,6 +27,23 @@ class ModelSpec(SimpleNamespace):
         """
         super().__init__(**kwargs)
 
+    def rename(self, other_name: str) -> "ModelSpec":
+        """
+        Return a copy of this ModelSpec with a different model name.
+
+        Creates a new ModelSpec instance identical to the current one,
+        except that the `model_name` field is replaced with `other_name`.
+        The original instance remains unchanged.
+
+        Args:
+            other_name (str): The new value for the `model_name` field.
+
+        Returns:
+            ModelSpec: A new ModelSpec instance with the updated `model_name`.
+        """
+        renamed_dict = {**self.to_dict(), **dict(model_name=other_name)}
+        return ModelSpec.from_dict(renamed_dict)
+
     def unify(self, other: "ModelSpec") -> "ModelSpec":
         """Unify two ModelSpec instances.
         Args:

@@ -98,7 +98,7 @@ def build_transcript(interactions: Dict):
                     from_game_role = players[from_player]["game_role"]
                     to_game_role = players[to_player]["game_role"]
                     speaker_attr = f"{from_player} ({from_game_role}) to {to_player} ({to_game_role})"
-                else: # old mode (before 2.4)
+                else:  # old mode (before 2.4)
                     speaker_attr = f"{event['from'].replace('GM', 'Game Master')} to {event['to'].replace('GM', 'Game Master')}"
             # in case the content is a json BUT given as a string!
             # we still want to check for image entry
@@ -108,24 +108,31 @@ def build_transcript(interactions: Dict):
                 except:
                     ...
             style = "border: dashed" if "label" in event["action"] and "forget" == event["action"]["label"] else ""
-            # in case the content is a json with an image entry
-            if isinstance(msg_content, dict):
-                if "image" in msg_content:
-                    transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
-                    transcript += f'  <p>{msg_raw}</p>\n'
-                    for image_src in msg_content["image"]:
-                        if not image_src.startswith("http"):  # take the web url as it is
-                            if "IMAGE_ROOT" in os.environ:
-                                image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
-                            else:
-                                # CAUTION: this only works when the project is checked out (dev mode)
-                                image_src = os.path.join(file_utils.project_root(), image_src)
-                        transcript += (f'  <a title="{image_src}">'
-                                       f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
-                                       f'</a>\n')
-                    transcript += '</div>\n'
-                else:
-                    transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
+
+            images = []
+            # check if images are in the action dict (new structure)
+            if "image" in event["action"]:
+                images += event["action"]["image"]
+            # check if images are in the content field (old structure)
+            if isinstance(msg_content, dict) and "image" in msg_content:
+                images += msg_content["image"]
+
+            if images:
+                transcript += f'<div speaker="{speaker_attr}" class="msg {class_name}" style="{style}">\n'
+                transcript += f'  <p>{msg_raw}</p>\n'
+                for image_src in images:
+                    if not image_src.startswith("http"):  # take the web url as it is
+                        if "IMAGE_ROOT" in os.environ:
+                            image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
+                        elif image_src.startswith("/"):
+                            pass  # keep absolute path to image
+                        else:
+                            # CAUTION: this only works when the project is checked out (dev mode)
+                            image_src = os.path.join(file_utils.project_root(), image_src)
+                    transcript += (f'  <a title="{image_src}">'
+                                   f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
+                                   f'</a>\n')
+                transcript += '</div>\n'
             else:
                 transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
         transcript += "</div>"

@@ -9,10 +9,17 @@ from clemcore import backends
 from clemcore.clemgame.environment import Action, GameEnvironment
 from clemcore.clemgame.errors import ParseError, GameError
 from clemcore.clemgame.events import GameEventSource
-from clemcore.clemgame.registry import GameSpec
+from clemcore.clemgame.metrics import (
+    METRIC_ABORTED,
+    METRIC_LOSE,
+    METRIC_REQUEST_COUNT,
+    METRIC_REQUEST_COUNT_PARSED,
+    METRIC_REQUEST_COUNT_VIOLATED,
+    METRIC_SUCCESS,
+)
 from clemcore.clemgame.player import Player
+from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator
-from clemcore.utils.string_utils import to_pretty_json
 
 module_logger = logging.getLogger(__name__)
 
@@ -489,7 +496,7 @@ class EnvGameMaster(GameMaster):
             game_spec: GameSpec,
             experiment: dict,
             player_models: List[backends.Model],
-            game_environment: GameEnvironment,
+            game_environment: Optional[GameEnvironment] = None,
     ):
         """
         Args:
@@ -500,7 +507,8 @@ class EnvGameMaster(GameMaster):
             game_environment: The environment that maintains the game state.
         """
         super().__init__(game_spec, experiment, player_models)
-        self.game_environment = game_environment
+        if game_environment is not None:
+            self.game_environment = game_environment
 
         # set players
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
@@ -512,8 +520,8 @@ class EnvGameMaster(GameMaster):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
-            player.game_recorder = self.game_recorder
+        for player in self.players_by_names.values():
+            player.register_many(self._loggers)
 
     def get_players(self) -> List[Player]:
         """Get a list of the players.
@@ -531,13 +539,31 @@ class EnvGameMaster(GameMaster):
         Args:
             player: The player to be added to the game. The player's name must be unique.
         """
-        player.game_recorder = self.game_recorder  # player should record to the same interaction log
+        player.register_many(self._loggers)
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
-            raise ValueError(f"Player names must be unique, "
-                             f"but there is already a player registered with name '{player.name}'.")
+            raise ValueError(
+                f"Player names must be unique, "
+                f"but there is already a player registered with name '{player.name}'."
+            )
         self.players_by_names[player.name] = player
-        self.log_player(player)
+        self.log_player(player.name, player.game_role, player.model.name)
+
+        self.game_environment.add_player(player)
+
+    def _next_player(self) -> Player:
+        """
+        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
+
+        Default: The gamer master passes the turn to the next player in the player list (order as added).
+        Starting again with the first player, when all players have had their turn(s).
+
+        :return: the next (current) player
+        """
+        self.current_player_idx = (self.current_player_idx + 1) % len(
+            self.players_by_names
+        )
+        return self.get_players()[self.current_player_idx]
 
     def setup(self, **kwargs):
         """Load resources and prepare everything to play the game.
@@ -564,76 +590,83 @@ class EnvGameMaster(GameMaster):
         """
         raise NotImplementedError
 
-    def get_environment_state(self):
-        """Get the current game state from the environment."""
-        return self.game_environment.state
-
-    def get_current_player(self) -> Optional[Player]:
-        return self.current_player
-
     def play(self) -> None:
         """
         Main play loop method. This method is called to run the game for benchmarking.
         This implementation uses the game environment for state management.
         """
         module_logger.debug(
-            f"[_play] Starting game with current player: {self.current_player}"
+            f"[play] Starting game with current player: {self.current_player}"
         )
         if self.current_player is None:
             module_logger.warning("No current player set, ending game.")
             return
 
+        self._on_before_game()
+
         while not self.game_environment.state["terminated"]:
             self._on_before_round()
 
-            observation = self.game_environment.get_observation(self.current_player)
-            module_logger.info(f"[_play] Player {self.current_player.name}")
-            module_logger.info(f"[_play] Observation: \n{to_pretty_json(observation)}")
+            player, observation = self.observe()
+            module_logger.info(f"[play] Player {player.name}")
 
-            response = self.current_player(observation)
-            module_logger.info(f"[_play] Response: {response}")
+            response = player(observation)
+            module_logger.info(f"[play] Response: {response}")
 
-            # TODO: now that we have _validate_action in the game_environment, do we still need this?
-            if not self._validate_player_response(self.current_player, response):
-                module_logger.warning(
-                    f"[_play] Player {self.current_player.name} response is invalid"
-                )
-                terminated = self._should_terminate_on_invalid_response()
-                if terminated:
-                    self._on_after_game()
-                    break
-
-            action = self.parse_action_from_response(response)
-
-            module_logger.debug(f"[_play] Action: {action}")
-            self.game_environment.step(self.current_player, action)
-
-            if self.game_environment.state["terminated"]:
-                self._on_after_game()
+            done = self.step(response)
+            if done:
                 break
 
-            if self._should_pass_turn():
-                self.current_player = self._next_player()
-                if self._start_next_round():
-                    self._on_after_round()
-                    self.current_round += 1
-                    self.log_next_round()
-
-    def _next_player(self) -> Player:
+    def observe(self) -> Tuple[Player, Dict]:
         """
-        Subclasses can overwrite this method to determine the next player after a player's turn has been passed.
-
-        Default: The gamer master passes the turn to the next player in the player list (order as added).
-        Starting again with the first player, when all players have had their turn(s).
-
-        :return: the next (current) player
+        Returns the current player and their observation from the environment.
         """
-        players = self.get_players()
-        if not players:
-            raise ValueError("No players have been added to the game")
+        if self.current_player is None:
+            raise RuntimeError("No current player set in EnvGameMaster.")
+        observation = self.game_environment.get_observation(self.current_player)
+        return self.current_player, observation
 
-        self.current_player_idx = (self.current_player_idx + 1) % len(players)
-        return players[self.current_player_idx]
+    def step(self, response: str) -> bool:
+        """
+        Applies the player's response as an action in the environment, advances the game, and returns (done, info).
+        """
+        if not self._player_response_in_expected_format(self.current_player, response):
+            if self._should_terminate_on_invalid_response():
+                self._end_game()
+                return True
+            action = self._violated_format_action()
+        else:
+            action = self._create_action_from_response(response)
+
+        self.game_environment.step(self.current_player, action)
+        if self.game_environment.state["aborted"]:
+            self.count_request_violation()
+        self.log_to_self("state", self.game_environment.state_to_log())
+
+        done = self.is_done()
+
+        if done:
+            self._end_game()
+        elif self._should_pass_turn():
+            self.current_player = self._next_player()
+            if self._start_next_round():
+                self._on_after_round()
+                self.current_round += 1
+                self.log_next_round()
+
+        return done
+
+    def is_done(self) -> bool:
+        """
+        Returns True if the game is finished (terminated in the environment).
+        """
+        return self.game_environment.state.get("terminated", False)
+
+    def has_started(self) -> bool:
+        """
+        Returns True if the game has started (current_player is set and environment is not in initial state).
+        """
+        return self.current_player is not None and self.game_environment.state is not None
 
     def _start_next_round(self) -> bool:
         """
@@ -645,24 +678,6 @@ class EnvGameMaster(GameMaster):
         """
         return self.current_player_idx == 0
 
-    @abc.abstractmethod
-    def compute_response_score(self, response: str, context: Dict):
-        """
-        Mandatory.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: the performance score for a player's response given the context
-        """
-        raise NotImplementedError
-
-    @abc.abstractmethod
-    def compute_episode_score(self):
-        """
-        Mandatory.
-        :return: the performance of the agent over the whole episode
-        """
-        raise NotImplementedError
-
     def _should_pass_turn(self):
         """
         Whether to pass the turn to the next player. Otherwise, the current player keeps playing
@@ -671,13 +686,9 @@ class EnvGameMaster(GameMaster):
         return True
 
     @abc.abstractmethod
-    def _validate_player_response(self, player: Player, response: str) -> bool:
+    def _player_response_in_expected_format(self, player: Player, response: str) -> bool:
         """
-        Decide if a player response is valid. An invalid response breaks the game rules and might end the game.
-
-        Note: If the response is not valid, then _parse_response() and on_valid_player_response() will not be called.
-
-        However, game developers can decide to give the player another turn by letting _should_pass_turn() return False.
+        Decide if a player response is valid. An invalid response breaks the game rules. In this case, depending on _should_terminate_on_invalid_response(), the game might be terminated.
 
         Args:
             player: The player that gave the response.
@@ -687,19 +698,35 @@ class EnvGameMaster(GameMaster):
         """
         raise NotImplementedError
 
-    def parse_action_from_response(self, response: str) -> Action:
-        """Create an action from a player's response.
+    def _create_action_from_response(self, response: str) -> Action:
+        """
+        Create an action from a player's response.
+        """
+        try:
+            return self._parse_action_from_response(response)
+        except Exception as e:
+            module_logger.warning(f"[_get_action] Error parsing action from response: {e}")
+            return self._violated_format_action()
 
-        Default: return action
+    def _violated_format_action(self) -> Action:
+        """
+        Create an action that represents a response that violates the format.
+        """
+        return {"action_type": "violated_format"}
+
+    @abc.abstractmethod
+    def _parse_action_from_response(self, response: str) -> Action:
+        """Create an action from a player's response.
 
         Args:
             response: The textual response from the player
-            action_type: The type of action to create
 
         Returns:
-            {"action_type": "verbal_response", "message": response}
+            An action dictionary with:
+                - action_type: The type of action
+                - body: The text response from the player
         """
-        return {"action_type": "verbal_response", "message": response}
+        raise NotImplementedError
 
     def _should_terminate_on_invalid_response(self) -> bool:
         """
@@ -724,37 +751,36 @@ class EnvGameMaster(GameMaster):
         pass
 
     def _on_before_game(self):
-        """Executed once at the start, before entering the play loop.
+        """Executed once at the start, at the start of the play loop.
 
         Hook: Modify this method for game-specific functionality.
         """
         pass
 
-    def _on_after_game(self):
-        """Executed once at the end, after exiting the play loop.
-
-        Hook: Modify this method for game-specific functionality.
+    def _end_game(self):
         """
-        # todo this is supposed to be a hook; users might accidentally overwrite which ignoes the call to _add_logs
-        # I also think the DGM is already doing this now (to see an example; shouldn't diverge too much)
-        self._add_logs_to_episode_scores()
-
-    def _add_logs_to_episode_scores(self):
-        """Executed once at the end, after exiting the play loop.
-
-        Hook: Modify this method for game-specific functionality.
-
-        This method is useful to process and log/record overall game results.
+        Finishes the game by adding the episode scores to the logs and calling the after game hook.
         """
-        module_logger.info("[_on_after_game] Game completed, processing final state")
-
         final_state = self.game_environment.state
 
-        module_logger.debug(f"Final game state: \n{to_pretty_json(final_state)}")
+        aborted = int(final_state.get("aborted", False))
+        success = int(final_state.get("success", False))
+        lose = int(not success and not aborted)
 
-        for key, value in final_state.items():
-            self.log_key(key, value)
+        self.log_key(METRIC_ABORTED, aborted)
+        self.log_key(METRIC_SUCCESS, success)
+        self.log_key(METRIC_LOSE, lose)
 
-        self.log_key("episode_score", self.compute_episode_score())
+        for logger in self._loggers:
+            self.log_key(METRIC_REQUEST_COUNT, logger.requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_PARSED, logger.successful_requests_counts)
+            self.log_key(METRIC_REQUEST_COUNT_VIOLATED, logger.violated_requests_counts)
 
-        module_logger.info(f"[_on_after_game] Game completed")
+        self._on_after_game()
+
+    def _on_after_game(self):
+        """Executed once at the end, at the end of the play loop.
+
+        Hook: Modify this method for game-specific functionality.
+        """
+        pass
