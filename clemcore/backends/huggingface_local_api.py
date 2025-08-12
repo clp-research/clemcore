@@ -215,18 +215,10 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             Tuple[Any, Any, str]: Single response tuple (prompt, response_object, response_text).
         """
         batch_messages = [messages]  # Wrap single message list into batch
-
         # Call batch method without decorators to avoid double invocation of decorators
         results = self._generate_batch_response(batch_messages)
-        # Return result if model is not a CoT output model
-        if not 'cot_output' in self.model.model_spec.model_config \
-            and not self.model.model_spec.model_config['cot_output']:
-            return results[0]  # Unpack single result to maintain original API
-        # Check if CoT output is done
-        elif self.model.tokenizer.eos_token not in results[0][2]['response']:
-            # CoT not done
-            # TODO: append prior outputs to prompt and keep generating
-            pass
+
+        return results[0]  # Unpack single result to maintain original API
 
     @augment_response_object
     @ensure_messages_format
@@ -302,6 +294,10 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             gen_args["top_p"] = getattr(self.model.generation_config, "top_p", None)  # look in config for default value
             gen_args["temperature"] = self.temperature
 
+        # Let CoT-output models generate to their context limit to assure CoT+final answer completion
+        if 'cot_output' in self.model.model_spec.model_config and self.model.model_spec.model_config['cot_output']:
+            gen_args["max_new_tokens"] = self.context_size
+
         # Generate outputs for the whole batch
         model_output_ids = self.model.generate(prompt_token_ids, **gen_args)
 
@@ -347,15 +343,17 @@ def split_and_clean_batch_outputs(
             prefix = model.model_spec['model_config']['output_split_prefix']
             if prefix in response_text:
                 response_text = response_text.rsplit(prefix, maxsplit=1)[1]
-        # Check for CoT output and split if present
-        if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
-            rumination, response_text = split_and_clean_cot_output(response_text, model)
         # Remove batch processing padding tokens
         if response_text.startswith(model.tokenizer.pad_token) or response_text.endswith(model.tokenizer.pad_token):
             response_text.replace(model.tokenizer.pad_token, "")
         # Remove EOS tokens and potential trailing tokens from response
         eos_to_cull = model.model_spec['model_config']['eos_to_cull']  # This is a regEx to handle inconsistent outputs
         response_text = re.sub(eos_to_cull, "", response_text)
+
+        # Check for CoT output and split if present
+        if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
+            rumination, response_text = split_and_clean_cot_output(response_text, model)
+
         # Prompt and response info for recording raw model inputs and outputs
         prompt_info = {
             "inputs": prompt_text,
@@ -385,12 +383,37 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
         - rumination: The cleaned CoT/thinking/reasoning/rumination content.
         - answer: The cleaned final answer content.
     """
+    # Retokenize to count output tokens
+    tokenized_response = model.tokenizer(response_text)
+    print("tokenized_response:", tokenized_response)
+    n_output_tokens = len(tokenized_response)
+    print("n_output_tokens:", n_output_tokens)
+
     # Cull CoT start tag
     response_text = response_text.replace(model.model_spec.model_config.cot_start_tag, "")
     # Split response text at CoT end tag
     split_cot_response = response_text.split(model.model_spec.model_config.cot_start_tag)
     rumination = split_cot_response[0]
     answer = split_cot_response[1]
+
+    # Retokenize and count CoT and final answer tokens
+    tokenized_rumination = model.tokenizer(rumination)
+    print("tokenized_rumination:", tokenized_rumination)
+    n_rumination_tokens = len(tokenized_rumination)
+    print("n_rumination_tokens:", n_rumination_tokens)
+    tokenized_answer = model.tokenizer(answer)
+    print("tokenized_answer:", tokenized_answer)
+    n_answer_tokens = len(tokenized_answer)
+    print("n_answer_tokens:", n_answer_tokens)
+
+    # Cut answer tokens to max_tokens value
+    if n_answer_tokens > model.max_tokens:
+        logger.info(f"CoT final answer token count {n_answer_tokens} exceeds max_tokens {model.max_tokens}, "
+                    f"cutting off excess tokens.")
+        tokenized_answer = tokenized_answer[:model.max_tokens]
+
+    # Decode retokenized and potentially cut answer
+    answer = model.tokenizer.decode(tokenized_answer)
 
     return rumination, answer
 
