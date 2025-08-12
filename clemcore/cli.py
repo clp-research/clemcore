@@ -95,7 +95,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
         instances_filename: str = None,
         results_dir_path: Path = None,
         sub_selector: Callable[[str, str], List[int]] = None,
-        force_sequential: bool = False
+        batch_size: int = 1
         ):
     """Run specific model/models with a specified clemgame.
     Args:
@@ -108,6 +108,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
         results_dir_path: Path to the results directory in which to store the episode records.
         sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
             If a mapping returns None, then all game instances will be used.
+        batch_size: A batch size to use for the run.
     """
     # check games
     game_registry = GameRegistry.from_directories_and_cwd_files()
@@ -161,7 +162,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
                 callbacks.append(ExperimentFileSaver(results_dir_path, player_models))
                 callbacks.append(InteractionsFileSaver(results_dir_path, player_models))
                 callbacks.append(ImageFileSaver(results_dir_path, player_models))
-                dispatch.run(game_benchmark, player_models, callbacks=callbacks, force_sequential=force_sequential)
+                dispatch.run(game_benchmark, player_models, callbacks=callbacks, batch_size=batch_size)
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -239,7 +240,7 @@ def cli(args: argparse.Namespace):
                 experiment_name=args.experiment_name,
                 instances_filename=args.instances_filename,
                 results_dir_path=args.results_dir,
-                force_sequential=args.sequential)
+                batch_size=args.batch_size)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
     if args.command_name == "score":
@@ -336,8 +337,12 @@ def main():
                             help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
                                  "Be careful with high values which might lead to exceed your API token limits."
                                  "Default: 300.")
-    run_parser.add_argument("--sequential", action="store_true",
-                            help="Force a sequential run (even when models support batching). Default: False")
+    run_parser.add_argument("-b", "--batch_size", type=int, default=1,
+                            help="The batch size for response generation, that is, "
+                                 "the number of simultaneously played game instances. "
+                                 "Applies to all models that support batchwise generation, "
+                                 "otherwise the game instances will be played sequentially."
+                                 "Default: 1 (sequential processing).")
 
     run_parser.add_argument("-i", "--instances_filename", type=str, default=None,
                             help="The instances file name (.json suffix will be added automatically.")
