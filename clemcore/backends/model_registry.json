@@ -4931,6 +4931,27 @@
         }
     },
     {
+        "model_name": "Llama-4-Maverick-17B-128E-Instruct",
+        "huggingface_id": "meta-llama/Llama-4-Maverick-17B-128E-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-05",
+        "open_weight": true,
+        "parameters": "109B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "1048576",
+        "license": {
+            "name": "llama4",
+            "url": ""
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|eot\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
         "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
         "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
         "backend": "llamacpp",
