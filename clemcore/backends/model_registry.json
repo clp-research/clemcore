@@ -3877,7 +3877,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -3997,7 +3998,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4463,7 +4465,8 @@
         "model_config": {
             "requires_api_key": true,
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|eot_id\\|>"
+            "eos_to_cull": "<\\|eot_id\\|>",
+            "padding_side": "left"
         }
     },
     {
