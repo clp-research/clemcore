@@ -9,7 +9,7 @@ from typing import List, Dict, Union, Callable, Optional
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver, GameBenchmarkCallbackList, ImageFileSaver, RunFileSaver
+    InteractionsFileSaver, GameBenchmarkCallbackList, ImageFileSaver, RunFileSaver, GameInstanceIterator
 from clemcore.clemgame import benchmark
 from clemcore import clemeval, get_version
 from clemcore.clemgame.runners import dispatch
@@ -141,10 +141,24 @@ def run(game_selector: Union[str, Dict, GameSpec],
         player_models.append(model)
     logger.info("Loading models took: %s", datetime.now() - start)
 
+    # setup reusable callbacks here once
+    callbacks = GameBenchmarkCallbackList([
+        InstanceFileSaver(results_dir_path, player_models),
+        ExperimentFileSaver(results_dir_path, player_models),
+        InteractionsFileSaver(results_dir_path, player_models),
+        ImageFileSaver(results_dir_path, player_models),
+        RunFileSaver(results_dir_path, player_models)]
+    )
+
     all_start = datetime.now()
-    run_file_saver = RunFileSaver(results_dir_path, player_models)
     for game_spec in game_specs:
         try:
+            # configure instance file to be used
+            if instances_filename:
+                game_spec.instances = instances_filename  # force the use of cli argument, when given
+            if not hasattr(game_spec, "instances"):
+                game_spec.instances = "instances"  # set default, or use whatever is already set
+
             if experiment_name:  # establish experiment filter, if given
                 logger.info("Only running experiment: %s", experiment_name)
                 if sub_selector is None:
@@ -153,18 +167,18 @@ def run(game_selector: Union[str, Dict, GameSpec],
                     game_ids = sub_selector(game_spec.game_name, experiment_name)
                     sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=game_ids)
 
-            with benchmark.load_from_spec(game_spec,
-                                          instances_filename=instances_filename,
-                                          sub_selector=sub_selector) as game_benchmark:
+            with benchmark.load_from_spec(game_spec) as game_benchmark:
                 time_start = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
-                callbacks = GameBenchmarkCallbackList()
-                callbacks.append(InstanceFileSaver(results_dir_path, player_models))
-                callbacks.append(ExperimentFileSaver(results_dir_path, player_models))
-                callbacks.append(InteractionsFileSaver(results_dir_path, player_models))
-                callbacks.append(ImageFileSaver(results_dir_path, player_models))
-                callbacks.append(run_file_saver)
-                dispatch.run(game_benchmark, player_models, callbacks=callbacks, batch_size=batch_size)
+                game_instance_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=sub_selector)
+                game_instance_iterator.reset(verbose=True)
+                dispatch.run(
+                    game_benchmark,
+                    game_instance_iterator,
+                    player_models,
+                    callbacks=callbacks,
+                    batch_size=batch_size
+                )
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -187,7 +201,7 @@ def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
     for game_spec in game_specs:
         try:
             time_start = datetime.now()
-            with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
+            with benchmark.load_from_spec(game_spec) as game_benchmark:
                 game_benchmark.compute_scores(results_dir)
             logger.info(f"Scoring {game_benchmark.game_name} took: %s", datetime.now() - time_start)
         except Exception as e:

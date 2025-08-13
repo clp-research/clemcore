@@ -4,20 +4,20 @@ from typing import List
 from tqdm import tqdm
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList
+from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
 
 
 def run(game_benchmark: GameBenchmark,
+        game_instance_iterator: GameInstanceIterator,
         player_models: List[Model],
         *,
         callbacks: GameBenchmarkCallbackList):
     callbacks.on_benchmark_start(game_benchmark)
     error_count = 0
-    game_benchmark.game_instance_iterator.reset(verbose=True)  # set up the instance queue to iterate over
-    for experiment, game_instance in tqdm(game_benchmark.game_instance_iterator, desc="Playing game instances"):
+    for experiment, game_instance in tqdm(game_instance_iterator, desc="Playing game instances"):
         try:
             game_master = game_benchmark.create_game_master(experiment, player_models)
             callbacks.on_game_start(game_master, game_instance)

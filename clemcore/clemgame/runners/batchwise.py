@@ -5,7 +5,7 @@ from tqdm import tqdm
 
 from clemcore.backends import Model
 from clemcore.backends.model_registry import BatchGenerativeModel
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameMaster, Player
+from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameMaster, Player, GameInstanceIterator
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -164,12 +164,15 @@ class DynamicBatchDataLoader(Iterable):
 
 
 def run(game_benchmark: GameBenchmark,
+        game_instance_iterator: GameInstanceIterator,
         player_models: List[BatchGenerativeModel],
         *,
         callbacks: GameBenchmarkCallbackList,
         batch_size: int):
     """
     Executes a batchwise evaluation of the given game benchmark using one or more player models.
+
+    The runner plays as many games as returned by the game instance iterator (without resetting it).
 
     This function handles:
     - Validating that all player models support batch inference.
@@ -179,6 +182,7 @@ def run(game_benchmark: GameBenchmark,
 
     Args:
         game_benchmark: The GameBenchmark to run.
+        game_instance_iterator: An iterator over the game instances to be played.
         player_models: List of player models participating in the benchmark.
         callbacks: Callback list to notify about benchmark and game events.
         batch_size: The batch size to use for all player models.
@@ -191,7 +195,7 @@ def run(game_benchmark: GameBenchmark,
         "Not all player models support batching. Use the sequential runner instead."
 
     callbacks.on_benchmark_start(game_benchmark)
-    game_sessions = __prepare_game_sessions(game_benchmark, player_models, callbacks, verbose=True)
+    game_sessions = __prepare_game_sessions(game_benchmark, game_instance_iterator, player_models, callbacks, verbose=True)
     num_sessions = len(game_sessions)
     if batch_size > num_sessions:
         stdout_logger.info("Reduce batch_size=%s to number of game sessions %s", batch_size, num_sessions)
@@ -200,6 +204,7 @@ def run(game_benchmark: GameBenchmark,
 
 
 def __prepare_game_sessions(game_benchmark: GameBenchmark,
+                            game_instance_iterator: GameInstanceIterator,
                             player_models: List[BatchGenerativeModel],
                             callbacks: Optional[GameBenchmarkCallbackList] = None,
                             verbose: bool = False):
@@ -225,12 +230,9 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
     callbacks = callbacks or GameBenchmarkCallbackList()
     error_count = 0
     game_sessions: List[GameSession] = []
-    # Note: We must reset iterator here, otherwise it is already exhausted after single invocation of prepare.
-    instance_iterator = game_benchmark.game_instance_iterator
-    instance_iterator.reset(verbose=verbose)
     if verbose:
-        pbar = tqdm(total=len(instance_iterator), desc="Setup game instances", dynamic_ncols=True)
-    for session_id, (experiment, game_instance) in enumerate(instance_iterator):
+        pbar = tqdm(total=len(game_instance_iterator), desc="Setup game instances", dynamic_ncols=True)
+    for session_id, (experiment, game_instance) in enumerate(game_instance_iterator):
         try:
             game_master = game_benchmark.create_game_master(experiment, player_models)
             callbacks.on_game_start(game_master, game_instance)
