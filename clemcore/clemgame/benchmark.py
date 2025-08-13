@@ -40,37 +40,6 @@ class GameBenchmark(GameResourceLocator):
     def add_callback(self, callback: GameBenchmarkCallback):
         self.callbacks.append(callback)
 
-    def setup(self,
-              *,
-              instances_filename: Optional[str] = None,
-              sub_selector: Optional[Callable[[str, str], List[int]]] = None
-              ):
-        """Set up a benchmark run of a clem game.
-
-        Args:
-            instances_filename: Name of the instances JSON file to be used for the benchmark run.
-            sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
-                If a mapping returns None, then all game instances will be used.
-        """
-        if instances_filename:
-            instances = self.load_instances(instances_filename)
-        elif hasattr(self.game_spec, "instances"):
-            instances = self.load_instances(self.game_spec.instances)
-        else:
-            instances = self.load_instances("instances")  # fallback to instances.json default
-        if "experiments" not in instances:
-            raise ValueError(f"{self.game_name}: No 'experiments' key in {instances_filename}")
-        experiments = instances["experiments"]
-        if not isinstance(experiments, list):
-            raise ValueError(f"{self.game_name}: Experiments in {instances_filename} is not a list")
-        if len(experiments) == 0:
-            raise ValueError(f"{self.game_name}: Experiments list in {instances_filename} is empty")
-        self.game_instance_iterator = GameInstanceIterator(self.game_name, instances,
-                                                           sub_selector=sub_selector,
-                                                           do_shuffle=False,
-                                                           reset=False  # reset iterator only later during run
-                                                           )
-
     def compute_scores(self, results_dir: str):
         """Compute and store scores for each episode and player pair.
         Episode score JSON files are stored in each corresponding episode directory. Combined scores for a player/model
@@ -141,19 +110,10 @@ def is_game_benchmark(obj):
 
 
 @contextmanager
-def load_from_spec(game_spec: GameSpec,
-                   *,
-                   do_setup: bool = True,
-                   instances_filename: str = None,
-                   sub_selector: Optional[Callable[[str, str], List[int]]] = None
-                   ) -> ContextManager[GameBenchmark]:
+def load_from_spec(game_spec: GameSpec) -> ContextManager[GameBenchmark]:
     """Load a clemgame using a GameSpec.
     Args:
         game_spec: A GameSpec instance holding specific clemgame data.
-        do_setup: Determines if the clemgame's setup method will be executed upon loading.
-        instances_filename: The name of the instances file to be used for the clemgame's setup if do_setup is True.
-        sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
-            If a mapping returns None, then all game instances will be used.
     """
     stdout_logger.info("Loading game benchmark for %s", game_spec.game_name)
     time_start = datetime.now()
@@ -197,9 +157,6 @@ def load_from_spec(game_spec: GameSpec,
             raise LookupError(f"There is more than one Game defined in {game_module}.")
         game_class_name, game_class = game_subclasses[0]
         game_cls = game_class(game_spec)  # instantiate the specific game class
-
-        if do_setup:
-            game_cls.setup(instances_filename=instances_filename, sub_selector=sub_selector)
         stdout_logger.info(f'Loading game benchmark for {game_spec["game_name"]} took: %s', datetime.now() - time_start)
         yield game_cls
     finally:
