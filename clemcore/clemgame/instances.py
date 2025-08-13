@@ -1,13 +1,15 @@
 import abc
 import collections
 import logging
+import os
 import random
 from copy import copy
 from typing import Dict, final, Optional, Callable, List, Tuple
 
 import numpy as np
+from clemcore.clemgame.registry import GameSpec
 
-from clemcore.clemgame.resources import GameResourceLocator
+from clemcore.clemgame.resources import GameResourceLocator, load_json
 
 stdout_logger = logging.getLogger("clemcore.run")
 
@@ -105,6 +107,68 @@ class GameInstanceIterator:
         if self._do_shuffle:
             random.shuffle(self._queue)
         return self
+
+    @classmethod
+    def from_game_spec(
+            cls,
+            game_spec: GameSpec,
+            *,
+            sub_selector: Optional[Callable[[str, str], List[int]]] = None,
+            do_shuffle: bool = False,
+            do_reset: bool = False
+    ):
+        """Load a game instance iterator using information from the given game spec.
+
+        Args:
+            game_spec: The game spec with a game path and instance file name.
+            sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+                If a mapping returns None, then all game instances will be used.
+            do_shuffle: Whether to shuffle the order of the instances on each reset. Default: False.
+            do_reset: Whether to initially reset the instance iterator. Default: False.
+        """
+        file_path = os.path.join(game_spec.game_path, "in", game_spec.instances)
+        return cls.from_file(
+            game_spec.game_name,
+            file_path,
+            sub_selector=sub_selector,
+            do_shuffle=do_shuffle,
+            do_reset=do_reset
+        )
+
+    @classmethod
+    def from_file(cls,
+                  game_name: str,
+                  file_path: str,
+                  *,
+                  sub_selector: Optional[Callable[[str, str], List[int]]] = None,
+                  do_shuffle: bool = False,
+                  do_reset: bool = False):
+        """Load a game instance iterator using the given file path.
+
+        Args:
+            game_name: The name of the game to which the instances belong to. Necessary for the sub_selector to work.
+            file_path: The path to a JSON file containing the game instances.
+            sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+                If a mapping returns None, then all game instances will be used.
+            do_shuffle: Whether to shuffle the order of the instances on each reset. Default: False.
+            do_reset: Whether to initially reset the instance iterator. Default: False.
+        """
+        filename = os.path.basename(file_path)
+        instances = load_json(file_path)
+        if "experiments" not in instances:
+            raise ValueError(f"{game_name}: No 'experiments' key in {filename}")
+        experiments = instances["experiments"]
+        if not isinstance(experiments, list):
+            raise ValueError(f"{game_name}: Experiments in {filename} is not a list")
+        if len(experiments) == 0:
+            raise ValueError(f"{game_name}: Experiments list in {filename} is empty")
+        return cls(
+            game_name,
+            instances,
+            sub_selector=sub_selector,
+            do_shuffle=do_shuffle,
+            reset=do_reset
+        )
 
 
 class GameInstanceGenerator(GameResourceLocator):
