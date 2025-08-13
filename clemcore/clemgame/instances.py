@@ -109,6 +109,8 @@ class GameInstanceIterator:
             sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
                 If a mapping returns None, then all game instances will be used.
         """
+        if not hasattr(game_spec, "instances"):
+            game_spec.instances = "instances"  # if not already set, fallback to default file name
         return cls.from_file(
             game_spec.game_name,
             os.path.join(game_spec.game_path, "in"),
@@ -120,7 +122,7 @@ class GameInstanceIterator:
     def from_file(cls,
                   game_name: str,
                   instance_dir_path: str,
-                  instance_file_name: str,
+                  instance_file_name: str = "instances",
                   *,
                   sub_selector: Optional[Callable[[str, str], List[int]]] = None):
         """Load a game instance iterator using the given file path.

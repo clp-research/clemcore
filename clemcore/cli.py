@@ -156,8 +156,6 @@ def run(game_selector: Union[str, Dict, GameSpec],
             # configure instance file to be used
             if instances_filename:
                 game_spec.instances = instances_filename  # force the use of cli argument, when given
-            if not hasattr(game_spec, "instances"):
-                game_spec.instances = "instances"  # set default, or use whatever is already set
 
             if experiment_name:  # establish experiment filter, if given
                 logger.info("Only running experiment: %s", experiment_name)
