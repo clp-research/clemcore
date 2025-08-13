@@ -4503,7 +4503,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|end_of_text\\|>"
+            "eos_to_cull": "<\\|end_of_text\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4524,8 +4525,9 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left",
             "cot_output": true,
-            "cot_end_tag": "<\\|end\\|>"
+            "cot_end_tag": "<|end|>"
         }
     },
     {
@@ -4546,6 +4548,7 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<｜end▁of▁sentence｜>",
+            "padding_side": "left",
             "cot_output": true,
             "cot_end_tag": "</think>"
         }
@@ -4568,6 +4571,7 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<｜end▁of▁sentence｜>",
+            "padding_side": "left",
             "cot_output": true,
             "cot_end_tag": "</think>"
         }
@@ -4589,7 +4593,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<end_of_sentence>"
+            "eos_to_cull": "<end_of_sentence>",
+            "padding_side": "left"
         }
     },
     {
@@ -4610,7 +4615,9 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|eos\\|>",
+            "padding_side": "left",
             "cot_output": true,
+            "cot_start_tag": "<think>",
             "cot_end_tag": "</think>"
         }
     },
@@ -4631,7 +4638,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|endoftext\\|>"
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4652,7 +4660,9 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left",
             "cot_output": true,
+            "cot_start_tag": "<think>",
             "cot_end_tag": "</think>"
         }
     },
@@ -4673,7 +4683,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "\\[EOS\\]"
+            "eos_to_cull": "\\[EOS\\]",
+            "padding_side": "left"
         }
     },
     {
@@ -4693,7 +4704,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4713,7 +4725,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4733,7 +4746,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4753,7 +4767,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "\\[EOS\\]"
+            "eos_to_cull": "\\[EOS\\]",
+            "padding_side": "left"
         }
     },
     {
@@ -4773,7 +4788,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4793,7 +4809,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4813,7 +4830,8 @@
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>"
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
         }
     },
     {
@@ -4834,7 +4852,10 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|return\\|>",
-            "padding_side": "left"
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<|channel|>analysis<|message|>",
+            "cot_end_tag": "<|end|><|start|>assistant<|channel|>final<|message|>"
         }
     },
     {
@@ -4855,7 +4876,10 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|return\\|>",
-            "padding_side": "left"
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<|channel|>analysis<|message|>",
+            "cot_end_tag": "<|end|><|start|>assistant<|channel|>final<|message|>"
         }
     },
     {
@@ -4876,7 +4900,10 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|endoftext\\|>",
-            "padding_side": "left"
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<think>",
+            "cot_end_tag": "</think>"
         }
     },
     {
@@ -4897,7 +4924,10 @@
         "model_config": {
             "premade_chat_template": true,
             "eos_to_cull": "<\\|endoftext\\|>",
-            "padding_side": "left"
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<think>",
+            "cot_end_tag": "</think>"
         }
     },
     {
