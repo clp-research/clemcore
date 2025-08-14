@@ -4,7 +4,7 @@ from typing import List
 from tqdm import tqdm
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator
+from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator, GameStep
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -22,7 +22,13 @@ def run(game_benchmark: GameBenchmark,
             game_master = game_benchmark.create_game_master(experiment, player_models)
             callbacks.on_game_start(game_master, game_instance)
             game_master.setup(**game_instance)
-            game_master.play()
+            done = False
+            while not done:
+                player, context = game_master.observe()
+                response = player(context)
+                done, info = game_master.step(response)
+                game_step = GameStep(context, response, done, info)
+                callbacks.on_game_step(game_master, game_instance, game_step)
             callbacks.on_game_end(game_master, game_instance)
         except Exception:  # continue with other instances if something goes wrong
             message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"

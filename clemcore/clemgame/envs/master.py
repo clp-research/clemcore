@@ -121,15 +121,6 @@ class EnvGameMaster(GameMaster):
         """
         raise NotImplementedError
 
-    def play(self) -> None:
-        done = False
-        while not done:
-            player, observation = self.observe()
-            response = player(observation)
-            done = self.step(response)
-        for player in self.get_players():
-            player.reset()
-
     def observe(self) -> Tuple[Player, Dict]:
         """
         Returns the current player and their observation from the environment.
@@ -291,6 +282,9 @@ class EnvGameMaster(GameMaster):
         self.log_key(METRIC_ABORTED, aborted)
         self.log_key(METRIC_SUCCESS, success)
         self.log_key(METRIC_LOSE, lose)
+
+        for player in self.get_players():
+            player.reset()
 
     def _on_after_game(self):
         """Executed once at the end, at the end of the play loop.

@@ -3,7 +3,7 @@ import collections
 import logging
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, Union, final, Optional
+from typing import List, Dict, Tuple, Any, Union, final
 
 from clemcore import backends
 from clemcore.clemgame.errors import ParseError, GameError
@@ -75,11 +75,6 @@ class GameMaster(EnvLike, GameEventSource):
         Args:
             kwargs: Keyword arguments used to set up the GameMaster instance.
         """
-        pass
-
-    @abc.abstractmethod
-    def play(self) -> None:
-        """Auto-Play the game for multiple turns given game instance."""
         pass
 
     @abc.abstractmethod
@@ -270,16 +265,6 @@ class DialogueGameMaster(GameMaster):
         return context
 
     @final
-    def play(self) -> None:
-        done = False
-        while not done:
-            player, context = self.observe()
-            response = player(context)
-            done, _ = self.step(response)
-        for player in self.get_players():
-            player.reset()
-
-    @final
     def observe(self) -> Tuple[Player, Dict]:
         player = self.current_player
         context = self.get_context_for(player)
@@ -318,6 +303,8 @@ class DialogueGameMaster(GameMaster):
             self._on_after_game()
             self.log_game_end()
             self.info["episode_score"] = self.compute_episode_score()
+            for player in self.get_players():
+                player.reset()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
 

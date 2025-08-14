@@ -5,7 +5,14 @@ from tqdm import tqdm
 
 from clemcore.backends import Model
 from clemcore.backends.model_registry import BatchGenerativeModel
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameMaster, Player, GameInstanceIterator
+from clemcore.clemgame import (
+    GameBenchmark,
+    GameBenchmarkCallbackList,
+    GameMaster,
+    GameStep,
+    Player,
+    GameInstanceIterator
+)
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -195,7 +202,8 @@ def run(game_benchmark: GameBenchmark,
         "Not all player models support batching. Use the sequential runner instead."
 
     callbacks.on_benchmark_start(game_benchmark)
-    game_sessions = __prepare_game_sessions(game_benchmark, game_instance_iterator, player_models, callbacks, verbose=True)
+    game_sessions = __prepare_game_sessions(game_benchmark, game_instance_iterator, player_models, callbacks,
+                                            verbose=True)
     num_sessions = len(game_sessions)
     if batch_size > num_sessions:
         stdout_logger.info("Reduce batch_size=%s to number of game sessions %s", batch_size, num_sessions)
@@ -304,12 +312,14 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
         pbar_batches.refresh()
 
         # Apply batch to receives responses
-        response_by_session_id = Player.batch_response(batch_players, batch_contexts, row_ids=session_ids)
+        context_response_by_session_id = Player.batch_response(batch_players, batch_contexts, row_ids=session_ids)
 
         # Use session_ids to map outputs back to game sessions for stepping
-        for sid, response in response_by_session_id.items():
+        for sid, context, response in context_response_by_session_id.items():
             session = game_sessions[sid]  # assuming session_id is an index (see __prepare_game_sessions)
-            done, _ = session.game_master.step(response)
+            done, info = session.game_master.step(response)
+            game_step = GameStep(context, response, done, info)
+            callbacks.on_game_step(session.game_master, session.game_instance, game_step)
             pbar_responses.update(1)
             if done:
                 pbar_instances.update(1)
