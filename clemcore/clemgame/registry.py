@@ -5,12 +5,12 @@ from typing import List, Dict, Union
 from types import SimpleNamespace
 import logging
 import nltk
-import clemcore.utils.file_utils as file_utils
 
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
 
 ENV_CLEMBENCH_HOME = "CLEMBENCH_HOME"
+
 
 class GameSpec(SimpleNamespace):
     """Base class for game specifications.

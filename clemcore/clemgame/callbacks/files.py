@@ -27,6 +27,8 @@ def to_model_results_folder(player_models: List[Model]):
     return f"group-{len(player_models)}p-{_hash}"
 
 
+# for pycharm: suppress could be static checks, because methods might be overwritten
+# noinspection PyMethodMayBeStatic
 class ResultsFolder:
     """
         Represents the following structure:
@@ -51,38 +53,35 @@ class ResultsFolder:
         return self.results_dir_path / self.models_dir
 
     def to_experiment_dir_path(self, game_master: "GameMaster") -> Path:
-        game_dir = ResultsFolder.to_game_dir(game_master)
-        experiment_dir = ResultsFolder.to_experiment_dir(game_master.experiment)
+        game_dir = self.to_game_dir(game_master)
+        experiment_dir = self.to_experiment_dir(game_master.experiment)
         return self.to_models_dir_path() / game_dir / experiment_dir
 
     def to_instance_dir_path(self, game_master: "GameMaster", game_instance: Dict) -> Path:
         experiment_path = self.to_experiment_dir_path(game_master)
-        instance_dir = ResultsFolder.to_instance_dir(game_instance)
+        instance_dir = self.to_instance_dir(game_instance)
         return experiment_path / instance_dir
 
-    @staticmethod
-    def to_game_dir(game_master: "GameMaster") -> str:
+    def to_game_dir(self, game_master: "GameMaster") -> str:
         return game_master.game_spec.game_name
 
-    @staticmethod
-    def to_experiment_dir(experiment: Dict) -> str:
+    def to_experiment_dir(self, experiment: Dict) -> str:
         return experiment["name"]
 
-    @staticmethod
-    def to_instance_dir(game_instance: Dict) -> str:
+    def to_instance_dir(self, game_instance: Dict) -> str:
         return f"instance_{game_instance['game_id']:05d}"
 
 
 class RunFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, result_dir_path: Path, player_models: List[Model]):
-        self.results_folder = ResultsFolder(result_dir_path, player_models)
+    def __init__(self, results_folder: ResultsFolder, player_model_infos: Dict):
+        self.results_folder = results_folder
         self.game_info = None
         self.benchmark_start = None
         self.num_instances = 0
         self.data = dict(clem_version=get_version(),
                          created=datetime.now().isoformat(),
-                         player_models=Model.to_infos(player_models),
+                         player_models=player_model_infos,
                          games={})
 
         model_dir_path = self.results_folder.to_models_dir_path()
@@ -114,8 +113,8 @@ class RunFileSaver(GameBenchmarkCallback):
 
 
 class InstanceFileSaver(GameBenchmarkCallback):
-    def __init__(self, result_dir_path: Path, player_models: List[Model]):
-        self.results_folder = ResultsFolder(result_dir_path, player_models)
+    def __init__(self, results_folder: ResultsFolder):
+        self.results_folder = results_folder
 
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
@@ -124,9 +123,9 @@ class InstanceFileSaver(GameBenchmarkCallback):
 
 class ExperimentFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, result_dir_path: Path, player_models: List[Model]):
-        self.results_folder = ResultsFolder(result_dir_path, player_models)
-        self.player_models_infos = Model.to_infos(player_models)
+    def __init__(self, results_folder: ResultsFolder, player_model_infos: Dict):
+        self.results_folder = results_folder
+        self.player_models_infos = player_model_infos
 
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         experiment_dir_path = self.results_folder.to_experiment_dir_path(game_master)
@@ -143,9 +142,9 @@ class ExperimentFileSaver(GameBenchmarkCallback):
 
 class InteractionsFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, result_dir_path: Path, player_models: List[Model]):
-        self.results_folder = ResultsFolder(result_dir_path, player_models)
-        self.player_models_infos = Model.to_infos(player_models)
+    def __init__(self, results_folder: ResultsFolder, player_model_infos: Dict):
+        self.results_folder = results_folder
+        self.player_models_infos = player_model_infos
         self._recorders: Dict[str, GameInteractionsRecorder] = {}
 
     @staticmethod
@@ -173,14 +172,17 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         assert _key in self._recorders, f"Recoder must be registered on_game_start, but wasn't for: {_key}"
         recorder = self._recorders.pop(_key)  # auto-remove recorder from registry
+        self._store_files(recorder, game_master, game_instance)
+
+    def _store_files(self, recorder, game_master, game_instance):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
         store_json(recorder.requests, "requests.json", instance_dir_path)
 
 
 class ImageFileSaver(GameBenchmarkCallback):
-    def __init__(self, result_dir_path: Path, player_models: List[Model]):
-        self.results_folder = ResultsFolder(result_dir_path, player_models)
+    def __init__(self, results_folder: ResultsFolder):
+        self.results_folder = results_folder
 
     def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
         game_dir = Path(game_master.game_spec.game_name)
