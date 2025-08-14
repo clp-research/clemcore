@@ -4949,6 +4949,7 @@
             "url": ""
         },
         "model_config": {
+            "requires_api_key": true,
             "premade_chat_template": true,
             "eos_to_cull": "<\\|eot\\|>",
             "padding_side": "left"
