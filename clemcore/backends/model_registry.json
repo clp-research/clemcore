@@ -298,6 +298,142 @@
         "model_config": {}
     },
     {
+        "model_name": "DeepSeek-R1-0528-openrouter",
+        "model_id": "deepseek/deepseek-r1-0528",
+        "backend": "openai_compatible",
+        "release_date": "2025-05-29",
+        "open_weight": true,
+        "parameters": "671B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {}
+    },
+	{
+        "model_name": "Hunyuan-A13B-Instruct-openrouter",
+        "model_id": "tencent/hunyuan-a13b-instruct",
+        "backend": "openai_compatible",
+        "release_date": "2025-07-01",
+        "open_weight": true,
+        "parameters": "80B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {}
+    },
+	{
+        "model_name": "Kimi-K2-Instruct-openrouter",
+        "model_id": "moonshotai/kimi-k2",
+        "backend": "openai_compatible",
+        "release_date": "2025-07-11",
+        "open_weight": true,
+        "parameters": "1T",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128K",
+        "license": {
+            "name": "modified-mit",
+            "url": ""
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "Qwen3-235B-A22B-Instruct-2507-openrouter",
+        "model_id": "qwen/qwen3-235b-a22b-2507",
+        "backend": "openai_compatible",
+        "release_date": "2025-07-21",
+        "open_weight": true,
+        "parameters": "235B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "Qwen3-Coder-480B-A35B-Instruct-openrouter",
+        "model_id": "qwen/qwen3-coder",
+        "backend": "openai_compatible",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "480B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {}
+    },
+	{
+        "model_name": "GLM-4.5-openrouter",
+        "model_id": "z-ai/glm-4.5",
+        "backend": "openai_compatible",
+        "release_date": "2025-07-28",
+        "open_weight": true,
+        "parameters": "355B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "GLM-4.5-Air-openrouter",
+        "model_id": "z-ai/glm-4.5-air",
+        "backend": "openai_compatible",
+        "release_date": "2025-07-28",
+        "open_weight": true,
+        "parameters": "106B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "Llama-4-Maverick-17B-128E-Instruct-openrouter",
+        "model_id": "meta-llama/llama-4-maverick",
+        "backend": "openai_compatible",
+        "release_date": "2025-04-05",
+        "open_weight": true,
+        "parameters": "109B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "1048576",
+        "license": {
+            "name": "llama4",
+            "url": ""
+        },
+        "model_config": {}
+    },
+    {
         "model_name": "gpt-4-1106-vision-preview",
         "model_id": "gpt-4-1106-vision-preview",
         "backend": "openai",
