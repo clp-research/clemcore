@@ -325,15 +325,7 @@ class Model(abc.ABC):
         self.__gen_args[arg_name] = arg_value
 
     def __repr__(self):
-        """Get a string representation of this Model instance."""
-        return str(self)
-
-    def __str__(self):
-        """Get the name of this Model instance's model.
-        Returns:
-            The name of the model as a string.
-        """
-        return self.name
+        return f"<{self.__class__.__name__} name={self.name!r} object at {hex(id(self))}>"
 
     def __eq__(self, other: "Model"):
         """Check if another assumed Model instance has the same model.
