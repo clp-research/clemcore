@@ -155,8 +155,7 @@ scrollObserver.observe(document.querySelector('#chat-area'), {
     subtree: true
 });
 
-
-// Ersetze <input id="text"> durch <textarea id="text">
+// New chat-area
 (function() {
     const oldInput = document.getElementById('text');
     if (oldInput) {
@@ -167,29 +166,45 @@ scrollObserver.observe(document.querySelector('#chat-area'), {
         textarea.style.cssText = oldInput.style.cssText;
         oldInput.parentNode.replaceChild(textarea, oldInput);
 
-        // Automatisches Anpassen der Höhe beim Tippen
+        // automatic adjustment of the height during the input
         textarea.addEventListener('input', function () {
             this.style.height = 'auto';
             this.style.height = (this.scrollHeight) + 'px';
         });
-    }
-})();
 
-// Absenden mit Enter (Shift+Enter = neue Zeile)
-document.addEventListener('keydown', function (e) {
-    const textarea = document.getElementById('text');
-    if (document.activeElement === textarea) {
+    textarea.addEventListener('keydown', function (e) {
+        const field = e.currentTarget; // das textarea
+
         if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault(); // Kein Zeilenumbruch
-            textarea.blur(); // Optional
-            const message = textarea.value.trim();
-            if (message) {
-                textarea.value = '';
-                textarea.style.height = 'auto';
-                // GENERISCHER ABSENDEN-CALL – hier ersetzen!
-                console.log("Senden:", message);
-                // Beispiel: socket.emit('message', message);
-            }
-        }
+            e.preventDefault(); // no line break
+            const message = field.value.trim();
+            if (!message) return;
+
+        //put into the UI
+        console.log('Senden:', message);
+        const chatBox = document.getElementById('chat-area'); // muss im HTML existieren
+        if (chatBox) {
+            const box = document.createElement('div');
+            box.className = 'message-box'; // eigene Nachricht
+            box.textContent = message;
+            box.style.background = '#CECDCD';
+            box.style.display = 'flex-right'
+            box.style.color = '#000';
+            box.style.padding = '10px';
+            box.style.minWidth = '50px'
+            box.style.borderRadius = '2px'
+            chatBox.appendChild(box);
     }
-});
+
+            // send the text to the server
+            socket.emit(
+            "text", {room: self_room, message: message}
+            );
+
+            // empty the field and reset auto-resize
+            field.value = '';
+            field.style.height = 'auto';
+            }
+    });
+    }})
+();
