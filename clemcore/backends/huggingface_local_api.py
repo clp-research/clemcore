@@ -352,7 +352,7 @@ def split_and_clean_batch_outputs(
 
         # Check for CoT output and split if present
         if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
-            rumination, response_text = split_and_clean_cot_output(response_text, model)
+            cot_content, response_text = split_and_clean_cot_output(response_text, model)
 
         # Prompt and response info for recording raw model inputs and outputs
         prompt_info = {
@@ -361,9 +361,9 @@ def split_and_clean_batch_outputs(
             "temperature": model.temperature
         }
         response_info = {'response': model_output}
-        # Add rumination content to response_info
+        # Add cot_content content to response_info
         if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
-            response_info['rumination'] = rumination
+            response_info['cot_content'] = cot_content
 
         prompts.append(prompt_info)
         responses.append(response_info)
@@ -373,7 +373,7 @@ def split_and_clean_batch_outputs(
 
 def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel) -> Tuple[str, str]:
     """
-    Splits a CoT-output model's response into rumination and final answer.
+    Splits a CoT-output model's response into cot_content and final answer.
     Final answers are cut to the token sequence allowed by the max_tokens value set for the model/benchmark run due to
     fairness concerns.
     CoT tags, stored in the model's registry entry, cover more than just relevant special tokens to assure broad
@@ -387,7 +387,7 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
         model: The HuggingfaceLocalModel instance containing model configuration and settings.
     Returns:
         Tuple of two strings:
-        - rumination: The cleaned CoT/thinking/reasoning/rumination content.
+        - cot_content: The cleaned CoT/thinking/reasoning/cot_content content.
         - answer: The cleaned final answer content.
     """
     # Cull CoT start tag if model has it defined
@@ -395,11 +395,11 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
         response_text = response_text.replace(model.model_spec.model_config.cot_start_tag, "")
     # Split response text at CoT end tag
     split_cot_response = response_text.split(model.model_spec.model_config.cot_end_tag)
-    rumination = split_cot_response[0]
+    cot_content = split_cot_response[0]
     answer = split_cot_response[1]
     # Retokenize and count CoT and final answer tokens
-    # tokenized_rumination = model.tokenizer(rumination)
-    # n_rumination_tokens = len(tokenized_rumination)
+    # tokenized_cot_content = model.tokenizer(cot_content)
+    # n_cot_content_tokens = len(tokenized_cot_content)
     tokenized_answer = model.tokenizer(answer)
     tokenized_answer = tokenized_answer.input_ids
     n_answer_tokens = len(tokenized_answer)
@@ -411,7 +411,7 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
     # Decode retokenized and potentially cut answer
     answer = model.tokenizer.decode(tokenized_answer)
 
-    return rumination, answer
+    return cot_content, answer
 
 
 def assert_context_limits(model: HuggingfaceLocalModel, prompt_token_ids):
