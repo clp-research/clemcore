@@ -4487,6 +4487,443 @@
         }
     },
     {
+        "model_name": "Llama-3_3-Nemotron-Super-49B-v1",
+        "huggingface_id": "nvidia/Llama-3_3-Nemotron-Super-49B-v1",
+        "backend": "huggingface_local",
+        "release_date": "2025-03-16",
+        "open_weight": true,
+        "parameters": "49B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "nvidia-open-model-license",
+            "url": "https://www.nvidia.com/en-us/agreements/enterprise-software/nvidia-open-model-license/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|end_of_text\\|>"
+        }
+    },
+    {
+        "model_name": "Phi-4-mini-reasoning",
+        "huggingface_id": "microsoft/Phi-4-mini-reasoning",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-29",
+        "open_weight": true,
+        "parameters": "3.8B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "cot_output": true,
+            "cot_end_tag": "<\\|end\\|>"
+        }
+    },
+    {
+        "model_name": "DeepSeek-R1-0528-Qwen3-8B",
+        "huggingface_id": "deepseek-ai/DeepSeek-R1-0528-Qwen3-8B",
+        "backend": "huggingface_local",
+        "release_date": "2025-05-29",
+        "open_weight": true,
+        "parameters": "8B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<｜end▁of▁sentence｜>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "DeepSeek-R1-0528",
+        "huggingface_id": "deepseek-ai/DeepSeek-R1-0528",
+        "backend": "huggingface_local",
+        "release_date": "2025-05-29",
+        "open_weight": true,
+        "parameters": "671B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<｜end▁of▁sentence｜>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "MiniMax-Text-01",
+        "huggingface_id": "MiniMaxAI/MiniMax-Text-01",
+        "backend": "huggingface_local",
+        "release_date": "2025-01-14",
+        "open_weight": true,
+        "parameters": "456B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4M",
+        "license": {
+            "name": "unknown",
+            "url": ""
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<end_of_sentence>"
+        }
+    },
+    {
+        "model_name": "Hunyuan-A13B-Instruct",
+        "huggingface_id": "tencent/Hunyuan-A13B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-01",
+        "open_weight": true,
+        "parameters": "80B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256k",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|eos\\|>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "reka-flash-3.1",
+        "huggingface_id": "RekaAI/reka-flash-3.1",
+        "backend": "huggingface_local",
+        "release_date": "2025-05-28",
+        "open_weight": true,
+        "parameters": "20.9B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "98304",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>"
+        }
+    },
+    {
+        "model_name": "MetaStone-S1-32B",
+        "huggingface_id": "MetaStoneTec/MetaStone-S1-32B",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-05",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "40960",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "cot_output": true,
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "Kimi-K2-Instruct",
+        "huggingface_id": "moonshotai/Kimi-K2-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-11",
+        "open_weight": true,
+        "parameters": "1T",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128K",
+        "license": {
+            "name": "modified-mit",
+            "url": ""
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "\\[EOS\\]"
+        }
+    },
+    {
+        "model_name": "Qwen3-235B-A22B-Instruct-2507",
+        "huggingface_id": "Qwen/Qwen3-235B-A22B-Instruct-2507",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-21",
+        "open_weight": true,
+        "parameters": "235B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-Coder-480B-A35B-Instruct",
+        "huggingface_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "480B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-Coder-480B-A35B-Instruct-FP8",
+        "huggingface_id": "Qwen/Qwen3-Coder-480B-A35B-Instruct-FP8",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "480B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Kimi-VL-A3B-Instruct",
+        "huggingface_id": "moonshotai/Kimi-VL-A3B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-09",
+        "open_weight": true,
+        "parameters": "16B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "128K",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "\\[EOS\\]"
+        }
+    },
+    {
+        "model_name": "EuroLLM-9B-Instruct",
+        "huggingface_id": "utter-project/EuroLLM-9B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2024-11-28",
+        "open_weight": true,
+        "parameters": "9B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-30B-A3B",
+        "huggingface_id": "Qwen/Qwen3-30B-A3B",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-28",
+        "open_weight": true,
+        "parameters": "30B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "32K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "Qwen3-32B",
+        "huggingface_id": "Qwen/Qwen3-32B",
+        "backend": "huggingface_local",
+        "release_date": "2025-04-28",
+        "open_weight": true,
+        "parameters": "30B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "32K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "gpt-oss-120b",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "huggingface_local",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "gpt-oss-20b",
+        "huggingface_id": "openai/gpt-oss-20b",
+        "backend": "huggingface_local",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "20B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "GLM-4.5",
+        "huggingface_id": "zai-org/GLM-4.5",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-28",
+        "open_weight": true,
+        "parameters": "355B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "GLM-4.5-Air",
+        "huggingface_id": "zai-org/GLM-4.5-Air",
+        "backend": "huggingface_local",
+        "release_date": "2025-07-28",
+        "open_weight": true,
+        "parameters": "106B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
+        "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
+        "backend": "llamacpp",
+        "release_date": "2025-07-22",
+        "open_weight": true,
+        "parameters": "235B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "256K",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "filename": "*/Q8_0/*Q8_0*.gguf",
+            "premade_chat_template": true,
+            "bos_string": "<s>",
+            "eos_string": "<|im_end|>",
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
         "model_name": "Qwen1.5-0.5B-Chat-GGUF-q8",
         "backend": "llamacpp",
         "huggingface_id": "Qwen/Qwen1.5-0.5B-Chat-GGUF",

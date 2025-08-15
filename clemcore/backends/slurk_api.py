@@ -103,8 +103,9 @@ class Slurk(backends.RemoteBackend):
         # Note: You can customize the bot name for individual games as described above
         bot_id = self.client.create_user(model_spec.bot_name, bot_token)
         user_token = self.client.create_token(user_permissions_id, room_id)
-
-        slurk_model = SlurkModel(bot_id, bot_token, room_id, model_spec).connect(self.client.slurk_host)
+        user_name = user_token[:8]  # using first 8 chars of login token, such as a36bf44a-a3fe-499a-a6eb-bb846dc8f993
+        renamed_model_spec = model_spec.rename(user_name)  # changed model_name from slurk to, e.g., a36bf44a
+        slurk_model = SlurkModel(bot_id, bot_token, room_id, renamed_model_spec).connect(self.client.slurk_host)
         self.client.join_room(bot_id, room_id)  # todo why do we need this?
 
         stdout_logger.info(f"SLURK_USER_TOKEN={user_token}")

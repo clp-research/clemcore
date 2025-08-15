@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import List, Dict, Union, Callable, Optional
 
 import clemcore.backends as backends
-from clemcore.backends import ModelRegistry, BackendRegistry
+from clemcore.backends import ModelRegistry, BackendRegistry, Model
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver, GameBenchmarkCallbackList
-from clemcore.clemgame import benchmark
+    InteractionsFileSaver, GameBenchmarkCallbackList, ImageFileSaver, RunFileSaver, GameInstanceIterator, ResultsFolder, \
+    GameBenchmark
 from clemcore import clemeval, get_version
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
@@ -95,7 +95,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
         instances_filename: str = None,
         results_dir_path: Path = None,
         sub_selector: Callable[[str, str], List[int]] = None,
-        force_sequential: bool = False
+        batch_size: int = 1
         ):
     """Run specific model/models with a specified clemgame.
     Args:
@@ -108,6 +108,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
         results_dir_path: Path to the results directory in which to store the episode records.
         sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
             If a mapping returns None, then all game instances will be used.
+        batch_size: A batch size to use for the run.
     """
     # check games
     game_registry = GameRegistry.from_directories_and_cwd_files()
@@ -140,9 +141,24 @@ def run(game_selector: Union[str, Dict, GameSpec],
         player_models.append(model)
     logger.info("Loading models took: %s", datetime.now() - start)
 
+    # setup reusable callbacks here once
+    results_folder = ResultsFolder(results_dir_path, player_models)
+    model_infos = Model.to_infos(player_models)
+    callbacks = GameBenchmarkCallbackList([
+        InstanceFileSaver(results_folder),
+        ExperimentFileSaver(results_folder, model_infos),
+        InteractionsFileSaver(results_folder, model_infos),
+        ImageFileSaver(results_folder),
+        RunFileSaver(results_folder, model_infos)
+    ])
+
     all_start = datetime.now()
     for game_spec in game_specs:
         try:
+            # configure instance file to be used
+            if instances_filename:
+                game_spec.instances = instances_filename  # force the use of cli argument, when given
+
             if experiment_name:  # establish experiment filter, if given
                 logger.info("Only running experiment: %s", experiment_name)
                 if sub_selector is None:
@@ -151,16 +167,18 @@ def run(game_selector: Union[str, Dict, GameSpec],
                     game_ids = sub_selector(game_spec.game_name, experiment_name)
                     sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=game_ids)
 
-            with benchmark.load_from_spec(game_spec,
-                                          instances_filename=instances_filename,
-                                          sub_selector=sub_selector) as game_benchmark:
+            with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
                 time_start = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
-                callbacks = GameBenchmarkCallbackList()
-                callbacks.append(InstanceFileSaver(results_dir_path, player_models))
-                callbacks.append(ExperimentFileSaver(results_dir_path, player_models))
-                callbacks.append(InteractionsFileSaver(results_dir_path, player_models))
-                dispatch.run(game_benchmark, player_models, callbacks=callbacks, force_sequential=force_sequential)
+                game_instance_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=sub_selector)
+                game_instance_iterator.reset(verbose=True)
+                dispatch.run(
+                    game_benchmark,
+                    game_instance_iterator,
+                    player_models,
+                    callbacks=callbacks,
+                    batch_size=batch_size
+                )
                 logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -183,7 +201,7 @@ def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
     for game_spec in game_specs:
         try:
             time_start = datetime.now()
-            with benchmark.load_from_spec(game_spec, do_setup=False) as game_benchmark:
+            with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
                 game_benchmark.compute_scores(results_dir)
             logger.info(f"Scoring {game_benchmark.game_name} took: %s", datetime.now() - time_start)
         except Exception as e:
@@ -238,7 +256,7 @@ def cli(args: argparse.Namespace):
                 experiment_name=args.experiment_name,
                 instances_filename=args.instances_filename,
                 results_dir_path=args.results_dir,
-                force_sequential=args.sequential)
+                batch_size=args.batch_size)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
     if args.command_name == "score":
@@ -335,8 +353,12 @@ def main():
                             help="Specify the maximum number of tokens to be generated per turn (except for cohere). "
                                  "Be careful with high values which might lead to exceed your API token limits."
                                  "Default: 300.")
-    run_parser.add_argument("--sequential", action="store_true",
-                            help="Force a sequential run (even when models support batching). Default: False")
+    run_parser.add_argument("-b", "--batch_size", type=int, default=1,
+                            help="The batch size for response generation, that is, "
+                                 "the number of simultaneously played game instances. "
+                                 "Applies to all models that support batchwise generation, "
+                                 "otherwise the game instances will be played sequentially."
+                                 "Default: 1 (sequential processing).")
 
     run_parser.add_argument("-i", "--instances_filename", type=str, default=None,
                             help="The instances file name (.json suffix will be added automatically.")

@@ -202,7 +202,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
 
     @augment_response_object
     @ensure_messages_format
-    def generate_response(self, messages: List[Dict], return_full_text: bool = False) -> Tuple[Any, Any, str]:
+    def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """
         Public method for single response generation.
 
@@ -210,44 +210,37 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
 
         Args:
             messages (List[Dict]): List of message dicts.
-            return_full_text (bool, optional): Whether to return full text.
 
         Returns:
             Tuple[Any, Any, str]: Single response tuple (prompt, response_object, response_text).
         """
         batch_messages = [messages]  # Wrap single message list into batch
-
         # Call batch method without decorators to avoid double invocation of decorators
-        results = self._generate_batch_response(batch_messages, return_full_text)
+        results = self._generate_batch_response(batch_messages)
 
         return results[0]  # Unpack single result to maintain original API
 
     @augment_response_object
     @ensure_messages_format
-    def generate_batch_response(self, batch_messages: List[List[Dict]], return_full_text: bool = False
-                                ) -> List[Tuple[Any, Any, str]]:
+    def generate_batch_response(self, batch_messages: List[List[Dict]]) -> List[Tuple[Any, Any, str]]:
         """
         Public method for batch response generation.
 
         Args:
             batch_messages (List[List[Dict]]): Batch of message lists.
-            return_full_text (bool, optional): Whether to return full text.
 
         Returns:
             List[Tuple[Any, Any, str]]: List of response tuples.
         """
-        return self._generate_batch_response(batch_messages, return_full_text)
+        return self._generate_batch_response(batch_messages)
 
-    def _generate_batch_response(self, batch_messages: List[List[Dict]],
-                                 return_full_text: bool = False
-                                 ) -> List[Tuple[Any, Any, str]]:
+    def _generate_batch_response(self, batch_messages: List[List[Dict]]) -> List[Tuple[Any, Any, str]]:
         """
         Core batch response implementation without decorators.
 
         Args:
             batch_messages (List[List[Dict]]): Batch of message lists,
                 assumed to be properly formatted.
-            return_full_text (bool, optional): Whether to return full text.
 
         Returns:
             List[Tuple[Any, Any, str]]: List of response tuples (prompt, response_object, response_text).
@@ -277,7 +270,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         # Tokenize all chats at once with padding for batch
         encoding_dict = self.tokenizer(
             rendered_chats,
-            add_special_tokens=False,  # <|begin_of_text|> already added above
+            add_special_tokens=False,  # <|begin_of_text|>/BOT token already added above
             return_tensors="pt",
             padding=True,  # pad to the longest sequence (necessary for batching)
             return_attention_mask=True  # with 1's up to sample length, followed by 0's
@@ -301,26 +294,27 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             gen_args["top_p"] = getattr(self.model.generation_config, "top_p", None)  # look in config for default value
             gen_args["temperature"] = self.temperature
 
+        # Let CoT-output models generate to their context limit to assure CoT+final answer completion
+        if 'cot_output' in self.model_spec.model_config and self.model_spec.model_config['cot_output']:
+            gen_args["max_new_tokens"] = self.context_size
+
         # Generate outputs for the whole batch
         model_output_ids = self.model.generate(prompt_token_ids, **gen_args)
 
         # Decode all outputs and prompts
-        model_outputs = self.tokenizer.batch_decode(model_output_ids, skip_special_tokens=True)
-        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids, skip_special_tokens=True)
+        model_outputs = self.tokenizer.batch_decode(model_output_ids)
+        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids)
 
         prompts, response_texts, responses = split_and_clean_batch_outputs(self,
                                                                            model_outputs,
-                                                                           prompt_texts,
-                                                                           return_full_text=return_full_text)
+                                                                           prompt_texts)
         return list(zip(prompts, responses, response_texts))
 
 
 def split_and_clean_batch_outputs(
         model: HuggingfaceLocalModel,
         model_outputs: List[str],
-        prompt_texts: List[str],
-        *,
-        return_full_text: bool = False
+        prompt_texts: List[str]
 ) -> Tuple[List[Dict[str, Any]], List[str], List[Dict[str, str]]]:
     """
     Processes a batch of raw model output strings by removing input prompts,
@@ -330,7 +324,6 @@ def split_and_clean_batch_outputs(
         model: The HuggingfaceLocalModel instance containing model configuration and settings.
         model_outputs: List of raw generated output strings from the model (batch).
         prompt_texts: List of prompt strings corresponding to each model output in the batch.
-        return_full_text: Boolean flag indicating whether to return the full generated text including prompt.
 
     Returns:
         Tuple of three lists (prompts, response_texts, responses):
@@ -343,32 +336,81 @@ def split_and_clean_batch_outputs(
     response_texts = []
 
     for model_output, prompt_text in zip(model_outputs, prompt_texts):
-        if not return_full_text:
-            # Remove prompt from output
-            response_text = model_output.replace(prompt_text, '').strip()
-            # Apply model-specific output_split_prefix if present
-            if 'output_split_prefix' in model.model_spec.model_config:
-                prefix = model.model_spec['model_config']['output_split_prefix']
-                if prefix in response_text:
-                    response_text = response_text.rsplit(prefix, maxsplit=1)[1]
-            # Remove EOS tokens from response
-            eos_to_cull = model.model_spec['model_config']['eos_to_cull']
-            response_text = re.sub(eos_to_cull, "", response_text)
-        else:
-            response_text = model_output.strip()
+        # Remove prompt from output
+        response_text = model_output.replace(prompt_text, '').strip()
+        # Apply model-specific output_split_prefix if present
+        if 'output_split_prefix' in model.model_spec.model_config:
+            prefix = model.model_spec['model_config']['output_split_prefix']
+            if prefix in response_text:
+                response_text = response_text.rsplit(prefix, maxsplit=1)[1]
+        # Remove batch processing padding tokens
+        if response_text.startswith(model.tokenizer.pad_token) or response_text.endswith(model.tokenizer.pad_token):
+            response_text = response_text.replace(model.tokenizer.pad_token, "")
+        # Remove EOS tokens and potential trailing tokens from response
+        eos_to_cull = model.model_spec['model_config']['eos_to_cull']  # This is a regEx to handle inconsistent outputs
+        response_text = re.sub(eos_to_cull, "", response_text)
 
+        # Check for CoT output and split if present
+        if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
+            rumination, response_text = split_and_clean_cot_output(response_text, model)
+
+        # Prompt and response info for recording raw model inputs and outputs
         prompt_info = {
             "inputs": prompt_text,
             "max_new_tokens": model.max_tokens,
-            "temperature": model.temperature,
-            "return_full_text": return_full_text
+            "temperature": model.temperature
         }
         response_info = {'response': model_output}
+        # Add rumination content to response_info
+        if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
+            response_info['rumination'] = rumination
 
         prompts.append(prompt_info)
         responses.append(response_info)
         response_texts.append(response_text)
     return prompts, response_texts, responses
+
+
+def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel) -> Tuple[str, str]:
+    """
+    Splits a CoT-output model's response into rumination and final answer.
+    Final answers are cut to the token sequence allowed by the max_tokens value set for the model/benchmark run due to
+    fairness concerns.
+    CoT tags, stored in the model's registry entry, cover more than just relevant special tokens to assure broad
+    applicability through string splitting. For example, the CoT end tag for gpt-oss models is
+    '<|end|><|start|>assistant<|channel|>final<|message|>' (the relevant part being '<|channel|>final'), as it includes
+    the non-special-token string 'final' between special tokens, with the *entire tag string* demarcating the beginning
+    of the final answer, instead of a simple single special token like for example DeepSeek's '</thinking>'.
+
+    Args:
+        response_text: The response text, without input prompt, but including all special tokens and tags.
+        model: The HuggingfaceLocalModel instance containing model configuration and settings.
+    Returns:
+        Tuple of two strings:
+        - rumination: The cleaned CoT/thinking/reasoning/rumination content.
+        - answer: The cleaned final answer content.
+    """
+    # Cull CoT start tag
+    response_text = response_text.replace(model.model_spec.model_config.cot_start_tag, "")
+    # Split response text at CoT end tag
+    split_cot_response = response_text.split(model.model_spec.model_config.cot_end_tag)
+    rumination = split_cot_response[0]
+    answer = split_cot_response[1]
+    # Retokenize and count CoT and final answer tokens
+    # tokenized_rumination = model.tokenizer(rumination)
+    # n_rumination_tokens = len(tokenized_rumination)
+    tokenized_answer = model.tokenizer(answer)
+    tokenized_answer = tokenized_answer.input_ids
+    n_answer_tokens = len(tokenized_answer)
+    # Cut answer tokens to max_tokens value if they exceed it
+    if n_answer_tokens > model.max_tokens:
+        logger.info(f"CoT final answer token count {n_answer_tokens} exceeds max_tokens {model.max_tokens}, "
+                    f"cutting off excess tokens.")
+        tokenized_answer = tokenized_answer[:model.max_tokens]
+    # Decode retokenized and potentially cut answer
+    answer = model.tokenizer.decode(tokenized_answer)
+
+    return rumination, answer
 
 
 def assert_context_limits(model: HuggingfaceLocalModel, prompt_token_ids):

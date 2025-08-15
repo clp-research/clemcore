@@ -36,7 +36,13 @@ class TestBatchResponse(unittest.TestCase):
 
         result = Player.batch_response(players, contexts, row_ids=row_ids)
 
-        self.assertEqual(result, {10: "resp1", 20: "resp2"})
+        self.assertEqual(
+            result,
+            {
+                10: ({'content': 'ctx1', 'role': 'user'}, 'resp1'),
+                20: ({'content': 'ctx2', 'role': 'user'}, 'resp2')
+            }
+        )
         model1.generate_batch_response.assert_called_once()
         model2.generate_batch_response.assert_called_once()
 
@@ -82,7 +88,13 @@ class TestBatchResponse(unittest.TestCase):
 
         result = Player.batch_response(players, contexts, row_ids=row_ids)
 
-        self.assertEqual(result, {1: "resp1", 2: "resp2"})
+        self.assertEqual(
+            result,
+            {
+                1: ({'content': 'ctx1', 'role': 'user'}, 'resp1'),
+                2: ({'content': 'ctx2', 'role': 'user'}, 'resp2')
+            }
+        )
         model.generate_batch_response.assert_called_once()
 
     def test_batch_response_auto_row_ids(self):
@@ -97,7 +109,13 @@ class TestBatchResponse(unittest.TestCase):
 
         result = Player.batch_response(players, contexts)
 
-        self.assertEqual(result, {0: "resp1", 1: "resp2"})
+        self.assertEqual(
+            result,
+            {
+                0: ({'content': 'ctx1', 'role': 'user'}, 'resp1'),
+                1: ({'content': 'ctx2', 'role': 'user'}, 'resp2')
+            }
+        )
 
     def test_batch_response_auto_row_ids_used_in_order(self):
         model = MagicMock()
@@ -118,7 +136,13 @@ class TestBatchResponse(unittest.TestCase):
 
         result = Player.batch_response(players, contexts)
 
-        self.assertEqual(result, {0: "resp0", 1: "resp1"})
+        self.assertEqual(
+            result,
+            {
+                0: ({'content': 'ctx0', 'role': 'user'}, 'resp0'),
+                1: ({'content': 'ctx1', 'role': 'user'}, 'resp1')
+            }
+        )
         model.generate_batch_response.assert_called_once()
 
 
