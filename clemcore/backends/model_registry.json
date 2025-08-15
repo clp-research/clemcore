@@ -434,6 +434,23 @@
         "model_config": {}
     },
     {
+        "model_name": "MiniMax-01-openrouter",
+        "model_id": "minimax/minimax-m1",
+        "backend": "openai_compatible",
+        "release_date": "2025-01-14",
+        "open_weight": true,
+        "parameters": "456B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4M",
+        "license": {
+            "name": "unknown",
+            "url": ""
+        },
+        "model_config": {}
+    },
+    {
         "model_name": "gpt-4-1106-vision-preview",
         "model_id": "gpt-4-1106-vision-preview",
         "backend": "openai",
