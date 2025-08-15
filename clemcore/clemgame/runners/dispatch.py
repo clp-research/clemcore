@@ -2,12 +2,13 @@ import logging
 from typing import List
 
 from clemcore.backends import Model, BatchGenerativeModel
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList
+from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator
 
 stdout_logger = logging.getLogger("clemcore.run")
 
 
 def run(game_benchmark: GameBenchmark,
+        game_instance_iterator: GameInstanceIterator,
         player_models: List[Model | BatchGenerativeModel],
         *,
         callbacks: GameBenchmarkCallbackList = None,
@@ -23,10 +24,11 @@ def run(game_benchmark: GameBenchmark,
 
         Note: Slurk backends do not support batching, hence will run always sequentially (for now).
     Args:
-        batch_size: The batch size to use (default: 1).
-        game_benchmark: The game benchmark to run.
+        game_benchmark: The game benchmark to run, that is, a factory to create the proper game master.
+        game_instance_iterator: An iterator over the game instances to be played.
         player_models: A list of backends.Model instances to run the game with.
         callbacks: Callbacks to be invoked during the benchmark run.
+        batch_size: The batch size to use (default: 1).
     """
     callbacks = callbacks or GameBenchmarkCallbackList()
     if batch_size > 1 and Model.all_support_batching(player_models):
@@ -35,7 +37,7 @@ def run(game_benchmark: GameBenchmark,
                            game_benchmark.game_name,
                            ",".join(player_model.name for player_model in player_models),
                            batch_size)
-        batchwise.run(game_benchmark, player_models, callbacks=callbacks, batch_size=batch_size)
+        batchwise.run(game_benchmark, game_instance_iterator, player_models, callbacks=callbacks, batch_size=batch_size)
     else:
         from clemcore.clemgame.runners import sequential  # lazy import
         if not Model.all_support_batching(player_models):
@@ -46,4 +48,4 @@ def run(game_benchmark: GameBenchmark,
                            game_benchmark.game_name,
                            ",".join(player_model.name for player_model in player_models),
                            batch_size)
-        sequential.run(game_benchmark, player_models, callbacks=callbacks)
+        sequential.run(game_benchmark, game_instance_iterator, player_models, callbacks=callbacks)

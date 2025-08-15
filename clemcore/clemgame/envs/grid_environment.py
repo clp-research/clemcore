@@ -1,15 +1,13 @@
-import base64
 import io
 import logging
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Set, Tuple, TypedDict, Union
+from typing import Dict, List, Optional, Tuple, TypedDict
 
 import matplotlib.patches as patches
 import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
 
-from clemcore.clemgame.environment import (
+from clemcore.clemgame.envs.environment import (
     Action,
     ActionSpace,
     GameEnvironment,
