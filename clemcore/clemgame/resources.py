@@ -99,6 +99,33 @@ def store_results_file(game_name, data, file_name: str, dialogue_pair: str,
     return fp
 
 
+def store_image(image_data: bytes, path: str, filename: str) -> str:
+    """Store an image in the results directory.
+
+    Args:
+        image_data: The image data as bytes.
+        path: The path to the image.
+
+    Returns:
+        The path to the stored image file.
+    """
+    try:
+        images_dir = os.path.join(path, "images")
+        os.makedirs(images_dir, exist_ok=True)
+
+        filepath = os.path.join(images_dir, filename)
+
+        with open(filepath, 'wb') as f:
+            f.write(image_data)
+
+        module_logger.info(f"Stored image to {filepath}")
+        return filepath
+
+    except Exception as e:
+        module_logger.error(f"Failed to store image {path}: {e}")
+        return ""
+
+
 class GameResourceLocator(abc.ABC):
     """
     Provides access to game specific resources and results (based on game path and results directory)
