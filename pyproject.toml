@@ -23,12 +23,12 @@ dependencies = [
     "retry>=0.9.2",
     "tqdm>=4.65.0",
     "nltk==3.8.1", # pin due to transformers==4.51.1 requires nltk<=3.8.1
-    "aleph-alpha-client==7.0.1",
-    "openai==1.75.0",
-    "anthropic==0.47.1",
-    "cohere==4.48",
-    "google-generativeai==0.8.4",
-    "mistralai==1.8.0",
+    "aleph-alpha-client==11.2.0",
+    "openai==1.99.9",
+    "anthropic==0.64.0",
+    "cohere==5.17",
+    "google-generativeai==0.8.5",
+    "mistralai==1.9.6",
     "matplotlib==3.7.1",
     "pandas==2.0.1",
     "seaborn==0.12.2",
@@ -38,20 +38,20 @@ dependencies = [
 [project.optional-dependencies]
 vllm = [
     "torch~=2.6.0",
-    "transformers==4.51.1",
+    "transformers==4.55.2", # keep in sync with huggingface extra
     "vllm==0.8.4" # requires: torch==2.6.0 transformers>=4.51.1 cuda==12.4 openai>=1.52.0
 ]
 huggingface = [
     "torch~=2.1.1",
-    "sentencepiece==0.1.99",
-    "accelerate==1.2.1",
-    "protobuf==4.21.6",
-    "einops==0.6.1",
-    "bitsandbytes==0.45.3",
-    "peft==0.15.2",
-    "transformers==4.51.1", # nltk<=3.8.1 torch>=2.0 sentencepiece>=0.1.91,!=0.1.92 accelerate>=0.26.0 protobuf
     "torchvision==0.16.1", # needs to be kept in synch with torch
-    "timm>=1.0.15"
+    "sentencepiece==0.2.1",
+    "accelerate==1.10.0",
+    "protobuf==6.32.0",
+    "einops==0.8.1",
+    "bitsandbytes==0.45.5", # "bitsandbytes==0.46.0" requires "torch>=2.2,<3"
+    "peft==0.17.0", # "torch>=1.13.0" "accelerate>=0.21.0"
+    "timm==1.0.19", # for transformers
+    "transformers==4.55.2", # nltk<=3.8.1 torch>=2.1 sentencepiece>=0.1.91,!=0.1.92 torch>=2.1 timm<=1.0.19
 ]
 slurk = [
     "python-engineio==4.4.0",
