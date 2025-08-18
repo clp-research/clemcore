@@ -44,7 +44,7 @@ vllm = [
 huggingface = [
     "torch~=2.1.1",
     "torchvision==0.16.1", # needs to be kept in synch with torch
-    "accelerate==1.10.0",
+    "accelerate==1.2.1",
     "bitsandbytes==0.45.5", # "bitsandbytes==0.46.0" requires "torch>=2.2,<3"
     "peft==0.17.0", # "torch>=1.13.0" "accelerate>=0.21.0"
     "timm>=1.0.15,<=1.0.19", # for transformers
