@@ -1,7 +1,38 @@
 import unittest
 
-from clemcore.backends import ModelRegistry, BackendRegistry
+from clemcore.backends import ModelRegistry, BackendRegistry, ModelSpec
+from clemcore.backends.anthropic_api import Anthropic
+from clemcore.backends.openai_api import OpenAI
 from clemcore.backends.utils import ensure_alternating_roles
+
+
+class GenerateTestCase(unittest.TestCase):
+
+    def _generate_response_test(self, backend, model_name, messages):
+        model_spec = ModelSpec.from_dict(dict(model_name=model_name, model_id=model_name, model_config={}))
+        model = backend.get_model_for(model_spec)
+        model.set_gen_arg("temperature", 0)
+        model.set_gen_arg("max_tokens", 100)
+        prompt, response, response_text = model.generate_response(messages)
+        assert prompt is not None
+        print(prompt)
+        assert response is not None
+        assert response_text is not None
+        print(response_text)
+
+    def test_generate_response_with_openai(self):
+        self._generate_response_test(
+            OpenAI(),
+            "gpt-4o-mini-2024-07-18",
+            [{"role": "user", "content": "How are you?"}]
+        )
+
+    def test_generate_response_with_anthropic(self):
+        self._generate_response_test(
+            Anthropic(),
+            "claude-3-haiku-20240307",
+            [{"role": "user", "content": "How are you?"}]
+        )
 
 
 class UtilsTestCase(unittest.TestCase):
