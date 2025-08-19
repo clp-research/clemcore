@@ -59,7 +59,7 @@ class OpenRouterModel(openai_api.OpenAIModel):
             client: An OpenAI library OpenAI client class.
             model_spec: A ModelSpec instance specifying the model.
         """
-        super().__init__(model_spec)
+        super().__init__(client, model_spec)
         self.client = client
 
     @retry(tries=3, delay=90, logger=logger)
