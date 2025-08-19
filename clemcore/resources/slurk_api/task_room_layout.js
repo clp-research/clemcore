@@ -182,24 +182,10 @@ scrollObserver.observe(document.querySelector('#chat-area'), {
 
         //put into the UI
         console.log('Senden:', message);
-        const chatBox = document.getElementById('chat-area'); // muss im HTML existieren
-        if (chatBox) {
-            const box = document.createElement('div');
-            box.className = 'message-box'; // eigene Nachricht
-            box.textContent = message;
-            box.style.background = '#CECDCD';
-            box.style.display = 'flex-right'
-            box.style.color = '#000';
-            box.style.padding = '10px';
-            box.style.minWidth = '50px'
-            box.style.borderRadius = '2px'
-            chatBox.appendChild(box);
-    }
 
-            // send the text to the server
-            socket.emit(
-            "text", {room: self_room, message: message}
-            );
+            display_message(self_user, null, message);
+            submit_text(message);
+
 
             // empty the field and reset auto-resize
             field.value = '';
