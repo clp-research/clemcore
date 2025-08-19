@@ -298,9 +298,9 @@
         "model_config": {}
     },
     {
-        "model_name": "DeepSeek-R1-0528-openrouter",
+        "model_name": "DeepSeek-R1-0528-fp8",
         "model_id": "deepseek/deepseek-r1-0528",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-05-29",
         "open_weight": true,
         "parameters": "671B",
@@ -312,12 +312,18 @@
             "name": "MIT",
             "url": "https://choosealicense.com/licenses/mit/"
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
 	{
-        "model_name": "Hunyuan-A13B-Instruct-openrouter",
+        "model_name": "Hunyuan-A13B-Instruct-fp8",
         "model_id": "tencent/hunyuan-a13b-instruct",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-07-01",
         "open_weight": true,
         "parameters": "80B",
@@ -332,9 +338,9 @@
         "model_config": {}
     },
 	{
-        "model_name": "Kimi-K2-Instruct-openrouter",
+        "model_name": "Kimi-K2-Instruct-fp8",
         "model_id": "moonshotai/kimi-k2",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-07-11",
         "open_weight": true,
         "parameters": "1T",
@@ -346,12 +352,18 @@
             "name": "modified-mit",
             "url": ""
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
     {
-        "model_name": "Qwen3-235B-A22B-Instruct-2507-openrouter",
+        "model_name": "Qwen3-235B-A22B-Instruct-2507-fp8",
         "model_id": "qwen/qwen3-235b-a22b-2507",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-07-21",
         "open_weight": true,
         "parameters": "235B",
@@ -363,12 +375,18 @@
             "name": "Apache 2.0",
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
     {
-        "model_name": "Qwen3-Coder-480B-A35B-Instruct-openrouter",
+        "model_name": "Qwen3-Coder-480B-A35B-Instruct-fp8",
         "model_id": "qwen/qwen3-coder",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-07-22",
         "open_weight": true,
         "parameters": "480B",
@@ -380,12 +398,18 @@
             "name": "Apache 2.0",
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
 	{
-        "model_name": "GLM-4.5-openrouter",
+        "model_name": "GLM-4.5-fp8",
         "model_id": "z-ai/glm-4.5",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-07-28",
         "open_weight": true,
         "parameters": "355B",
@@ -397,12 +421,18 @@
             "name": "MIT",
             "url": "https://choosealicense.com/licenses/mit/"
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
     {
-        "model_name": "GLM-4.5-Air-openrouter",
+        "model_name": "GLM-4.5-Air-fp8",
         "model_id": "z-ai/glm-4.5-air",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-07-28",
         "open_weight": true,
         "parameters": "106B",
@@ -414,12 +444,18 @@
             "name": "MIT",
             "url": "https://choosealicense.com/licenses/mit/"
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
     {
-        "model_name": "Llama-4-Maverick-17B-128E-Instruct-openrouter",
+        "model_name": "Llama-4-Maverick-17B-128E-Instruct-fp8",
         "model_id": "meta-llama/llama-4-maverick",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-04-05",
         "open_weight": true,
         "parameters": "109B",
@@ -431,12 +467,18 @@
             "name": "llama4",
             "url": ""
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
     {
-        "model_name": "MiniMax-01-openrouter",
+        "model_name": "MiniMax-01-fp8",
         "model_id": "minimax/minimax-m1",
-        "backend": "openai_compatible",
+        "backend": "openrouter",
         "release_date": "2025-01-14",
         "open_weight": true,
         "parameters": "456B",
@@ -448,7 +490,13 @@
             "name": "unknown",
             "url": ""
         },
-        "model_config": {}
+        "model_config": {
+            "extra_body": {
+                "provider": {
+                    "quantizations": ["fp8"]
+                }
+            }
+        }
     },
     {
         "model_name": "gpt-4-1106-vision-preview",
