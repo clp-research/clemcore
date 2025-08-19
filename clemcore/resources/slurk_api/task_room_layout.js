@@ -155,7 +155,7 @@ scrollObserver.observe(document.querySelector('#chat-area'), {
     subtree: true
 });
 
-// New chat-area
+// We want to replace the text input with a textarea to support multiple line messages
 (function() {
     const oldInput = document.getElementById('text');
     if (oldInput) {
@@ -178,14 +178,10 @@ scrollObserver.observe(document.querySelector('#chat-area'), {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault(); // no line break
             const message = field.value.trim();
-            if (!message) return;
 
-        //put into the UI
-        console.log('Senden:', message);
-
+            // We give null to use current time stamp
             display_message(self_user, null, message);
             submit_text(message);
-
 
             // empty the field and reset auto-resize
             field.value = '';
