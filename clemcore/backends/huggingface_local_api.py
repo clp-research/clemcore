@@ -257,12 +257,26 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         # parts of the inputs that are actually padded. However, this is usually not a problem for single
         # item batches, because here, the padding is not necessary anyway. In the following we first apply
         # the chat template and then use the tokenizer to receive the proper masks, also feasible for batches.
-        # Render each chat in the batch (list of messages) to a string prompt
-        rendered_chats = self.tokenizer.apply_chat_template(
-            batch_messages,
-            add_generation_prompt=True,  # append assistant prompt
-            tokenize=False  # get back the rendered string
-        )
+
+        # Bypassing CoT requires appending a message with empty CoT to the history, which is then completed by the model
+        # As this is incompatible with the add_generation_prompt argument, it's handled separately here
+        if 'cot_bypass' in self.model_spec.model_config and self.model_spec.model_config['cot_bypass']:
+            # Add last message containing CoT bypass string content to each message history in batch
+            for message_history in batch_messages:
+                message_history.append({"role": "assistant", "content": self.model_spec.model_config['cot_bypass']})
+            # Render each chat in the batch (list of messages) to a string prompt to continue after CoT bypass
+            rendered_chats = self.tokenizer.apply_chat_template(
+                batch_messages,
+                continue_final_message=True,  # continue after CoT bypass
+                tokenize=False  # get back the rendered string
+            )
+        else:
+            # Render each chat in the batch (list of messages) to a string prompt with generation prompt
+            rendered_chats = self.tokenizer.apply_chat_template(
+                batch_messages,
+                add_generation_prompt=True,  # append assistant prompt
+                tokenize=False  # get back the rendered string
+            )
 
         # The rendered chat (with system message already removed before) will, for example, look like:
         # <|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nWho won the world series in 2020?<|eot_id|>

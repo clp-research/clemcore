@@ -5087,6 +5087,56 @@
         }
     },
     {
+        "model_name": "gpt-oss-120b-nothink",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "huggingface_local",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>",
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<|channel|>analysis<|message|>",
+            "cot_end_tag": "<|end|><|start|>assistant<|channel|>final<|message|>",
+            "cot_bypass": "<|channel|>analysis<|message|><|end|><|start|>assistant<|channel|>final<|message|>"
+        }
+    },
+    {
+        "model_name": "gpt-oss-20b-nothink",
+        "huggingface_id": "openai/gpt-oss-20b",
+        "backend": "huggingface_local",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "20B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>",
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<|channel|>analysis<|message|>",
+            "cot_end_tag": "<|end|><|start|>assistant<|channel|>final<|message|>",
+            "cot_bypass": "<|channel|>analysis<|message|><|end|><|start|>assistant<|channel|>final<|message|>"
+        }
+    },
+    {
         "model_name": "GLM-4.5",
         "huggingface_id": "zai-org/GLM-4.5",
         "backend": "huggingface_local",
