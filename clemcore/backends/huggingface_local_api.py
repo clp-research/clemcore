@@ -405,8 +405,9 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
         - answer: The cleaned final answer content.
     """
     # Cull CoT start tag if model has it defined
-    if 'cot_start_tag' in model.model_spec.model_config and model.model_spec.model_config.cot_start_tag:
-        response_text = response_text.replace(model.model_spec.model_config.cot_start_tag, "")
+    if 'cot_start_tag' in model.model_spec.model_config:
+        if model.model_spec.model_config.cot_start_tag:
+            response_text = response_text.replace(model.model_spec.model_config.cot_start_tag, "")
     # Split response text at CoT end tag
     split_cot_response = response_text.split(model.model_spec.model_config.cot_end_tag)
     cot_content = split_cot_response[0]
