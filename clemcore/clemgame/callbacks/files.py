@@ -170,7 +170,7 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         experiment_name = game_master.experiment["name"]
         game_id = game_instance["game_id"]
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
-        assert _key in self._recorders, f"Recoder must be registered on_game_start, but wasn't for: {_key}"
+        assert _key in self._recorders, f"Recorder must be registered on_game_start, but wasn't for: {_key}"
         recorder = self._recorders.pop(_key)  # auto-remove recorder from registry
         self._store_files(recorder, game_master, game_instance)
 
