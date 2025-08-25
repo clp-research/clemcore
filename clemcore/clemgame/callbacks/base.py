@@ -1,9 +1,9 @@
 import abc
 from dataclasses import dataclass, field
-from typing import List, TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:  # to satisfy pycharm
-    from clemcore.clemgame import GameMaster, GameBenchmark
+    from clemcore.clemgame import GameBenchmark, GameMaster
 
 
 @dataclass
@@ -20,6 +20,9 @@ class GameBenchmarkCallback(abc.ABC):
         pass
 
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
+        pass
+
+    def on_game_ready(self, game_master: "GameMaster", game_instance: Dict):
         pass
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
@@ -50,6 +53,10 @@ class GameBenchmarkCallbackList(GameBenchmarkCallback):
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         for callback in self.callbacks:
             callback.on_game_start(game_master, game_instance)
+
+    def on_game_ready(self, game_master: "GameMaster", game_instance: Dict):
+        for callback in self.callbacks:
+            callback.on_game_ready(game_master, game_instance)
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
         for callback in self.callbacks:

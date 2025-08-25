@@ -106,8 +106,7 @@ class EnvGameMaster(GameMaster):
                 read from the game's instances.json.
         """
         self._on_setup(**kwargs)
-        if self.players_by_names:  # todo: why should this be empty here?
-            self.current_player = self.get_players()[self.current_player_idx]
+        self.current_player = self.get_players()[self.current_player_idx]
         self._on_before_game()
 
     @abc.abstractmethod
@@ -115,6 +114,7 @@ class EnvGameMaster(GameMaster):
         """Method executed at the start of the default setup method.
         Template method: Must be implemented!
         Use add_player() here to add the players.
+        Also add the game environment here.
         Args:
             kwargs: Keyword arguments of the game instance. This is usually a game instance object
                 read from the game's instances.json.

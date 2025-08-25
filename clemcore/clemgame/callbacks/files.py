@@ -1,18 +1,20 @@
 import hashlib
+import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 
 from clemcore import get_version
+from clemcore.backends import Model
+from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameStep
+from clemcore.clemgame.recorder import GameInteractionsRecorder
+from clemcore.clemgame.resources import load_json, store_json
+
+module_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # to satisfy pycharm
-    from clemcore.clemgame import GameMaster, GameBenchmark
-
-from clemcore.backends import Model
-from clemcore.clemgame.recorder import GameInteractionsRecorder
-from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
-from clemcore.clemgame.resources import store_json, load_json
+    from clemcore.clemgame import GameBenchmark, GameMaster
 
 
 def to_model_results_folder(player_models: List[Model]):
@@ -176,6 +178,23 @@ class InteractionsFileSaver(GameBenchmarkCallback):
 
     def _store_files(self, recorder, game_master, game_instance):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+
+        # If images were saved, replace inline base64 images in interactions with file paths
+        images_dir = instance_dir_path / "images"
+        if images_dir.exists() and images_dir.is_dir():
+            image_files = sorted(images_dir.glob("step_*.png"))
+            image_index = 0
+            for turn in recorder.interactions.get("turns", []):
+                for event in turn:
+                    action = event.get("action", {})
+                    images = action.get("image", [])
+                    if images and image_index < len(image_files):
+                        # Only replace if current entry looks like a data URL
+                        if isinstance(images[0], str) and images[0].startswith("data:image"):
+                            rel_path = Path("images") / image_files[image_index].name
+                            action["image"] = [str(rel_path)]
+                            image_index += 1
+
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
         store_json(recorder.requests, "requests.json", instance_dir_path)
 
@@ -183,23 +202,43 @@ class InteractionsFileSaver(GameBenchmarkCallback):
 class ImageFileSaver(GameBenchmarkCallback):
     def __init__(self, results_folder: ResultsFolder):
         self.results_folder = results_folder
+        self.step_counter = 0
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
-        game_dir = Path(game_master.game_spec.game_name)
-        local_images_dir = game_dir / "images"
+    def _save_image(self, game_master: "GameMaster", game_instance: Dict):
+        game_env = game_master.game_environment
 
-        if not local_images_dir.exists() or not local_images_dir.is_dir():
-            return
+        if game_env.render_as == 'image':
+            instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+            results_images_dir = instance_dir_path / "images"
+            results_images_dir.mkdir(parents=True, exist_ok=True)
 
-        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
-        results_images_dir = instance_dir_path / "images"
-        results_images_dir.mkdir(parents=True, exist_ok=True)
+            image_filename = f"step_{self.step_counter:04d}.png"
 
-        for image_file in local_images_dir.glob("*"):
-            if image_file.is_file():
-                shutil.move(str(image_file), str(results_images_dir / image_file.name))
+            image_data = None
 
-        try:
-            local_images_dir.rmdir()
-        except OSError:
-            pass
+            try:
+                player_name = game_master.current_player.name
+                image_data = game_env._render_state_as_image(player_name)
+            except Exception as e:
+                module_logger.warning(f"Failed to render image from _render_state_as_image: {e}")
+                return
+
+            try:
+                image_path = results_images_dir / image_filename
+                with open(image_path, 'wb') as f:
+                    f.write(image_data)
+                module_logger.debug(f"Saved image to {image_path}")
+                self.step_counter += 1
+            except Exception as e:
+                module_logger.error(f"Failed to save image {image_filename}: {e}")
+
+    def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
+        self.step_counter = 0
+
+    def on_game_ready(self, game_master: "GameMaster", game_instance: Dict):
+        if game_master.game_environment:
+            self._save_image(game_master, game_instance)
+
+    def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
+        if game_master.game_environment:
+            self._save_image(game_master, game_instance)

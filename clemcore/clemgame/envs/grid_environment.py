@@ -77,15 +77,12 @@ class GridEnvironment(GameEnvironment):
         self.width = config.get("width", 10)
         self.height = config.get("height", 10)
         self.limited_visibility = config.get("limited_visibility", False)
-        self.render_as = config.get("render_as", "string")
-
-        self.grid: Grid = [
-            [GridCell(objects=[], position=(y, x)) for x in range(self.width)]
-            for y in range(self.height)
-        ]
 
         self.state: GridState = {
-            "grid": self.grid,
+            "grid": [
+                [GridCell(objects=[], position=(y, x)) for x in range(self.width)]
+                for y in range(self.height)
+            ],
             "player_positions": {},
         }
 
@@ -93,8 +90,8 @@ class GridEnvironment(GameEnvironment):
         """Reset the environment to its initial state."""
         super().reset()
 
-        self.grid = [[GridCell(objects=[], position=(y, x)) for x in range(self.width)] for y in range(self.height)]
-        self.state["grid"] = self.grid
+        self.state["grid"] = [[GridCell(objects=[], position=(y, x))
+                                        for x in range(self.width)] for y in range(self.height)]
         self.state["player_positions"] = {}
 
     def add_object(self, obj: Object) -> None:
