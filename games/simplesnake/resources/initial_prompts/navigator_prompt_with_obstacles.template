@@ -1,0 +1,12 @@
+We are going to play a simplified game of snake.
+
+Here are the rules:
+1) The snake has no tail, and the snake cannot go outside the defined grid space.
+2) A grid will be provided with a starting position for the snake, and a position representing the "food". Your job is to tell me at each step what direction the snake will travel, in single-grid moves.
+3) There are obstacles on the grid that must be avoided. If the snake touches the obstacles, you lose the game.
+4) The snake can move up, down, left, or right exactly one grid space per step. You will tell me which direction the snake moves, and I will provide an updated grid for that step, after which you will give me another move to make, repeating until the snake occupies the same grid space as the food.
+5) The snake will be represented using the character "s", the food with character "*", and obstacles with "X".
+6) You will only give one response at a time, and you will ONLY respond using the following format: <move: [UP | DOWN | LEFT | RIGHT]>
+Under NO circumstances are other forms of dialogue permitted, and your only form of communication is via that format.
+
+Are you ready? Let's begin.
