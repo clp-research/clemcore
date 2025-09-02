@@ -6,36 +6,73 @@ import html
 from pathlib import Path
 from typing import Dict, List
 from tqdm import tqdm
+import markdown as md
+from pylatex.utils import escape_latex
 
-import clemcore.clemgame.transcripts.constants as constants
-import clemcore.clemgame.transcripts.patterns as patterns
+import clemcore.clemgame.transcripts.html_templates as html_templates
+import clemcore.clemgame.transcripts.tex_templates as tex_templates
 from clemcore.utils import file_utils
 from clemcore.clemgame.resources import store_file, load_json
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
 
-
-def _get_class_name(event):
-    """Get a string representation of the direction of a message.
-    Example: A message from the game's GM to Player 1 is represented by the string 'gm-a'.
-    Args:
-        event: The interaction record event to get the message direction for.
-    Returns:
-        The string representation of the direction of the message in the passed interaction event.
+def get_css(num_players) -> str:
     """
-    if event['from'] == 'GM' and event['to'].startswith('Player 1'):
-        return "gm-a"
-    if event['from'] == 'GM' and event['to'].startswith('Player 2'):
-        return "gm-b"
-    if event['from'].startswith('Player 1') and event['to'] == 'GM':
-        return "a-gm"
-    if event['from'].startswith('Player 2') and event['to'] == 'GM':
-        return "b-gm"
-    if event['from'] == 'GM' and event['to'] == 'GM':
-        return "gm-gm"
-    raise RuntimeError(f"Cannot handle event entry {event}")
+    Get the CSS template for the given number of players, including GM.
+    Args:
+        players: A dict of players as passed by the interaction record.
+    Returns:
+        The CSS template to be used for the transcript as a String.
+    """
+    stylesheet = html_templates.CSS_BASIC
+    if num_players == 3:
+        stylesheet += html_templates.CSS_TWO_TRACKS
+    else:
+        stylesheet += html_templates.CSS_MULTIPLAYER
+        for i in range(1, num_players):
+            color = html_templates.CSS_MULTI_COLORS[(i - 1) % len(html_templates.CSS_MULTI_COLORS)]
+            stylesheet += f".msg.player-gm.p{i} {{ background: {color}; }}\n"
+    return stylesheet
 
+def get_css_player_dict(players: Dict) -> Dict[str, str]:
+    """Get a dict of player names as keys and css abbreviations as values.
+    Args:
+        players: A dict of players as passed by the interaction record.
+    Returns:
+        A dict of player names and their css abbreviations.
+    """
+    player_dict = { "GM": "gm" }
+    i = 1
+    for player in players:
+        if player == "GM":
+            continue
+        else:
+            player_dict[player] = f"p{i}"
+            i += 1
+    return player_dict
+
+def _get_class_name(event: Dict, css_player_dict: Dict[str, str]) -> str:
+    """Get the CSS class name for a given event based on its 'from' and 'to' fields.
+    Args:
+        event: A dict representing a game event with 'from' and 'to' fields.
+        css_player_dict: A dict mapping player names to their CSS abbreviations.
+    Returns:
+        The CSS class name as a string.
+    """
+    player = None
+    if event['from'] == 'GM':
+        from_ = 'gm'
+    else:
+        from_ = 'player'
+        player = css_player_dict[event['from']]
+    if event['to'] == 'GM':
+        to = 'gm'
+    else:
+        to = 'player'
+        player = css_player_dict[event['to']]
+    class_string = f"{from_}-{to}"
+    return class_string, player
 
 def build_transcripts(top_dir: str, filter_games: List = None):
     """
@@ -78,17 +115,30 @@ def build_transcript(interactions: Dict):
     """
     meta = interactions["meta"]
     players = interactions["players"]
-    transcript = patterns.HTML_HEADER.format(constants.CSS_STRING)
+    markdown = interactions.get("markdown", False)
+
+    css_player_dict = get_css_player_dict(players)
+    transcript = html_templates.HEADER.format(get_css(len(players)))
     pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
-    title = f"Interaction Transcript for {meta['experiment_name']}, " \
+    title = f"Interaction Transcript for game '{meta['game_name']}', experiment '{meta['experiment_name']}', " \
             f"episode {meta['game_id']} with {pair_descriptor}."
-    transcript += patterns.TOP_INFO.format(title)
+    transcript += html_templates.TOP_INFO.format(title)
     for turn_idx, turn in enumerate(interactions['turns']):
         transcript += f'<div class="game-round" data-round="{turn_idx}">'
         for event in turn:
-            class_name = _get_class_name(event)
+            class_name, player = _get_class_name(event, css_player_dict)
+            if player is not None:
+                class_name += f" {player}"
             msg_content = event['action']['content']
-            msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
+            if markdown:
+                msg_raw = msg_content.strip()
+                while msg_raw.startswith('`') and msg_raw.endswith('`'):
+                    # remove code block markers if whole message is wrapped in them
+                    msg_raw = msg_raw[1:-1]
+                msg_raw = md.markdown(msg_raw, extensions=['fenced_code'])
+                stdout_logger.info(f"Converted markdown message to HTML:\n{msg_raw}")
+            else:
+                msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
             if event['from'] == 'GM' and event['to'] == 'GM':
                 speaker_attr = f'Game Master: {event["action"]["type"]}'
             else:
@@ -134,11 +184,10 @@ def build_transcript(interactions: Dict):
                                    f'</a>\n')
                 transcript += '</div>\n'
             else:
-                transcript += patterns.HTML_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
+                transcript += html_templates.EVENT_TEMPLATE.format(speaker_attr, class_name, style, msg_raw)
         transcript += "</div>"
-    transcript += patterns.HTML_FOOTER
+    transcript += html_templates.FOOTER
     return transcript
-
 
 def build_tex(interactions: Dict):
     """Create a LaTeX .tex file with the interaction transcript.
@@ -146,21 +195,49 @@ def build_tex(interactions: Dict):
     Args:
         interactions: An episode interaction record dict.
     """
-    tex = patterns.TEX_HEADER
+    css_player_dict = get_css_player_dict(interactions["players"])
+    players_key = len(interactions["players"]) - 1 # exclude GM
+    # Use special 2-player layout if there are exactly 2 players + GM, otherwise single-/multiplayer layout
+    if players_key != 2:
+        players_key = 1
+    column_header = tex_templates.COLUMN_HEADER[players_key]
+    meta = interactions["meta"]
+    pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
+    title = escape_latex(f"Interaction Transcript for game `{meta['game_name']}', experiment `{meta['experiment_name']}', " \
+            f"episode {meta['game_id']} with {pair_descriptor}.")
+    tex = tex_templates.HEADER.replace("$title", title).replace("$column_header", column_header)
+    tex_bubble = tex_templates.BUBBLE[players_key]
     # Collect all events over all turns (ignore turn boundaries here)
     events = [event for turn in interactions['turns'] for event in turn]
     for event in events:
-        class_name = _get_class_name(event).replace('msg ', '')
+        class_name, player = _get_class_name(event, css_player_dict)
+        if players_key == 2 and player is not None:
+            class_name += f" {player}"
+        elif player:
+            player = player.upper()
         msg_content = event['action']['content']
         if isinstance(msg_content, str):
-            msg_content = msg_content.replace('\n', '\\\\ \\tt ')
-        rgb, speakers, cols_init, cols_end, ncols, width = constants.TEX_BUBBLE_PARAMS[class_name]
-        tex += patterns.TEX_TEMPLATE.substitute(cols_init=cols_init,
+            lines = msg_content.splitlines()
+            msg_content = ""
+            for line in lines:
+                if line.strip() == "":
+                    msg_content += "\\\\ \n"
+                else:
+                    msg_content += "\\texttt{" + escape_latex(line) + "} \\\\\n"
+            msg_content = msg_content[:-1]
+        rgb, speakers, cols_init, cols_end, ncols, width = tex_bubble[class_name]
+        if players_key == 1:
+            speakers = speakers.replace("$player_name", player if player else "")
+        if rgb is None and player is not None:
+            rgb = tex_templates.COLORS[int(player[1:]) - 1 % len(tex_templates.COLORS)]
+        else:
+            rgb = "0.9,0.9,0.9" if "gm" in class_name else "0.95,0.95,0.95"
+        tex += tex_templates.EVENT_TEMPLATE.substitute(cols_init=cols_init,
                                                 rgb=rgb,
                                                 speakers=speakers,
                                                 msg=msg_content,
                                                 cols_end=cols_end,
                                                 ncols=ncols,
                                                 width=width)
-    tex += patterns.TEX_FOOTER
+    tex += tex_templates.FOOTER
     return tex
