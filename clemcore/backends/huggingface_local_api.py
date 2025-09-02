@@ -410,7 +410,11 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
     # Split response text at CoT end tag
     split_cot_response = response_text.split(model.model_spec.model_config['cot_end_tag'])
     cot_content = split_cot_response[0]
-    answer = split_cot_response[1]
+    # Handle empty CoT outputs
+    if len(split_cot_response) >= 2:
+        answer = split_cot_response[1]
+    else:
+        answer = ""
     # Retokenize and count CoT and final answer tokens
     # tokenized_cot_content = model.tokenizer(cot_content)
     # n_cot_content_tokens = len(tokenized_cot_content)
