@@ -172,21 +172,37 @@ scrollObserver.observe(document.querySelector('#chat-area'), {
             this.style.height = (this.scrollHeight) + 'px';
         });
 
-    textarea.addEventListener('keydown', function (e) {
-        const field = e.currentTarget; // das textarea
+        // Nachricht abschicken
+        textarea.addEventListener('keydown', function (e) {
+            const field = e.currentTarget;
 
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault(); // no line break
-            const message = field.value.trim();
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const message = field.value.trim();
+                if (!message) return;
 
-            // We give null to use current time stamp
-            display_message(self_user, null, message);
-            submit_text(message);
+                // We display the message and submit the message. We give null to use the current time stamp
+                display_message(self_user, null, message);
+                submit_text(message);
 
-            // empty the field and reset auto-resize
-            field.value = '';
-            field.style.height = 'auto';
+                // Disable the textarea after sending the message
+                textarea.disabled = true;
+                textarea.placeholder = "Wait for a message from your partner";
+
+                field.value = '';
+                field.style.height = 'auto';
             }
-    });
-    }})
-();
+        });
+
+        // Wait for the incoming message of your partner. If the message arrived, activate the textarea
+        socket.on("text_message", function(data) {
+            if (data.user.id !== self_user.id) {
+                // reactivate the chat-area
+                textarea.disabled = false;
+                textarea.placeholder = "Enter your message here!";
+                textarea.focus();
+            }
+        });
+    }
+})();
+
