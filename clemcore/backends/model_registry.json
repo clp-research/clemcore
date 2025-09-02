@@ -4731,7 +4731,7 @@
             "eos_to_cull": "<\\|endoftext\\|>",
             "padding_side": "left",
             "cot_output": true,
-            "cot_end_tag": "<|end|>"
+            "cot_end_tag": "<\\|end\\|>"
         }
     },
     {
@@ -5059,7 +5059,7 @@
             "padding_side": "left",
             "cot_output": true,
             "cot_start_tag": "<|channel|>analysis<|message|>",
-            "cot_end_tag": "<|end|><|start|>assistant<|channel|>commentary to=assistant<|channel|>final<|message|>"
+            "cot_end_tag": "<\\|end\\|><\\|start\\|>assistant(<\\|channel\\|>commentary to=assistant)*<\\|channel\\|>final<\\|message\\|>"
         }
     },
     {
@@ -5083,7 +5083,7 @@
             "padding_side": "left",
             "cot_output": true,
             "cot_start_tag": "<|channel|>analysis<|message|>",
-            "cot_end_tag": "<|end|><|start|>assistant<|channel|>commentary to=assistant<|channel|>final<|message|>"
+            "cot_end_tag": "<\\|end\\|><\\|start\\|>assistant(<\\|channel\\|>commentary to=assistant)*<\\|channel\\|>final<\\|message\\|>"
         }
     },
     {
@@ -5107,7 +5107,7 @@
             "padding_side": "left",
             "cot_output": true,
             "cot_start_tag": "<|channel|>analysis<|message|>",
-            "cot_end_tag": "<|end|><|start|>assistant<|channel|>commentary to=assistant<|channel|>final<|message|>",
+            "cot_end_tag": "<\\|end\\|><\\|start\\|>assistant(<\\|channel\\|>commentary to=assistant)*<\\|channel\\|>final<\\|message\\|>",
             "cot_bypass": "<|channel|>analysis<|message|><|end|><|start|>assistant<|channel|>final<|message|>"
         }
     },
@@ -5132,7 +5132,7 @@
             "padding_side": "left",
             "cot_output": true,
             "cot_start_tag": "<|channel|>analysis<|message|>",
-            "cot_end_tag": "<|end|><|start|>assistant<|channel|>commentary to=assistant<|channel|>final<|message|>",
+            "cot_end_tag": "<\\|end\\|><\\|start\\|>assistant(<\\|channel\\|>commentary to=assistant)*<\\|channel\\|>final<\\|message\\|>",
             "cot_bypass": "<|channel|>analysis<|message|><|end|><|start|>assistant<|channel|>final<|message|>"
         }
     },
