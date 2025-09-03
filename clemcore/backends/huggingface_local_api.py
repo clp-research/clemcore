@@ -270,6 +270,18 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
                 continue_final_message=True,  # continue after CoT bypass
                 tokenize=False  # get back the rendered string
             )
+        elif 'cot_effort' in self.model_spec.model_config and self.model_spec.model_config['cot_effort']:
+            # Render each chat in the batch (list of messages) to a string prompt with generation prompt
+            # including setting CoT effort to value defined in model registry entry
+            # NOTE: Currently this is custom code to handle gpt-oss models! Other models that have CoT effort setting
+            # training might not pass the value to the model and thus template in the same way. Using this for those
+            # models will likely lead to errors!
+            rendered_chats = self.tokenizer.apply_chat_template(
+                batch_messages,
+                add_generation_prompt=True,  # append assistant prompt
+                tokenize=False,  # get back the rendered string
+                reasoning_effort=self.model_spec.model_config['cot_effort']  # use string from model config
+            )
         else:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
             rendered_chats = self.tokenizer.apply_chat_template(
