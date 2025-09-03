@@ -23,19 +23,19 @@ $column_header
 
 # 2 is for 2 players, 1 for all other cases
 COLUMN_HEADER = {
-    1: "    \\# & \\multicolumn{2}{c}{Player} && \\multicolumn{2}{c}{Game Master} \\\\",
-    2: "    \\# & $\\;$A & \\multicolumn{4}{c}{Game Master} & $\\;\\:$B\\\\",
+    "one_track":  "    \\# & \\multicolumn{2}{c}{Player} && \\multicolumn{2}{c}{Game Master} \\\\",
+    "two_tracks": "    \\# & $\\;$A & \\multicolumn{4}{c}{Game Master} & $\\;\\:$B\\\\",
 }
 
 BUBBLE = {
-    1: {
+    "one_track": {
         "player-gm": (None, "$player_name$\\rangle$GM", "&", "& &", 4, 0.6),
         "gm-player": ("0.9,0.9,0.9", "$player_name$\\langle$GM", "& & &", "", 4, 0.6),
         "gm-gm": ("0.95,0.95,0.95", "GM$|$GM", "& & &", "& &", 2, 0.3)
     },
-    2: {
-        "player-gm p1": (None, "P1$\\rangle$GM", "&", "& &", 4, 0.6),
-        "player-gm p2": (None, "GM$\\langle$P2", "& & &", "", 4, 0.6),
+    "two_tracks": {
+        "player-gm p1": ("0.8,1,0.9", "P1$\\rangle$GM", "&", "& &", 4, 0.6),
+        "player-gm p2": ("1,0.85,0.72", "GM$\\langle$P2", "& & &", "", 4, 0.6),
         "gm-player p1": ("0.9,0.9,0.9", "P1$\\langle$GM", "& &", "&", 4, 0.6),
         "gm-player p2": ("0.9,0.9,0.9", "GM$\\rangle$P2", "& &", "&", 4, 0.6),
         "gm-gm": ("0.95,0.95,0.95", "GM$|$GM", "& & &", "& &", 2, 0.3)

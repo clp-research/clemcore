@@ -2,8 +2,8 @@ from clemcore.clemgame.resources import load_packaged_file
 
 CSS_BASIC = load_packaged_file("utils/chat-basic.css")
 CSS_TWO_TRACKS = load_packaged_file("utils/chat-two-tracks.css")
-CSS_MULTIPLAYER = load_packaged_file("utils/chat-multiplayer.css")
-CSS_MULTI_COLORS = ["darkseagreen", "cadetblue", "indianred", "goldenrod", "thistle", "wheat", "sandybrown", "rebeccapurple"]
+CSS_ONE_TRACK = load_packaged_file("utils/chat-one-track.css")
+CSS_COLORS = ["darkseagreen", "cadetblue", "indianred", "goldenrod", "thistle", "wheat", "sandybrown", "rebeccapurple"]
 
 
 HEADER = '''

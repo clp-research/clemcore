@@ -33,9 +33,9 @@ dependencies = [
     "pandas==2.0.1",
     "seaborn==0.12.2",
     "sparklines~=0.7.0",
-    "pylatex"~=1.4.2,
-    "ordered-set"~=4.1.0,
-    "markdown"~=3.8.2
+    "pylatex"~=1.4.2,       # transcripts
+    "ordered-set"~=4.1.0,   # transcripts
+    "markdown"~=3.8.2       # transcripts
 ]
 
 [project.optional-dependencies]

@@ -29,9 +29,9 @@ def get_css(num_players) -> str:
     if num_players == 3:
         stylesheet += html_templates.CSS_TWO_TRACKS
     else:
-        stylesheet += html_templates.CSS_MULTIPLAYER
+        stylesheet += html_templates.CSS_ONE_TRACK
         for i in range(1, num_players):
-            color = html_templates.CSS_MULTI_COLORS[(i - 1) % len(html_templates.CSS_MULTI_COLORS)]
+            color = html_templates.CSS_COLORS[(i - 1) % len(html_templates.CSS_COLORS)]
             stylesheet += f".msg.player-gm.p{i} {{ background: {color}; }}\n"
     return stylesheet
 
@@ -136,7 +136,6 @@ def build_transcript(interactions: Dict):
                     # remove code block markers if whole message is wrapped in them
                     msg_raw = msg_raw[1:-1]
                 msg_raw = md.markdown(msg_raw, extensions=['fenced_code'])
-                stdout_logger.info(f"Converted markdown message to HTML:\n{msg_raw}")
             else:
                 msg_raw = html.escape(f"{msg_content}").replace('\n', '<br/>')
             if event['from'] == 'GM' and event['to'] == 'GM':
@@ -196,22 +195,19 @@ def build_tex(interactions: Dict):
         interactions: An episode interaction record dict.
     """
     css_player_dict = get_css_player_dict(interactions["players"])
-    players_key = len(interactions["players"]) - 1 # exclude GM
-    # Use special 2-player layout if there are exactly 2 players + GM, otherwise single-/multiplayer layout
-    if players_key != 2:
-        players_key = 1
-    column_header = tex_templates.COLUMN_HEADER[players_key]
+    track_type = "two_tracks" if len(interactions["players"]) == 3 else "one_track"
+    column_header = tex_templates.COLUMN_HEADER[track_type]
     meta = interactions["meta"]
     pair_descriptor = meta["results_folder"] if "results_folder" in meta else meta["dialogue_pair"]
     title = escape_latex(f"Interaction Transcript for game `{meta['game_name']}', experiment `{meta['experiment_name']}', " \
             f"episode {meta['game_id']} with {pair_descriptor}.")
     tex = tex_templates.HEADER.replace("$title", title).replace("$column_header", column_header)
-    tex_bubble = tex_templates.BUBBLE[players_key]
+    tex_bubble = tex_templates.BUBBLE[track_type]
     # Collect all events over all turns (ignore turn boundaries here)
     events = [event for turn in interactions['turns'] for event in turn]
     for event in events:
         class_name, player = _get_class_name(event, css_player_dict)
-        if players_key == 2 and player is not None:
+        if track_type == "two_tracks" and player is not None:
             class_name += f" {player}"
         elif player:
             player = player.upper()
@@ -226,7 +222,7 @@ def build_tex(interactions: Dict):
                     msg_content += "\\texttt{" + escape_latex(line) + "} \\\\\n"
             msg_content = msg_content[:-1]
         rgb, speakers, cols_init, cols_end, ncols, width = tex_bubble[class_name]
-        if players_key == 1:
+        if track_type == "one_track":
             speakers = speakers.replace("$player_name", player if player else "")
         if rgb is None and player is not None:
             rgb = tex_templates.COLORS[int(player[1:]) - 1 % len(tex_templates.COLORS)]

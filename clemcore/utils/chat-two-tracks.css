@@ -2,14 +2,14 @@
 
 .msg.player-gm.p1 {
   border-radius: var(--rad-sm) var(--rad) var(--rad) var(--rad-sm);
-  background: darkseagreen;
+  background: #f39109;
   color: #fff;
   margin-right: 40%;
 }
 
 .msg.player-gm.p2 {
   border-radius: var(--rad) var(--rad-sm) var(--rad-sm) var(--rad);
-  background: cadetblue;
+  background: #874aaf;
   color: #fff;
   margin-left: 40%;
 }
