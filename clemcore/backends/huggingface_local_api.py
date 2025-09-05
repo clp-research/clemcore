@@ -366,14 +366,14 @@ def split_and_clean_batch_outputs(
         response_text = model_output.replace(prompt_text, '').strip()
         # Apply model-specific output_split_prefix if present
         if 'output_split_prefix' in model.model_spec.model_config:
-            prefix = model.model_spec['model_config']['output_split_prefix']
+            prefix = model.model_spec.model_config['output_split_prefix']
             if prefix in response_text:
                 response_text = response_text.rsplit(prefix, maxsplit=1)[1]
         # Remove batch processing padding tokens
         if response_text.startswith(model.tokenizer.pad_token) or response_text.endswith(model.tokenizer.pad_token):
             response_text = response_text.replace(model.tokenizer.pad_token, "")
         # Remove EOS tokens and potential trailing tokens from response
-        eos_to_cull = model.model_spec['model_config']['eos_to_cull']  # This is a regEx to handle inconsistent outputs
+        eos_to_cull = model.model_spec.model_config['eos_to_cull']  # This is a regEx to handle inconsistent outputs
         response_text = re.sub(eos_to_cull, "", response_text)
 
         # Check for CoT output and split if present
