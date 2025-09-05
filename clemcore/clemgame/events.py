@@ -1,5 +1,6 @@
 import abc
-from typing import Any, List
+from typing import Any, List, Dict
+import json
 
 
 class GameEventLogger(abc.ABC):
@@ -170,6 +171,12 @@ class GameEventSource(GameEventLogger):
             key: Identifier string for the log entry.
             value: The data associated with the key.
         """
+        if type(value) == set:
+            value = list(value)
+        try:
+            json.dumps(value)  # Ensure value is JSON-serializable
+        except TypeError:
+            raise ValueError(f"Value for key '{key}' is of type {type(value)} and thus not JSON-serializable.\nValue: {value}")
         for logger in self._loggers:
             logger.log_key(key, value)
 
