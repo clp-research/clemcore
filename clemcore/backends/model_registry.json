@@ -6608,6 +6608,31 @@
         }
     },
     {
+        "model_name": "gpt-oss-120b-vllm-2gpu",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "vllm",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+		    "number_gpus": 2,
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|return\\|>",
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<|channel|>analysis<|message|>",
+            "cot_end_tag": "<\\|end\\|><\\|start\\|>assistant(<\\|channel\\|>commentary to=assistant)*<\\|channel\\|>final<\\|message\\|>"
+        }
+    },
+    {
         "model_name": "InternVL3-14B",
         "backend": "huggingface_multimodal",
         "huggingface_id": "OpenGVLab/InternVL3-14B",

@@ -95,17 +95,20 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Union[AutoToken
     return tokenizer, model_config, context_size
 
 
-def load_model(model_spec: backends.ModelSpec) -> Any:
+def load_model(model_spec: backends.ModelSpec, context_size: int = FALLBACK_CONTEXT_SIZE) -> Any:
     """
     Load model weights from HuggingFace, onto the number of GPUs specified in the ModelSpec/model registry entry.
     :param model_spec: The ModelSpec for the model.
+    :param context_size: The context size of the model, from the model's HF generation config. Defaults to the fallback
+        context size.
     :return: The vLLM LLM class instance of the loaded model.
     """
     assert "model_config" in model_spec, "vllm model requires model_config entry in model spec"
     model_config = model_spec.model_config
 
     default_args = dict(tensor_parallel_size=model_config['number_gpus'] if 'number_gpus' in model_config else 1)
-    max_model_len = int(model_spec.context_size) if 'context_size' in model_spec and model_spec.context_size else None
+    # max_model_len = int(model_spec.context_size) if 'context_size' in model_spec and model_spec.context_size else None
+    max_model_len = context_size
     if max_model_len is not None:
         default_args["max_model_len"] = max_model_len
 
@@ -151,7 +154,7 @@ class VLLMLocalModel(backends.Model):
         super().__init__(model_spec)
         # fail-fast
         self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
-        self.model = load_model(model_spec)
+        self.model = load_model(model_spec, self.context_size)
 
         """
         # generation_config not used with vLLM
@@ -234,7 +237,63 @@ class VLLMLocalModel(backends.Model):
         else:
             response_text = model_output.strip()
 
+        # Check for CoT output and split if present
+        if 'cot_output' in self.model.model_spec.model_config and self.model.model_spec.model_config['cot_output']:
+            cot_content, response_text = split_and_clean_cot_output(response_text, self.model)
+
+        # Add cot_content content to response_info
+        if 'cot_output' in self.model.model_spec.model_config and self.model.model_spec.model_config['cot_output']:
+            response['cot_content'] = cot_content
+
         return prompt, response, response_text
+
+
+def split_and_clean_cot_output(response_text: str, model: VLLMLocalModel) -> Tuple[str, str]:
+    """
+    Splits a CoT-output model's response into cot_content and final answer.
+    Final answers are cut to the token sequence allowed by the max_tokens value set for the model/benchmark run due to
+    fairness concerns.
+    CoT tags, stored in the model's registry entry, cover more than just relevant special tokens to assure broad
+    applicability through string splitting. For example, the CoT end tag for gpt-oss models is
+    '<|end|><|start|>assistant<|channel|>final<|message|>' (the relevant part being '<|channel|>final'), as it includes
+    the non-special-token string 'final' between special tokens, with the *entire tag string* demarcating the beginning
+    of the final answer, instead of a simple single special token like for example DeepSeek's '</thinking>'.
+
+    Args:
+        response_text: The response text, without input prompt, but including all special tokens and tags.
+        model: The VLLMLocalModel instance containing model configuration and settings.
+    Returns:
+        Tuple of two strings:
+        - cot_content: The cleaned CoT/thinking/reasoning/cot_content content.
+        - answer: The cleaned final answer content.
+    """
+    # Cull CoT start tag if model has it defined
+    if 'cot_start_tag' in model.model_spec.model_config and model.model_spec.model_config['cot_start_tag']:
+            response_text = response_text.replace(model.model_spec.model_config['cot_start_tag'], "")
+    # Split response text at CoT end tag
+    # split_cot_response = response_text.split(model.model_spec.model_config['cot_end_tag'])
+    split_cot_response = re.split(model.model_spec.model_config['cot_end_tag'], response_text)
+    cot_content = split_cot_response[0]
+    # Handle empty CoT outputs
+    if len(split_cot_response) >= 2:
+        answer = split_cot_response[-1]
+    else:
+        answer = ""
+    # Retokenize and count CoT and final answer tokens
+    # tokenized_cot_content = model.tokenizer(cot_content)
+    # n_cot_content_tokens = len(tokenized_cot_content)
+    tokenized_answer = model.tokenizer(answer)
+    tokenized_answer = tokenized_answer.input_ids
+    n_answer_tokens = len(tokenized_answer)
+    # Cut answer tokens to max_tokens value if they exceed it
+    if n_answer_tokens > model.max_tokens:
+        logger.info(f"CoT final answer token count {n_answer_tokens} exceeds max_tokens {model.max_tokens}, "
+                    f"cutting off excess tokens.")
+        tokenized_answer = tokenized_answer[:model.max_tokens]
+    # Decode retokenized and potentially cut answer
+    answer = model.tokenizer.decode(tokenized_answer)
+
+    return cot_content, answer
 
 
 def _check_context_limit(context_size, prompt_tokens, max_new_tokens: int = 100) -> Tuple[bool, int, int, int]:
