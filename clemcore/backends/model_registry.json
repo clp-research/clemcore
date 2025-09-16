@@ -5259,6 +5259,48 @@
         }
     },
     {
+        "model_name": "OLMo-2-0325-32B-Instruct",
+        "huggingface_id": "allenai/OLMo-2-0325-32B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-03-12",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4096",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "OLMo-2-1124-13B-Instruct",
+        "huggingface_id": "allenai/OLMo-2-1124-13B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2024-12-18",
+        "open_weight": true,
+        "parameters": "32B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4096",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|endoftext\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
         "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
         "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
         "backend": "llamacpp",
