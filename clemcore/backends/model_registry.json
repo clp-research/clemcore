@@ -5301,6 +5301,51 @@
         }
     },
     {
+        "model_name": "Qwen3-Next-80B-A3B-Thinking",
+        "huggingface_id": "Qwen/Qwen3-Next-80B-A3B-Thinking",
+        "backend": "huggingface_local",
+        "release_date": "2025-09-09",
+        "open_weight": true,
+        "parameters": "80B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4096",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left",
+            "cot_output": true,
+            "cot_start_tag": "<think>",
+            "cot_end_tag": "</think>"
+        }
+    },
+    {
+        "model_name": "Qwen3-Next-80B-A3B-Instruct",
+        "huggingface_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-09-09",
+        "open_weight": true,
+        "parameters": "80B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "4096",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
         "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
         "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
         "backend": "llamacpp",
