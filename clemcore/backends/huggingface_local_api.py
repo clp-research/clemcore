@@ -441,6 +441,8 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
         tokenized_answer = tokenized_answer[:model.max_tokens]
     # Decode retokenized and potentially cut answer
     answer = model.tokenizer.decode(tokenized_answer)
+    # Strip answer to assure proper clemgame parsing
+    answer = answer.strip()
 
     return cot_content, answer
 
