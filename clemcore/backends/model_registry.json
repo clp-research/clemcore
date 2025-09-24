@@ -499,6 +499,144 @@
         }
     },
     {
+        "model_name": "gpt-oss-120b-openrouter-reasoning-medium",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "openrouter",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "extra_body": {
+                "reasoning": {
+                    "effort": "medium"
+                }
+            }
+        }
+    },
+    {
+        "model_name": "gpt-oss-120b-openrouter-reasoning-low",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "openrouter",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "extra_body": {
+                "reasoning": {
+                    "effort": "low"
+                }
+            }
+        }
+    },
+    {
+        "model_name": "gpt-oss-120b-openrouter-reasoning-high",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "openrouter",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "120B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "extra_body": {
+                "reasoning": {
+                    "effort": "high"
+                }
+            }
+        }
+    },
+    {
+        "model_name": "gpt-oss-20b-openrouter-reasoning-medium",
+        "huggingface_id": "openai/gpt-oss-20b",
+        "backend": "openrouter",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "20B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "extra_body": {
+                "reasoning": {
+                    "effort": "medium"
+                }
+            }
+        }
+    },
+    {
+        "model_name": "gpt-oss-20b-openrouter-reasoning-low",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "openrouter",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "20B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "extra_body": {
+                "reasoning": {
+                    "effort": "low"
+                }
+            }
+        }
+    },
+    {
+        "model_name": "gpt-oss-20b-openrouter-reasoning-high",
+        "huggingface_id": "openai/gpt-oss-120b",
+        "backend": "openrouter",
+        "release_date": "2025-08-04",
+        "open_weight": true,
+        "parameters": "20B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "131072",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "extra_body": {
+                "reasoning": {
+                    "effort": "high"
+                }
+            }
+        }
+    },
+    {
         "model_name": "gpt-4-1106-vision-preview",
         "model_id": "gpt-4-1106-vision-preview",
         "backend": "openai",
