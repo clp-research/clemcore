@@ -146,6 +146,9 @@ class OpenAIModel(backends.Model):
             # https://platform.openai.com/docs/guides/reasoning/controlling-costs?api-mode=chat#controlling-costs
             logger.info("Ignoring max_tokens for reasoning models, because the argument is not supported")
             del gen_kwargs["max_tokens"]
+        # Add reasoning effort level value
+        if 'reasoning' in model_config:
+            gen_kwargs['reasoning'] = model_config['reasoning']
         api_response = self.client.chat.completions.create(**gen_kwargs)
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
