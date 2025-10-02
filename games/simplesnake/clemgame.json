@@ -1,0 +1,31 @@
+[
+  {
+    "game_name": "simplesnake",
+    "description": "A simple game of snake.",
+    "main_game": "simplesnake",
+    "players": 1,
+    "image": "none",
+    "languages": ["en"],
+    "benchmark": ["2.0"]
+  },
+  {
+    "game_name": "simplesnake_withobstacles",
+    "description": "A simple game of snake, with obstacles.",
+    "main_game": "simplesnake",
+    "instances": "instances_withobstacles",
+    "players": 1,
+    "image": "none",
+    "languages": ["en"],
+    "benchmark": ["2.0"]
+  },
+  {
+    "game_name": "simplesnake_withplanning",
+    "description": "A simple game of snake played via planning.",
+    "main_game": "simplesnake",
+    "instances": "instances_withplanning",
+    "players": 1,
+    "image": "none",
+    "languages": ["en"],
+    "benchmark": ["2.0"]
+  }
+]
