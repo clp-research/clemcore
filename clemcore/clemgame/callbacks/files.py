@@ -1,18 +1,20 @@
 import hashlib
+import logging
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import List, Dict, TYPE_CHECKING
+from typing import TYPE_CHECKING, Dict, List
 
 from clemcore import get_version
+from clemcore.backends import Model
+from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameStep
+from clemcore.clemgame.recorder import GameInteractionsRecorder
+from clemcore.clemgame.resources import load_json, store_json
+
+module_logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:  # to satisfy pycharm
-    from clemcore.clemgame import GameMaster, GameBenchmark
-
-from clemcore.backends import Model
-from clemcore.clemgame.recorder import GameInteractionsRecorder
-from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
-from clemcore.clemgame.resources import store_json, load_json
+    from clemcore.clemgame import GameBenchmark, GameMaster
 
 
 def to_model_results_folder(player_models: List[Model]):
@@ -176,30 +178,6 @@ class InteractionsFileSaver(GameBenchmarkCallback):
 
     def _store_files(self, recorder, game_master, game_instance):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
         store_json(recorder.requests, "requests.json", instance_dir_path)
-
-
-class ImageFileSaver(GameBenchmarkCallback):
-    def __init__(self, results_folder: ResultsFolder):
-        self.results_folder = results_folder
-
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
-        game_dir = Path(game_master.game_spec.game_name)
-        local_images_dir = game_dir / "images"
-
-        if not local_images_dir.exists() or not local_images_dir.is_dir():
-            return
-
-        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
-        results_images_dir = instance_dir_path / "images"
-        results_images_dir.mkdir(parents=True, exist_ok=True)
-
-        for image_file in local_images_dir.glob("*"):
-            if image_file.is_file():
-                shutil.move(str(image_file), str(results_images_dir / image_file.name))
-
-        try:
-            local_images_dir.rmdir()
-        except OSError:
-            pass

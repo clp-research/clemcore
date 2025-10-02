@@ -4,7 +4,12 @@ from typing import List
 from tqdm import tqdm
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator, GameStep
+from clemcore.clemgame import (
+    GameBenchmark,
+    GameBenchmarkCallbackList,
+    GameInstanceIterator,
+    GameStep,
+)
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")

@@ -1,10 +1,11 @@
 import glob
+import html
 import json
 import logging
 import os
-import html
 from pathlib import Path
 from typing import Dict, List
+
 from tqdm import tqdm
 import markdown as md
 from pylatex.utils import escape_latex
@@ -174,10 +175,9 @@ def build_transcript(interactions: Dict):
                         if "IMAGE_ROOT" in os.environ:
                             image_src = os.path.join(os.environ["IMAGE_ROOT"], image_src)
                         elif image_src.startswith("/"):
-                            pass  # keep absolute path to image
+                            pass
                         else:
-                            # CAUTION: this only works when the project is checked out (dev mode)
-                            image_src = os.path.join(file_utils.project_root(), image_src)
+                            pass
                     transcript += (f'  <a title="{image_src}">'
                                    f'<img style="width:100%" src="{image_src}" alt="{image_src}" />'
                                    f'</a>\n')

@@ -1,9 +1,9 @@
 import abc
 from dataclasses import dataclass, field
-from typing import List, TYPE_CHECKING, Dict
+from typing import TYPE_CHECKING, Dict, List
 
 if TYPE_CHECKING:  # to satisfy pycharm
-    from clemcore.clemgame import GameMaster, GameBenchmark
+    from clemcore.clemgame import GameBenchmark, GameMaster
 
 
 @dataclass

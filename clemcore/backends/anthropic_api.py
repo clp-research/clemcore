@@ -102,7 +102,13 @@ class AnthropicModel(backends.Model):
                         else:
                             # encode each image
                             for image in message['image']:
-                                encoded_image_data, image_type = self.encode_image(image)
+                                if isinstance(image, str) and image.startswith("data:image/"):
+                                    # data URL: extract media type and payload
+                                    header, b64 = image.split(',', 1)
+                                    image_type = header.split(';')[0].split(':', 1)[1]
+                                    encoded_image_data = b64
+                                else:
+                                    encoded_image_data, image_type = self.encode_image(image)
                                 content.append({
                                     "type": "image",
                                     "source": {

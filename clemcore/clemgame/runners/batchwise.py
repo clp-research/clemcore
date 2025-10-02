@@ -1,5 +1,5 @@
 import logging
-from typing import List, Dict, Callable, Optional, Tuple, Any, Iterable
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple
 
 from tqdm import tqdm
 
@@ -8,10 +8,10 @@ from clemcore.backends.model_registry import BatchGenerativeModel
 from clemcore.clemgame import (
     GameBenchmark,
     GameBenchmarkCallbackList,
+    GameInstanceIterator,
     GameMaster,
     GameStep,
     Player,
-    GameInstanceIterator
 )
 
 module_logger = logging.getLogger(__name__)
