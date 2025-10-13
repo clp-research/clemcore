@@ -1,55 +1,87 @@
 ## Instructions on how to run existing games:
 
-* clone [clembench repo](https://github.com/AnneBeyer/clembench.git) and checkout branch `game_registry` [TODO: merge into clp-research/clembench `main` once everything is tested]
+1. Create your working directory. Set up a python environment in your working directory and install the clemcore 
+library. For support for specific backends, install clemcore with the `[huggingface]`, `[vllm]` or `[slurk]` flags, for 
+example `pip install clemcore[huggingface]`.
 
-* clone [clemgames repo](https://github.com/clp-research/clemgames.git) into sibling directory to clembench
+2. Clone the [clemgames repository](https://github.com/clp-research/clemgames.git) into your working directory.
 
-* change into the clembench directory
+3. Create a `key.json` file in your working directory, matching the structure in `key.json.template`, easily done by 
+copying `key.json.template` and removing the `.template` suffix. This is required even if you do not use remote API 
+inference.
 
-	* run prepare_path.sh to add clembench to your python path (NOTE: If you are using a different shell than bash, or if for any other reason `echo $PYTHONPATH` still does not contain the current path, call `export PYTHONPATH=.:$PYTHONPATH` directly in your shell instead)
-		
-	* create key.json either by adapting key.json.template or running setup.sh (also see setup.sh to create a python environment as necessary) [TODO: this is redundant, which version do we want to keep? setup.sh potentially overwrites existing key.json files...]
+4. To evaluate a remote API model, add the required keys to `key.json` for either connecting to the model served by our 
+group (see pinned post in mattermost channel CLEM-Club), or any remote API by creating an account (e.g., Groq, 
+OpenAI, ...)
 
-	* to evaluate a model, add the required keys to key.json for either connecting to the model served by our group (see pinned post in mattermost channel CLEM-Club), or using any model api by creating an account (e.g., groq, openAI, ...), or downloading and running any (supported) hf model locally (this can be done by running the code on our server (requires A100 access ([TODO] link to the other internal doc) and running `export HUGGINGFACE_HUB_CACHE=/data/>USERNAME>/huggingface_cache`). See `clembench/clemcore/backends/model_registry.json` for all supported models (and instruction in docs on how to add new ones)
+5. Downloading and running any (supported) model hosted on HuggingFace locally is covered by the clemcore framework. To 
+set a custom HuggingFace hub cache directory to store the model files in, run 
+`export HUGGINGFACE_HUB_CACHE=/data/>USERNAME>/huggingface_cache`) via terminal. You can check which models are 
+supported with the CLI command `clem list models`. See the [model registry readme](model_backend_registry_readme.md) 
+and the [adding models howto](howto_add_models.md) for details.
 
-	* install requirements (if not already done by setup.sh)(`.txt` for general use, `_hf.txt` for using huggingface models locally, `_llamacpp....txt` to run models via llamacpp?) [TODO]
+6. Install clemgame specific requirements listed in `clembench/requirements.txt` and the respective game directories. 
+Running `pip install clembench/requirements.txt` is the simplest way to do this.
 
-	* if necessary, install game specific requirements (see respective game folders in clemgames [TODO: currently still part of general requirements]) [TODO: do we want something like a setup.sh for installing several/all game requirements as well?]	
+7. To run a game, use the `clem run` CLI command. For example, to run the Taboo clemgame with mock 
+model responses, the CLI commmand is `clem run -g taboo -m mock`. Use `clem run -h` for more example calls.
+* Run `clem list games` for all currently available/supported games.
+* Run `clem list models` for all currently registered/supported models.
+* Instances are expected to be stored in each game's directory under `in/instances.json`, if not specified otherwise 
+using the `-i` argument for the `clem run` CLI command. For example, `clem run -g taboo -m mock -i instances_v2.0` will 
+run the taboo game with mock model responses using instances stored in the `clembench/taboo/in/instances_v2.0.json`
+file.
+* Results will be stored in `./results`, if not specified otherwise using the `-r` argument for the `clem run` CLI 
+command. For example, `clem run -g taboo -m mock -r testing` will run the taboo game with mock model responses and store
+the result files in the `./testing` directory.
+* Run information will be logged will be written to `./clembench.log`, and model-specific inference logs will be written 
+to the `./logs` directory.
 
-	* to run(/score/transcribe) a game, call `clemcore/cli.py run` (e.g., `clemcore/cli.py run -g taboo -m mock`, see file (or -h) for more example calls)
-		* see `clemcore/clemgames/game_registry.json` for all supported games
-		* see `clemcore/backends/model_registry.json` for all supported models
-		* instances are expected to live in game directory under `in/instances.json` if not specified otherwise
-		* results will be stored in `./results` if not specified otherwise
-		* detailed logs will be written to `./clembench.log`
+8. After the game/benchmark was run, use the `clem score` CLI command to score the results. For example, 
+`clem score -g taboo` will score the results of the taboo game. If no `-g` argument is given, all games' results will be 
+scored.
+* The results directory to score defaults to `./results`, but can be set to a different path with the `-r` argument. For
+example, `clem score -r testing` will score results stored in the `./testing` directory.
 
-	* after running `clemcore/cli.py score -g GAME` use `evaluation/bencheval.py` for creating evaluation table (collects results from `./results` by default, but can be overwritten to any location), which calculates `clemscore, %Played and Success` for all games and models found in the results directory and creates an overview in `./results/results.[csv|html]`
-	* see the ´clembench/scripts´ folder for example scripts on how to run the whole pipeline
+9. After all results have been scored, use `clem eval` to create the evaluation table, which calculates 
+`clemscore, %Played and Success` for all games and models found in the results directory and creates an overview in 
+`./results/results.[csv|html]`.
+* The results directory to evaluate defaults to `./results`, but can be set to a different path with the `-r` argument. 
+For example, `clem eval -r testing` will evaluate results stored in the `./testing` directory.
+
+10. See the ´clembench/scripts´ folder for example scripts on how to run the whole pipeline.
 
 
 ## Instructions on how to add new games:
-
-* follow the steps above, but instead of cloning the clemgames repository, create your own game repository (for compatibility, also create it in a sibling directory to clembench)
-
-* open clembench in your IDE
-
-* open (attach) your game repository in your IDE
-
-* make game repo know about clembench and vice versa (for now required to facilitate development in IDE; clemcore might become pip-installable at some point) (in PyCharm: tick boxes in Settings-Project-Project Dependencies, in VSCode ?[TODO])
-
-* if developing a new game or running one from a different location, add an entry for the game in clembench/clemgames/game_registry_custom.json (give the path either relative to the clembench directory, e.g., `../clemgames/taboo/` or as an absolute path)
-
-* create instances (see existing instancegenerator.py files in the game directories for examples) in YOURGAME/in, storing required resources in YOURGAME/resources and create the game master in master.py in YOURGAME. (TODO: update and link to how_to_develop_games, add script to create (and describe) game structure (provided by YP))
-
-* to develop the game structure, it can be helpful to first define custom responses in players that always answer according to the formal rules and can be run using `-m mock` [TODO: add details here?]
-
-* for evaluation, use `evaluation/bencheval.py` as a starting point and potentially extend it for game specific evaluation (other examples to be added to evaluation/)
-
-* to add your final game to the official collection, create a PR in the clemgames repo
-
-* for any required changes regarding the clemcore framework, open an issue/PR in the clembench repo
+1. Follow the steps above, but instead of cloning the clemgames repository, create your own game repository (for 
+compatibility, create it inside your working directory).
+2. Create a `clemgame.json` file in your game's root directory `./YOURGAME` to allow clemcore to detect it. All keys in the following 
+example must be present: 
+```
+{
+  "game_name": "yourgame",
+  "description": "Your new clemgame",
+  "main_game": "yourgame",
+  "players": 1,
+  "image": "none",
+  "languages": ["en"],
+  "benchmark": [],
+  "regression": "large",
+  "roles": ["YourGamePlayer"]
+}
+```
+Clemcore searches for `clemgame.json` files in subdirectories of your working directory and sibling directories of it up 
+to a depth of three.
+3. Create instances (see existing instancegenerator.py files in the game directories for examples) in `./YOURGAME/in`, 
+storing required resources in `./YOURGAME/resources` and create the game master in `master.py` in `./YOURGAME`. See the 
+[adding games readme](howto_add_games.md) and the [adding games howto](howto_add_games_example.ipynb) for more details.
+* To develop the game structure, it can be helpful to first define custom responses in players that always answer 
+according to the formal rules and can be run using `-m mock`.
+* For evaluation, use `clemcore/clemeval.py` as a starting point and potentially extend it for game specific evaluation.
+* To add your final game to the official collection, create a PR in the clemgames repo.
+* For any required changes regarding the clemcore framework, open an issue/PR in the clemcore repo.
 
 ## Instructions on how to update games to the new framework version:
-
-+ if you started developing your game before December 2024, and if it was not added to the official games yet, you need to update your game to the new framework version as described [here](howto_update_to_v2.md)
-* some games in `clemgames` still need to be updated (this is work in progress)
++ If you started developing your game before December 2024, and if it was not added to the official games yet, you need 
+to update your game to the new framework version as described [here](howto_update_to_v2.md).
+* Some games in `clemgames` still need to be updated (this is work in progress).

@@ -2,68 +2,63 @@
 
 ### Preliminaries
 
-If you're completely new to this, it might make sense to look at two Jupyter notebooks that we provide here, which explain how to set up new games a bit more from scratch:
+If you're completely new to this, it might make sense to look at two Jupyter notebooks that we provide here, which 
+explain how to set up new games a bit more from scratch:
 
-- [How to Prototype Games](https://github.com/clp-research/clembench/blob/main/docs/howto_prototype_games.ipynb) explains how to use our backends to make first tests of prompts with a variety of LLMs easy to do, and then how to prototype your game loop.
-- [How to Add Games](https://github.com/clp-research/clembench/blob/main/docs/howto_add_games_example.ipynb) takes this further and shows how you get from the prototype to an implementation that can use all the clembench infrastructure for running the game repeatedly with different instances and models.
+- [How to Prototype Games](https://github.com/clp-research/clembench/blob/main/docs/howto_prototype_games.ipynb) explains how to use our backends to make first tests of prompts with a variety of LLMs 
+easy to do, and then how to prototype your game loop.
+- [How to Add Games](https://github.com/clp-research/clembench/blob/main/docs/howto_add_games_example.ipynb) takes this further and shows how you get from the prototype to an implementation that can use 
+all the clemcore infrastructure for running the game repeatedly with different instances and models.
 
 ### Introduction
 
 The benchmark is run for a particular game -- for example the taboo game -- using the follow command:  
 
 ```
-python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo-1106
+clem run -g taboo -m gpt-3.5-turbo-1106
 ```
 
-_Note: when only a single model for a 2-player game is given, then clem will use this model for both players!_ 
+_Note: when only a single model for a 2-player game is given, then clemcore will use this model for both players!_ 
 
 As taboo is a game of two players (a clue giver and a guesser) we could theoretically also let two different
 models play the game which would look like:
 
 ```
-python3 scripts/cli.py run -g taboo -m gpt-3.5-turbo-1106 gpt-4-0613
+clem run -g taboo -m gpt-3.5-turbo-1106 gpt-4-0613
 ```
 
 ### GameBenchmark class
 
-When the command is executed then the `run` routine in `benchmark.py` 
-will determine the game code that needs to be invoked.
-For this the benchmark code loads all **subclasses** of type `GameBenchmark` and calls `setup()` 
-on them. The setup method already loads the game instances (`self.load_json("in/instances.json")`). 
-After this each game benchmark **subclass** is asked if it applies to the given game name, here `taboo`.  
+When the command is executed then the `run` routine in `benchmark.py` will determine the game code that needs to be 
+invoked. For this the benchmark code loads all **subclasses** of type `GameBenchmark` and calls `setup()` on them. The 
+setup method already loads the game instances (`self.load_json("in/instances.json")`). After this each game benchmark 
+**subclass** is asked if it applies to the given game name, here `taboo`.  
 
-Therefore, such a **subclass** has to be provided with a specific game name 
-for each game to be run in the benchmark, for example for taboo:
+Therefore, such a **subclass** has to be provided with a specific game name for each game to be run in the benchmark, 
+for example for taboo:
 
 ```
 class TabooGameBenchmark(GameBenchmark):
+    def __init__(self, game_spec: GameSpec):
+        super().__init__(game_spec)
 
-    def __init__(self):
-        super().__init__(GAME_NAME)
+    def create_game_master(self, experiment: Dict, player_models: List[Model]) -> GameMaster:
+        return Taboo(self.game_spec, experiment, player_models)
 
-    def get_description(self):
-        return "Taboo game between two agents where one has to describe a word for the other to guess."
-
-    def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster:
-        return Taboo(experiment, player_backends)
-        
-    def is_single_player(self) -> bool:
-        return False
+    def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer:
+        return TabooScorer(self.game_name, experiment, game_instance)
 ```
 
-The respective subclass simply provides the `GAME_NAME=taboo` and the `GameBenchmark` super class is taking care of most
+The respective subclass simply provides the game's `GameSpec` and the `GameBenchmark` super class is taking care of most
 of the necessary plumbing and executes the main logic for a benchmark run (calling the game master, loading files etc.).
 
-Aside: The return value of `get_description` is shown for the `python3 scripts/cli.py ls` command.
-
-Then the benchmark code checks if your game is single or multiplayer game (the default is multi-player), 
-so that the `-m gpt-3.5-turbo-1106` option is properly handled. 
-Then the `run(dialog_pair,temperature)` method is called which is already implemented by `GameBenchmark`.
+Then the benchmark code checks if your game is single or multiplayer game (the default is multi-player), so that the 
+`-m gpt-3.5-turbo-1106` option is properly handled.  
+Then the `run(dialog_pair,temperature)` method is called which is already implemented by `GameBenchmark`.  
 This is when the `GameMaster` becomes relevant (which should be returned by your `create_game_master()` factory method).
 
 ### GameMaster class
-
-Now for each experiment in the `instances.json` -- that has been loaded on_setup() -- the game benchmark code 
+Now for each experiment in the `instances.json` -- that has been loaded `on_setup()` -- the game benchmark code 
 applies the given dialog pair (or if not given tries to determine the dialogue pair from the instance information).
 
 Aside: There is also the option to provide multiple dialogue pairings in the experiments in `instances.json`. 
@@ -72,8 +67,8 @@ Therefore, the code must check again, if these pairing align to the nature of th
 Each experiment represents a specific condition for the game, for example the assumed difficulty of the game instances
 and holds the actual game instances themselves. Then for each game instance a `GameMaster` is created 
 by using the `self.create_game_master()` method of the `GameBenchmark`. The `GameMaster` is in charge of actually 
-playing a single instance of the game. 
-For taboo this would be a target word to be guessed and the words that are not allowed to be said.
+playing a single instance of the game.  
+For taboo this would be a target word to be guessed and the words that are not allowed to be said.  
 The relevant code looks as follows:
 
 ```
@@ -86,26 +81,28 @@ except Exception:  # continue with other episodes if something goes wrong
    self.logger.exception(f"{self.name}: Exception for episode {game_id} (but continue)")
 ```
 
-We see that game master receives the game instance information on `setup()`. 
-Then coordinates the `play()` of the actual game. And finally calls `store_records` to stores 
-the interactions between the players and the game master during the turns in the `game_record_dir` 
-(this directory is prepared by the `GameBenchmark`).
+We see that game master receives the game instance information on `setup()`, and then coordinates the `play()` of the 
+actual game. And finally calls `store_records` to stores the interactions between the players and the game master during 
+the turns in the `game_record_dir` (this directory is prepared by the `GameBenchmark`).
 
 ### Overview
 
 These are the important classes and methods to be implemented for your own game.
 
-A`MyGameBenchmark` that extends `GameBenchmark` and implements:
-- `def __init__(self)` with call to `super().__init__(GAME_NAME)`
+A `MyGameBenchmark` that extends `GameBenchmark` and implements:
+- `def __init__(self, game_spec: GameSpec)` with call to `super().__init__(game_spec)`
 - `def get_description(self)` that returns a description
 - `def is_single_player(self) -> bool` that determines if one player is sufficient
-- `def create_game_master(self, experiment: Dict, player_backends: List[str]) -> GameMaster` that returns `MyGameMaster` for my game
+- `def create_game_master(self, experiment: Dict, player_models: List[str]) -> GameMaster` that returns `MyGameMaster` 
+for my game
 
-A`MyGameMaster` that extends `GameMaster` and implements:
-- `def __init__(self, name: str, experiment: Dict, player_backends: List[str] = None):` that receives the experiment information and the players that play the game. These can be simply delegated to `super()`.
+A `MyGameMaster` that extends `GameMaster` and implements:
+- `def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[str] = None):` that receives the 
+experiment information and the players that play the game. These can be simply delegated to `super()`.
 - `def setup(self, **game_instance)` which sets the information you specify in `instances.json`
 - `def play(self)` that executes the game logic and performs the turns in the game
-- `def compute_scores(self, episode_interactions: Dict)` that is called later when the user executes the `python3 scripts/cli.py score taboo` command
+- `def compute_scores(self, episode_interactions: Dict)` that is called later when the user executes the 
+`python3 scripts/cli.py score taboo` command
 
 Note that the `store_records` method is already implemented by `GameRecorder` 
 and every `GameMaster` extends that class. This means that the method must not be implemented.
@@ -175,19 +172,25 @@ Still, there are several hooks for you to customize the gameplay:
 
 - `def _on_setup(self, **kwargs)` which must be implemented. Use `add_player()` here to add the players.
 - `def _does_game_proceed(self) -> bool` which must be implemented. Decides if the game can continue.
-- `def _validate_player_response(self, player: Player, utterance: str) -> bool` to decide if an utterance should be added. This is also the place to check for game end conditions. 
-- `def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]` to decide if a response utterance should be modified. If not simply return the utterance.
+- `def _validate_player_response(self, player: Player, utterance: str) -> bool` to decide if an utterance should be 
+added. This is also the place to check for game end conditions. 
+- `def _on_parse_response(self, player: Player, utterance: str) -> Tuple[str, bool]` to decide if a response utterance 
+should be modified. If not simply return the utterance.
         When a modified utterance and a true value is returned, then a 'parse' event is logged.
-- `def _after_add_player_response(self, player: Player, utterance: str)` to add the utterance to other player's history, if necessary.
+- `def _after_add_player_response(self, player: Player, utterance: str)` to add the utterance to other player's history, 
+if necessary.
         To do this use the method `add_user_message(other_player,utterance)`.
 - the general game hooks `_on_before_game()` and `_on_before_game()`
 - the general turn hooks `_on_before_turn(turn_idx)` and `_on_after_turn(turn_idx)`
+- `def compute_response_score(self, response, context)` to calculate a score for individual responses (used for potential reinforcement learning, not necessarily benchmark scoring)
+- `def compute_episode_score(self)` that calculates a score for the entire episode (used for potential reinforcement learning, not necessarily benchmark scoring)
 
-Overall the game master acts here as a moderator between the players and the players actually never directly talk to each other.
+Overall the game master acts here as a moderator between the players and the players actually never directly talk to 
+each other.
 
-For the `taboo` game we use the setup hook to set instance specific values and
-to setup the `WordDescriber` and `WordGuesser` which are the `Player` for the game.
-The player could also be LLMs defined by the `player_backends` descriptor string.
+For the `taboo` game we use the setup hook to set instance specific values and to set up the `WordDescriber` and 
+`WordGuesser` which are the `Player`s for the game. The players could also be LLMs defined by the `player_models` 
+descriptor string.
 
 ```python
  def _on_setup(self, **game_instance):
@@ -245,7 +248,7 @@ def _validate_player_response(self, player, utterance: str) -> bool:
   return True
 ```
 
-We see that this is also the place to potentially detect violations of the game rules.
+We see that this is also the place to potentially detect violations of the game rules.  
 Now we can also modify the message and for example log the responses without the prefixes.
 
 ```python
@@ -260,7 +263,7 @@ def _on_parse_response(self, player, utterance: str) -> Tuple[str, bool]:
   return utterance, False
 ```
 
-The (possibly modified) response is then automatically added the player's history which is acting.
+The (possibly modified) response is then automatically added the player's history which is acting.  
 Still, for two-player games we have to add the response to the history of the other player as well.
 
 ```python
@@ -274,8 +277,8 @@ def _after_add_player_response(self, player, utterance: str):
             self.add_user_message(self.describer, utterance)
 ```
 
-Finally, we need to use the general turn method to additionally log the initial prompt for the second player 
-and not only the most recent one (as automatically done by the `DialogueGameMaster`).
+Finally, we need to use the general turn method to additionally log the initial prompt for the second player and not 
+only the most recent one (as automatically done by the `DialogueGameMaster`).
 
 ```python
 def _on_before_turn(self, turn_idx: int):
@@ -285,35 +288,36 @@ def _on_before_turn(self, turn_idx: int):
 
 ### GameResourceLocator class
 
-Note that the game masters are subclasses of the game resource locator.
+Note that the game masters are subclasses of the game resource locator.  
 This class provides methods to access, load and store files from within the game directory.
 
-You should access resource only via the game resource locator! The locator knows how to refer to them.
-For example use: `gm.load_json("my_file")` which is located directly at your game directory `game/my_file.json`.
+You should access resource only via the game resource locator! The locator knows how to refer to them.  
+For example use: `gm.load_json("my_file")` which is located directly at your game directory `game/my_file.json`.  
 You can access subdirectories by giving `gm.load_json("sub/my_file")` in `game/sub/my_file.json`.
 
 The expected game folder structure would be as follows:
 ```
-games
-  ├──mygame
-  │     ├── in
-  │     │   └── instances.json
-  │     ├── resources
-  │     │   └── initial_prompt.template
-  │     ├── instancegenerator.py
-  │     └── master.py
+mygame
+   ├── in
+   │   └── instances.json
+   ├── resources
+   │   └── initial_prompt.template
+   ├── instancegenerator.py
+   ├── clemgame.json
+   └── master.py
   ...
 ```
 
-The resource locator tries to load files from the respective `mygame` directory in the games folder.
+The resource locator tries to load files from the respective `mygame` directory.
 
 ### Player class
 
-A `Player` object receives `messages` and returns a textual response.
-A player generates this response either as a `_api_response()`
-(calling a deployed cLLM) or by implemented behavior in `_custom_response()`.
+A `Player` object receives `messages` and returns a textual response.  
+A player generates this response either as a `_api_response()` (calling a deployed cLLM) or by implemented behavior in 
+`_custom_response()`.
 
-For example, the taboo game guesser agent can be implemented as a player that can be a cLLM with a static response that always guesses the word "pear":
+For example, the taboo game guesser agent can be implemented as a player that can be a cLLM with a static response that 
+always guesses the word "pear":
 
 ```python
 from clemgame.clemgame import Player
@@ -330,10 +334,12 @@ class WordGuesser(Player):
 
 ### GameInstanceGenerator class
 
-In order to let agents play a game, you need a description that instantiate single episodes.
-For example, in the taboo game, each episode is played with a specific target word that also comes with a list of other, related and forbidden words.
+In order to let agents play a game, you need a description that instantiate single episodes.  
+For example, in the taboo game, each episode is played with a specific target word that also comes with a list of other, 
+related and forbidden words.
 
-The clemgame framework provides a `GameInstanceGenerator` class that you can use to generate full instances that also include initial prompts for the models and other meta information for running experiments.
+The clemgame framework provides a `GameInstanceGenerator` class that you can use to generate full instances that also 
+include initial prompts for the models and other meta information for running experiments.
 
 For example, in the taboo game, we
 - use word lists of 3 different frequency levels low/medium/high
@@ -389,14 +395,14 @@ This will then generate game instances as a json file at `games/taboo/in/instanc
 
 ### Adding your own game
 
-To add your own game, create a submodule in `games` with the name of your game, for example `games.hellogame`.
+To add your own game, create a module with the name of your game, for example `hellogame`.
 
-Add to the module a `master.py` that implements the `GameMaster`.
+Add to the module a `master.py` that implements the `GameMaster` and a `clemgame.json`.
 
 ### Running experiments with your game
 
 ```
-python3 scripts/cli.py run -g hellogame -m gpt-3.5-turbo-1106 [-e greet_en]
+clem run -g hellogame -m gpt-3.5-turbo-1106 [-e greet_en]
 ```
 
 Note: With -e you can specify specific experiments to run.
@@ -422,11 +428,11 @@ results
 
 The top level is `results` followed by directories that mention the involved model (pairings).
 
-The model (pairing) sub-folders will contain a directory structure for each experiment
-and the experiments episodes (game plays).
+The model (pairing) sub-folders will contain a directory structure for each experiment and the experiments episodes 
+(game plays).
 
-The episodes are defined by the game instances (from the `instances.json`) and
-contain the instance parameters `instance.json`, an `interaction.json` and a nice human-viewable `transcript.html`.
+The episodes are defined by the game instances (from the `instances.json`) and contain the instance parameters 
+`instance.json`, an `interaction.json` and a nice human-viewable `transcript.html`.
 
 The experiment folder also contains a `experiment_name.json` that contains the run parameters.
 
