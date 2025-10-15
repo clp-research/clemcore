@@ -66,19 +66,23 @@ Therefore, the code must check again, if these pairing align to the nature of th
 
 Each experiment represents a specific condition for the game, for example the assumed difficulty of the game instances
 and holds the actual game instances themselves. Then for each game instance a `GameMaster` is created 
-by using the `self.create_game_master()` method of the `GameBenchmark`. The `GameMaster` is in charge of actually 
-playing a single instance of the game.  
+by using the `self.create_game_master()` method of the `GameBenchmark`. The `GameMaster` is essentially in charge of 
+actually playing a single instance of the game. (This is eventually done through method calls by the runner script.)  
 For taboo this would be a target word to be guessed and the words that are not allowed to be said.  
-The relevant code looks as follows:
+The following is an abbreviation of the relevant code:
 
 ```
 try:
    game_master = self.create_game_master(experiment_config, dialogue_pair)
    game_master.setup(**game_instance)
-   game_master.play()
-   game_master.store_records(game_id, game_record_dir)
-except Exception:  # continue with other episodes if something goes wrong
-   self.logger.exception(f"{self.name}: Exception for episode {game_id} (but continue)")
+   done = False
+   while not done:
+       player, context = game_master.observe()
+       response = player(context)
+       done, info = game_master.step(response)
+except Exception:  # continue with other instances if something goes wrong
+   message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"
+   module_logger.exception(message)
 ```
 
 We see that game master receives the game instance information on `setup()`, and then coordinates the `play()` of the 
@@ -91,21 +95,26 @@ These are the important classes and methods to be implemented for your own game.
 
 A `MyGameBenchmark` that extends `GameBenchmark` and implements:
 - `def __init__(self, game_spec: GameSpec)` with call to `super().__init__(game_spec)`
-- `def get_description(self)` that returns a description
-- `def is_single_player(self) -> bool` that determines if one player is sufficient
 - `def create_game_master(self, experiment: Dict, player_models: List[str]) -> GameMaster` that returns `MyGameMaster` 
 for my game
+- `def create_game_scorer(self, experiment: Dict, game_instance: Dict) -> GameScorer` that returns `MyGameScorer` for 
+my game
 
 A `MyGameMaster` that extends `GameMaster` and implements:
 - `def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[str] = None):` that receives the 
 experiment information and the players that play the game. These can be simply delegated to `super()`.
 - `def setup(self, **game_instance)` which sets the information you specify in `instances.json`
 - `def play(self)` that executes the game logic and performs the turns in the game
-- `def compute_scores(self, episode_interactions: Dict)` that is called later when the user executes the 
-`python3 scripts/cli.py score taboo` command
 
-Note that the `store_records` method is already implemented by `GameRecorder` 
-and every `GameMaster` extends that class. This means that the method must not be implemented.
+A `MyGameScorer` that extends `GameScorer` and implements:
+- `def compute_round_score(self, round_idx, round_events: List[Dict])` that calculates scores for a round of the game
+- `def compute_episode_scores(self, interactions: Dict)` that calculates overall episode scores and must include the 
+game's main BENCH_SCORE
+- the scorer is called later when the user executes the `clem score taboo` command
+
+Note that the `store_records` method is already implemented by `GameRecorder` and every `GameMaster` extends that class. 
+This means that the method must not be implemented. In general, you only need to take care of logging your game's 
+specific events and scores, while standard clemcore score recording is already taken care of by the framework code. 
 
 ### DialogueGameMaster
 
@@ -113,7 +122,7 @@ Now we can see that `MyGameMaster` has all the freedom to implement `play()` whi
 In other cases we already know that the gameplay will be executed in turns of for example two players.
 For these cases you can extend from `DialogueGameMaster` a more conrete subclass of `GameMaster`.
 
-The dialogue game master defines a play routine that is as follows:
+The DialogueGameMaster base class defines a play routine that is as follows:
 
 ```python
  def play(self) -> None:
