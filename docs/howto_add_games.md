@@ -85,9 +85,10 @@ except Exception:  # continue with other instances if something goes wrong
    module_logger.exception(message)
 ```
 
-We see that game master receives the game instance information on `setup()`, and then coordinates the `play()` of the 
-actual game. And finally calls `store_records` to stores the interactions between the players and the game master during 
-the turns in the `game_record_dir` (this directory is prepared by the `GameBenchmark`).
+We see that game master receives the game instance information on `setup()`, and then continuously updates the player's 
+context with `observe()`, generates a response from the player (`player(context)`) and processes it to change the game 
+state (`game_master.step(response)`) to play the game. Record keeping calls are omitted here, as the underlying 
+`GameRecorder` takes care of them. See `clemcore/clemgame/runners/sequential.py` for the full code referenced here.
 
 ### Overview
 
@@ -104,7 +105,10 @@ A `MyGameMaster` that extends `GameMaster` and implements:
 - `def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[str] = None):` that receives the 
 experiment information and the players that play the game. These can be simply delegated to `super()`.
 - `def setup(self, **game_instance)` which sets the information you specify in `instances.json`
-- `def play(self)` that executes the game logic and performs the turns in the game
+- `def observe(self)` which updates player context
+- `def step(self)` that executes the game logic and performs the turns in the game
+- NOTE: These are `GameMaster` base class methods and should not be used directly, instead a set of hook abstract 
+methods should be implemented that are then called by these methods. See the [DialogueGameMaster section](#dialoguegamemaster).
 
 A `MyGameScorer` that extends `GameScorer` and implements:
 - `def compute_round_score(self, round_idx, round_events: List[Dict])` that calculates scores for a round of the game
@@ -118,14 +122,243 @@ specific events and scores, while standard clemcore score recording is already t
 
 ### DialogueGameMaster
 
-Now we can see that `MyGameMaster` has all the freedom to implement `play()` which might be in some cases a nice thing.
-In other cases we already know that the gameplay will be executed in turns of for example two players.
-For these cases you can extend from `DialogueGameMaster` a more conrete subclass of `GameMaster`.
+Now we can see that `MyGameMaster` has all the freedom to implement methods involved in playing the game which might be 
+in some cases a nice thing.  
+In other cases we already know that the gameplay will be executed in turns of, for example, two players.  
+For these cases you can extend from `DialogueGameMaster` a more concrete subclass of `GameMaster`.
+
+The DialogueGameMaster base class includes fully implemented `setup()`, `observe()` and `step()` methods:
+```python
+@final
+def setup(self, **kwargs):
+    """Load resources and prepare everything to play the game.
+    Needs to log the players dictionary via self.log_players(players_dict).
+    Intended to be left as-is by inheriting classes. Implement game-specific setup functionality in the _on_setup
+    method.
+    Called by the game's GameBenchmark run method for each game instance.
+    Args:
+        kwargs: Keyword arguments used to set up the GameMaster instance. This is usually a game instance object
+            read from the game's instances.json.
+    """
+    self._on_setup(**kwargs)
+    self._current_player = self.get_players()[self._current_player_idx]
+    self._on_before_game()
+    self.started = True
+    self._on_before_round()
+
+@final
+def observe(self) -> Tuple[Player, Dict]:
+    """
+    Observe the current player context.
+    Returns:
+        Current Player object, current player context
+    """
+    player = self.current_player
+    context = self.get_context_for(player)
+    return player, context
+
+@final
+def step(self, response: str) -> Tuple[bool, Dict]:
+    """
+    Verifies the response and transitions the game by applying the current player's response for the turn.
+
+    Args:
+        response: The response (verbal action) of the current player.
+    Returns:
+        Bool determining if game is done, info about the processed game step
+    """
+    try:
+        parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
+        self._advance_game(self.current_player, parsed_response)  # throws GameError
+    except ParseError as error:
+        self.count_request_violation()
+        self._on_parse_error(error)
+    except GameError as error:
+        self._on_game_error(error)
+
+    self.info["turn_score"] = self.compute_turn_score()
+    self.info["turn_feedback"] = self.get_turn_feedback()
+
+    # determine if the current player should pass the turn to the next player or get another turn:
+    if self._should_pass_turn():  # True = move on to next player
+        self._current_player = self._next_player()
+
+    if self._start_next_round():
+        self._on_after_round()
+        self.current_round += 1  # already increment here b.c. _does_game_proceed might rely on it
+
+    done = not self._does_game_proceed()
+    if done:
+        self._on_after_game()
+        self.log_game_end()
+        self.info["episode_score"] = self.compute_episode_score()
+        for player in self.get_players():
+            player.reset()
+    elif self._start_next_round():  # prepare next round only when game has not ended yet
+        self.__prepare_next_round()
+
+    info = deepcopy(self.info)
+    self.info = {}  # reset info after each step
+    return done, info
+```
+These methods should not be changed for your game implementation. The methods called by `setup()` and `step()` are 
+instead used to implement game-specific functionality.  
+The methods that **must** be implemented for a working DialogueGameMaster subclass are:  
+- `_on_setup(self, **kwargs)` has to contain the game-specific setup, based on the structure and content of your instances
+- `_parse_response(self.current_player, response)` processes the player's response, checking it for game rule conformity 
+and extracting game-relevant response content to return
+- `_advance_game(self.current_player, parsed_response)` uses the processed player response to update the game state
+- `compute_turn_score()` calculates a score for the current turn, while mandatory, it is only used for reinforcement 
+learning (PlayPen)
+- `compute_episode_score()` calculates a score for the entire, while mandatory, it is only used for reinforcement 
+learning (PlayPen), and is not called as part of the normal game play loop
+- `_does_game_proceed()` determines if the game play loop should continue, enforcing game rules
+
+DialogueGameMaster assumes that for each *round*, each player takes at least one *turn*, meaning that *round* and *turn* 
+are different. Only if there is a single player, giving only a single response that is used to advance the game, round 
+and turn are conceptually the same - however, records and thus eventual scoring are round-based, so the difference 
+between round and turn is important to anticipate. Overall the game master acts as a moderator between the players and 
+the players actually never directly talk to each other.  
+For the taboo example, in each round the word describer takes a turn describing the target word and the guesser takes a 
+turn guessing, then the next round starts.
+
+There are many methods involved in the processing of the game step, which are already implemented with minimal 
+placeholder functionality in the DialogueGameMaster base class and are intended to be modified for a specific game.  
+Below are the taboo-specific method implementations.
+
+For the `taboo` game we use the setup hook to set instance specific values and to set up the `WordDescriber` and 
+`WordGuesser` which are the `Player` subclasses for the game. The players use the `Model`s (LLMs, humans or 
+programmatic) defined by the `player_models` argument. Adding the players in this order is crucial, as they are iterated 
+over in the order they were added.
+
+```python
+def _on_setup(self, **game_instance):
+    self.game_instance = game_instance
+
+    self.target_word = game_instance["target_word"]
+    self.related_words = game_instance["related_word"]
+
+    describer_initial_prompt = self.experiment["describer_initial_prompt"]
+    describer_initial_prompt = describer_initial_prompt.replace("$TARGET_WORD$", self.target_word)
+    rel_words = f"- {self.related_words[0]}\n- {self.related_words[1]}\n- {self.related_words[2]}"
+    describer_initial_prompt = describer_initial_prompt.replace("$REL_WORD$", rel_words)
+    describer_initial_prompt = describer_initial_prompt.replace("$N$", str(self.max_rounds))
+
+    guesser_initial_prompt = self.experiment["guesser_initial_prompt"]
+    guesser_initial_prompt = guesser_initial_prompt.replace("$N$", str(self.max_rounds))
+
+    self.describer = WordDescriber(self.player_models[0])
+    self.guesser = WordGuesser(self.player_models[1])
+
+    self.add_player(self.describer, initial_context=describer_initial_prompt)
+    self.add_player(self.guesser, initial_prompt=guesser_initial_prompt)
+
+    self.invalid_response = False
+    self.clue_error = None
+    self.guess_word = None
+```
+
+Then we must decide if the guessing should continue like
+
+```python
+def _does_game_proceed(self):
+    """Proceed as long as the word hasn't been guessed and the maximum length isn't reached.
+    """
+    if self.is_terminal():
+        if self.is_aborted():
+            self.log_to_self("invalid format", "abort game")
+        if self.is_clue_error():  # stop game if clue is wrong (for now)
+            self.log_to_self("invalid clue", self.clue_error["message"])
+        if self.is_turn_limit_reached():
+            self.log_to_self("max rounds reached", str(self.max_rounds))
+        if self.is_success():
+            self.log_to_self("correct guess", "end game")
+        return False
+    return True
+```
+
+NOTE: on_valid_player_response and validate_player_response are now to be part of _parse_response
+
+And we have to check if the player response is actually in the valid format:
+
+```python
+def _validate_player_response(self, player: Player, utterance: str) -> bool:
+    if player == self.guesser:
+        # validate response format
+        if not utterance.startswith("GUESS:"):
+            self.invalid_response = True
+            return False
+        self.log_to_self("valid response", "continue")
+        # extract guess word
+        guess_word = utterance.replace("GUESS:", "")
+        guess_word = guess_word.strip()
+        guess_word = guess_word.lower()
+        guess_word = string_utils.remove_punctuation(guess_word)
+        self.guess_word = guess_word.lower()
+        self.log_to_self("valid guess", self.guess_word)
+    if player == self.describer:
+        # validate response format
+        if not utterance.startswith("CLUE:"):
+            self.invalid_response = True
+            return False
+        self.log_to_self("valid response", "continue")
+        # validate clue
+        clue, errors = check_clue(utterance, self.target_word, self.related_words, return_clue=True)
+        if errors:
+            error = errors[0]  # highlight single error
+            self.clue_error = error
+            return False
+        self.log_to_self("valid clue", clue)
+    return True
+```
+
+
+
+We see that this is also the place to potentially detect violations of the game rules.  
+Now we can also modify the message and for example log the responses without the prefixes.
+
+```python
+def _on_parse_response(self, player, utterance: str) -> Tuple[str, bool]:
+  if player == self.guesser:
+      utterance = utterance.replace("GUESS:", "")
+      self.guess_word = utterance.lower()
+      self.log_to_self("guess", self.guess_word)
+  if player == self.describer:
+      utterance = utterance.replace("CLUE:", "")
+      self.log_to_self("clue", utterance)
+  return utterance, False
+```
+
+The (possibly modified) response is then automatically added the player's history which is acting.  
+Still, for two-player games we have to add the response to the history of the other player as well.
+
+```python
+def _after_add_player_response(self, player, utterance: str):
+    if player == self.describer:
+        utterance = f"CLUE: {utterance}."
+        self.add_user_message(self.guesser, utterance)
+    if player == self.guesser:
+        if self.guess_word != self.target_word:
+            utterance = f"GUESS: {self.guess_word}."
+            self.add_user_message(self.describer, utterance)
+```
+
+Finally, we need to use the general turn method to additionally log the initial prompt for the second player and not 
+only the most recent one (as automatically done by the `DialogueGameMaster`).
+
+```python
+def _on_before_turn(self, turn_idx: int):
+    if turn_idx == 0:
+        self.log_message_to(self.guesser, self.guesser_initial_prompt)
+```
+
+
+
 
 The DialogueGameMaster base class defines a play routine that is as follows:
 
 ```python
- def play(self) -> None:
+def play(self) -> None:
     self._on_before_game()
     while self._does_game_proceed():
         self.log_next_round()  # not sure if we want to do this always here (or add to _on_before_turn)
@@ -153,7 +386,7 @@ The DialogueGameMaster base class defines a play routine that is as follows:
         self.log_event(from_=player.descriptor, to="GM", action=action, call=(_prompt, _response))
 
         # GM -> GM
-        self.__validate_parse_and_add_player_response(player, response_message)
+        self.__validate_parse_and_add_player_response(player, response_message)  # this odd method really existed sometime...?! not mentioned below either...
     self._on_after_round(self.current_round)
     self.current_round += 1
 
