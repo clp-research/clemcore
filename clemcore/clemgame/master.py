@@ -266,6 +266,11 @@ class DialogueGameMaster(GameMaster):
 
     @final
     def observe(self) -> Tuple[Player, Dict]:
+        """
+        Observe the current player context.
+        Returns:
+            Current Player object, current player context
+        """
         player = self.current_player
         context = self.get_context_for(player)
         return player, context
@@ -275,8 +280,10 @@ class DialogueGameMaster(GameMaster):
         """
         Verifies the response and transitions the game by applying the current player's response for the turn.
 
-        :param response: The response (verbal action) of the current player.
-        :return: done, info
+        Args:
+            response: The response (verbal action) of the current player.
+        Returns:
+            Bool determining if game is done, info about the processed game step
         """
         try:
             parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
@@ -327,7 +334,8 @@ class DialogueGameMaster(GameMaster):
         Default: The gamer master passes the turn to the next player in the player list (order as added).
         Starting again with the first player, when all players have had their turn(s).
 
-        :return: the next (current) player
+        Returns:
+            The next (current) player
         """
         self._current_player_idx = (self._current_player_idx + 1) % len(self.players_by_names)
         return self.get_players()[self._current_player_idx]
@@ -338,7 +346,8 @@ class DialogueGameMaster(GameMaster):
 
         Default: Start next round when we cycled through the whole list i.e. it is again the first player's turn.
 
-        :return: True, when to start a new round
+        Returns:
+            True, when to start a new round
         """
         return self._current_player_idx == 0
 
@@ -348,21 +357,24 @@ class DialogueGameMaster(GameMaster):
 
     def get_turn_feedback(self):
         """Optional textual feedback to be fed back to model (for playpen RL).
-        :return: a verbal feedback about the player's response given the context
+        Returns:
+            A verbal feedback about the player's response given the context
         """
         return None
 
     @abc.abstractmethod
     def compute_turn_score(self):
         """Score response based on last context (for playpen RL)
-        :return: the performance score for a player's response given its last context
+        Returns:
+            The performance score for a player's response given its last context
         """
         pass
 
     @abc.abstractmethod
     def compute_episode_score(self):
         """
-        :return: the performance of the agent over the whole episode
+        Returns:
+            The performance of the agent over the whole episode
         """
         pass
 
