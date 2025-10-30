@@ -1,30 +1,29 @@
 # Keeping Records of Interactions
 When a clemgame is run, the `GameMaster` class (and the `DialogueGameMaster` class inheriting from it) produces a record 
-of interactions. This record is stored as a JSON file named `interactions.json` in a `records/<model>/<gamename>` 
-subdirectory corresponding to the experiment and episode. For example, the interactions recorded for the openchat-3.5 
-model as both players of the `taboo` clemgame experiment `0_high_en` `episode_0` (corresponding to the first instance of 
-this experiment) are stored in `records/openchat_3.5-t0.0--openchat_3.5-t0.0/taboo/0_high_en/episode_0/`.
+of interactions. This is done using the `GameInteractionsRecorder`class, instantiated when the `GameMaster` is. The 
+record is stored as a JSON file named `interactions.json` in a `records/<model>/<gamename>` subdirectory corresponding 
+to the experiment and episode.  
+For example, the interactions recorded for the openchat-3.5 model as both players of the `taboo` clemgame experiment 
+`0_high_en` `episode_0` (corresponding to the first instance of this experiment) are stored in 
+`records/openchat_3.5-t0.0--openchat_3.5-t0.0/taboo/0_high_en/episode_0/`.
 
 The game master should record every interaction that is necessary to score the game, to generate the dialogue 
 transcripts and other relevant information for posterior inspection of the interactions.
 
-This is taken care of by the `GameRecorder` class, which has methods to log various types of information:
+This is taken care of by the `GameInteractionsRecorder` class, which has methods to log various types of information:
 
 - `log_players`: Must be called once, in the game setup, to log the description of the agents playing each role in 
-the game.
-- `log_event`: Must be called to log every action; see [Logging Interaction](#logging-interaction).
-- `log_next_turn`: Must be called at the beginning of every game turn; what constitutes a turns is a decision of the 
-game designer.
+the game. The automated player adding of `DialogueGameMaster` takes care of this.
+- `log_event`: Must be called to log every game-specific round-level action; see [Logging Interaction](#logging-interaction).
+- `log_next_round`: Must be called at the beginning of every game round; what constitutes a round is a decision of the 
+game designer. `DialogueGameMaster` default methods already take care of this.
 - `log_key`: Can be used to log game-specific episode-level keys and values.
 
-The `GameMaster` class inherits these methods from `GameRecorder`.
+The `GameMaster` class inherits these methods from `GameEventSource`. It adds a GM-related shortcut method:
 
-The `DialogueGameMaster` class inherits these methods from `GameMaster`, and has additional logging methods:
+- `log_to_self`: Logs a GM->GM 'message' for game processing related records that will show up in transcripts.
 
-- `log_message_to`: Logs a GM->Player `send_message` action.
-- `log_message_to_self`: Logs a GM->GM `metadata` action.
-- `log_to_self`: Logs a GM->GM action of a type passed as `type_` argument. This method is useful to record both 
-standard and custom scoring-relevant actions.
+The `DialogueGameMaster` class inherits these methods from `GameMaster`.
 ## Logging Players
 The GameMaster `setup` method must call `log_players` passing a dictionary that maps player identifier strings to 
 a description of the player (e.g. is it a pretrained model, a human, or a program).
@@ -43,6 +42,8 @@ self.log_players(
 )
 ```
 This example uses the `GameMaster.player_models` attribute list of `Model`s to get the names for the two players. 
+
+This is already fully implemented in the `DialogueGameMaster` class.
 ## Logging Interaction
 The interactions record for an episode is a dictionary containing at least the `players` and `turns` keys.
 
@@ -73,9 +74,8 @@ transcript).
 
 If a game needs more custom actions, they should be documented in the game directory. See [Custom Actions](#custom-actions).
 
-Use `from: "GM"` and `to: "GM"` for messages that the Game Master emits to itself (not the players).
-The `DialogueGameMaster` methods `log_message_to_self` and `log_to_self` call `log_event` with `from: "GM"` and 
-`to: "GM"`.
+Use `from: "GM"` and `to: "GM"` for messages that the Game Master emits to itself (not the players).  
+The `GameMaster` method `log_to_self` call `log_event` with `from: "GM"` and `to: "GM"`.
 
 Here is an example of what the `interactions.json` file of an episode will look like:
 
@@ -153,11 +153,11 @@ Here is an example of what the `interactions.json` file of an episode will look 
 ```
 
 ## Logging Calls
-We also want to log the exact input and output from an backend/API, to make sure that there are no issues with model 
-outputs and their processing by backends and the game master.
+We also log the exact input and output from a backend/API, to make sure that there are no issues with model outputs and 
+their processing by backends.
 
 The backend/API call returns the manipulated prompt (including the applied chat template) and the raw response, which 
-should simply be logged by the game master without any modifications.
+is simply logged by the game master without any modifications.
 
 For that, use the optional `call` argument in `log_event` to log the call with the same timestamp and an action.
 
@@ -170,7 +170,7 @@ action = {'type': 'get message', 'content': player_1_response_text}
 # log the action event with log_event along with the backend/API call:
 self.log_event(from_="Player 1", to="GM", action=action, call=(player_1_prompt, player_1_response))
 ```
-`DialogueGameMaster`'s default `prompt` method contains `log_event` with a `get message` action and `call` argument as 
+The `Player` base class's reponse methods contain `log_event` with a `get message` action and `call` argument as 
 in the example.
 
 The backend/API calls will be stored in a `requests.json` file that contains the raw inputs and outputs of calls made 
@@ -195,27 +195,27 @@ Depending on the backend/API `raw_response_obj` is likely to be more extensive.
 ## Scoring & Logging Scores
 Scores are calculated using the `GameScorer` class, preferably a game-specific child class of it. Game-specific child 
 classes of `GameScorer` allow for the implementation of custom scores.  
-Scoring is to be done after a clembench run has finished, meaning that all results are recorded in an 
+Scoring is to be done after a clembench run has finished, requiring that all results are recorded in an 
 `interactions.json` for each episode.
 
 Default `GameScorer` iterates over the `turns` list in an episode's `interactions.json` and assigns scores based on the 
 recorded actions in each turn.  
-This is implemented in the `score_turns` method, which receives the entire episode interactions dict as 
-`episode_interactions` argument. See the `GameScorer` base class in `clemgame.py` 
-[here](../clemgame/clemgame.py) for a base scoring procedure.
+This is implemented in the `score_rounds` method, which receives the entire episode interactions dict as 
+`episode_interactions` argument. See the `GameScorer` base class in `metrics.py` 
+[here](../clemcore/clemgame/metrics.py) for a base scoring procedure.
 
 `GameScorer` has the following logging methods:
-- `log_turn_score`: Should be called in the scoring method to log turn-level scores. It takes a score name and a value 
-for a given turn index.
+- `log_round_score`: Should be called in the scoring method to log turn-level scores. It takes a score name and a value 
+for a given round index.
 - `log_episode_score`: Should be called in the scoring method to log episode-level scores.  It takes a score name and a 
 value for the whole episode.
 - `log_main_score`: Should be called once per episode to record the main score/`BENCH_SCORE` of your clemgame.
 
-Games can have multiple turn-level scores and episode-level scores, but only one main score/`BENCH_SCORE` that reflects 
+Games can have multiple round-level scores and episode-level scores, but only one main score/`BENCH_SCORE` that reflects 
 the core quality of a played episode. Episode scores are usually measures of game success.
 
 You can log as many scores as you wish. The minimal requirements is to log the default episode-level scores defined in 
-`clemgame/metrics.py` [here](../clemgame/metrics.py) (see the [paper](https://doi.org/10.48550/arXiv.2305.13455)'s 
+`clemgame/metrics.py` [here](../clemcore/clemgame/metrics.py) (see the [paper](https://doi.org/10.48550/arXiv.2305.13455)'s 
 appendix for details). For custom, game-specific scores see [Custom Scores](#custom-scores).
 
 **Important**: If the game was aborted, all default episode-level scores should be `np.nan` and turn-level scores can be 
@@ -223,27 +223,25 @@ logged up to the turn when the game was aborted. If the game was won or lost, al
 This is specially relevant for the main score of each game, so that the evaluation script correctly distinguishes 
 %played and computes the main score only for actually played games.
 
-The `GameScorer` method `score_turns` is intended to hold all `log_turn_score` calls, iterating over actions in each 
+The `GameScorer` method `score_rounds` is intended to hold all `log_turn_score` calls, iterating over actions in each 
 turn. Complex turn-level score calculations are best implemented inside this method as well.  
-The `score_game` method is intended for episode-level scores, specially those that rely on turn-level or other 
-episode-level scores.  
-The `score_game_end` and `score_requests` methods are used to conveniently calculate the minimally required scores 
-defined in `clemgame/metrics.py`.
+The `score_episode` method is intended for episode-level scores, specially those that rely on round-level or other 
+episode-level scores.
 
 A clemgame's `GameBenchmark` will call the `compute_scores` method of the clemgame's `GameScorer`, which calls 
-`score_turns` and then `score_game` (unless modified for game-specific demands). This is followed by its `store_scores` 
-method to store the score results.  
+`score_rounds` and then `score_episode` (unless modified for game-specific demands). This is followed by its 
+`store_scores` method to store the score results.  
 The CLI command to score all present results is
 ```shell
-python3 scripts/cli.py score 
+(clemcore-venv) clem score 
 ```
-Or to only score a specific game, inn this example 'taboo':
+Or to only score a specific game, in this example 'taboo':
 ```shell
-python3 scripts/cli.py score -g taboo
+(clemcore-venv) clem  score -g taboo
 ```
 
 The score results will be stored to `scores.json` which contains:
-- `turn scores`: The turn-level scores for each game turn.
+- `turn scores`: The round-level scores for each game round.
 - `episode scores`: The episode-level scores for the episode.
 
 Here is an example of how the `scores.json` file of an episode will look like:
@@ -281,8 +279,8 @@ See [Transcripts](#transcripts) for a more accessible way to inspect episode int
 You can record any kind of action that is specific to your game, to show it in the interaction transcripts and/or to use 
 it for game-specific scoring.  
 To do so, simply create an action dict with a new `type` key and the `content` you want to record and pass it to 
-`log_event` (or one of the `DialogueGameMaster` logging methods).  
-`content` type is hinted to be string, but any python data type that can be converted into JSON string can be used. 
+`log_event`.  
+`content` type is hinted to be string, but any python data type **that can be converted into JSON string** can be used. 
 JSON convertibility can be checked by passing the `content` object to `json.dump` - if there are no exceptions and the 
 resulting string adequately contains the information you want to record, it can be used as `content`.
 
@@ -303,6 +301,7 @@ If you record [Custom Actions](#custom-actions), they can be used to implement c
 
 Example `GameScorer` method implementation:
 ```python
+# TODO: update this to work properly with current GameScorer methods
 # in custom GameScorer child class
 def score_turns(self, episode_interactions: Dict) -> None:
     # Loop over turns, calculate and log turn-specific scores
@@ -322,7 +321,7 @@ The transcripts are generated as HTML files for quick inspection and in LaTeX fo
 works.  
 Given existing game records, the following CLI command will generate transcripts in the episode directories:  
 ```shell
-python3 scripts/cli.py transcribe
+(clemcore-venv) clem transcribe
 ```
 
 Messages are shown as 'chat bubbles', with orange background for player messages and grey background for game master 
@@ -341,11 +340,11 @@ interaction log.
 To generate overview tables listing all models and aggregate main default scores for all present results, use the 
 following CLI command:
 ```shell
-python3 evaluation/bencheval.py
+(clemcore-venv) clem eval
 ```
 Alternatively, if results are stored in a different directory, this can be specified:
 ```shell
-python3 evaluation/bencheval.py --results_path <PATH>
+(clemcore-venv) clem eval --results_path <PATH>
 ```
 See the [benchmark workflow howto](howto_benchmark_workflow.md) for further information and contributing your 
 experimental results.
