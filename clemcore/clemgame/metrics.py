@@ -226,7 +226,7 @@ class GameScorer:
     def compute_round_score(self, round_idx, round_events: List[Dict]) -> None:
         """Calculate and log round scores/metrics. This method is intended to contain any game-specific round scoring.
 
-        Note: Use the log_turn_score helper method to log values.
+        Note: Use the log_round_score helper method to log values.
         Args:
             round_idx: The index for the round the score is to be recorded for.
             round_events: List of player actions logged during the round.

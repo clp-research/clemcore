@@ -297,22 +297,63 @@ self.log_event(from_="GM", to="GM", action=action)
 ```
 Both the action's type and its content will be shown in the interaction transcript for convenient inspection.
 ## Custom Scores
-If you record [Custom Actions](#custom-actions), they can be used to implement custom scores specific to your game.
+If you record [Custom Actions](#custom-actions) or custom episode-level values, they can be used to implement custom scores 
+specific to your game.
+
+The `compute_round_score` method is called by the `GameScorer`'s `score_rounds` method, which iterates over the rounds 
+records in the interaction file. Use this method to calculate and log round-level scores.
+
+The `compute_episode_scores` method is called after `score_rounds`, and calculates and logs episode-level scores, most 
+importantly the game's main score. It **must** be implemented to record the game's main score! Episode-level values are 
+recorded by the `GameMaster` using its `log_key` method.
 
 Example `GameScorer` method implementation:
 ```python
-# TODO: update this to work properly with current GameScorer methods
 # in custom GameScorer child class
-def score_turns(self, episode_interactions: Dict) -> None:
-    # Loop over turns, calculate and log turn-specific scores
-    for turn_idx, turn in enumerate(episode_interactions["turns"]):
-        state_requirement_fail_count_turn = 0
-        for event in turn:
+def compute_round_score(self, round_idx, round_events: List[Dict]) -> None:
+        """Calculate and log round scores/metrics.
+        Logs world state requirement mismatches at the round level.
+        
+        Args:
+            round_idx: The index for the round the score is to be recorded for.
+            round_events: List of player actions logged during the round.
+        """
+        state_requirement_fail_count_round = 0
+        for event in round_events:
             action = event["action"]
             if action["type"] == "world_state_requirement_unfulfilled":
-                state_requirement_fail_count_turn += 1
-        self.log_turn_score(turn_idx, "state_requirement_fail", state_requirement_fail_count_turn)
+                state_requirement_fail_count_round += 1
+        self.log_round_score(round_idx, "state_requirement_fail", state_requirement_fail_count_round)
+
+def compute_episode_scores(self, interactions: Dict):
+        """Compute and log main score and speed scores.
+
+        Args:
+            interactions: Dict containing the logged episode's interactions.
+        """
+        # The method MUST log main score/BENCH_SCORE
+        # This simply uses episode success/lose/aborted
+        if interactions[METRIC_SUCCESS]:
+            # Successfull episodes get full score
+            self.log_episode_score(BENCH_SCORE, 100)
+        elif interactions[METRIC_LOSE]:
+            # Lost episode get zero score
+            self.log_episode_score(BENCH_SCORE, 0)
+        elif interactions[METRIC_ABORTED]:
+            # IMPORTANT: Main score for aborted episodes MUST be np.nan!
+            self.log_episode_score(BENCH_SCORE, np.nan)
+        else:
+            raise ValueError("Missing outcome value (success, failure, abort) in interactions.json")
+        
+        # Custom speed scores
+        speed = interactions["optimal_rounds"] - interactions["rounds_played"]
+        self.log_episode_score("speed", speed)
+        speed_ratio = interactions["rounds_played"] / interactions["optimal_rounds"]
+        self.log_episode_score("speed_ratio", speed_ratio)
 ```
+If your game tracks a lot of different aspects of interaction quantitatively, these methods should be appropriately 
+extensive to allow your evaluation to access them from the score files and not the interaction files.
+
 ## Transcripts
 Episode transcripts allow convenient inspection of interactions, by presenting them in a visual format similar 
 to common chat applications.
