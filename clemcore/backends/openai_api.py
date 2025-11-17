@@ -102,15 +102,21 @@ class OpenAIModel(backends.Model):
                         else:
                             # encode each image
                             for image in message['image']:
-                                is_url, loaded, image_type = self.encode_image(image)
-                                if is_url:
+                                if isinstance(image, str) and image.startswith("data:image/"):
+                                    # already data url, use this
                                     this["content"].append(dict(type="image_url", image_url={
-                                        "url": loaded
+                                        "url": image
                                     }))
                                 else:
-                                    this["content"].append(dict(type="image_url", image_url={
-                                        "url": f"data:{image_type};base64,{loaded}"
-                                    }))
+                                    is_url, loaded, image_type = self.encode_image(image)
+                                    if is_url:
+                                        this["content"].append(dict(type="image_url", image_url={
+                                            "url": loaded
+                                        }))
+                                    else:
+                                        this["content"].append(dict(type="image_url", image_url={
+                                            "url": f"data:{image_type};base64,{loaded}"
+                                        }))
                 encoded_messages.append(this)
         return encoded_messages
 

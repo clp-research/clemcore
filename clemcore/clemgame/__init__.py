@@ -1,6 +1,6 @@
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameBenchmarkCallbackList, GameStep
 from clemcore.clemgame.callbacks.files import ResultsFolder, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver, ImageFileSaver, RunFileSaver
+    InteractionsFileSaver, RunFileSaver
 from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError, ResponseError, ProtocolError, \
     NotApplicableError
 from clemcore.clemgame.instances import GameInstanceGenerator, GameInstanceIterator
@@ -12,7 +12,8 @@ from clemcore.clemgame.registry import GameSpec, GameRegistry
 from clemcore.clemgame.benchmark import GameBenchmark
 from clemcore.clemgame.envs.master import EnvGameMaster
 from clemcore.clemgame.envs.environment import Action, ActionSpace, GameEnvironment, GameState, Observation
-from clemcore.clemgame.envs.grid_environment import GridEnvironment, GridState, Grid, GridCell, Object, PlayerObject
+from clemcore.clemgame.envs.grid_environment import GridEnvironment, GridState, Grid, GridCell, Object, PlayerObject, \
+    InclusiveGridEnvironment, InclusiveGridState
 
 __all__ = [
     "GameBenchmark",
@@ -31,6 +32,8 @@ __all__ = [
     "GridState",
     "Object",
     "PlayerObject",
+    "InclusiveGridEnvironment",
+    "InclusiveGridState",
     "GameMaster",
     "DialogueGameMaster",
     "EnvGameMaster",
@@ -44,7 +47,6 @@ __all__ = [
     "InstanceFileSaver",
     "ExperimentFileSaver",
     "InteractionsFileSaver",
-    "ImageFileSaver",
     "GameInteractionsRecorder",
     "GameResourceLocator",
     "ResponseError",
