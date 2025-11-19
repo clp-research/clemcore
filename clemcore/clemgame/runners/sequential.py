@@ -15,6 +15,15 @@ def run(game_benchmark: GameBenchmark,
         player_models: List[Model],
         *,
         callbacks: GameBenchmarkCallbackList):
+
+    # Automatic player expansion: When only a single model is given, then use this model given for each game role.
+    if len(player_models) == 1 and game_spec.players > 1:
+        player_models = [player_models[0]] * game_spec.players  # keeps original list untouched
+    if len(player_models) != game_spec.players:
+        raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
+                         f"but {len(player_models)} were given: {[m.name for m in player_models]}")
+    self.player_models: List[backends.Model] = player_models
+
     callbacks.on_benchmark_start(game_benchmark)
     error_count = 0
     for experiment, game_instance in tqdm(game_instance_iterator, desc="Playing game instances"):

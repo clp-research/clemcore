@@ -32,25 +32,21 @@ class EnvLike(abc.ABC):
 class GameMaster(EnvLike, GameEventSource):
     """Base class to contain game-specific functionality."""
 
-    def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
+    def __init__(self, game_spec: GameSpec, experiment: Dict):
         """
         Args:
             game_spec: the game specifications for this game as given in the clemgame.json file
             experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
-            player_models: Player models to use for one or two players.
         """
         super().__init__()
         self.game_spec = game_spec
         self.experiment: Dict = experiment
-        # Automatic player expansion: When only a single model is given, then use this model given for each game role.
-        if len(player_models) == 1 and game_spec.players > 1:
-            player_models = [player_models[0]] * game_spec.players  # keeps original list untouched
-        if len(player_models) != game_spec.players:
-            raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
-                             f"but {len(player_models)} were given: {[m.name for m in player_models]}")
-        self.player_models: List[backends.Model] = player_models
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
+
+    @property
+    def num_players(self) -> int:
+        return self.game_spec.players
 
     def load_json(self, file_path: Union[str, Path]):
         return self.game_resources.load_json(file_path)
@@ -85,20 +81,18 @@ class GameMaster(EnvLike, GameEventSource):
     def has_started(self) -> bool:
         pass
 
+
 class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
-    Has most logging and gameplay procedures implemented, including convenient logging methods.
     """
 
-    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: List[backends.Model]):
+    def __init__(self, game_spec: GameSpec, experiment: dict):
         """
         Args:
-            name: The name of the game (as specified in game_registry).
-            path: Path to the game (as specified in game_registry).
-            experiment: The experiment (set of instances) to use.
-            player_models: Player models to use for one or two players.
+            game_spec: the game specifications for this game as given in the clemgame.json file
+            experiment: The parameter of the experiment, that is, parameters that are the same for all game instances.
         """
-        super().__init__(game_spec, experiment, player_models)
+        super().__init__(game_spec, experiment)
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: Dict[str, Player] = collections.OrderedDict()
         self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
@@ -111,8 +105,6 @@ class DialogueGameMaster(GameMaster):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        for player in self.players_by_names.values():  # sync game recorders (not copied in Player)
-            player.register_many(self._loggers)
 
     @property
     def game_state(self):
@@ -157,13 +149,12 @@ class DialogueGameMaster(GameMaster):
                             to directly react to the initial prompt. Alternatively, overwrite on_before_game() and
                             use set_context_for(player) to set the player context.
         """
-        player.register_many(self._loggers)  # player should record to the same interaction log
         player.name = f"Player {len(self.players_by_names) + 1}"
         if player.name in self.players_by_names:
             raise ValueError(f"Player names must be unique, "
                              f"but there is already a player registered with name '{player.name}'.")
         self.players_by_names[player.name] = player
-        self.log_player(player.name, player.game_role, player.model.name)
+        self.log_player(player.name, player.game_role, player.model_name)
         if initial_prompt is not None:
             assert isinstance(initial_prompt, (str, dict)), \
                 f"The initial prompt must be a str or dict, but is {type(initial_prompt)}"
