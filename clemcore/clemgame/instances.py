@@ -61,7 +61,9 @@ class GameInstanceIterator:
 
     def __deepcopy__(self) -> "GameInstanceIterator":
         _copy = type(self).__new__(self.__class__)
-        _copy._instance = self._instances
+        _copy._game_name = self._game_name
+        _copy._instances = self._instances
+        _copy._sub_selector = self._sub_selector
         _copy._queue = copy(self._queue)  # no need to copy the underlying instances
         return _copy
 
