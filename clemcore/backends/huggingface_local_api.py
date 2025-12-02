@@ -5,9 +5,10 @@ import logging
 from typing import List, Dict, Tuple, Any, Union
 import torch
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, PreTrainedTokenizerBase
 from peft import PeftModel
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, PreTrainedTokenizerBase, PreTrainedModel
 from jinja2 import TemplateError
+from transformers.generation.utils import GenerateOutput
 
 import clemcore.backends as backends
 from clemcore.backends.utils import ensure_alternating_roles, ensure_messages_format, augment_response_object
@@ -127,7 +128,7 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
     return tokenizer, auto_config, context_size
 
 
-def load_model(model_spec: backends.ModelSpec) -> Any:
+def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
     """Load Huggingface model weights, into VRAM if available.
     Weights are distributed over all available GPUs for maximum speed - make sure to limit the available GPUs using
     environment variables if only a subset is to be used.
@@ -180,7 +181,7 @@ class HuggingfaceLocal(backends.Backend):
         return HuggingfaceLocalModel(model_spec)
 
 
-class HuggingfaceLocalModel(backends.BatchGenerativeModel):
+class HuggingfaceLocalModel(backends.BatchGenerativeModel, torch.nn.Module):
     """Class for loaded HuggingFace transformers models ready for generation."""
 
     def __init__(self, model_spec: backends.ModelSpec):
@@ -188,10 +189,11 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         Args:
             model_spec: A ModelSpec instance specifying the model.
         """
-        super().__init__(model_spec)
+        backends.BatchGenerativeModel.__init__(model_spec)
+        torch.nn.Module.__init__(self)
         # fail-fast
         self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
-        self.model = load_model(model_spec)
+        self.model: PreTrainedModel = load_model(model_spec)
 
         # check if model's generation_config has pad_token_id set:
         if not self.model.generation_config.pad_token_id:
@@ -301,11 +303,11 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             padding=True,  # pad to the longest sequence (necessary for batching)
             return_attention_mask=True  # with 1's up to sample length, followed by 0's
         )
-        prompt_token_ids = encoding_dict["input_ids"].to(self.device)
+        generation_input_ids = encoding_dict["input_ids"].to(self.device)
         attention_mask = encoding_dict["attention_mask"].to(self.device)
 
         # Check context limit for each input in the batch
-        assert_context_limits(self, prompt_token_ids)
+        assert_context_limits(self, generation_input_ids)
 
         # Prepare generation arguments: by default assume greedy decoding (set values to None to avoid warnings)
         gen_args = {
@@ -313,7 +315,9 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             "temperature": None,  # avoid warning
             "top_p": None,  # avoid warning
             "max_new_tokens": self.max_tokens,
-            "attention_mask": attention_mask
+            "attention_mask": attention_mask,
+            "return_dict_in_generate": True,
+            "output_logits": True
         }
         if self.temperature > 0.0:
             gen_args["do_sample"] = True
@@ -324,23 +328,20 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         if 'cot_output' in self.model_spec.model_config and self.model_spec.model_config['cot_output']:
             gen_args["max_new_tokens"] = self.context_size
 
-        # Generate outputs for the whole batch
-        model_output_ids = self.model.generate(prompt_token_ids, **gen_args)
-
-        # Decode all outputs and prompts
-        model_outputs = self.tokenizer.batch_decode(model_output_ids)
-        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids)
-
-        prompts, response_texts, responses = split_and_clean_batch_outputs(self,
-                                                                           model_outputs,
-                                                                           prompt_texts)
+        # Generate outputs for the whole batch (this sets torch.no_grad)
+        generation_output = self.model.generate(generation_input_ids, **gen_args)
+        prompts, response_texts, responses = split_and_clean_batch_outputs(
+            self,
+            generation_output,
+            generation_input_ids
+        )
         return list(zip(prompts, responses, response_texts))
 
 
 def split_and_clean_batch_outputs(
         model: HuggingfaceLocalModel,
-        model_outputs: List[str],
-        prompt_texts: List[str]
+        generation_output: GenerateOutput,
+        generation_input_ids
 ) -> Tuple[List[Dict[str, Any]], List[str], List[Dict[str, str]]]:
     """
     Processes a batch of raw model output strings by removing input prompts,
@@ -361,7 +362,12 @@ def split_and_clean_batch_outputs(
     responses = []
     response_texts = []
 
-    for model_output, prompt_text in zip(model_outputs, prompt_texts):
+    # Decode all outputs and prompts
+    batch_model_outputs = model.tokenizer.batch_decode(generation_output.sequences)
+    batch_prompt_texts = model.tokenizer.batch_decode(generation_input_ids)
+    batch_model_logits = generation_output.logits
+
+    for model_output, model_logits, prompt_text in zip(batch_model_outputs, batch_model_logits, batch_prompt_texts):
         # Remove prompt from output
         response_text = model_output.replace(prompt_text, '').strip()
         # Apply model-specific output_split_prefix if present
@@ -386,7 +392,7 @@ def split_and_clean_batch_outputs(
             "max_new_tokens": model.max_tokens,
             "temperature": model.temperature
         }
-        response_info = {'response': model_output}
+        response_info = {'response': model_output, "logits": model_logits}
         # Add cot_content content to response_info
         if 'cot_output' in model.model_spec.model_config and model.model_spec.model_config['cot_output']:
             response_info['cot_content'] = cot_content
