@@ -81,7 +81,8 @@ class CohereModel(backends.Model):
         prompt = json.dumps({"message": message, "chat_history": chat_history})
 
         response = output.__dict__
-        response.pop('client')
-        response.pop('token_count')
+        # This fix is removing the 'client' key, only when it is available.
+        response.pop('client', None)
+        response.pop('token_count', None)
 
         return prompt, response, response_text
