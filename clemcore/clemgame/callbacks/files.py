@@ -6,7 +6,7 @@ from typing import List, Dict, TYPE_CHECKING
 from clemcore import get_version
 
 if TYPE_CHECKING:  # to satisfy pycharm
-    from clemcore.clemgame import GameMaster, GameBenchmark
+    from clemcore.clemgame import GameMaster, GameSpec
 
 from clemcore.backends import Model
 from clemcore.clemgame.recorder import GameInteractionsRecorder
@@ -90,16 +90,16 @@ class RunFileSaver(GameBenchmarkCallback):
         else:
             store_json(self.data, "run.json", model_dir_path)  # create file
 
-    def on_benchmark_start(self, game_benchmark: "GameBenchmark"):
+    def on_benchmark_start(self, game_spec: "GameSpec"):
         self.benchmark_start = datetime.now()
-        self.game_info = dict(game_path=game_benchmark.game_path, benchmark_start=self.benchmark_start.isoformat())
-        self.data["games"][game_benchmark.game_name] = self.game_info
+        self.game_info = dict(game_path=game_spec.game_path, benchmark_start=self.benchmark_start.isoformat())
+        self.data["games"][game_spec.game_name] = self.game_info
         store_json(self.data, "run.json", self.results_folder.to_models_dir_path())  # overwrite
 
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         self.num_instances += 1  # the instance iterator is not necessarily yet initialized, so we count here
 
-    def on_benchmark_end(self, game_benchmark: "GameBenchmark"):
+    def on_benchmark_end(self, game_spec: "GameSpec"):
         benchmark_end = datetime.now()
         benchmark_duration = benchmark_end - self.benchmark_start
         self.game_info["benchmark_end"] = benchmark_end.isoformat()
