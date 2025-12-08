@@ -4,6 +4,7 @@ import logging
 import os
 import random
 from copy import copy
+from dataclasses import dataclass
 from typing import Dict, final, Optional, Callable, List, Tuple
 
 import numpy as np
@@ -12,6 +13,21 @@ from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.resources import GameResourceLocator, load_json
 
 stdout_logger = logging.getLogger("clemcore.run")
+
+
+@dataclass(frozen=True)
+class GameInstanceIteratorConfig:
+    """
+    Configuration for a game instance iterator.
+
+    Attributes:
+        sub_selector (Optional[Callable[[str, str], List[int]]]): A callable mapping from
+            (game_name, experiment_name) tuples to lists of game instance IDs. If the
+            mapping returns None, all game instances will be used.
+        verbose (bool): Whether to enable detailed output.
+    """
+    sub_selector: Optional[Callable[[str, str], List[int]]] = None
+    verbose: bool = False
 
 
 class GameInstanceIterator:
@@ -39,12 +55,12 @@ class GameInstanceIterator:
                  game_name: str,
                  instances: Dict,
                  *,
-                 sub_selector: Optional[Callable[[str, str], List[int]]] = None):
+                 config: Optional[GameInstanceIteratorConfig] = None):
         assert game_name is not None, "Game name must be given"
         assert instances is not None, "Instances must be given"
         self._game_name = game_name
         self._instances: Dict = instances
-        self._sub_selector: Optional[Callable[[str, str], List[int]]] = sub_selector
+        self._config = config or GameInstanceIteratorConfig()
         self._queue = []
 
     def __iter__(self):
@@ -63,11 +79,11 @@ class GameInstanceIterator:
         _copy = type(self).__new__(self.__class__)
         _copy._game_name = self._game_name
         _copy._instances = self._instances
-        _copy._sub_selector = self._sub_selector
+        _copy._config = self._config
         _copy._queue = copy(self._queue)  # no need to copy the underlying instances
         return _copy
 
-    def reset(self, verbose: bool = False) -> "GameInstanceIterator":
+    def reset(self) -> "GameInstanceIterator":
         self._queue = []
         experiment_names = []
         num_instances = 0
@@ -75,18 +91,18 @@ class GameInstanceIterator:
             filtered_experiment = {k: experiment[k] for k in experiment if k != 'game_instances'}
             selected_ids: Optional[List[int]] = None
             # some bookkeeping and logging
-            if self._sub_selector is None:
+            if self._config.sub_selector is None:
                 experiment_names.append(experiment["name"])
             else:
-                selected_ids = self._sub_selector(self._game_name, experiment["name"])
+                selected_ids = self._config.sub_selector(self._game_name, experiment["name"])
                 if selected_ids is None:  # use all instances
                     experiment_names.append(experiment["name"])
                 elif len(selected_ids) == 0:
-                    if verbose:
+                    if self._config.verbose:
                         stdout_logger.info("Skip experiment %s for %s", experiment["name"], self._game_name)
                 else:
                     experiment_names.append(experiment["name"])
-                    if verbose:
+                    if self._config.verbose:
                         stdout_logger.info("Sub-select for %s experiment %s instances with game_ids: %s",
                                            self._game_name, experiment["name"], selected_ids)
             # add instances to queue, if eligible
@@ -94,7 +110,7 @@ class GameInstanceIterator:
                 if selected_ids is None or game_instance["game_id"] in selected_ids:
                     self._queue.append((filtered_experiment, game_instance))
                     num_instances += 1
-        if verbose:
+        if self._config.verbose:
             stdout_logger.info("Prepared instance queue for %s using %s experiments %s and %s instances in total.",
                                self._game_name, len(experiment_names), experiment_names, num_instances)
         return self
@@ -103,13 +119,12 @@ class GameInstanceIterator:
     def from_game_spec(cls,
                        game_spec: GameSpec,
                        *,
-                       sub_selector: Optional[Callable[[str, str], List[int]]] = None):
+                       config: Optional[GameInstanceIteratorConfig] = None):
         """Load a game instance iterator using information from the given game spec.
 
         Args:
             game_spec: The game spec with a game path and instance file name.
-            sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
-                If a mapping returns None, then all game instances will be used.
+            config: A configurable instance of GameInstanceConfig.
         """
         if not hasattr(game_spec, "instances"):
             game_spec.instances = "instances"  # if not already set, fallback to default file name
@@ -117,7 +132,7 @@ class GameInstanceIterator:
             game_spec.game_name,
             os.path.join(game_spec.game_path, "in"),
             game_spec.instances,
-            sub_selector=sub_selector
+            config=config
         )
 
     @classmethod
@@ -126,15 +141,14 @@ class GameInstanceIterator:
                   instance_dir_path: str,
                   instance_file_name: str = "instances",
                   *,
-                  sub_selector: Optional[Callable[[str, str], List[int]]] = None):
+                  config: Optional[GameInstanceIteratorConfig] = None):
         """Load a game instance iterator using the given file path.
 
         Args:
             game_name: The name of the game to which the instances belong to. Necessary for the sub_selector to work.
             instance_dir_path: The path the directory containing a JSON file with the game instances.
             instance_file_name: The name of the instance file to load.
-            sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
-                If a mapping returns None, then all game instances will be used.
+            config: A configurable instance of GameInstanceConfig.
         """
         file_path = os.path.join(instance_dir_path, instance_file_name)
         instances = load_json(file_path)
@@ -145,7 +159,7 @@ class GameInstanceIterator:
             raise ValueError(f"{game_name}: Experiments in {instance_file_name} is not a list")
         if len(experiments) == 0:
             raise ValueError(f"{game_name}: Experiments list in {instance_file_name} is empty")
-        return cls(game_name, instances, sub_selector=sub_selector)
+        return cls(game_name, instances, config=config)
 
 
 class GameInstanceGenerator(GameResourceLocator):
