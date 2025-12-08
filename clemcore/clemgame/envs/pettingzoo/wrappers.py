@@ -1,19 +1,28 @@
 from typing import ContextManager
 
 from clemcore.backends import CustomResponseModel
-from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry
+from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry, GameSpec
 from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils import BaseWrapper
 from pettingzoo.utils.env import AgentID, ObsType, ActionType
 
 
-def env(game_name: str, single_pass: bool = False):
+def env(game_name: str, iterator_config=None, single_pass: bool = False):
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
     # Load the packaged default instances.json to be played
-    game_iterator = GameInstanceIterator.from_game_spec(game_spec)
+    game_iterator = GameInstanceIterator.from_game_spec(game_spec, config=iterator_config)
+    return env_from_spec(game_spec, game_iterator, single_pass=single_pass)
+
+
+def env_from_spec(
+        game_spec: GameSpec,
+        game_iterator: GameInstanceIterator,
+        *,
+        single_pass: bool = False
+):
     # Load the game and pre-set the default instance
     game_context_manager = GameBenchmark.load_from_spec(game_spec)
     # Wrap everything in a pettingzoo style env
@@ -38,7 +47,8 @@ class GameInstanceIteratorWrapper(BaseWrapper):
     def __init__(self, wrapped_env: AECEnv, game_iterator: GameInstanceIterator, single_pass: bool = False):
         super().__init__(wrapped_env)
         self.game_iterator = game_iterator.__deepcopy__()
-        self.game_iterator.reset(verbose=False)
+        self.game_iterator.reset()
+        self.options = {}
         if not single_pass:
             from itertools import cycle
             self.game_iterator = cycle(self.game_iterator)
@@ -50,6 +60,9 @@ class GameInstanceIteratorWrapper(BaseWrapper):
         options["game_instance"] = game_instance
         super().reset(seed=seed, options=options)
 
+    def unwrapped(self) -> AECEnv:
+        return self.wrapped_env
+
 
 class PettingZooGameMasterEnv(AECEnv):
 
@@ -60,6 +73,7 @@ class PettingZooGameMasterEnv(AECEnv):
         self.game_master = None  # initialized on reset()
 
         # initialize pettingzoo env
+        self.options = {}
         self.metadata = dict(name=self.game_benchmark.game_spec.game_name)
         self.observation_spaces = dict()
         self.action_spaces = dict()
@@ -73,6 +87,7 @@ class PettingZooGameMasterEnv(AECEnv):
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         # game instance infos are given via options dict
+        self.options = options or {}
         experiment, game_instance = options["experiment"], options["game_instance"]
         # Clearing the players must go into the GM; we didnt need this before; but setup() must become a proper reset()
         # Hence, we reset() here by creating a whole new GM
