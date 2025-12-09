@@ -13,7 +13,6 @@ from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, Experim
     InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstanceIterator, ResultsFolder, \
     GameBenchmark
 from clemcore import clemeval, get_version
-from clemcore.clemgame.instances import GameInstanceIteratorConfig
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
 
@@ -169,21 +168,19 @@ def run(game_selector: Union[str, Dict, GameSpec],
                     game_ids = sub_selector(game_spec.game_name, experiment_name)
                     sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=game_ids)
 
-            time_start = datetime.now()
-            logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
-            game_instance_iterator = GameInstanceIterator.from_game_spec(game_spec,
-                                                                         config=GameInstanceIteratorConfig(
-                                                                             sub_selector=sub_selector,
-                                                                             verbose=True)
-                                                                         )
-            dispatch.run(
-                game_spec,
-                game_instance_iterator,
-                player_models,
-                callbacks=callbacks,
-                batch_size=batch_size
-            )
-            logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
+            with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
+                time_start = datetime.now()
+                logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
+                game_instance_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=sub_selector)
+                game_instance_iterator.reset(verbose=True)
+                dispatch.run(
+                    game_benchmark,
+                    game_instance_iterator,
+                    player_models,
+                    callbacks=callbacks,
+                    batch_size=batch_size
+                )
+                logger.info(f"Running {game_spec['game_name']} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
             logger.error(e, exc_info=True)
