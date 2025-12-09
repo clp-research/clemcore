@@ -27,24 +27,22 @@ def run(game_benchmark: GameBenchmark,
                 "experiment": experiment,
                 "game_instance": game_instance
             })
-            game_master = game_env.game_master
-            players_by_names = game_master.players_by_names
-            callbacks.on_game_start(game_master, game_instance)
-            for player_name in game_env.agent_iter():  # when there is no agent left, the episode is done
+            callbacks.on_game_start(game_env.game_master, game_instance)
+            for agent_id in game_env.agent_iter():  # when there is no agent left, the episode is done
                 context, reward, termination, truncation, info = game_env.last(observe=True)
                 if termination or truncation:
                     # None actions remove the agent from the game during step(None)
                     # Actually, this will never happen if the game_env removes all agents at the same time on done
                     response = None
                 else:
-                    player = players_by_names[player_name]
+                    player = game_env.player_by_agent_id[agent_id]
                     response = player(context)
                 game_env.step(response)
                 if response is not None:  # notify callbacks only for agent actions
                     done = len(game_env.agents) == 0
                     game_step = GameStep(context, response, done, info)
-                    callbacks.on_game_step(game_master, game_instance, game_step)
-            callbacks.on_game_end(game_master, game_instance)
+                    callbacks.on_game_step(game_env.game_master, game_instance, game_step)
+            callbacks.on_game_end(game_env.game_master, game_instance)
         except Exception:  # continue with other instances if something goes wrong
             message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"
             module_logger.exception(message)

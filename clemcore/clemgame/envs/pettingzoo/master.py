@@ -1,4 +1,4 @@
-from typing import ContextManager, Optional
+from typing import Optional
 
 from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry
 from gymnasium import spaces
@@ -32,6 +32,8 @@ class GameMasterEnv(AECEnv):
         super().__init__()
         self.game_benchmark = game_benchmark
         self.game_master: Optional[DialogueGameMaster] = None  # initialized on reset()
+        self.player_by_agent_id = {}  # mapping between agent ids and player instances
+        self.player_to_agent_id = {}  # mapping player names to agent ids
 
         # initialize pettingzoo env
         self.options = {}
@@ -46,6 +48,10 @@ class GameMasterEnv(AECEnv):
         self.agents = []
         self.possible_agents = []
 
+    def get_current_agent(self):
+        """ Mapping the current player to an agent id """
+        return self.player_to_agent_id[self.game_master.current_player.name]
+
     def reset(self, seed: int | None = None, options: dict | None = None):
         self.options = options or {}
         assert "experiment" in options, "Missing 'experiment' in reset options"
@@ -58,9 +64,13 @@ class GameMasterEnv(AECEnv):
         self.game_master: DialogueGameMaster = self.game_benchmark.create_game_master(experiment, player_models)
         self.game_master.setup(**game_instance)
         # Only after setup() the players are set
-        self.agents = [player.name for player in self.game_master.get_players()]
+        self.player_by_agent_id = {f"player_{idx}": player
+                                   for idx, player in enumerate(self.game_master.get_players())}
+        self.player_to_agent_id = {player.name: f"player_{idx}"
+                                   for idx, player in enumerate(self.game_master.get_players())}
+        self.agents = list(self.player_to_agent_id.values())
         self.possible_agents = self.agents.copy()
-        self.agent_selection = self.game_master.current_player.name
+        self.agent_selection = self.get_current_agent()
 
         for agent in self.agents:
             # GameMaster should implement this by default;
@@ -86,29 +96,29 @@ class GameMasterEnv(AECEnv):
         Automatically switches control to the next agent.
         """
         # after step current_player might have changed, so we reference it here already
-        # current_player should move into GameMaster
-        current_player_name = self.game_master.current_player.name
+        current_agent = self.get_current_agent()
+        # step possibly transitions the current agent
         done, info = self.game_master.step(action)
         # for now we only have the case that all players end at the same time
-        for player in self.game_master.get_players():
-            self.terminations[player.name] = done
-            self.truncations[player.name] = done
-        self.infos[current_player_name] = info
+        for agent_id in self.agents:
+            self.terminations[agent_id] = done
+            self.truncations[agent_id] = done
+        self.infos[current_agent] = info
         # response_score is returned in legacy master
-        self.rewards[current_player_name] = info["response_score"] if "response_score" in info else info["turn_score"]
+        self.rewards[current_agent] = info["response_score"] if "response_score" in info else info["turn_score"]
         self._accumulate_rewards()
         if done:
             self.agent_selection = None
             self.agents = []  # this signals the play loop to terminate
         # next player
-        self.agent_selection = self.game_master.current_player.name
+        self.agent_selection = self.get_current_agent()
 
     def observe(self, agent: AgentID) -> ObsType | None:
         """Returns the observation an agent currently can make.
 
         `last()` calls this function.
         """
-        player = self.game_master.players_by_names[agent]
+        player = self.player_by_agent_id[agent]
         return self.game_master.get_context_for(player)
 
     def observation_space(self, agent: AgentID):
