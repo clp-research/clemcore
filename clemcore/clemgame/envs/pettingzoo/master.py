@@ -55,7 +55,7 @@ class GameMasterEnv(AECEnv):
         experiment = options["experiment"]
         player_models = options["player_models"]
         game_instance = options["game_instance"]
-        self.game_master = self.game_benchmark.create_game_master(experiment, player_models)
+        self.game_master: DialogueGameMaster = self.game_benchmark.create_game_master(experiment, player_models)
         self.game_master.setup(**game_instance)
         # Only after setup() the players are set
         self.agents = [player.name for player in self.game_master.get_players()]
@@ -108,7 +108,8 @@ class GameMasterEnv(AECEnv):
 
         `last()` calls this function.
         """
-        return self.game_master.get_context_for(agent)
+        player = self.game_master.players_by_names[agent]
+        return self.game_master.get_context_for(player)
 
     def observation_space(self, agent: AgentID):
         return self.observation_spaces[agent]
