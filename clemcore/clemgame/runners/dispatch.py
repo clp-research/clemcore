@@ -2,12 +2,12 @@ import logging
 from typing import List
 
 from clemcore.backends import Model, BatchGenerativeModel
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator
+from clemcore.clemgame import GameSpec, GameBenchmarkCallbackList, GameInstanceIterator
 
 stdout_logger = logging.getLogger("clemcore.run")
 
 
-def run(game_benchmark: GameBenchmark,
+def run(game_spec: GameSpec,
         game_instance_iterator: GameInstanceIterator,
         player_models: List[Model | BatchGenerativeModel],
         *,
@@ -34,10 +34,10 @@ def run(game_benchmark: GameBenchmark,
     if batch_size > 1 and Model.all_support_batching(player_models):
         from clemcore.clemgame.runners import batchwise  # lazy import
         stdout_logger.info("Start batchwise runner for %s with models=[%s]  (batch_size=%s)",
-                           game_benchmark.game_name,
+                           game_spec.game_name,
                            ",".join(player_model.name for player_model in player_models),
                            batch_size)
-        batchwise.run(game_benchmark, game_instance_iterator, player_models, callbacks=callbacks, batch_size=batch_size)
+        batchwise.run(game_spec, game_instance_iterator, player_models, callbacks=callbacks, batch_size=batch_size)
     else:
         from clemcore.clemgame.runners import sequential  # lazy import
         if not Model.all_support_batching(player_models):
@@ -45,7 +45,7 @@ def run(game_benchmark: GameBenchmark,
                                "models=%s, support=%s", player_models,
                                [model.supports_batching() for model in player_models])
         stdout_logger.info("Start sequential runner for %s with models=[%s] (batch_size=%s)",
-                           game_benchmark.game_name,
+                           game_spec.game_name,
                            ",".join(player_model.name for player_model in player_models),
                            batch_size)
-        sequential.run(game_benchmark, game_instance_iterator, player_models, callbacks=callbacks)
+        sequential.run(game_spec, game_instance_iterator, player_models, callbacks=callbacks)

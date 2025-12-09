@@ -11,7 +11,7 @@ from clemcore.clemgame import (
     GameMaster,
     GameStep,
     Player,
-    GameInstanceIterator
+    GameInstanceIterator, GameSpec
 )
 
 module_logger = logging.getLogger(__name__)
@@ -170,7 +170,7 @@ class DynamicBatchDataLoader(Iterable):
                 yield self.collate_fn(batch_items)
 
 
-def run(game_benchmark: GameBenchmark,
+def run(game_spec: GameSpec,
         game_instance_iterator: GameInstanceIterator,
         player_models: List[BatchGenerativeModel],
         *,
@@ -201,14 +201,15 @@ def run(game_benchmark: GameBenchmark,
     assert Model.all_support_batching(player_models), \
         "Not all player models support batching. Use the sequential runner instead."
 
-    callbacks.on_benchmark_start(game_benchmark)
-    game_sessions = __prepare_game_sessions(game_benchmark, game_instance_iterator, player_models, callbacks,
-                                            verbose=True)
-    num_sessions = len(game_sessions)
-    if batch_size > num_sessions:
-        stdout_logger.info("Reduce batch_size=%s to number of game sessions %s", batch_size, num_sessions)
-    __run_game_sessions(game_sessions, callbacks, min(batch_size, num_sessions))
-    callbacks.on_benchmark_end(game_benchmark)
+    callbacks.on_benchmark_start(game_spec)
+    with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
+        game_sessions = __prepare_game_sessions(game_benchmark, game_instance_iterator, player_models, callbacks,
+                                                verbose=True)
+        num_sessions = len(game_sessions)
+        if batch_size > num_sessions:
+            stdout_logger.info("Reduce batch_size=%s to number of game sessions %s", batch_size, num_sessions)
+        __run_game_sessions(game_sessions, callbacks, min(batch_size, num_sessions))
+    callbacks.on_benchmark_end(game_spec)
 
 
 def __prepare_game_sessions(game_benchmark: GameBenchmark,
