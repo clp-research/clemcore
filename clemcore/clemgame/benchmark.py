@@ -46,6 +46,22 @@ class GameBenchmark(GameResourceLocator):
         """
         super().__init__(game_spec.game_name, game_spec.game_path)
         self.game_spec = game_spec
+        self._extra_modules: List[str] = []  # additional modules loaded during load_from_spec
+
+    def set_extra_modules(self, extra_modules: List[str]):
+        self._extra_modules = extra_modules
+
+    def close(self):
+        for mod in self._extra_modules:
+            if mod in sys.modules:
+                del sys.modules[mod]
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False
 
     def compute_scores(self, results_dir: str):
         """Compute and store scores for each episode and player pair.
@@ -104,8 +120,7 @@ class GameBenchmark(GameResourceLocator):
         raise NotImplementedError()
 
     @staticmethod
-    @contextmanager
-    def load_from_spec(game_spec: GameSpec) -> ContextManager["GameBenchmark"]:
+    def load_from_spec(game_spec: GameSpec) -> "GameBenchmark":
         """Load a clemgame using a GameSpec.
         Args:
             game_spec: A GameSpec instance holding specific clemgame data.
@@ -151,11 +166,15 @@ class GameBenchmark(GameResourceLocator):
             if len(game_subclasses) > 1:
                 raise LookupError(f"There is more than one Game defined in {game_module}.")
             game_class_name, game_class = game_subclasses[0]
-            game_cls = game_class(game_spec)  # instantiate the specific game class
+            game_cls: "GameBenchmark" = game_class(game_spec)  # instantiate the specific game class
             stdout_logger.info(f'Loading game benchmark for {game_spec["game_name"]} took: %s',
                                datetime.now() - time_start)
-            yield game_cls
-        finally:
+            game_cls.set_extra_modules(extra_modules)
+            return game_cls
+        except Exception as e:
+            module_logger.exception(f"Failed to load game benchmark for {game_spec.game_name}: {e}")
             for mod in extra_modules:
-                del sys.modules[mod]
-            module_logger.debug("Removed temporarily loaded additional game modules")
+                if mod in sys.modules:
+                    del sys.modules[mod]
+            module_logger.debug("Immediately removed temporarily loaded additional game modules")
+            raise
