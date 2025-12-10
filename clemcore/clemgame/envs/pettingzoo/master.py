@@ -1,29 +1,59 @@
-from typing import Optional
+from typing import Optional, List, Dict, Callable
 
-from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry
+import gymnasium
+from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry, GameSpec
 from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils.env import AgentID, ObsType, ActionType
 
+from clemcore.clemgame.envs.pettingzoo.wrappers import GameInstanceIteratorWrapper, GameBenchmarkWrapper
 from clemcore.clemgame.master import DialogueGameMaster
 
 
-def env(game_name: str):
+def gym_env(game_name: str,
+            *,
+            game_instance_filter: Optional[Callable[[str, str], List[int]]] = None,
+            single_pass: bool = False,
+            policy_mapping: Optional[Dict[str, str]] = None
+            ) -> gymnasium.Env:
     """
-    PettingZoo style factory method for game envs.
+    Factory method for Gymnasium style game envs.
+    Args:
+        game_name:
+        game_instance_filter:
+        single_pass:
+
+    Returns:
+
+    """
+    game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass)
+    game_env = SinglePlayerWrapper(game_env, policy_mapping=policy_mapping)
+    return game_env
+
+
+def env(game_name: str,
+        *,
+        game_instance_filter: Optional[Callable[[str, str], List[int]]] = None,
+        single_pass: bool = False
+        ) -> AECEnv:
+    """
+    Factory method for Pettingzoo style game envs.
 
     Args:
-        game_name: the name of the clem-game to wrap as a PZ env
+        game_name: The name of the clem-game to wrap as a PZ env
+        game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+        single_pass: Whether to run through the game instances only once or multiple times.
     Returns: a fully initialized game env ready for RL-like training
-
     """
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
-    # Load the packaged default instances.json to be played
-    game_iterator = GameInstanceIterator.from_game_spec(game_spec)
-    game_context_manager = GameBenchmark.load_from_spec(game_spec)
-    # return env_from_spec(game_spec, game_iterator, single_pass=single_pass)
+    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec)
+
+    # Load the packaged default instances.json to be played and pass an optional filter
+    game_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=game_instance_filter)
+    game_env = GameInstanceIteratorWrapper(game_env, game_iterator, single_pass=single_pass)
+    return game_env
 
 
 class GameMasterEnv(AECEnv):

@@ -1,6 +1,22 @@
-from clemcore.clemgame import GameInstanceIterator
+from typing import Callable
+
+from clemcore.clemgame import GameInstanceIterator, GameSpec, GameBenchmark
 from pettingzoo import AECEnv
 from pettingzoo.utils import BaseWrapper
+
+
+class GameBenchmarkWrapper(BaseWrapper):
+    """
+    A wrapper that loads a GameBenchmark from a GameSpec and passes it to the wrapped environment.
+    """
+
+    def __init__(self, env_class: Callable[[GameBenchmark], AECEnv], game_spec: GameSpec, **env_kwargs):
+        self.game_benchmark = GameBenchmark.load_from_spec(game_spec)
+        super().__init__(env_class(self.game_benchmark, **env_kwargs))
+
+    def close(self) -> None:
+        super().close()
+        self.game_benchmark.close()
 
 
 class GameInstanceIteratorWrapper(BaseWrapper):
