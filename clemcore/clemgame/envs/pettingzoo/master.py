@@ -1,12 +1,15 @@
-from typing import Optional, List, Dict, Callable
+from typing import Optional, List, Dict, Callable, Union, Literal
 
 import gymnasium
-from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry, GameSpec
+
+from clemcore.backends import Model
+from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry, Player
 from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils.env import AgentID, ObsType, ActionType
 
-from clemcore.clemgame.envs.pettingzoo.wrappers import GameInstanceIteratorWrapper, GameBenchmarkWrapper
+from clemcore.clemgame.envs.pettingzoo.wrappers import GameInstanceIteratorWrapper, GameBenchmarkWrapper, \
+    SinglePlayerWrapper, AECToGymWrapper
 from clemcore.clemgame.master import DialogueGameMaster
 
 
@@ -14,20 +17,24 @@ def gym_env(game_name: str,
             *,
             game_instance_filter: Optional[Callable[[str, str], List[int]]] = None,
             single_pass: bool = False,
-            policy_mapping: Optional[Dict[str, str]] = None
+            learner_agent: AgentID,
+            other_agents: Dict[AgentID, Model]
             ) -> gymnasium.Env:
     """
     Factory method for Gymnasium style game envs.
+
+    Note: This creates first a normal AECEnv and then wraps it into a gymnasium.Env with SinglePlayerWrapper.
     Args:
-        game_name:
-        game_instance_filter:
-        single_pass:
-
-    Returns:
-
+        game_name: The name of the clem-game to wrap as a PZ env
+        game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+        single_pass: Whether to run through the game instances only once or multiple times.
+        learner_agent: the agent id of the learner agent (e.g. player_0)
+        other_agents: a mapping from agent ids to players (e.g. {player_1: "gpt5"})
+    Returns: a fully initialized game env ready for RL-like training
     """
     game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass)
-    game_env = SinglePlayerWrapper(game_env, policy_mapping=policy_mapping)
+    game_env = SinglePlayerWrapper(game_env, learner_agent, other_agents=other_agents)
+    game_env = AECToGymWrapper(game_env)
     return game_env
 
 
@@ -38,6 +45,8 @@ def env(game_name: str,
         ) -> AECEnv:
     """
     Factory method for Pettingzoo style game envs.
+
+    Note: We do not perform an agent mapping here, but the caller has to define this in his training loop.
 
     Args:
         game_name: The name of the clem-game to wrap as a PZ env
