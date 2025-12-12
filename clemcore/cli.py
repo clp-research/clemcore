@@ -114,33 +114,9 @@ def run(game_selector: Union[str, Dict, GameSpec],
     # check games
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_specs = game_registry.get_game_specs_that_unify_with(game_selector)  # throws error when nothing unifies
-    # check models are available
-    model_registry = ModelRegistry.from_packaged_and_cwd_files()
-    unified_model_specs = []
-    for model_selector in model_selectors:
-        unified_model_spec = model_registry.get_first_model_spec_that_unify_with(model_selector)
-        logger.info(f"Found registered model spec that unifies with {model_selector.to_string()} "
-                    f"-> {unified_model_spec}")
-        unified_model_specs.append(unified_model_spec)
-    # check backends are available
-    backend_registry = BackendRegistry.from_packaged_and_cwd_files()
-    for unified_model_spec in unified_model_specs:
-        backend_selector = unified_model_spec.backend
-        if not backend_registry.is_supported(backend_selector):
-            raise ValueError(f"Specified model backend '{backend_selector}' not found in backend registry.")
-        logger.info(f"Found registry entry for backend {backend_selector} "
-                    f"-> {backend_registry.get_first_file_matching(backend_selector)}")
-    # ready to rumble, do the heavy lifting only now, that is, loading the additional modules
-    start = datetime.now()
-    player_models = []
-    for unified_model_spec in unified_model_specs:
-        logger.info(f"Dynamically import backend {unified_model_spec.backend}")
-        backend = backend_registry.get_backend_for(unified_model_spec.backend)
-        model = backend.get_model_for(unified_model_spec)
-        model.set_gen_args(**gen_args)  # todo make this somehow available in generate method?
-        logger.info(f"Successfully loaded {unified_model_spec.model_name} model")
-        player_models.append(model)
-    logger.info("Loading models took: %s", datetime.now() - start)
+
+    # load models (can take some time for large local models)
+    player_models = backends.load_models(model_selectors, gen_args)
 
     # setup reusable callbacks here once
     results_folder = ResultsFolder(results_dir_path, player_models)
