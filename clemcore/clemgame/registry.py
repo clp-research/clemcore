@@ -1,7 +1,7 @@
 import copy
 import json
 import os.path
-from typing import List, Dict, Union
+from typing import List, Dict, Union, Optional
 from types import SimpleNamespace
 import logging
 import nltk
@@ -27,6 +27,12 @@ class GameSpec(SimpleNamespace):
                 raise KeyError(f"No game path specified in {kwargs}")
             if "players" not in self:
                 raise KeyError(f"No players specified in {kwargs}")
+
+    def is_single_player(self):
+        return self.players == 1
+
+    def is_multi_player(self):
+        return self.players > 1
 
     def __deepcopy__(self, memo):
         # Create a new blank instance without triggering __init__ which will lead to KeyErrors
@@ -191,6 +197,30 @@ class GameRegistry:
 
     def get_game_specs(self):
         return self._game_specs
+
+    def get_game_spec(self, game_name: str) -> GameSpec:
+        """
+        Get a single game spec by name.
+        Args:
+            game_name: the name to find the game spec for
+        Returns: the game spec if found, else raises ValueError
+        """
+        game_spec = self.find_game_spec(game_name)
+        if game_spec is None:
+            raise ValueError(f"Game '{game_name}' not found in registry.")
+        return game_spec
+
+    def find_game_spec(self, game_name: str) -> Optional[GameSpec]:
+        """
+        Find a particular game spec by name.
+        Args:
+            game_name: the name to find the game spec for
+        Returns: the game spec if found, or None otherwise
+        """
+        for game_spec in self._game_specs:
+            if game_spec["game_name"] == game_name:
+                return game_spec
+        return None
 
     @classmethod
     def from_directories_and_cwd_files(cls):
