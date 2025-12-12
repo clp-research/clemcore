@@ -4,8 +4,6 @@ from datetime import datetime
 from functools import wraps
 from typing import List, Dict, Tuple
 
-from clemcore.backends import ContextExceededError
-
 logger = logging.getLogger(__name__)
 
 
@@ -67,8 +65,8 @@ def ensure_alternating_roles(messages: List[Dict], cull_system_message: bool = T
         message = _messages[msg_idx]
         if is_same_role(prev_message, message):
             msg = (f"Found consecutive role assignments. These will be merged into one:\n"
-                        f"{prev_message}\n"
-                        f"{message}")
+                   f"{prev_message}\n"
+                   f"{message}")
             logger.debug(msg)
             prev_message['content'] = join_content(prev_message, message)
             del _messages[msg_idx]
@@ -203,3 +201,27 @@ def check_context_limit_generic(context_size: int, prompt_tokens: List, model_na
                                    tokens_used=tokens_used, tokens_left=tokens_left, context_size=context_size)
 
     return fits, tokens_used, tokens_left, context_size
+
+
+class ContextExceededError(Exception):
+    """Exception to be raised when the messages passed to a backend instance exceed the context limit of the model."""
+    tokens_used: int = int()
+    tokens_left: int = int()
+    context_size: int = int()
+
+    def __init__(self, info_str: str = "Context limit exceeded", tokens_used: int = 0,
+                 tokens_left: int = 0, context_size: int = 0):
+        """
+        Args:
+            info_str: String informing about context limit being exceeded. To optionally be modified with further
+                information by the backend class eventually raising this error.
+            tokens_used: The number of tokens used by the context that lead to this error being raised.
+            tokens_left: The number of tokens left in the context limit. Will be negative if this error is raised,
+                absolute value being the number of tokens that exceed the context limit.
+            context_size: The size of the context/the context limit.
+        """
+        info = f"{info_str} {tokens_used}/{context_size}"
+        super().__init__(info)
+        self.tokens_used = tokens_used
+        self.tokens_left = tokens_left
+        self.context_size = context_size

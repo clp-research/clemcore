@@ -4,11 +4,12 @@ Backend using HuggingFace transformers for open-weight multimodal models.
 from typing import List, Dict, Tuple, Any
 import torch
 import clemcore.backends as backends
-from transformers import AutoTokenizer, AutoConfig
 from jinja2 import Template
-import warnings
 import importlib
 import logging
+
+from clemcore.backends.utils import ContextExceededError
+
 FALLBACK_CONTEXT_SIZE = 256
 
 logger = logging.getLogger(__name__)
@@ -246,9 +247,9 @@ class HuggingfaceMultimodalModel(backends.Model):
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
             # fail gracefully:
-            raise backends.ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
-                                                tokens_used=context_check[1], tokens_left=context_check[2],
-                                                context_size=context_check[3])
+            raise ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
+                                       tokens_used=context_check[1], tokens_left=context_check[2],
+                                       context_size=context_check[3])
 
         prompt = {"inputs": prompt_text, "max_new_tokens": self.max_tokens, "temperature": self.temperature}
 

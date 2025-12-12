@@ -12,7 +12,7 @@ from transformers import AutoTokenizer, AutoConfig
 
 from jinja2 import TemplateError
 import clemcore.backends as backends
-from clemcore.backends.utils import ensure_alternating_roles
+from clemcore.backends.utils import ensure_alternating_roles, ContextExceededError
 
 logger = logging.getLogger(__name__)
 
@@ -209,9 +209,9 @@ class VLLMLocalModel(backends.Model):
             logger.info(f"Context token limit for {self.model_spec.model_name} exceeded: "
                         f"{context_check[1]}/{context_check[3]}")
             # fail gracefully:
-            raise backends.ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
-                                                tokens_used=context_check[1], tokens_left=context_check[2],
-                                                context_size=context_check[3])
+            raise ContextExceededError(f"Context token limit for {self.model_spec.model_name} exceeded",
+                                       tokens_used=context_check[1], tokens_left=context_check[2],
+                                       context_size=context_check[3])
 
         # vLLM sampling parameters:
         sampling_params = vllm.SamplingParams(

@@ -11,7 +11,8 @@ from peft import PeftModel
 from jinja2 import TemplateError
 
 import clemcore.backends as backends
-from clemcore.backends.utils import ensure_alternating_roles, ensure_messages_format, augment_response_object
+from clemcore.backends.utils import ensure_alternating_roles, ensure_messages_format, augment_response_object, \
+    ContextExceededError
 
 logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
@@ -462,7 +463,7 @@ def assert_context_limits(model: HuggingfaceLocalModel, prompt_token_ids):
         if not context_check[0]:
             logger.info(f"Context token limit for {model.model_spec.model_name} exceeded on batch index {i}: "
                         f"{context_check[1]}/{context_check[3]}")
-            raise backends.ContextExceededError(
+            raise ContextExceededError(
                 f"Context token limit for {model.model_spec.model_name} exceeded at batch index {i}",
                 tokens_used=context_check[1],
                 tokens_left=context_check[2],
