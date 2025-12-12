@@ -147,9 +147,11 @@ class SinglePlayerWrapper(AgentControlWrapper):
     def __init__(
             self,
             env: AECEnv,
-            learner_agent: AgentID,
-            other_agents: Dict[AgentID, Model]
+            learner_agent: AgentID = "player_0",
+            other_agents: Dict[AgentID, Model] = None
     ):
+        # todo: implement logic when wrapping a single player game with this sinlge player wrapper
+        # in this case the other agents can be null and the learner agent must be player_0
         agent_mapping = {learner_agent: "learner", **other_agents}
         super().__init__(env, agent_mapping)
 
