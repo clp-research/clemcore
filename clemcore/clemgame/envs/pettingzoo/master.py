@@ -140,14 +140,8 @@ class GameMasterEnv(AECEnv):
             # GameMaster should implement this by default;
             # OK maybe the implemented game should provide a more concrete upper bound on the content length
             # If you have images, then you should also define them here
-            self.observation_spaces[agent] = spaces.Dict(
-                {
-                    "role": spaces.Text(max_length=128),  # should be enough chars for a role name
-                    "content": spaces.Text(max_length=8192)  # should be enough chars for prompt and context
-                }
-            )
-            # only a general descriptor of the action space
-            self.action_spaces[agent] = spaces.Text(max_length=8192)
+            self.observation_spaces[agent] = self.observation_space(agent)
+            self.action_spaces[agent] = self.action_space(agent)
             self.terminations[agent] = False
             self.truncations[agent] = False
             self.rewards[agent] = 0.
@@ -186,8 +180,20 @@ class GameMasterEnv(AECEnv):
         return self.game_master.get_context_for(player)
 
     def observation_space(self, agent: AgentID):
-        return self.observation_spaces[agent]
+        """All agents share the same observation space.
+
+        If necessary, use AEC wrapper to change the action space, e.g., to include images.
+        """
+        return spaces.Dict(
+            {
+                "role": spaces.Text(max_length=128),  # should be enough chars for a role name
+                "content": spaces.Text(max_length=8192)  # should be enough chars for prompt and context
+            }
+        )
 
     def action_space(self, agent: AgentID):
-        """ Use AEC wrapper to change the action space """
-        return self.action_spaces[agent]
+        """All agents share the same action space. The agents are supposedly generalist models.
+
+        If necessary, use AEC wrapper to change the action space.
+        """
+        return spaces.Text(max_length=8192)
