@@ -1,4 +1,5 @@
-from typing import Callable, Union, Literal, Dict, Any, SupportsFloat
+import collections
+from typing import Callable, Union, Literal, Dict, Any, SupportsFloat, Tuple
 
 import gymnasium
 from gymnasium.core import ActType, ObsType
@@ -55,7 +56,7 @@ class AECToGymWrapper(gymnasium.Env):
     def step(
             self, action: ActType
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
-        """Execute learner's action, iterate through and return next observation."""
+        """Execute learner's action, iterate through and return the next observation."""
         self.env.step(action)
         # step stops at the learner's turn, so this is its next observation'
         obs, reward, done, truncated, info = self.env.last()
@@ -72,14 +73,31 @@ class AECToGymWrapper(gymnasium.Env):
         self.env.close()
 
 
+def order_agent_mapping_by_agent_id(agent_mapping: Dict[AgentID, Any]):
+    """Returns the given agent mappings sorted by agent id.
+
+    For example, an order in keys like player_0, player_1, ...
+    """
+
+    def agent_key(entry: Tuple[AgentID, Any]):
+        agent_id = entry[0]
+        agent_number = agent_id.split('_')[1]
+        return int(agent_number)
+
+    return collections.OrderedDict(sorted(agent_mapping.items(), key=agent_key))
+
+
 class AgentControlWrapper(BaseWrapper):
     """
-    Flexible wrapper for mixed control: some agents automated, some externally controlled.
+    This wrapper allows configuring mixed control settings:
+    Learner agents remain externally controlled, but other agents are stepped automatically internally.
 
-    Agents marked as "learner" return control to the caller.
-    Other agents are automated with provided models.
+    Specifically, agents marked as "learner" return control to the caller.
+    Other agents are automated with provided models or players.
 
-    Note: The models for the other agents must be
+    Note: When there is no "learner" in the agent mapping,
+    then the control will only be given back to the caller when the episode ended.
+    This behavior can be useful for full simulations or evaluation runs without a learner.
     """
 
     def __init__(
@@ -88,31 +106,20 @@ class AgentControlWrapper(BaseWrapper):
             agent_mapping: Dict[AgentID, Union[Literal["learner"], Model]]
     ):
         super().__init__(env)
-        self.agent_mapping = agent_mapping
-
-        self.learner_agents = {
-            agent_id for agent_id, player in agent_mapping.items()
-            if player == "learner"
-        }
-        self.automated_agents = {
-            agent_id: player
-            for agent_id, player in agent_mapping.items()
-            if player != "learner"
-        }
-
-        if not self.learner_agents:
-            raise ValueError("At least one agent must be marked as 'learner'")
+        self.agent_mapping = order_agent_mapping_by_agent_id(agent_mapping)
+        self.learner_agents = [agent_id for agent_id, agent in agent_mapping.items() if agent == "learner"]
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         options = options or {}
         # Augment reset options with player_models but don't overwrite if the caller provided it
         if "player_models" not in options:
             player_models = []
-            for agent_id in self.env.possible_agents:
-                if agent_id in self.learner_agents:
+            # assume an order in keys like player_0, player_1, ...
+            for agent in self.agent_mapping.values():
+                if agent == "learner":
                     player_models.append(CustomResponseModel(ModelSpec(model_name="learner")))
                 else:
-                    player_models.append(self.automated_agents[agent_id])
+                    player_models.append(agent)
             options["player_models"] = player_models
         super().reset(seed, options)
         """ If the learner is only on later turns, simulate the interaction up to that turn."""
@@ -132,6 +139,7 @@ class AgentControlWrapper(BaseWrapper):
             if done or truncated:  # Episode ended before reaching the learner
                 return  # caller will observe done for learner b.c. env sets done for all players
             # use the player from the game_env
+            # todo: add option to use a passed player here directly
             player = self.unwrapped.player_by_agent_id[agent_id]
             auto_action = player(obs)
             super().step(auto_action)
@@ -139,9 +147,9 @@ class AgentControlWrapper(BaseWrapper):
 
 class SinglePlayerWrapper(AgentControlWrapper):
     """
-    Restricted wrapper: exactly one learner agent, all others automated.
+    This wrapper exposes all game environments as single-agent RL environments.
 
-    Simpler API for the common single-agent RL case.
+    This means that any other player than "learner" is automatically controlled by the provided other agents.
     """
 
     def __init__(
@@ -150,15 +158,13 @@ class SinglePlayerWrapper(AgentControlWrapper):
             learner_agent: AgentID = "player_0",
             other_agents: Dict[AgentID, Model] = None
     ):
-        # todo: implement logic when wrapping a single player game with this sinlge player wrapper
-        # in this case the other agents can be null and the learner agent must be player_0
-        agent_mapping = {learner_agent: "learner", **other_agents}
-        super().__init__(env, agent_mapping)
+        other_agents = other_agents or {}  # single-player game anyway
+        super().__init__(env, {learner_agent: "learner", **other_agents})
 
-        if len(self.learner_agents) != 1:
+        if "learner" in other_agents:
             raise ValueError(
                 f"SinglePlayerWrapper requires exactly 1 learner, "
-                f"got {len(self.learner_agents)}"
+                f"but got other_agents={list(other_agents.keys())}"
             )
 
         self.learner_agent = learner_agent
