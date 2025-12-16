@@ -22,6 +22,8 @@ loggers:
     handlers: [ console ]
   "clemcore.clemgame":
     level: WARNING
+  "clemcore.clemgame.envs.openenv":
+    level: INFO
 root:
   level: INFO
   handlers: [ file_handler ]

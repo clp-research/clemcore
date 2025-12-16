@@ -58,6 +58,10 @@ slurk = [
     "python-socketio==5.7.2",
     "websocket-client"
 ]
+openenv = [
+    "datasets~=4.4.1", # to load playpen-data
+    "openenv-core~=0.1.1" # to use playpen openenv container
+]
 
 [project.scripts]
 clem = "clemcore.cli:main"
