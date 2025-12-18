@@ -8,7 +8,7 @@ from openenv_core import Environment
 from clemcore.backends import load_models
 from clemcore.clemgame.envs.openenv.models import ClemGameState, ClemGameObservation, ClemGameAction
 from clemcore.clemgame.envs.pettingzoo import gym_env, check_agent_mapping_for_training
-from clemcore.clemgame import GameRegistry
+from clemcore.clemgame.registry import GameRegistry
 from clemcore.clemgame.instances import to_instance_filter
 
 module_logger = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ class ClemGameEnvironment(Environment):
 
         # todo: also allows to provide Player's (not just the model)
         self._game_name = game_name
-        self._state = ClemGameState(game_name=game_name)
+        self._state = ClemGameState(game_name=game_name, episode_id="episode_0", step_count=0, episode_count=0)
         self._game_env = gym_env(game_name,
                                  game_instance_filter=game_instance_filter,
                                  single_pass=single_pass,
@@ -66,8 +66,9 @@ class ClemGameEnvironment(Environment):
 
     def reset(self) -> ClemGameObservation:
         observation, info = self._game_env.reset()
-        self._state.episode_id += 1
         self._state.step_count = 0
+        self._state.episode_count += 1
+        self._state.episode_id = f"episode_{self._state.episode_count}"
         module_logger.info(f"Reset ClemGameEnvironment {self._state.game_name} for episode {self._state.episode_id}")
         return ClemGameObservation(context=observation)
 

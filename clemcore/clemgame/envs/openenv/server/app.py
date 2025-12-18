@@ -1,40 +1,43 @@
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from openenv_core.env_server import create_app
 
+from clemcore.utils.string_utils import read_query_string
 from clemcore.clemgame.envs.openenv.models import ClemGameAction, ClemGameObservation
 from clemcore.clemgame.envs.openenv.server.environment import ClemGameEnvironment
 
-
-def read_query_string(query_string: str) -> Optional[Dict[str, str]]:
-    if query_string is None:
-        return None
-    if not query_string:
-        return {}
-    kv_pairs = query_string.split(",")
-    kv_dict = {}
-    for kv_pair in kv_pairs:
-        assert "=" in kv_pair, f"Invalid query string: {query_string}"
-        k, v = kv_pair.split("=")
-        kv_dict[k.strip()] = v.strip()
-    return kv_dict
+CLEMV_GAME = os.getenv("CLEMV_GAME")
+CLEMV_GAME_SPLIT = os.getenv("CLEMV_GAME_SPLIT")
+CLEMV_SINGLE_PASS = os.getenv("CLEMV_SINGLE_PASS", "False").lower() in ("true", "1", "t")
+CLEMV_LEARNER_AGENT = os.getenv("CLEMV_LEARNER_AGENT")
+CLEMV_OTHER_AGENTS = read_query_string(os.getenv("CLEMV_OTHER_AGENTS"))
+CLEMV_GEN_ARGS = read_query_string(os.getenv("CLEMV_GEN_ARGS"))
 
 
-def create_clem_game_app(
-        game_name: Optional[str] = None,
+def create_clemv_app(
+        game_name: str = CLEMV_GAME,
         *,
-        game_instance_split=None,
-        single_pass: bool = False,
-        learner_agent: str = "player_0",
-        other_agents: Dict[str, str] = "player_1=mock",
+        learner_agent: str = CLEMV_LEARNER_AGENT,
+        other_agents: Optional[Dict[str, str]] = None,
+        game_instance_split: str = CLEMV_GAME_SPLIT,
+        single_pass: bool = CLEMV_SINGLE_PASS,
+        gen_args: Optional[Dict[str, Any]] = None
 ):
-    game_name = os.getenv("CLEM_GAME", game_name)
-    game_instance_split = os.getenv("CLEM_GAME_SPLIT", game_instance_split)
-    single_pass = os.getenv("CLEM_GAME_SINGLE_PASS", str(single_pass)).lower() == "true"
-    learner_agent = os.getenv("CLEM_GAME_LEARNER_AGENT", "player_0")
-    other_agents = read_query_string(os.getenv("CLEM_GAME_OTHER_AGENTS", "player_1=mock"))
-    gen_args = read_query_string(os.getenv("CLEM_GAME_GEN_ARGS", "temperature=0.0,max_tokens=300"))
+    # Fallback to env vars if not provided as arguments
+    other_agents = other_agents if other_agents is not None else CLEMV_OTHER_AGENTS
+    gen_args = gen_args if gen_args is not None else CLEMV_GEN_ARGS
+
+    # Validation: Ensure required configuration is present
+    config_values = {
+        "game_name": game_name,
+        "learner_agent": learner_agent
+    }
+    missing = [k for k, v in config_values.items() if v is None]
+    if missing:
+        raise ValueError(f"Missing required configuration for: {', '.join(missing)}. "
+                         "Provide them as arguments or set the corresponding CLEM_GAME_* env vars.")
+
     env = ClemGameEnvironment(game_name,
                               game_instance_split=game_instance_split,
                               single_pass=single_pass,
@@ -42,4 +45,4 @@ def create_clem_game_app(
                               other_agents=other_agents,
                               gen_args=gen_args
                               )
-    return create_app(env, ClemGameAction, ClemGameObservation, env_name="clemgame_env")
+    return create_app(env, ClemGameAction, ClemGameObservation, env_name="clem_env")

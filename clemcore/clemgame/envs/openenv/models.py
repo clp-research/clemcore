@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from typing import Dict, Union, Any, Optional
+from typing import Dict, Optional
 
 from openenv_core.env_server import Action, Observation, State
-from clemcore.clemgame import Player
 
 
 @dataclass
@@ -18,3 +17,4 @@ class ClemGameObservation(Observation):
 @dataclass
 class ClemGameState(State):
     game_name: Optional[str] = None
+    episode_count: int = 0
