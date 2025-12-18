@@ -1,6 +1,9 @@
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameBenchmarkCallbackList, GameStep
 from clemcore.clemgame.callbacks.files import ResultsFolder, InstanceFileSaver, ExperimentFileSaver, \
     InteractionsFileSaver, RunFileSaver
+from clemcore.clemgame.envs.openenv.client import ClemGameEnv
+from clemcore.clemgame.envs.openenv.models import ClemGameObservation, ClemGameAction, ClemGameState
+from clemcore.clemgame.envs.pettingzoo import env, gym_env
 from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError, ResponseError, ProtocolError, \
     NotApplicableError
 from clemcore.clemgame.instances import GameInstanceGenerator, GameInstanceIterator
@@ -37,6 +40,12 @@ __all__ = [
     "GameMaster",
     "DialogueGameMaster",
     "EnvGameMaster",
+    "ClemGameEnv",
+    "ClemGameAction",
+    "ClemGameObservation",
+    "ClemGameState",
+    "env",
+    "gym_env",
     "GameScorer",
     "GameSpec",
     "GameRegistry",
