@@ -2,10 +2,11 @@ import argparse
 import sys
 import textwrap
 import logging
+import uvicorn
 from datetime import datetime
 from functools import partial
 from pathlib import Path
-from typing import List, Dict, Union, Callable, Optional
+from typing import List, Dict, Union, Callable, Optional, Any
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry, Model
@@ -15,6 +16,8 @@ from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, Experim
 from clemcore import clemeval, get_version
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
+from clemcore.utils.string_utils import read_query_string
+from clemcore.clemgame.envs.openenv.server.app import create_clemv_app
 
 logger = logging.getLogger(__name__)  # by default also logged to console
 
@@ -209,6 +212,32 @@ def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = No
     logger.info(f"Building transcripts took: %s", datetime.now() - time_start)
 
 
+def serve(game: str,
+          learner_agent: str,
+          other_agents: Optional[Dict[str, str]] = None,
+          gen_args: Optional[Dict[str, Any]] = None,
+          split: Optional[str] = None,
+          single_pass: bool = False,
+          host: str = "0.0.0.0",
+          port: int = 5000):
+    logger.info(f"Starting a clem environment server for the game: {game} on {host}:{port}")
+    app = create_clemv_app(
+        game_name=game,
+        learner_agent=learner_agent,
+        other_agents=other_agents,
+        game_instance_split=split,
+        single_pass=single_pass,
+        gen_args=gen_args
+    )
+    uvicorn.run(app, host=host, port=port)
+
+
+def parse_kv(arg: str):
+    if '=' not in arg:
+        raise argparse.ArgumentTypeError(f"Invalid agent format: '{arg}'. Use key=value")
+    return arg.split('=', 1)
+
+
 def read_gen_args(args: argparse.Namespace):
     """Get text generation inference parameters from CLI arguments.
     Handles sampling temperature and maximum number of tokens to generate.
@@ -242,6 +271,15 @@ def cli(args: argparse.Namespace):
                 batch_size=args.batch_size)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
+    if args.command_name == "serve":
+        serve(args.game,
+              learner_agent=args.learner_agent,
+              other_agents=args.env_agents,
+              gen_args=args.gen_args,
+              split=args.split,
+              single_pass=args.single_pass,
+              host=args.host,
+              port=args.port)
     if args.command_name == "score":
         score(args.game, results_dir=args.results_dir)
     if args.command_name == "transcribe":
@@ -250,57 +288,7 @@ def cli(args: argparse.Namespace):
         clemeval.perform_evaluation(args.results_dir)
 
 
-"""
-    Use good old argparse to run the commands.
-
-    To list available games: 
-    $> clem list [games]
-
-    To list available models: 
-    $> clem list models
-
-    To list available backends: 
-    $> clem list backends
-
-    To run a specific game with a single player:
-    $> clem run -g privateshared -m mock
-
-    To run a specific game with two players:
-    $> clem run -g taboo -m mock mock
-
-    If the game supports model expansion (using the single specified model for all players):
-    $> clem run -g taboo -m mock
-
-    To score all games:
-    $> clem score
-
-    To score a specific game:
-    $> clem score -g privateshared
-
-    To transcribe all games:
-    $> clem transcribe
-
-    To transcribe a specific game:
-    $> clem transcribe -g privateshared
-"""
-
-
 def main():
-    """Main CLI handling function.
-
-    Handles the clembench CLI commands
-
-    - 'ls' to list available clemgames.
-    - 'run' to start a benchmark run. Takes further arguments determining the clemgame to run, which experiments,
-    instances and models to use, inference parameters, and where to store the benchmark records.
-    - 'score' to score benchmark results. Takes further arguments determining the clemgame and which of its experiments
-    to score, and where the benchmark records are located.
-    - 'transcribe' to transcribe benchmark results. Takes further arguments determining the clemgame and which of its
-    experiments to transcribe, and where the benchmark records are located.
-
-    Args:
-        args: CLI arguments as passed via argparse.
-    """
     parser = argparse.ArgumentParser()
     parser.add_argument('--version', action='version', version=f'%(prog)s {get_version()}')
     sub_parsers = parser.add_subparsers(dest="command_name")
@@ -342,7 +330,6 @@ def main():
                                  "Applies to all models that support batchwise generation, "
                                  "otherwise the game instances will be played sequentially."
                                  "Default: 1 (sequential processing).")
-
     run_parser.add_argument("-i", "--instances_filename", type=str, default=None,
                             help="The instances file name (.json suffix will be added automatically.")
     run_parser.add_argument("-r", "--results_dir", type=Path, default="results",
@@ -352,7 +339,7 @@ def main():
 
     score_parser = sub_parsers.add_parser("score")
     score_parser.add_argument("-g", "--game", type=str,
-                              help='A specific game name (see ls), a GameSpec-like JSON string object or "all" (default).',
+                              help='A specific game name, a GameSpec-like JSON string object or "all" (default).',
                               default="all")
     score_parser.add_argument("-r", "--results_dir", type=str, default="results",
                               help="A relative or absolute path to the results root directory. "
@@ -361,7 +348,7 @@ def main():
 
     transcribe_parser = sub_parsers.add_parser("transcribe")
     transcribe_parser.add_argument("-g", "--game", type=str,
-                                   help='A specific game name (see ls), a GameSpec-like JSON string object or "all" (default).',
+                                   help='A specific game name, a GameSpec-like JSON string object or "all" (default).',
                                    default="all")
     transcribe_parser.add_argument("-r", "--results_dir", type=str, default="results",
                                    help="A relative or absolute path to the results root directory. "
@@ -375,6 +362,40 @@ def main():
                                   "When not specified, then the results will be located in 'results'."
                                   "For evaluation, the directory must already contain the scores.")
 
+    serve_parser = sub_parsers.add_parser("serve")
+    serve_parser.add_argument("-g", "--game",
+                              type=str,
+                              required=True,
+                              help="A specific game name , or a GameSpec-like JSON string object.")
+    serve_parser.add_argument("-l", "--learner_agent",
+                              type=str,
+                              default="player_0",
+                              help="The player id which the learning agent is supposed to play."
+                                   "Default: player_0.")
+    serve_parser.add_argument("-e", "--env-agents",
+                              type=read_query_string,
+                              help="Fixed agents providing the training environment. "
+                                   "Example: 'player_1=gpt-4o,player_2=llama3'.")
+    serve_parser.add_argument("--gen-args",
+                              type=read_query_string,
+                              help="Sampling parameters for the models. Example: 'temperature=0.0,max_tokens=300'.")
+    serve_parser.add_argument("--split",
+                              type=str,
+                              choices=["train", "validation"],
+                              help="Specify the game instance split to use (train or validation). "
+                                   "Default: None (all instances).")
+    serve_parser.add_argument("--single-pass",
+                              action="store_true",
+                              help="If set, the environment will run in single-pass mode. "
+                                   "Default: False (cycles through the games instances infinitely).")
+    serve_parser.add_argument("--host",
+                              type=str,
+                              default="0.0.0.0",
+                              help="The host to bind the server to. Default: 0.0.0.0")
+    serve_parser.add_argument("--port",
+                              type=int,
+                              default=8000,
+                              help="The port to bind the server to. Default: 8000")
     cli(parser.parse_args())
 
 
