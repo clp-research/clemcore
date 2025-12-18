@@ -1,14 +1,19 @@
 import collections
+import logging
 from typing import Callable, Union, Literal, Dict, Any, SupportsFloat, Tuple
-
 import gymnasium
+
+from clemcore.backends.model_registry import Model, CustomResponseModel, ModelSpec
+from clemcore.clemgame.registry import GameSpec
+from clemcore.clemgame.instances import GameInstanceIterator
+from clemcore.clemgame.benchmark import GameBenchmark
+
 from gymnasium.core import ActType, ObsType
 from pettingzoo.utils.env import ActionType, AgentID
-
-from clemcore.backends import Model, CustomResponseModel, ModelSpec
-from clemcore.clemgame import GameInstanceIterator, GameSpec, GameBenchmark
 from pettingzoo import AECEnv
 from pettingzoo.utils import BaseWrapper
+
+stdout_logger = logging.getLogger("clemcore.run")
 
 
 class AECToGymWrapper(gymnasium.Env):
@@ -198,11 +203,14 @@ class GameInstanceIteratorWrapper(BaseWrapper):
     def __init__(self, wrapped_env: AECEnv, game_iterator: GameInstanceIterator, single_pass: bool = False):
         super().__init__(wrapped_env)
         self.game_iterator = game_iterator.__deepcopy__()
-        self.game_iterator.reset()
+        self.game_iterator.reset(verbose=True)
         self.options = {}
         if not single_pass:
+            stdout_logger.info("Detected single_pass=False, cycling through instances infinitely.")
             from itertools import cycle
             self.game_iterator = cycle(self.game_iterator)
+        else:
+            stdout_logger.info("Detected single_pass=True, stopping after first pass through all instances.")
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         experiment, game_instance = next(self.game_iterator)

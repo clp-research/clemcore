@@ -2,15 +2,21 @@ from typing import Optional, List, Dict, Callable
 
 import gymnasium
 
-from clemcore.backends import Model
-from clemcore.clemgame import GameInstanceIterator, GameBenchmark, GameRegistry
+from clemcore.backends.model_registry import Model
+from clemcore.clemgame.registry import GameRegistry
+from clemcore.clemgame.instances import GameInstanceIterator
+from clemcore.clemgame.benchmark import GameBenchmark
+from clemcore.clemgame.master import DialogueGameMaster
+from clemcore.clemgame.envs.pettingzoo.wrappers import (
+    GameInstanceIteratorWrapper,
+    GameBenchmarkWrapper,
+    SinglePlayerWrapper,
+    AECToGymWrapper
+)
+
 from gymnasium import spaces
 from pettingzoo import AECEnv
 from pettingzoo.utils.env import AgentID, ObsType, ActionType
-
-from clemcore.clemgame.envs.pettingzoo.wrappers import GameInstanceIteratorWrapper, GameBenchmarkWrapper, \
-    SinglePlayerWrapper, AECToGymWrapper
-from clemcore.clemgame.master import DialogueGameMaster
 
 
 def gym_env(game_name: str,

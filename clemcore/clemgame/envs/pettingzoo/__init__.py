@@ -2,7 +2,7 @@ from typing import Dict
 
 from pettingzoo.utils.env import AgentID
 
-from clemcore.clemgame import GameSpec
+from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.envs.pettingzoo.wrappers import (
     AECToGymWrapper,
     SinglePlayerWrapper,
