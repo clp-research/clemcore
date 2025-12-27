@@ -500,7 +500,7 @@
     },
     {
         "model_name": "gpt-oss-120b-openrouter-reasoning-medium",
-        "huggingface_id": "openai/gpt-oss-120b",
+        "model_id": "openai/gpt-oss-120b",
         "backend": "openrouter",
         "release_date": "2025-08-04",
         "open_weight": true,
@@ -523,7 +523,7 @@
     },
     {
         "model_name": "gpt-oss-120b-openrouter-reasoning-low",
-        "huggingface_id": "openai/gpt-oss-120b",
+        "model_id": "openai/gpt-oss-120b",
         "backend": "openrouter",
         "release_date": "2025-08-04",
         "open_weight": true,
@@ -546,7 +546,7 @@
     },
     {
         "model_name": "gpt-oss-120b-openrouter-reasoning-high",
-        "huggingface_id": "openai/gpt-oss-120b",
+        "model_id": "openai/gpt-oss-120b",
         "backend": "openrouter",
         "release_date": "2025-08-04",
         "open_weight": true,
@@ -569,7 +569,7 @@
     },
     {
         "model_name": "gpt-oss-20b-openrouter-reasoning-medium",
-        "huggingface_id": "openai/gpt-oss-20b",
+        "model_id": "openai/gpt-oss-20b",
         "backend": "openrouter",
         "release_date": "2025-08-04",
         "open_weight": true,
@@ -592,7 +592,7 @@
     },
     {
         "model_name": "gpt-oss-20b-openrouter-reasoning-low",
-        "huggingface_id": "openai/gpt-oss-120b",
+        "model_id": "openai/gpt-oss-120b",
         "backend": "openrouter",
         "release_date": "2025-08-04",
         "open_weight": true,
@@ -615,7 +615,7 @@
     },
     {
         "model_name": "gpt-oss-20b-openrouter-reasoning-high",
-        "huggingface_id": "openai/gpt-oss-120b",
+        "model_id": "openai/gpt-oss-120b",
         "backend": "openrouter",
         "release_date": "2025-08-04",
         "open_weight": true,
@@ -635,6 +635,40 @@
                 }
             }
         }
+    },
+    {
+        "model_name": "DeepSeek-V3.1-Terminus-openrouter",
+        "model_id": "deepseek/deepseek-v3.1-terminus",
+        "backend": "openrouter",
+        "release_date": "2025-09-22",
+        "open_weight": true,
+        "parameters": "685B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "163840",
+        "license": {
+            "name": "MIT",
+            "url": "https://choosealicense.com/licenses/mit/"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "Qwen3-Next-80B-A3B-Thinking-openrouter",
+        "model_id": "qwen/qwen3-next-80b-a3b-thinking",
+        "backend": "openrouter",
+        "release_date": "2025-09-09",
+        "open_weight": true,
+        "parameters": "80B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "262144",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {}
     },
     {
         "model_name": "gpt-4-1106-vision-preview",
@@ -1487,6 +1521,147 @@
         }
     },
     {
+        "model_name": "gpt-5",
+        "model_id": "gpt-5",
+        "backend": "openai",
+        "release_date": "2025-08-07",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true
+        }
+    },
+    {
+        "model_name": "gpt-5-reasoning-minimal",
+        "model_id": "gpt-5",
+        "backend": "openai",
+        "release_date": "2025-08-07",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true,
+            "reasoning": {
+                "effort": "minimal"
+            }
+        }
+    },
+    {
+        "model_name": "gpt-5-reasoning-low",
+        "model_id": "gpt-5",
+        "backend": "openai",
+        "release_date": "2025-08-07",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true,
+            "reasoning": {
+                "effort": "low"
+            }
+        }
+    },
+    {
+        "model_name": "gpt-5-reasoning-high",
+        "model_id": "gpt-5",
+        "backend": "openai",
+        "release_date": "2025-08-07",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "ar",
+            "bn",
+            "zh",
+            "fr",
+            "de",
+            "hi",
+            "en",
+            "id",
+            "it",
+            "ja",
+            "ko",
+            "pt",
+            "es",
+            "sw",
+            "yo"
+        ],
+        "context_size": "200k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "reasoning_model": true,
+            "reasoning": {
+                "effort": "high"
+            }
+        }
+    },
+    {
         "model_name": "mistral-medium-2312",
         "model_id": "mistral-medium-2312",
         "backend": "mistral",
@@ -1914,6 +2089,118 @@
         "model_id": "claude-3-7-sonnet-20250219",
         "backend": "anthropic",
         "release_date": "2025-02-19",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "thinking_mode": true
+        }
+    },
+    {
+        "model_name": "claude-sonnet-4-20250514",
+        "model_id": "claude-sonnet-4-20250514",
+        "backend": "anthropic",
+        "release_date": "2025-05-14",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "thinking_mode": true
+        }
+    },
+    {
+        "model_name": "claude-sonnet-4-5-20250929",
+        "model_id": "claude-sonnet-4-5-20250929",
+        "backend": "anthropic",
+        "release_date": "2025-09-29",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "thinking_mode": true
+        }
+    },
+    {
+        "model_name": "claude-opus-4-20250514",
+        "model_id": "claude-opus-4-20250514",
+        "backend": "anthropic",
+        "release_date": "2025-05-14",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "ja"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            },
+            "thinking_mode": true
+        }
+    },
+    {
+        "model_name": "claude-opus-4-1-20250805",
+        "model_id": "claude-opus-4-1-20250805",
+        "backend": "anthropic",
+        "release_date": "2025-05-14",
         "open_weight": false,
         "parameters": "",
         "languages": [
@@ -5473,6 +5760,48 @@
             "en"
         ],
         "context_size": "4096",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "Qwen3-Omni-30B-A3B-Instruct",
+        "huggingface_id": "Qwen/Qwen3-Omni-30B-A3B-Instruct",
+        "backend": "huggingface_local",
+        "release_date": "2025-09-20",
+        "open_weight": true,
+        "parameters": "30B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "65536",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "premade_chat_template": true,
+            "eos_to_cull": "<\\|im_end\\|>",
+            "padding_side": "left"
+        }
+    },
+    {
+        "model_name": "Qwen3-Omni-30B-A3B-Thinking",
+        "huggingface_id": "Qwen/Qwen3-Omni-30B-A3B-Thinking",
+        "backend": "huggingface_local",
+        "release_date": "2025-09-15",
+        "open_weight": true,
+        "parameters": "30B",
+        "languages": [
+            "en"
+        ],
+        "context_size": "65536",
         "license": {
             "name": "Apache 2.0",
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
