@@ -43,7 +43,6 @@ class ClemGameEnvironment(Environment):
 
         # Finally, load the opponent models, which can take a long time for large models
         if game_spec.is_multi_player():  # if single_player other_agents should be None; or check has failed above
-            gen_args = gen_args or dict(temperature=0.0, max_length=300)
             agent_models = load_models(list(other_agents.values()), gen_args)
             other_agents = {
                 agent_id: agent_model

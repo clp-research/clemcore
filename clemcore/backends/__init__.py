@@ -51,13 +51,13 @@ def load_credentials(backend, file_name="key.json") -> Dict:
     return creds
 
 
-def load_model(model_spec: str | ModelSpec, gen_args: Dict) -> Model:
+def load_model(model_spec: str | ModelSpec, gen_args: Dict = None) -> Model:
     """
     Loads a single model which given model_spec matches one in the model registry file.
 
     Args:
         model_spec: either as a model_name or a ModelSpec instance
-        gen_args: additional arguments to control the model's generate method
+        gen_args: optional arguments to control the model's generate method
 
     Returns: the loaded Model as specified by the model_spec
     """
@@ -65,16 +65,19 @@ def load_model(model_spec: str | ModelSpec, gen_args: Dict) -> Model:
 
 
 @temporary_loglevel(logger, logging.INFO)
-def load_models(model_specs: List[str | ModelSpec], gen_args: Dict) -> List[Model]:
+def load_models(model_specs: List[str | ModelSpec], gen_args: Dict = None) -> List[Model]:
     """
         Loads multiple models whose given model specs each match one in the model registry file.
 
         Args:
             model_specs: a list of model specs, either as a model_name or a ModelSpec instance
-            gen_args: additional arguments to control the model's generate method
+            gen_args: optional arguments to control the model's generate method
 
         Returns: the list of loaded Model's as specified by the model_specs
         """
+    if gen_args is None:
+        gen_args = dict(temperature=0.0, max_length=300)
+        logger.warning(f"No generation arguments provided, using default values: {gen_args}.")
     model_selectors = [
         ModelSpec.from_name(model_spec) if isinstance(model_spec, str) else model_spec
         for model_spec in model_specs
