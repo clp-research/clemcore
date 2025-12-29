@@ -312,7 +312,9 @@ def cli(args: argparse.Namespace):
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
     if args.command_name == "register":
         if args.mode == "model":
-            ...
+            registry = ModelRegistry.register(args.name, reset=args.reset, **args.values)
+            model_spec = registry.get_first_model_spec_that_unify_with(args.name)
+            print(f"Updated model registry at {registry.get_cwd_path()} successfully: {model_spec.to_string()}")
         if args.mode == "key":
             registry = KeyRegistry.register(args.name, reset=args.reset, **args.values)
             key = registry.get_key_for(args.name)

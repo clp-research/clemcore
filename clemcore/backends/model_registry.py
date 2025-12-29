@@ -3,6 +3,7 @@ import json
 import logging
 import os
 from dataclasses import dataclass
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Dict, List, Union, Tuple, Any
 import importlib.resources as importlib_resources
@@ -171,6 +172,69 @@ class ModelRegistry:
 
     def __iter__(self):
         return iter(self._model_specs)
+
+    @classmethod
+    def get_cwd_path(cls) -> str:
+        return str(Path.cwd() / "model_registry.json")
+
+    def set_model_spec(self, model_spec: dict, reset: bool = False) -> "ModelRegistry":
+        model_spec = ModelSpec.from_dict(model_spec)
+        for idx, registered_spec in enumerate(self._model_specs):
+            if reset and (registered_spec.model_name == model_spec.model_name
+                          and registered_spec.lookup_source == model_spec.lookup_source):
+                self._model_specs[idx] = model_spec  # update entry at index
+                return self
+
+            if not reset:
+                try:
+                    unified_model_spec = model_spec.unify(registered_spec)
+                    self._model_specs[idx] = unified_model_spec  # update entry at index
+                    return self
+                except ValueError:
+                    continue
+        self._model_specs.insert(0, model_spec)
+        return self
+
+    def persist(self):
+        """
+        Saves only the local overrides to the CWD model registry.
+        Packaged models are filtered out to prevent duplication.
+        """
+        target_path = self.get_cwd_path()
+        local_specs = [
+            spec for spec in self._model_specs
+            if spec.lookup_source == target_path
+        ]
+        data_to_save = [spec.to_dict() for spec in local_specs]
+        with open(target_path, "w") as f:
+            json.dump(data_to_save, f, indent=2, sort_keys=True)
+
+    @classmethod
+    def register(
+            cls,
+            model_name: str,
+            *,
+            backend: str = None,
+            reset: bool = False,
+            persist: bool = True,
+            **kwargs
+    ) -> "ModelRegistry":
+        # Note: We cannot change model entries in the packaged model registry,
+        # but we can precede these entries by creating a model_registry.json
+        # in the current working directory, and having set lookup_source,
+        # ensures we never match packaged entries.
+        entry_data = {
+            "model_name": model_name,
+            "backend": backend,
+            "lookup_source": cls.get_cwd_path()
+        }
+        entry_data.update(kwargs)
+        entry_data = {k: v for k, v in entry_data.items() if v is not None}
+        registry = cls.from_packaged_and_cwd_files()
+        registry.set_model_spec(entry_data, reset=reset)
+        if persist:
+            registry.persist()
+        return registry
 
     @classmethod
     def from_packaged_and_cwd_files(cls) -> "ModelRegistry":

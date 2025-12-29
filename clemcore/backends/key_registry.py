@@ -85,7 +85,7 @@ class KeyRegistry(Mapping):
     @classmethod
     def register(
             cls,
-            name: str,
+            backend_name: str,
             *,
             api_key: str = None,
             organization: str = None,
@@ -93,7 +93,7 @@ class KeyRegistry(Mapping):
             reset: bool = False,
             persist: bool = True,
             **kwargs
-    ):
+    ) -> "KeyRegistry":
         entry_data = {
             "api_key": api_key,
             "organization": organization,
@@ -102,7 +102,7 @@ class KeyRegistry(Mapping):
         entry_data.update(kwargs)
         entry_data = {k: v for k, v in entry_data.items() if v is not None}
         registry = cls.from_json()
-        registry.set_key_for(name, entry_data, reset=reset)
+        registry.set_key_for(backend_name, entry_data, reset=reset)
         if persist:
             registry.persist()
         return registry
