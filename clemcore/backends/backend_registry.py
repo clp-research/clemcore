@@ -7,6 +7,7 @@ import importlib.util as importlib_util
 from typing import List
 
 from clemcore.backends import ModelSpec, Model, HumanModel, CustomResponseModel
+from clemcore.backends.key_registry import KeyRegistry
 
 
 class Backend(abc.ABC):
@@ -39,7 +40,9 @@ class Backend(abc.ABC):
 
 class RemoteBackend(Backend):
 
-    def __init__(self):
+    def __init__(self, key_name: str = None):
+        self.key_name = key_name or self.__class__.__name__.lower()
+        self.key = KeyRegistry.from_json().get_key_for(self.key_name)
         self.client = self._make_api_client()
 
     @abc.abstractmethod

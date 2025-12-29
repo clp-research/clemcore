@@ -12,14 +12,12 @@ from clemcore.backends.utils import ensure_messages_format, augment_response_obj
 
 logger = logging.getLogger(__name__)
 
-NAME = "anthropic"
 
-
-class Anthropic(backends.Backend):
+class Anthropic(backends.RemoteBackend):
     """Backend class for accessing the Anthropic remote API."""
-    def __init__(self):
-        creds = backends.load_credentials(NAME)
-        self.client = anthropic.Anthropic(api_key=creds[NAME]["api_key"])
+
+    def _make_api_client(self):
+        self.client = anthropic.Anthropic(api_key=self.key["api_key"])
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get an Anthropic model instance based on a model specification.
@@ -33,6 +31,7 @@ class Anthropic(backends.Backend):
 
 class AnthropicModel(backends.Model):
     """Model class accessing the Anthropic remote API."""
+
     def __init__(self, client: anthropic.Client, model_spec: backends.ModelSpec):
         """
         Args:
@@ -56,7 +55,7 @@ class AnthropicModel(backends.Model):
                 image_bytes = image_file.read()
         image_data = base64.b64encode(image_bytes).decode("utf-8")
         image_type = imghdr.what(None, image_bytes)
-        return image_data, "image/"+str(image_type)
+        return image_data, "image/" + str(image_type)
 
     def encode_messages(self, messages) -> Tuple[List, str]:
         """Encode a message history containing images to allow sending it to the Anthropic remote API.
@@ -94,7 +93,8 @@ class AnthropicModel(backends.Model):
                 if 'multimodality' in self.model_spec.model_config:
                     if "image" in message.keys():
 
-                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(message['image']) > 1:
+                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(
+                                message['image']) > 1:
                             logger.info(
                                 f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
                             raise Exception(

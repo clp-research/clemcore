@@ -1,4 +1,5 @@
 """Initial checks on models to be added to the HuggingFace local backend."""
+"""NOTE: This manual testing code should move into the test package"""
 
 import argparse
 from transformers import AutoTokenizer

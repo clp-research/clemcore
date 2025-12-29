@@ -12,15 +12,12 @@ from clemcore.backends.utils import ensure_messages_format, augment_response_obj
 
 logger = logging.getLogger(__name__)
 
-NAME = "openai"
-
 
 class OpenAI(backends.RemoteBackend):
 
     def _make_api_client(self):
-        creds = backends.load_credentials(NAME)
-        api_key = creds[NAME]["api_key"]
-        organization = creds[NAME]["organisation"] if "organisation" in creds[NAME] else None
+        api_key = self.key["api_key"]
+        organization = self.key["organisation"] if "organisation" in self.key else None
         return openai.OpenAI(api_key=api_key, organization=organization)
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:

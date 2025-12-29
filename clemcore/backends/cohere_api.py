@@ -9,14 +9,11 @@ from clemcore.backends.utils import ensure_messages_format, augment_response_obj
 
 logger = logging.getLogger(__name__)
 
-NAME = "cohere"
 
-
-class Cohere(backends.Backend):
+class Cohere(backends.RemoteBackend):
     """Backend class for accessing the Cohere remote API."""
-    def __init__(self):
-        creds = backends.load_credentials(NAME)
-        self.client = cohere.Client(creds[NAME]["api_key"])
+    def _make_api_client(self):
+        self.client = cohere.Client(self.key["api_key"])
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get a Cohere model instance based on a model specification.

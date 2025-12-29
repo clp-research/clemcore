@@ -12,6 +12,7 @@ from transformers import AutoTokenizer, AutoConfig
 
 from jinja2 import TemplateError
 import clemcore.backends as backends
+from clemcore.backends.key_registry import KeyRegistry
 from clemcore.backends.utils import ensure_alternating_roles, ContextExceededError
 
 logger = logging.getLogger(__name__)
@@ -34,8 +35,8 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Union[AutoToken
     if 'requires_api_key' in model_spec['model_config']:
         if model_spec['model_config']['requires_api_key']:
             # load HF API key:
-            creds = backends.load_credentials("huggingface")
-            api_key = creds["huggingface"]["api_key"]
+            key = KeyRegistry.from_json().get_key_for("huggingface")
+            api_key = key["api_key"]
             use_api_key = True
         else:
             requires_api_key_info = (f"{model_spec['model_name']} registry setting has requires_api_key, "

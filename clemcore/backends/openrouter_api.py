@@ -14,9 +14,6 @@ import clemcore.backends.openai_api as openai_api
 
 logger = logging.getLogger(__name__)
 
-NAME_DEPRECATED = "openrouter"  # for backwards compatibility: people have to adjust their key.json
-NAME = "openrouter"
-
 
 class OpenRouter(openai_api.OpenAI):
     """
@@ -26,15 +23,9 @@ class OpenRouter(openai_api.OpenAI):
     """
 
     def _make_api_client(self):
-        try:
-            creds = backends.load_credentials(NAME_DEPRECATED)
-            _name = NAME_DEPRECATED
-        except:
-            creds = backends.load_credentials(NAME)  # new name: backend name and entry name match
-            _name = NAME
         return openai.OpenAI(
-            base_url = "https://openrouter.ai/api/v1",
-            api_key = creds[_name]["api_key"],
+            base_url="https://openrouter.ai/api/v1",
+            api_key=self.key["api_key"],
             ### TO BE REVISED!!! (Famous last words...)
             ### The line below is needed because of
             ### issues with the certificates on our GPU server.
@@ -53,6 +44,7 @@ class OpenRouter(openai_api.OpenAI):
 
 class OpenRouterModel(openai_api.OpenAIModel):
     """Model class accessing the OpenRouter remote API."""
+
     def __init__(self, client: openai.OpenAI, model_spec: backends.ModelSpec):
         """
         Args:

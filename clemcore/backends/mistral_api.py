@@ -8,14 +8,11 @@ from clemcore.backends.utils import ensure_messages_format, augment_response_obj
 
 logger = logging.getLogger(__name__)
 
-NAME = "mistral"
 
-
-class Mistral(backends.Backend):
+class Mistral(backends.RemoteBackend):
     """Backend class for accessing the Mistral remote API."""
-    def __init__(self):
-        creds = backends.load_credentials(NAME)
-        self.client = MistralClient(api_key=creds[NAME]["api_key"])
+    def _make_api_client(self):
+        self.client = MistralClient(api_key=self.key["api_key"])
 
     def list_models(self) -> list:
         """List models available on the Mistral remote API.

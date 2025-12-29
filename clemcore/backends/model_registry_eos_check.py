@@ -3,6 +3,7 @@ Run this script after adding new model entries for the HuggingFace, llama-cpp an
 re.sub to cull EOS and other sequences at the end of model outputs flexibly - but this means that characters/substrings
 that can be parsed as special python regEx special characters/sequences need to be properly escaped if they are part of
 the model's special tokens and/or chat template."""
+"""NOTE: This manual testing code should move into the test package"""
 
 import json
 import os

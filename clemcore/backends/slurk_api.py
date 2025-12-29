@@ -81,8 +81,7 @@ class SlurkClient:
 class Slurk(backends.RemoteBackend):
 
     def _make_api_client(self):
-        creds = backends.load_credentials(NAME)
-        return SlurkClient(creds[NAME]["slurk_host"], creds[NAME]["api_key"])  # slurk admin token
+        return SlurkClient(self.key["slurk_host"], self.key["api_key"])  # slurk admin token
 
     def get_model_for(self, model_spec: ModelSpec) -> Model:
         # Note: If you want to customize the room layout for a specific game, then create a new model registry entry
