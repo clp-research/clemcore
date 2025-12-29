@@ -14,7 +14,7 @@
   },
   "slurk": {
     "api_key": "00000000-0000-0000-0000-000000000000",
-    "slurk_host": "http://localhost:5000"
+    "base_url": "http://localhost:5000"
   },
   "openai_compatible": {
     "api_key": "",

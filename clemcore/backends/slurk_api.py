@@ -81,7 +81,14 @@ class SlurkClient:
 class Slurk(backends.RemoteBackend):
 
     def _make_api_client(self):
-        return SlurkClient(self.key["slurk_host"], self.key["api_key"])  # slurk admin token
+        # Deprecatioin warning: use base_url instead of slurk_host in key.json
+        url = self.key.get("slurk_host", None) or self.key.get("base_url", None)
+        if url is None:
+            raise ValueError(
+                f"Missing connection URL for {self.__class__.__name__}. "
+                "Please define 'slurk_host' or 'base_url' in your key registry."
+            )
+        return SlurkClient(url, self.key["api_key"])  # slurk admin token
 
     def get_model_for(self, model_spec: ModelSpec) -> Model:
         # Note: If you want to customize the room layout for a specific game, then create a new model registry entry
