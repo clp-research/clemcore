@@ -9,6 +9,7 @@ from clemcore.backends.model_registry import (
     CustomResponseModel,
     BatchGenerativeModel
 )
+from clemcore.backends.key_registry import KeyRegistry
 from clemcore.backends.backend_registry import Backend, RemoteBackend, BackendRegistry
 from clemcore.utils.log_utils import temporary_loglevel
 

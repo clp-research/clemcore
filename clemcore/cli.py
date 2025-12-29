@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import List, Dict, Union, Callable, Optional, Any
 
 import clemcore.backends as backends
-from clemcore.backends import ModelRegistry, BackendRegistry, Model
+from clemcore.backends import ModelRegistry, BackendRegistry, Model, KeyRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
     InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstanceIterator, ResultsFolder, \
     GameBenchmark
@@ -22,21 +22,66 @@ from clemcore.clemgame.envs.openenv.server.app import create_clemv_app
 logger = logging.getLogger(__name__)  # by default also logged to console
 
 
+def list_keys(verbose: bool):
+    # load key registry, then go through detected backends and show if keys are present or not
+    key_registry = KeyRegistry.from_json()
+    print(f"Listing all registered keys in {key_registry.key_file_path}")
+    if not key_registry:
+        print("No registered keys found")
+        return
+    print(f"The following {len(key_registry)} backends are considered [ active ] if 'api_key' is present:")
+    for backend_name, key in key_registry.items():
+        # overwrite key_api values to mask the secret
+        status = " active " if key.has_api_key() else "inactive"
+        key.api_key = ("*" * len("[MISSING]")) if key.has_api_key() else "[MISSING]"
+        print(f'* [{status}] {backend_name}: {key.to_json()}')
+    print("")
+    print("A note on how to define your own keys manually:")
+    print("Create a 'key.json' in the current working directory and add {'backend_name': {'api_key':'value'}} entries.")
+    print("Alternatively use: clem register key -b <backend_name> -k <api_key=value>")
+
+
 def list_backends(verbose: bool):
-    """List all models specified in the models registries."""
+    """List all backends found within the package and the current working directory."""
     print("Listing all supported backends (use -v option to see full file path)")
     backend_registry = BackendRegistry.from_packaged_and_cwd_files()
     if not backend_registry:
         print("No registered backends found")
         return
     print(f"Found '{len(backend_registry)}' supported backends.")
-    print("Then you can use models that specify one of the following backends:")
-    wrapper = textwrap.TextWrapper(initial_indent="\t", width=70, subsequent_indent="\t")
+    key_registry = KeyRegistry.from_json()
+
+    registered_backends = []
+    unregistered_backends = []
     for backend_file in backend_registry:
-        print(f'{backend_file["backend"]} '
-              f'({backend_file["lookup_source"]})')
-        if verbose:
-            print(wrapper.fill("\nFull Path: " + backend_file["file_path"]))
+        backend_name = backend_file["backend"]
+        if backend_name in key_registry and not key_registry.get_key_for(backend_name).has_api_key():
+            unregistered_backends.append(backend_file)
+        else:
+            registered_backends.append(backend_file)
+
+    def print_backends(listing):
+        wrapper = textwrap.TextWrapper(initial_indent="\t", width=70, subsequent_indent="\t")
+        for backend_file in sorted(listing, key=lambda x: x["backend"]):
+            print(f'* {backend_file["backend"]} '
+                  f'({backend_file["lookup_source"]})')
+            if verbose:
+                print(wrapper.fill("\nFull Path: " + backend_file["file_path"]))
+
+    print()
+    if registered_backends:
+        print("[ active ] backends:")
+        print_backends(registered_backends)
+        print("-> If an active backend is not functional, consider adding a respective entry to the key registry.")
+        print()
+    if unregistered_backends:
+        print("[inactive] backends:")
+        print_backends(unregistered_backends)
+        print("-> To enable these, set the 'api_key' in the key registry.")
+        print()
+    print("A note on how to add your own backend:")
+    print("Create a 'custom_api.py' in the current working directory and implement a Backend class in that file.")
+    print("Then your custom backend will then be listed and usable as 'custom' backend.")
 
 
 def list_models(verbose: bool):
@@ -257,6 +302,8 @@ def cli(args: argparse.Namespace):
             list_models(args.verbose)
         elif args.mode == "backends":
             list_backends(args.verbose)
+        elif args.mode == "keys":
+            list_keys(args.verbose)
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
     if args.command_name == "run":
@@ -293,7 +340,7 @@ def main():
     parser.add_argument('--version', action='version', version=f'%(prog)s {get_version()}')
     sub_parsers = parser.add_subparsers(dest="command_name")
     list_parser = sub_parsers.add_parser("list")
-    list_parser.add_argument("mode", choices=["games", "models", "backends"],
+    list_parser.add_argument("mode", choices=["games", "models", "backends", "keys"],
                              default="games", nargs="?", type=str,
                              help="Choose to list available games, models or backends. Default: games")
     list_parser.add_argument("-v", "--verbose", action="store_true")
