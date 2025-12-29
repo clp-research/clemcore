@@ -33,12 +33,11 @@ def list_keys(verbose: bool):
     for backend_name, key in key_registry.items():
         # overwrite key_api values to mask the secret
         status = " active " if key.has_api_key() else "inactive"
-        key.api_key = ("*" * len("[MISSING]")) if key.has_api_key() else "[MISSING]"
         print(f'* [{status}] {backend_name}: {key.to_json()}')
     print("")
     print("A note on how to define your own keys manually:")
     print("Create a 'key.json' in the current working directory and add {'backend_name': {'api_key':'value'}} entries.")
-    print("Alternatively use: clem register key -b <backend_name> -k <api_key=value>")
+    print("Alternatively use: clem register key -n <backend_name> -v <api_key=value>")
 
 
 def list_backends(verbose: bool):
@@ -99,6 +98,11 @@ def list_models(verbose: bool):
               f'({model_spec["lookup_source"]})')
         if verbose:
             print(wrapper.fill("\nModelSpec: " + model_spec.to_string()))
+    print("")
+    print("A note on how to add a model entry manually:")
+    print("Create a 'model_registry.json' in the current working directory "
+          "and list {'model_name': <model_name>, 'backend': <backend_name>} entries.")
+    print("Alternatively use: clem register model -n <model_name> -v <backend=backend_name>")
 
 
 def list_games(game_selector: str, verbose: bool):
@@ -306,6 +310,13 @@ def cli(args: argparse.Namespace):
             list_keys(args.verbose)
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
+    if args.command_name == "register":
+        if args.mode == "model":
+            ...
+        if args.mode == "key":
+            registry = KeyRegistry.register(args.name, reset=args.reset, **args.values)
+            key = registry.get_key_for(args.name)
+            print(f"Updated key registry at {registry.key_file_path} successfully: {key.to_json()}")
     if args.command_name == "run":
         start = datetime.now()
         try:
@@ -345,6 +356,34 @@ def main():
                              help="Choose to list available games, models or backends. Default: games")
     list_parser.add_argument("-v", "--verbose", action="store_true")
     list_parser.add_argument("-s", "--selector", type=str, default="all")
+
+    register_parser = sub_parsers.add_parser(
+        "register",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Update a model or key registry entry.",
+        epilog="""
+Update Behavior:
+  - By default, existing entries are UPDATED (merged). 
+    Only the keys provided in --value will be changed; 
+    unmentioned fields remain intact.
+  - If --reset is used, the entry is REPLACED. 
+    All existing data for that name is wiped, and only 
+    the new values provided are saved.
+    """
+    )
+
+    register_parser.add_argument("mode", choices=["model", "key"], type=str,
+                                 help="Choose which entry type to register.")
+    register_parser.add_argument("-n", "--name", type=str, required=True,
+                                 help="The name of the entry to be registered. "
+                                      "For 'model' entries, this is the model name, "
+                                      "and for 'key' entries it is the backend name.")
+    register_parser.add_argument("-v", "--values", required=True,
+                                 type=read_query_string,
+                                 help="Query string style values for the entry to be registered. "
+                                      "Example: 'api_key=abc,base_url=localhost'.")
+    register_parser.add_argument("-r", "--reset", action="store_true",
+                                 help="Reset existing entries with the same name. Otherwise entries are updated.")
 
     run_parser = sub_parsers.add_parser("run", formatter_class=argparse.RawTextHelpFormatter)
     run_parser.add_argument("-m", "--models", type=str, nargs="*",

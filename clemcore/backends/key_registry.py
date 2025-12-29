@@ -24,8 +24,18 @@ class Key(Mapping):
     def has_api_key(self):
         return isinstance(self.api_key, str) and bool(self.api_key.strip())
 
-    def to_json(self) -> str:
-        return json.dumps(self.__dict__, indent=2, sort_keys=True)
+    def to_json(self, mask_secrets=True) -> str:
+        visible_data = self.__dict__.copy()
+        if mask_secrets and "api_key" in visible_data:
+            val = visible_data["api_key"]
+            if self.has_api_key():
+                if len(val) <= 8:
+                    visible_data["api_key"] = "****" + val[-2:]
+                else:
+                    visible_data["api_key"] = f"{val[:4]}...{val[-4:]}"
+            else:
+                visible_data["api_key"] = "[MISSING]"
+        return json.dumps(visible_data, indent=2, sort_keys=True)
 
     def __repr__(self):
         return f"Key(api_key={self.api_key!r}, extra={list(self.keys())})"
@@ -52,9 +62,50 @@ class KeyRegistry(Mapping):
     def __iter__(self):
         return iter(self._keys)
 
+    def set_key_for(self, backend_name: str, values: dict, reset: bool = False):
+        if reset or backend_name not in self:
+            self._keys[backend_name] = Key(**values)
+        else:
+            self._keys[backend_name].__dict__.update(values)
+        return self
+
     def get_key_for(self, backend_name: str) -> Key:
         assert backend_name in self, f"No '{backend_name}' in {self._key_file_path}. See README."
         return self._keys[backend_name]
+
+    def persist(self):
+        with open(self._key_file_path, "w") as f:
+            json.dump(self._keys, f, indent=2, sort_keys=True, default=vars)
+        return self
+
+    def __repr__(self):
+        backends = ", ".join(self._keys.keys())
+        return f"KeyRegistry(file='{self._key_file_path}', backends=[{backends}])"
+
+    @classmethod
+    def register(
+            cls,
+            name: str,
+            *,
+            api_key: str = None,
+            organization: str = None,
+            base_url: str = None,
+            reset: bool = False,
+            persist: bool = True,
+            **kwargs
+    ):
+        entry_data = {
+            "api_key": api_key,
+            "organization": organization,
+            "base_url": base_url,
+        }
+        entry_data.update(kwargs)
+        entry_data = {k: v for k, v in entry_data.items() if v is not None}
+        registry = cls.from_json()
+        registry.set_key_for(name, entry_data, reset=reset)
+        if persist:
+            registry.persist()
+        return registry
 
     @classmethod
     def from_json(cls, file_name: str = "key.json") -> "KeyRegistry":
