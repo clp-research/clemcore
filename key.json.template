@@ -6,9 +6,6 @@
   "anthropic": {
     "api_key": ""
   },
-  "alephalpha": {
-    "api_key": ""
-  },
   "huggingface": {
     "api_key": ""
   },
