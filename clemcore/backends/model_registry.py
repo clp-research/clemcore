@@ -251,7 +251,7 @@ class ModelRegistry:
             reset: bool = False,
             persist: bool = True,
             **kwargs
-    ) -> "ModelSpec":
+    ) -> "ModelRegistry":
         # Note: We cannot change model entries in the packaged model registry,
         # but we can precede these entries by creating a model_registry.json
         # in the current working directory, and having set lookup_source,
@@ -264,10 +264,10 @@ class ModelRegistry:
         entry_data.update(kwargs)
         entry_data = {k: v for k, v in entry_data.items() if v is not None}
         registry = cls.from_packaged_and_cwd_files()
-        model_spec = registry.set_model_spec(entry_data, reset=reset)
+        registry.set_model_spec(entry_data, reset=reset)
         if persist:
             registry.persist()
-        return model_spec
+        return registry
 
     @classmethod
     def from_packaged_and_cwd_files(cls) -> "ModelRegistry":
