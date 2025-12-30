@@ -177,23 +177,56 @@ class ModelRegistry:
     def get_cwd_path(cls) -> str:
         return str(Path.cwd() / "model_registry.json")
 
-    def set_model_spec(self, model_spec: dict, reset: bool = False) -> "ModelRegistry":
+    def set_model_spec(self, model_spec: dict, reset: bool = False) -> "ModelSpec":
+        """
+        Set a model specification in the registry. The passed dictionary is converted into a `ModelSpec`.
+        The registry is then scanned in order:
+
+        * If `reset` is True (replace behavior), an existing entry is replaced when both
+          `model_name` and `lookup_source` match the new spec exactly.
+        * If `reset` is False (update behavior), the new spec is *unified* with the first registered spec
+          that is compatible. The unified spec then replaces the existing one.
+        * If no existing spec matches, the new spec is inserted at the front of the registry (to precede other entries).
+
+        Note:
+            The more complex `reset` behavior is necessary because the model registry lookup
+            is based on unification. When we want to update an entry, we have to find it first,
+            but unification performs both matching and updating at once. When we want to
+            *replace* an entry, we need a different matching strategy; otherwise, the entry
+            might not be found. For replacement, we therefore match only on `model_name` and
+            `lookup_source`. The `model_name` allows us to match the first entry with that name.
+            The `lookup_source` allows us to effectively exclude packaged model registry entries.
+
+        Args:
+            model_spec (dict): A dictionary describing the model spec. It must be
+                compatible with `ModelSpec.from_dict`.
+            reset (bool, optional): Controls how conflicts are handled:
+                - True: replace an existing spec with the same `model_name` and
+                  `lookup_source`.
+                - False (default): attempt unification with the first compatible
+                  registered spec; insert as new if no unification is possible.
+
+        Returns:
+            ModelSpec: The `ModelSpec` instance that ended up in the registry
+            (either the new spec or the unified spec).
+        """
         model_spec = ModelSpec.from_dict(model_spec)
         for idx, registered_spec in enumerate(self._model_specs):
             if reset and (registered_spec.model_name == model_spec.model_name
                           and registered_spec.lookup_source == model_spec.lookup_source):
                 self._model_specs[idx] = model_spec  # update entry at index
-                return self
+                return model_spec
 
             if not reset:
                 try:
                     unified_model_spec = model_spec.unify(registered_spec)
                     self._model_specs[idx] = unified_model_spec  # update entry at index
-                    return self
+                    return unified_model_spec
                 except ValueError:
                     continue
+                    
         self._model_specs.insert(0, model_spec)
-        return self
+        return model_spec
 
     def persist(self):
         """
@@ -218,7 +251,7 @@ class ModelRegistry:
             reset: bool = False,
             persist: bool = True,
             **kwargs
-    ) -> "ModelRegistry":
+    ) -> "ModelSpec":
         # Note: We cannot change model entries in the packaged model registry,
         # but we can precede these entries by creating a model_registry.json
         # in the current working directory, and having set lookup_source,
@@ -231,10 +264,10 @@ class ModelRegistry:
         entry_data.update(kwargs)
         entry_data = {k: v for k, v in entry_data.items() if v is not None}
         registry = cls.from_packaged_and_cwd_files()
-        registry.set_model_spec(entry_data, reset=reset)
+        model_spec = registry.set_model_spec(entry_data, reset=reset)
         if persist:
             registry.persist()
-        return registry
+        return model_spec
 
     @classmethod
     def from_packaged_and_cwd_files(cls) -> "ModelRegistry":
