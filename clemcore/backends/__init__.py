@@ -54,7 +54,7 @@ def load_models(model_specs: List[str | ModelSpec], gen_args: Dict = None) -> Li
         Returns: the list of loaded Model's as specified by the model_specs
         """
     if gen_args is None:
-        gen_args = dict(temperature=0.0, max_length=300)
+        gen_args = dict(temperature=0.0, max_tokens=300)
         logger.warning(f"No generation arguments provided, using default values: {gen_args}.")
     model_selectors = [
         ModelSpec.from_name(model_spec) if isinstance(model_spec, str) else model_spec
