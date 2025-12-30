@@ -2,7 +2,7 @@ from typing import Optional, List, Dict, Callable
 
 import gymnasium
 
-from clemcore.backends.model_registry import Model
+from clemcore.backends.model_registry import Model, CustomResponseModel
 from clemcore.clemgame.registry import GameRegistry
 from clemcore.clemgame.instances import GameInstanceIterator
 from clemcore.clemgame.benchmark import GameBenchmark
@@ -100,12 +100,12 @@ class GameMasterEnv(AECEnv):
     def reset(self, seed: int | None = None, options: dict | None = None):
         self.options = options or {}
         assert "experiment" in options, "Missing 'experiment' in reset options"
-        assert "player_models" in options, "Missing 'player_models' in reset options"
         assert "game_instance" in options, "Missing 'game_instance' in reset options"
         # GM.setup() adds players, i.e., is not idempotent. Therefore, we create a new GM instance here.
         experiment = options["experiment"]
-        player_models = options["player_models"]
         game_instance = options["game_instance"]
+        player_models = (options.get("player_models", None)
+                         or [CustomResponseModel()] * self.game_benchmark.game_spec.players)
         self.game_master: DialogueGameMaster = self.game_benchmark.create_game_master(experiment, player_models)
         self.game_master.setup(**game_instance)
         # Only after setup() the players are set
