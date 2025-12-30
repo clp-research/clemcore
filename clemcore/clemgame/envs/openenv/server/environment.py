@@ -22,18 +22,18 @@ class ClemGameEnvironment(Environment):
                  game_instance_split: str = None,
                  single_pass: bool = False,
                  learner_agent: str = "player_0",
-                 other_agents: Dict[str, str] = None,
+                 env_agents: Dict[str, str] = None,
                  gen_args: Dict[str, Any] = None
                  ):
         super().__init__()
         module_logger.info("Initialize ClemGameEnvironment: "
-                           "game_name=%s, game_instance_split=%s, learner_agent=%s, other_agents=%s",
-                           game_name, game_instance_split, learner_agent, other_agents)
+                           "game_name=%s, game_instance_split=%s, learner_agent=%s, env_agents=%s",
+                           game_name, game_instance_split, learner_agent, env_agents)
 
         # Fail quickly if the given agent mapping is not compatible with the game's specifications
-        other_agents = other_agents or {}
+        env_agents = env_agents or {}
         game_spec = GameRegistry.from_directories_and_cwd_files().get_game_spec(game_name)
-        check_agent_mapping_for_training(game_spec, {learner_agent: "learner", **other_agents})
+        check_agent_mapping_for_training(game_spec, {learner_agent: "learner", **env_agents})
 
         game_instance_filter = None  # use all the default game instances of the game
         if game_instance_split:
@@ -42,11 +42,11 @@ class ClemGameEnvironment(Environment):
             game_instance_filter = to_instance_filter(dataset)
 
         # Finally, load the opponent models, which can take a long time for large models
-        if game_spec.is_multi_player():  # if single_player other_agents should be None; or check has failed above
-            agent_models = load_models(list(other_agents.values()), gen_args)
-            other_agents = {
+        if game_spec.is_multi_player():  # if single_player env_agents should be None; or check has failed above
+            agent_models = load_models(list(env_agents.values()), gen_args)
+            env_agents = {
                 agent_id: agent_model
-                for agent_id, agent_model in zip(other_agents.keys(), agent_models)
+                for agent_id, agent_model in zip(env_agents.keys(), agent_models)
             }
 
         # todo: also allows to provide Player's (not just the model)
@@ -56,7 +56,7 @@ class ClemGameEnvironment(Environment):
                                  game_instance_filter=game_instance_filter,
                                  single_pass=single_pass,
                                  learner_agent=learner_agent,
-                                 other_agents=other_agents
+                                 env_agents=env_agents
                                  )
 
     def close(self):

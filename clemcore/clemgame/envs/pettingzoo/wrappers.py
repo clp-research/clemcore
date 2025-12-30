@@ -161,15 +161,15 @@ class SinglePlayerWrapper(AgentControlWrapper):
             self,
             env: AECEnv,
             learner_agent: AgentID = "player_0",
-            other_agents: Dict[AgentID, Model] = None
+            env_agents: Dict[AgentID, Model] = None
     ):
-        other_agents = other_agents or {}  # single-player game anyway
-        super().__init__(env, {learner_agent: "learner", **other_agents})
+        env_agents = env_agents or {}  # single-player game anyway
+        super().__init__(env, {learner_agent: "learner", **env_agents})
 
-        if "learner" in other_agents:
+        if "learner" in env_agents:
             raise ValueError(
                 f"SinglePlayerWrapper requires exactly 1 learner, "
-                f"but got other_agents={list(other_agents.keys())}"
+                f"but got env_agents={list(env_agents.keys())}"
             )
 
         self.learner_agent = learner_agent

@@ -24,7 +24,7 @@ def gym_env(game_name: str,
             game_instance_filter: Optional[Callable[[str, str], List[int]]] = None,
             single_pass: bool = False,
             learner_agent: AgentID = "player_0",
-            other_agents: Optional[Dict[AgentID, Model]] = None
+            env_agents: Optional[Dict[AgentID, Model]] = None
             ) -> gymnasium.Env:
     """
     Factory method for Gymnasium style game envs.
@@ -35,11 +35,11 @@ def gym_env(game_name: str,
         game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
         single_pass: Whether to run through the game instances only once or multiple times.
         learner_agent: the agent id of the learner agent (e.g. player_0)
-        other_agents: a mapping from agent ids to players (e.g. {player_1: "gpt5"})
+        env_agents: a mapping from agent ids to players (e.g. {player_1: "gpt5"})
     Returns: a fully initialized game env ready for RL-like training
     """
     game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass)
-    game_env = SinglePlayerWrapper(game_env, learner_agent, other_agents=other_agents)
+    game_env = SinglePlayerWrapper(game_env, learner_agent, env_agents=env_agents)
     game_env = AECToGymWrapper(game_env)
     return game_env
 

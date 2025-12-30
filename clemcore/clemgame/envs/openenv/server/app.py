@@ -11,7 +11,7 @@ CLEMV_GAME = os.getenv("CLEMV_GAME")
 CLEMV_GAME_SPLIT = os.getenv("CLEMV_GAME_SPLIT")
 CLEMV_SINGLE_PASS = os.getenv("CLEMV_SINGLE_PASS", "False").lower() in ("true", "1", "t")
 CLEMV_LEARNER_AGENT = os.getenv("CLEMV_LEARNER_AGENT")
-CLEMV_OTHER_AGENTS = read_query_string(os.getenv("CLEMV_OTHER_AGENTS"))
+CLEMV_ENV_AGENTS = read_query_string(os.getenv("CLEMV_ENV_AGENTS"))
 CLEMV_GEN_ARGS = read_query_string(os.getenv("CLEMV_GEN_ARGS"))
 
 
@@ -19,13 +19,13 @@ def create_clemv_app(
         game_name: str = CLEMV_GAME,
         *,
         learner_agent: str = CLEMV_LEARNER_AGENT,
-        other_agents: Optional[Dict[str, str]] = None,
+        env_agents: Optional[Dict[str, str]] = None,
         game_instance_split: str = CLEMV_GAME_SPLIT,
         single_pass: bool = CLEMV_SINGLE_PASS,
         gen_args: Optional[Dict[str, Any]] = None
 ):
     # Fallback to env vars if not provided as arguments
-    other_agents = other_agents if other_agents is not None else CLEMV_OTHER_AGENTS
+    env_agents = env_agents if env_agents is not None else CLEMV_ENV_AGENTS
     gen_args = gen_args if gen_args is not None else CLEMV_GEN_ARGS
 
     # Validation: Ensure required configuration is present
@@ -42,7 +42,7 @@ def create_clemv_app(
                               game_instance_split=game_instance_split,
                               single_pass=single_pass,
                               learner_agent=learner_agent,
-                              other_agents=other_agents,
+                              env_agents=env_agents,
                               gen_args=gen_args
                               )
     return create_app(env, ClemGameAction, ClemGameObservation, env_name="clem_env")

@@ -263,7 +263,7 @@ def transcripts(game_selector: Union[str, Dict, GameSpec], results_dir: str = No
 
 def serve(game: str,
           learner_agent: str,
-          other_agents: Optional[Dict[str, str]] = None,
+          env_agents: Optional[Dict[str, str]] = None,
           gen_args: Optional[Dict[str, Any]] = None,
           split: Optional[str] = None,
           single_pass: bool = False,
@@ -273,7 +273,7 @@ def serve(game: str,
     app = create_clemv_app(
         game_name=game,
         learner_agent=learner_agent,
-        other_agents=other_agents,
+        env_agents=env_agents,
         game_instance_split=split,
         single_pass=single_pass,
         gen_args=gen_args
@@ -334,7 +334,7 @@ def cli(args: argparse.Namespace):
     if args.command_name == "serve":
         serve(args.game,
               learner_agent=args.learner_agent,
-              other_agents=args.env_agents,
+              env_agents=args.env_agents,
               gen_args=args.gen_args,
               split=args.split,
               single_pass=args.single_pass,
