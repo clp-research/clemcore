@@ -22,7 +22,7 @@ from clemcore.clemgame.envs.openenv.server.app import create_clemv_app
 logger = logging.getLogger(__name__)  # by default also logged to console
 
 
-def list_keys(verbose: bool):
+def list_keys():
     # load key registry, then go through detected backends and show if keys are present or not
     key_registry = KeyRegistry.from_json()
     print(f"Listing all registered keys in {key_registry.key_file_path}")
@@ -40,7 +40,7 @@ def list_keys(verbose: bool):
     print("Alternatively use: clem register key -n <backend_name> -v <api_key=value>")
 
 
-def list_backends(verbose: bool):
+def list_backends(verbose: bool = False):
     """List all backends found within the package and the current working directory."""
     print("Listing all supported backends (use -v option to see full file path)")
     backend_registry = BackendRegistry.from_packaged_and_cwd_files()
@@ -83,7 +83,7 @@ def list_backends(verbose: bool):
     print("Then your custom backend will then be listed and usable as 'custom' backend.")
 
 
-def list_models(verbose: bool):
+def list_models(verbose: bool = False):
     """List all models specified in the models registries."""
     print("Listing all available models by name (use -v option to see the whole specs)")
     model_registry = ModelRegistry.from_packaged_and_cwd_files()
@@ -105,7 +105,7 @@ def list_models(verbose: bool):
     print("Alternatively use: clem register model -n <model_name> -v <backend=backend_name>")
 
 
-def list_games(game_selector: str, verbose: bool):
+def list_games(game_selector: str, verbose: bool = False):
     """List all games specified in the game registries.
     Only loads those for which master.py can be found in the specified path.
     See game registry doc for more infos (TODO: add link)
@@ -301,13 +301,13 @@ def read_gen_args(args: argparse.Namespace):
 def cli(args: argparse.Namespace):
     if args.command_name == "list":
         if args.mode == "games":
-            list_games(args.selector, args.verbose)
+            list_games(args.selector, verbose=args.verbose)
         elif args.mode == "models":
-            list_models(args.verbose)
+            list_models(verbose=args.verbose)
         elif args.mode == "backends":
-            list_backends(args.verbose)
+            list_backends(verbose=args.verbose)
         elif args.mode == "keys":
-            list_keys(args.verbose)
+            list_keys()
         else:
             print(f"Cannot list {args.mode}. Choose an option documented at 'list -h'.")
     if args.command_name == "register":
@@ -316,7 +316,7 @@ def cli(args: argparse.Namespace):
             model_spec = registry.get_first_model_spec_that_unify_with(args.name)
             print(f"Updated model registry at {registry.get_cwd_path()} successfully: {model_spec.to_string()}")
         if args.mode == "key":
-            registry = KeyRegistry.register(args.name, reset=args.reset, **args.values)
+            registry = KeyRegistry.register(args.name, reset=args.reset, force_cwd=args.cwd, **args.values)
             key = registry.get_key_for(args.name)
             print(f"Updated key registry at {registry.key_file_path} successfully: {key.to_json()}")
     if args.command_name == "run":
@@ -386,6 +386,8 @@ Update Behavior:
                                       "Example: 'api_key=abc,base_url=localhost'.")
     register_parser.add_argument("-r", "--reset", action="store_true",
                                  help="Reset existing entries with the same name. Otherwise entries are updated.")
+    register_parser.add_argument("--cwd", action="store_true",
+                                 help="Create files always in current working directory.")
 
     run_parser = sub_parsers.add_parser("run", formatter_class=argparse.RawTextHelpFormatter)
     run_parser.add_argument("-m", "--models", type=str, nargs="*",

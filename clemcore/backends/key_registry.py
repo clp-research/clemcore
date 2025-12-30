@@ -92,6 +92,7 @@ class KeyRegistry(Mapping):
             base_url: str = None,
             reset: bool = False,
             persist: bool = True,
+            force_cwd: bool = False,
             **kwargs
     ) -> "KeyRegistry":
         entry_data = {
@@ -101,14 +102,14 @@ class KeyRegistry(Mapping):
         }
         entry_data.update(kwargs)
         entry_data = {k: v for k, v in entry_data.items() if v is not None}
-        registry = cls.from_json()
+        registry = cls.from_json(fallback=not force_cwd)
         registry.set_key_for(backend_name, entry_data, reset=reset)
         if persist:
             registry.persist()
         return registry
 
     @classmethod
-    def from_json(cls, file_name: str = "key.json") -> "KeyRegistry":
+    def from_json(cls, file_name: str = "key.json", fallback=True) -> "KeyRegistry":
         """
         Look up key.json in the following locations:
         (1) Lookup in the current working directory (relative to script execution)
@@ -122,11 +123,12 @@ class KeyRegistry(Mapping):
                 return cls(key_file_path, json.load(f))
         except Exception as e:
             module_logger.info(f"Loading key file from {key_file_path} (cwd) failed: %s.", e)
-        try:
-            key_file_path = Path.home() / ".clemcore" / file_name
-            with open(key_file_path) as f:
-                return cls(key_file_path, json.load(f))
-        except Exception as e:
-            module_logger.info(f"Loading key file from {key_file_path} (home) failed: %s", e)
+        if fallback:
+            try:
+                key_file_path = Path.home() / ".clemcore" / file_name
+                with open(key_file_path) as f:
+                    return cls(key_file_path, json.load(f))
+            except Exception as e:
+                module_logger.info(f"Loading key file from {key_file_path} (home) failed: %s", e)
         module_logger.warning(f"Fallback to empty key.json at {key_file_path}.")
         return cls(key_file_path, {})
