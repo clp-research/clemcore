@@ -457,7 +457,7 @@ Update Behavior:
                               type=str,
                               required=True,
                               help="A specific game name , or a GameSpec-like JSON string object.")
-    serve_parser.add_argument("-l", "--learner_agent",
+    serve_parser.add_argument("-l", "--learner-agent",
                               type=str,
                               default="player_0",
                               help="The player id which the learning agent is supposed to play."
