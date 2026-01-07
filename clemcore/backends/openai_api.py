@@ -32,6 +32,7 @@ class OpenAI(backends.RemoteBackend):
 
 class OpenAIModel(backends.Model):
     """Model class accessing the OpenAI remote API."""
+
     def __init__(self, client: openai.OpenAI, model_spec: backends.ModelSpec):
         """
         Args:
@@ -55,7 +56,7 @@ class OpenAIModel(backends.Model):
             return True, image_path, image_type
         with open(image_path, "rb") as image_file:
             image_type = imghdr.what(image_path)
-            return False, base64.b64encode(image_file.read()).decode('utf-8'), 'image/'+str(image_type)
+            return False, base64.b64encode(image_file.read()).decode('utf-8'), 'image/' + str(image_type)
 
     def encode_messages(self, messages) -> list:
         """Encode a message history containing images to allow sending it to the OpenAI remote API.
@@ -93,9 +94,12 @@ class OpenAIModel(backends.Model):
                 if 'multimodality' in self.model_spec.model_config:
                     if "image" in message.keys():
 
-                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(message['image']) > 1:
-                            logger.info(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
-                            raise Exception(f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(
+                                message['image']) > 1:
+                            logger.info(
+                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                            raise Exception(
+                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
                         else:
                             # encode each image
                             for image in message['image']:
@@ -134,10 +138,8 @@ class OpenAIModel(backends.Model):
             The generated response message returned by the OpenAI remote API.
         """
         prompt = self.encode_messages(messages)
-        gen_kwargs = dict(model=self.model_spec.model_id,
-                          messages=prompt,
-                          temperature=self.temperature,
-                          max_tokens=self.max_tokens)
+        gen_kwargs = dict(model=self.model_spec.model_id, messages=prompt)
+        gen_kwargs = {**gen_kwargs, **self.gen_args}
         model_config = getattr(self.model_spec, "model_config", {})
         if 'reasoning_model' in model_config:
             if not self.temperature > 0:
@@ -149,11 +151,18 @@ class OpenAIModel(backends.Model):
             # https://platform.openai.com/docs/guides/reasoning/controlling-costs?api-mode=chat#controlling-costs
             logger.info("Ignoring max_tokens for reasoning models, because the argument is not supported")
             del gen_kwargs["max_tokens"]
+
+        logger.debug(f"Calling OpenAI API with parameters: {json.dumps(gen_kwargs, indent=2)}")
         api_response = self.client.chat.completions.create(**gen_kwargs)
+        logger.debug(f"OpenAI API response: {api_response.model_dump_json(indent=2)}")
+
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check
             raise AttributeError("Response message role is " + message.role + " but should be 'assistant'")
-        response_text = message.content.strip()
-        response = json.loads(api_response.json())
 
+        response_text = (message.content or "").strip()
+        if not response_text:
+            logger.warning("OpenAI API response message content is None or empty, returning empty string.")
+
+        response = api_response.model_dump(mode="json")
         return prompt, response, response_text

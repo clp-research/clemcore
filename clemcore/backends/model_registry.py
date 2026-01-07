@@ -380,6 +380,10 @@ class Model(abc.ABC):
         return self.model_spec.model_name
 
     @property
+    def gen_args(self):
+        return self.__gen_args
+
+    @property
     def temperature(self):
         """Get the value of the temperature text generation inference parameter for this model.
         Returns:
