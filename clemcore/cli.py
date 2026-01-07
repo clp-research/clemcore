@@ -171,7 +171,8 @@ def run(game_selector: Union[str, Dict, GameSpec],
     player_models = backends.load_models(model_selectors, gen_args)
 
     # setup reusable callbacks here once
-    results_folder = ResultsFolder(results_dir_path, player_models)
+    # we name the run directory after the participating models
+    results_folder = ResultsFolder(results_dir_path, run_dir=Model.to_identifier(player_models))
     model_infos = Model.to_infos(player_models)
     callbacks = GameBenchmarkCallbackList([
         InstanceFileSaver(results_folder),

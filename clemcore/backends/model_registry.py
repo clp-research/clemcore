@@ -1,4 +1,5 @@
 import abc
+import hashlib
 import json
 import logging
 import os
@@ -224,7 +225,7 @@ class ModelRegistry:
                     return unified_model_spec
                 except ValueError:
                     continue
-                    
+
         self._model_specs.insert(0, model_spec)
         return model_spec
 
@@ -370,6 +371,24 @@ class Model(abc.ABC):
         assert hasattr(model_spec, "model_name"), "The passed ModelSpec must have a `model_name` attribute"
         self.model_spec = model_spec
         self.__gen_args = dict()
+
+    def __str__(self):
+        """Human-readable descriptor of this model."""
+        return f"{self.name}-t{self.temperature}"
+
+    @staticmethod
+    def to_identifier(player_models: List["Model"]):
+        """Generate a unique and (where possible) human-readable identifier for a list of models.
+
+        - For 1–2 models: returns human-readable concatenation (pretty label)
+        - For >2 models: returns a deterministic hashed identifier (still unique)
+        """
+        model_descriptors = [str(m) for m in player_models]
+        folder_name = "--".join(model_descriptors)
+        if len(player_models) <= 2:
+            return folder_name
+        _hash = hashlib.sha1(folder_name.encode("utf-8")).hexdigest()[:8]
+        return f"group-{len(player_models)}p-{_hash}"
 
     @staticmethod
     def to_infos(player_models: List["Model"]):
