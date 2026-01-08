@@ -176,9 +176,9 @@ def run(game_selector: Union[str, Dict, GameSpec],
     model_infos = Model.to_infos(player_models)
     callbacks = GameBenchmarkCallbackList([
         InstanceFileSaver(results_folder),
-        ExperimentFileSaver(results_folder, model_infos),
-        InteractionsFileSaver(results_folder, model_infos),
-        RunFileSaver(results_folder, model_infos)
+        ExperimentFileSaver(results_folder, player_model_infos=model_infos),
+        InteractionsFileSaver(results_folder, player_model_infos=model_infos),
+        RunFileSaver(results_folder, player_model_infos=model_infos)
     ])
 
     all_start = datetime.now()

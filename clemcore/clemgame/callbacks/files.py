@@ -1,6 +1,6 @@
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, TYPE_CHECKING
+from typing import Dict, TYPE_CHECKING, Any
 
 from clemcore import get_version
 
@@ -66,7 +66,7 @@ class ResultsFolder:
 
 class RunFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, results_folder: ResultsFolder, player_model_infos: Dict):
+    def __init__(self, results_folder: ResultsFolder, *, player_model_infos: Any = None):
         self.results_folder = results_folder
         self.game_info = None
         self.benchmark_start = None
@@ -105,6 +105,7 @@ class RunFileSaver(GameBenchmarkCallback):
 
 
 class InstanceFileSaver(GameBenchmarkCallback):
+
     def __init__(self, results_folder: ResultsFolder):
         self.results_folder = results_folder
 
@@ -115,7 +116,7 @@ class InstanceFileSaver(GameBenchmarkCallback):
 
 class ExperimentFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, results_folder: ResultsFolder, player_model_infos: Dict):
+    def __init__(self, results_folder: ResultsFolder, *, player_model_infos: Any = None):
         self.results_folder = results_folder
         self.player_models_infos = player_model_infos
 
@@ -134,7 +135,7 @@ class ExperimentFileSaver(GameBenchmarkCallback):
 
 class InteractionsFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, results_folder: ResultsFolder, player_model_infos: Dict):
+    def __init__(self, results_folder: ResultsFolder, *, player_model_infos: Any = None):
         self.results_folder = results_folder
         self.player_models_infos = player_model_infos
         self._recorders: Dict[str, GameInteractionsRecorder] = {}
