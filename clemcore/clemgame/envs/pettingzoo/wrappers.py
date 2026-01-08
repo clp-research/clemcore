@@ -4,6 +4,7 @@ from typing import Callable, Union, Literal, Dict, Any, SupportsFloat, Tuple
 import gymnasium
 
 from clemcore.backends.model_registry import Model, CustomResponseModel, ModelSpec
+from clemcore.clemgame import GameBenchmarkCallbackList
 from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.instances import GameInstanceIterator
 from clemcore.clemgame.benchmark import GameBenchmark
@@ -180,12 +181,22 @@ class GameBenchmarkWrapper(BaseWrapper):
     A wrapper that loads a GameBenchmark from a GameSpec and passes it to the wrapped environment.
     """
 
-    def __init__(self, env_class: Callable[[GameBenchmark], AECEnv], game_spec: GameSpec, **env_kwargs):
+    def __init__(
+            self,
+            env_class: Callable[[GameBenchmark], AECEnv],
+            *,
+            game_spec: GameSpec,
+            callbacks: GameBenchmarkCallbackList | None = None,
+            **env_kwargs
+    ):
+        self.callbacks = callbacks or GameBenchmarkCallbackList()
         self.game_benchmark = GameBenchmark.load_from_spec(game_spec)
+        self.callbacks.on_benchmark_start(self.game_benchmark)
         super().__init__(env_class(self.game_benchmark, **env_kwargs))
 
     def close(self) -> None:
         super().close()
+        self.callbacks.on_benchmark_end(self.game_benchmark)
         self.game_benchmark.close()
 
 
