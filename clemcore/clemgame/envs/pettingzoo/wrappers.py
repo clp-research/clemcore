@@ -1,6 +1,6 @@
 import collections
 import logging
-from typing import Callable, Union, Literal, Dict, Any, SupportsFloat, Tuple
+from typing import Callable, Literal, Any, SupportsFloat
 import gymnasium
 
 from clemcore.backends.model_registry import Model, CustomResponseModel, ModelSpec
@@ -19,29 +19,20 @@ stdout_logger = logging.getLogger("clemcore.run")
 
 class AECToGymWrapper(gymnasium.Env):
 
-    def __init__(self, env: AECEnv):
+    def __init__(self, env: "AgentControlWrapper"):
         self.env = env
-
-        # Get the learner agent (assumes exactly one)
         if hasattr(env, 'learner_agent'):
-            # Should be set by SinglePlayerWrapper
-            self.learner_agent = env.learner_agent
+            self.learner_agent = env.learner_agent  # Should be set by SinglePlayerWrapper
         elif hasattr(env, 'learner_agents') and len(env.learner_agents) == 1:
-            # Should be set by AgentControlWrapper
-            self.learner_agent = next(iter(env.learner_agents))
+            self.learner_agent = next(iter(env.learner_agents))  # Should be set by AgentControlWrapper
         else:
             raise ValueError(
                 "AECToGymWrapper requires an env with exactly one learner agent. "
                 "Wrap with SinglePlayerWrapper first."
             )
-
         # Set up Gym spaces from the learner's perspective
         self.observation_space = env.observation_space(self.learner_agent)
         self.action_space = env.action_space(self.learner_agent)
-
-        # Track current episode state
-        self._last_obs = None
-        self._cumulative_reward = 0.0
 
     def reset(
             self,
@@ -50,13 +41,10 @@ class AECToGymWrapper(gymnasium.Env):
             options: dict[str, Any] | None = None,
     ) -> tuple[ObsType, dict[str, Any]]:  # type: ignore
         """Reset environment and return learner's first observation."""
-        self._last_obs = None
-        self._cumulative_reward = 0.0
         # reset already steps through when AutoControlWrapper is used
         self.env.reset(seed, options)
         # reset stops at the learner's turn, so this is its first observation
         obs, reward, done, truncated, info = self.env.last()
-        self._last_obs = dict(obs=obs, reward=reward, done=done, truncated=truncated, info=info)
         return obs, info
 
     def step(
@@ -64,10 +52,14 @@ class AECToGymWrapper(gymnasium.Env):
     ) -> tuple[ObsType, SupportsFloat, bool, bool, dict[str, Any]]:
         """Execute learner's action, iterate through and return the next observation."""
         self.env.step(action)
-        # step stops at the learner's turn, so this is its next observation'
+        # The downstream call to self.env.step() stops at the learner's turn, so this is its next observation
         obs, reward, done, truncated, info = self.env.last()
-        self._last_obs = dict(obs=obs, reward=reward, done=done, truncated=truncated, info=info)
-        self._cumulative_reward += reward
+        if done or truncated:
+            # If the game ended, we remove the learner agent from the environment and continue playing till the end.
+            # The learner will not observe anything happening after this, so autoplay could also be stopped.
+            # However, proper game_end logging only happens when all agents have terminated.
+            # So, this is not the most efficient, but for now the cleanest way to handle this case.
+            self.env.step(None)
         return obs, reward, done, truncated, info
 
     def render(self):
@@ -79,13 +71,13 @@ class AECToGymWrapper(gymnasium.Env):
         self.env.close()
 
 
-def order_agent_mapping_by_agent_id(agent_mapping: Dict[AgentID, Any]):
+def order_agent_mapping_by_agent_id(agent_mapping: dict[AgentID, Any]):
     """Returns the given agent mappings sorted by agent id.
 
     For example, an order in keys like player_0, player_1, ...
     """
 
-    def agent_key(entry: Tuple[AgentID, Any]):
+    def agent_key(entry: tuple[AgentID, Any]):
         agent_id = entry[0]
         agent_number = agent_id.split('_')[1]
         return int(agent_number)
@@ -109,7 +101,7 @@ class AgentControlWrapper(BaseWrapper):
     def __init__(
             self,
             env: AECEnv,
-            agent_mapping: Dict[AgentID, Union[Literal["learner"], Model]]
+            agent_mapping: dict[AgentID, Literal["learner"] | Model]
     ):
         super().__init__(env)
         self.agent_mapping = order_agent_mapping_by_agent_id(agent_mapping)
@@ -140,15 +132,20 @@ class AgentControlWrapper(BaseWrapper):
         """Automatically play automated agents until the next learner's turn."""
         for agent_id in self.env.agent_iter():
             if agent_id in self.learner_agents:
-                return
-            obs, reward, done, truncated, info = self.env.last()
-            if done or truncated:  # Episode ended before reaching the learner
-                return  # caller will observe done for learner b.c. env sets done for all players
-            # use the player from the game_env
-            # todo: add option to use a passed player here directly
-            player = self.unwrapped.player_by_agent_id[agent_id]
-            auto_action = player(obs)
+                return  # Let the caller invoke last(), e.g., to remove the agent when termination=True
+            observation, reward, termination, truncation, info = self.env.last()
+            if termination or truncation:
+                super().step(None)  # Remove terminated env agents
+                continue
+            env_agent = self.get_env_agent(agent_id)
+            auto_action = env_agent(observation)
             super().step(auto_action)
+        # Here the episode ended before the learner took control again, i.e., all agents have been removed
+
+    def get_env_agent(self, agent_id: AgentID):
+        # Return the env agents for the agent_id (using the Player from the game master)
+        # todo: add option to use a passed player here directly
+        return self.unwrapped.player_by_agent_id[agent_id]
 
 
 class SinglePlayerWrapper(AgentControlWrapper):
@@ -162,7 +159,7 @@ class SinglePlayerWrapper(AgentControlWrapper):
             self,
             env: AECEnv,
             learner_agent: AgentID = "player_0",
-            env_agents: Dict[AgentID, Model] = None
+            env_agents: dict[AgentID, Model] = None
     ):
         env_agents = env_agents or {}  # single-player game anyway
         super().__init__(env, {learner_agent: "learner", **env_agents})

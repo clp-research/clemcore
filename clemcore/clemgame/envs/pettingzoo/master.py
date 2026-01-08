@@ -17,6 +17,7 @@ from clemcore.clemgame.envs.pettingzoo.wrappers import (
 
 from gymnasium import spaces
 from pettingzoo import AECEnv
+from pettingzoo.utils.wrappers import OrderEnforcingWrapper
 from pettingzoo.utils.env import AgentID, ObsType, ActionType
 
 
@@ -95,6 +96,9 @@ def env(game_name: str,
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
     game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks)
 
+    # Warn env users in case of wrong method execution order
+    game_env = OrderEnforcingWrapper(game_env)
+
     # Load the packaged default instances.json to be played and pass an optional filter
     game_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=game_instance_filter)
     game_env = GameInstanceIteratorWrapper(game_env, game_iterator, single_pass=single_pass)
@@ -132,12 +136,12 @@ class GameMasterEnv(AECEnv):
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         self.options = options or {}
-        assert "experiment" in options, "Missing 'experiment' in reset options"
-        assert "game_instance" in options, "Missing 'game_instance' in reset options"
+        assert "experiment" in self.options, "Missing 'experiment' in reset options"
+        assert "game_instance" in self.options, "Missing 'game_instance' in reset options"
         # GM.setup() adds players, i.e., is not idempotent. Therefore, we create a new GM instance here.
-        self.experiment = options["experiment"]
-        self.game_instance = options["game_instance"]
-        player_models = (options.get("player_models", None)
+        self.experiment = self.options["experiment"]
+        self.game_instance = self.options["game_instance"]
+        player_models = (self.options.get("player_models", None)
                          or [CustomResponseModel()] * self.game_benchmark.game_spec.players)
         self.game_master: DialogueGameMaster = self.game_benchmark.create_game_master(self.experiment, player_models)
         self.game_master.setup(**self.game_instance)
@@ -168,27 +172,52 @@ class GameMasterEnv(AECEnv):
 
         Automatically switches control to the next agent.
         """
-        # after step() current_player might have changed, so we reference it here already
+        # Standard PettingZoo check: handles the final "None" step for dead agents to observe their final reward
+        if self.terminations[self.agent_selection] or self.truncations[self.agent_selection]:
+            # Note: This removes the agent and selects the next (dead) agent in self.agents
+            # or selects the next live agent stored during _deads_step_first() at the end of this step
+            self._was_dead_step(action)
+            return
+
+        # After step() current_player might have changed, so we reference it here already
         current_agent = self.get_current_agent()
         current_context = self.observe(current_agent)
-        # step possibly transitions the current agent
+
+        # Step possibly transitions the current agent (as specified by the game master)
         done, info = self.game_master.step(action, log_event=True)
+
+        # Update current rewards and info for the current agent (response_score is returned in legacy master)
+        self._cumulative_rewards[current_agent] = 0
+        self.rewards[current_agent] = info.get("turn_score", info.get("response_score", 0.))
+        self.infos[current_agent] = info
+
+        # Inform callbacks about the game step results
         game_step = GameStep(current_context, action, done, info)
         self.callbacks.on_game_step(self.game_master, self.game_instance, game_step)
-        # for now we only have the case that all players end at the same time
-        for agent_id in self.agents:
-            self.terminations[agent_id] = done
-            self.truncations[agent_id] = done
-        self.infos[current_agent] = info
-        # response_score is returned in legacy master
-        self.rewards[current_agent] = info["response_score"] if "response_score" in info else info["turn_score"]
-        self._accumulate_rewards()
+
+        # The terminal case:
+        # - Flag everyone as terminated so they all get a final "None" turn to observe the final reward
+        # - Distribute the game outcome as a team reward to all agents together (overwriting the individual turn_score)
         if done:
+            for agent_id in self.agents:
+                # Note: we do not handle truncations separately yet, e.g., running out of turns
+                self.terminations[agent_id] = True
+                self.rewards[agent_id] = info.get("episode_score", 0.)
             self.callbacks.on_game_end(self.game_master, self.game_instance)
-            self.agent_selection = None
-            self.agents = []  # this signals the play loop to terminate
-        # next player
+
+        # Collect and reset the rewards for all agents
+        # Note: We accumulate the rewards to collect all environmental impacts on an agent until its next call of last()
+        self._accumulate_rewards()
+        self._clear_rewards()
+
+        # Select the next player determined by the game master after game_master.step()
+        # Note: For games done, this might return the same player as before. However, this is okay (can be ignored),
+        # because in our games all agents terminate at the same turn simultaneously and are cleaned up all together
         self.agent_selection = self.get_current_agent()
+
+        # Store the current self.agent_selection to continue with after cleanup of agents that terminated at this step
+        # Note: This already supports games where not all agents terminate together at the end of the game
+        self._deads_step_first()
 
     def observe(self, agent: AgentID) -> ObsType | None:
         """Returns the observation an agent currently can make.

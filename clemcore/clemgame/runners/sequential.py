@@ -18,7 +18,7 @@ def run(game_benchmark: GameBenchmark,
         callbacks: GameBenchmarkCallbackList
         ):
     callbacks.on_benchmark_start(game_benchmark)
-    game_env = GameMasterEnv(game_benchmark)
+    game_env = GameMasterEnv(game_benchmark, callbacks=callbacks)
     error_count = 0
     for experiment, game_instance in tqdm(game_instance_iterator, desc="Playing game instances"):
         try:
@@ -29,26 +29,22 @@ def run(game_benchmark: GameBenchmark,
             })
             for model in player_models:
                 model.reset()  # this is mainly to notify slurk backends; other models are state-less anyway
-            callbacks.on_game_start(game_env.game_master, game_instance)
             for agent_id in game_env.agent_iter():  # when there is no agent left, the episode is done
                 context, reward, termination, truncation, info = game_env.last(observe=True)
                 if termination or truncation:
                     # None actions remove the agent from the game during step(None)
-                    # Actually, this will never happen if the game_env removes all agents at the same time on done
+                    # This is essential to observe the final reward, e.g., for the describer, when the guesser wins
                     response = None
                 else:
                     player = game_env.player_by_agent_id[agent_id]
                     response = player(context)
                 game_env.step(response)
-                if response is not None:  # notify callbacks only for agent actions
-                    done = len(game_env.agents) == 0
-                    game_step = GameStep(context, response, done, info)
-                    callbacks.on_game_step(game_env.game_master, game_instance, game_step)
-            callbacks.on_game_end(game_env.game_master, game_instance)
         except Exception:  # continue with other instances if something goes wrong
             message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"
             module_logger.exception(message)
             error_count += 1
+            for model in player_models:
+                model.reset()
     game_env.close()
     if error_count > 0:
         stdout_logger.error(
