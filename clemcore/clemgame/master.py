@@ -25,7 +25,7 @@ class EnvLike(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def step(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str, *, log_event: bool = False) -> Tuple[bool, Dict]:
         pass
 
 
@@ -84,6 +84,7 @@ class GameMaster(EnvLike, GameEventSource):
     @abc.abstractmethod
     def has_started(self) -> bool:
         pass
+
 
 class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
