@@ -183,10 +183,9 @@ class GameBenchmarkWrapper(BaseWrapper):
             env_class: Callable[[GameBenchmark], AECEnv],
             *,
             game_spec: GameSpec,
-            callbacks: GameBenchmarkCallbackList | None = None,
             **env_kwargs
     ):
-        self.callbacks = callbacks or GameBenchmarkCallbackList()
+        self.callbacks = env_kwargs.get("callbacks", GameBenchmarkCallbackList())
         self.game_benchmark = GameBenchmark.load_from_spec(game_spec)
         self.callbacks.on_benchmark_start(self.game_benchmark)
         super().__init__(env_class(self.game_benchmark, **env_kwargs))

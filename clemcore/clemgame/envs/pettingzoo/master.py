@@ -89,8 +89,6 @@ def env(game_name: str,
     Returns:
         A fully initialized game env ready for RL-like training
     """
-    callbacks = callbacks or GameBenchmarkCallbackList()
-
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
