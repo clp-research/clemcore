@@ -166,9 +166,16 @@ class GameMasterEnv(AECEnv):
             self.infos[agent] = {}
 
     def step(self, action: ActionType) -> None:
-        """Accepts and executes the action of the current agent_selection in the environment.
+        """Accepts, executes, and logs the action of the current agent in the environment.
 
-        Automatically switches control to the next agent.
+        Note:
+            - The transcript logging assumes that the actions are responses to the context of the current agent.
+            - The transcript logging is disabled for None actions (agent cleanup), so these won't appear in transcripts.
+
+        Args:
+            action: the agent's response to the current context of it
+        Returns:
+            None - internal state transition to the (supposedly) next agent
         """
         # Standard PettingZoo check: handles the final "None" step for dead agents to observe their final reward
         if self.terminations[self.agent_selection] or self.truncations[self.agent_selection]:
@@ -179,9 +186,12 @@ class GameMasterEnv(AECEnv):
 
         # After step() current_player might have changed, so we reference it here already
         current_agent = self.get_current_agent()
-        current_context = self.observe(current_agent)
+
+        # Get and log the context that was given from GM -> Player
+        current_context = self.game_master.get_context_for(self.player_by_agent_id[current_agent], log_event=True)
 
         # Step possibly transitions the current agent (as specified by the game master)
+        # Log the response action from Player -> GM
         done, info = self.game_master.step(action, log_event=True)
 
         # Update current rewards and info for the current agent (response_score is returned in legacy master)
@@ -223,7 +233,7 @@ class GameMasterEnv(AECEnv):
         `last()` calls this function.
         """
         player = self.player_by_agent_id[agent]
-        return self.game_master.get_context_for(player, log_event=True)
+        return self.game_master.get_context_for(player)
 
     def observation_space(self, agent: AgentID):
         """All agents share the same observation space.
