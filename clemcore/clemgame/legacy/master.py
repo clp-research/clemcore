@@ -158,23 +158,23 @@ class DialogueGameMaster(GameMaster):
         context = {**extras, **message}
         self.context_for_player[player.name] = context
 
-    def get_context_for(self, player, *, log_event: bool = False) -> Dict:
+    def get_context_for(self, player) -> Dict:
+        """
+        Get the context for the specified player. This is a pure function with no side effects.
+
+        The initial_prompt (if set) is always merged with the context.
+        """
         assert player is not None, "Cannot get player context for 'None'"
         assert player.name in self.context_for_player, f"No context set for {player.name}"
         context = self.context_for_player[player.name]
         assert "role" in context, f"Player context must have a 'role' entry"
         assert context["role"] == "user", f"Role of player context must be 'user'"
         assert "content" in context, f"Player context must have a 'content' entry"
-        initial_prompt = self.initial_prompt_for_player.pop(player.name, None)
+        initial_prompt = self.initial_prompt_for_player.get(player.name)
         if initial_prompt is not None:
             content = context["content"]
             initial_prompt_content = initial_prompt["content"]
             context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
-        if log_event:
-            action = {'type': 'send message', 'content': context["content"], 'label': "context"}
-            if "image" in context:
-                action["image"] = context["image"]
-            self.log_event(from_='GM', to=player.name, action=action)
         return context
 
     def observe(self) -> Tuple[Player, Dict]:
@@ -187,22 +187,26 @@ class DialogueGameMaster(GameMaster):
         context = self.get_context_for(player)
         return player, context
 
-    def step(self, response: str, *, log_event: bool = False) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> Tuple[bool, Dict]:
         """
         Transitions the game state by applying the current player's response.
 
         Args:
             response: The response (verbal action) of the current player.
-            log_event: Whether to log the player's response
         Returns:
             Bool determining if game is done, info about the processed game step
         """
-        if log_event:
-            self.log_event(from_=self.current_player.name, to="GM",
-                           action={'type': 'get message', 'content': response, 'label': "response"})
+        context = self.get_context_for(self.current_player)
+
+        # Log message exchange (assuming the step response is from the current player and context)
+        self.log_gm_to_player(context, self.current_player)
+        self.log_player_to_gm(response, self.current_player)
+
+        # Consume the initial_prompt (if set) now that we've committed to this turn
+        self.initial_prompt_for_player.pop(self.current_player.name, None)
+
         # compute scores first, so that we are sure that the player's context
         # can still be retrieved (state has not changed yet)
-        context = self.get_context_for(self.current_player, log_event=False)
         self.info["response_score"] = self.compute_response_score(response, context)
         self.info["response_feedback"] = self.get_response_feedback(response, context)
         self.info["episode_score"] = 0

@@ -188,12 +188,12 @@ class GameMasterEnv(AECEnv):
         # After step() current_player might have changed, so we reference it here already
         current_agent = self.get_current_agent()
 
-        # Get and log the context that was given from GM -> Player
-        current_context = self.game_master.get_context_for(self.player_by_agent_id[current_agent], log_event=True)
+        # Get the context that was given from GM -> Player (logging happens in game_master.step)
+        current_context = self.game_master.get_context_for(self.player_by_agent_id[current_agent])
 
         # Step possibly transitions the current agent (as specified by the game master)
         # Log the response action from Player -> GM
-        done, info = self.game_master.step(action, log_event=True)
+        done, info = self.game_master.step(action)
 
         # Update current rewards and info for the current agent (response_score is returned in legacy master)
         self._cumulative_rewards[current_agent] = 0

@@ -25,7 +25,7 @@ class EnvLike(abc.ABC):
         pass
 
     @abc.abstractmethod
-    def step(self, response: str, *, log_event: bool = False) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> Tuple[bool, Dict]:
         pass
 
 
@@ -57,6 +57,18 @@ class GameMaster(EnvLike, GameEventSource):
 
     def load_template(self, file_path: Union[str, Path]):
         return self.game_resources.load_template(file_path)
+
+    def log_gm_to_player(self, context, player):
+        # Log the context that was sent to the player (GM -> Player)
+        action = {'type': 'send message', 'content': context["content"], 'label': "context"}
+        if "image" in context:
+            action["image"] = context["image"]
+        self.log_event(from_='GM', to=player.name, action=action)
+
+    def log_player_to_gm(self, response, player):
+        # Log the response from the player (Player -> GM)
+        self.log_event(from_=player.name, to="GM",
+                       action={'type': 'get message', 'content': response, 'label': "response"})
 
     def log_to_self(self, type_: str, value: Any):
         """Logs an action of the passed type from GM to GM.
@@ -243,23 +255,23 @@ class DialogueGameMaster(GameMaster):
         self.context_for_player[player.name] = context
 
     @final
-    def get_context_for(self, player, *, log_event: bool = False) -> Dict:
+    def get_context_for(self, player) -> Dict:
+        """
+        Get the context for the specified player. This is a pure function with no side effects.
+
+        The initial_prompt (if set) is always merged with the context.
+        """
         assert player is not None, "Cannot get player context for 'None'"
         assert player.name in self.context_for_player, f"No context set for {player.name}"
         context = self.context_for_player[player.name]
         assert "role" in context, f"Player context must have a 'role' entry"
         assert context["role"] == "user", f"Role of player context must be 'user'"
         assert "content" in context, f"Player context must have a 'content' entry"
-        initial_prompt = self.initial_prompt_for_player.pop(player.name, None)
+        initial_prompt = self.initial_prompt_for_player.get(player.name)
         if initial_prompt is not None:
             content = context["content"]
             initial_prompt_content = initial_prompt["content"]
             context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
-        if log_event:
-            action = {'type': 'send message', 'content': context["content"], 'label': "context"}
-            if "image" in context:
-                action["image"] = context["image"]
-            self.log_event(from_='GM', to=player.name, action=action)
         return context
 
     @final
@@ -274,19 +286,24 @@ class DialogueGameMaster(GameMaster):
         return player, context
 
     @final
-    def step(self, response: str, *, log_event: bool = False) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> Tuple[bool, Dict]:
         """
         Verifies the response and transitions the game by applying the current player's response for the turn.
 
         Args:
             response: The response (verbal action) of the current player.
-            log_event: Whether to log the player's response
         Returns:
             Bool determining if game is done, info about the processed game step
         """
-        if log_event:
-            self.log_event(from_=self.current_player.name, to="GM",
-                           action={'type': 'get message', 'content': response, 'label': "response"})
+        # Log the context that was sent to the player (GM -> Player)
+        context = self.get_context_for(self.current_player)
+
+        # Log message exchange (assuming the step response is from the current player and context)
+        self.log_gm_to_player(context, self.current_player)
+        self.log_player_to_gm(response, self.current_player)
+
+        # Consume the initial_prompt (if set) now that we've committed to this turn
+        self.initial_prompt_for_player.pop(self.current_player.name, None)
         try:
             parsed_response = self._parse_response(self.current_player, response)  # throws ParseError
             self._advance_game(self.current_player, parsed_response)  # throws GameError
