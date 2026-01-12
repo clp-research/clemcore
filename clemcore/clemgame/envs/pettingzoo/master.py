@@ -2,7 +2,7 @@ from typing import Callable
 
 import gymnasium
 
-from clemcore.backends.model_registry import Model, CustomResponseModel
+from clemcore.backends.model_registry import CustomResponseModel
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList, GameStep
 from clemcore.clemgame.registry import GameRegistry
 from clemcore.clemgame.instances import GameInstanceIterator
@@ -232,9 +232,18 @@ class GameMasterEnv(AECEnv):
         """Returns the observation an agent currently can make.
 
         `last()` calls this function.
+
+        Note:
+            If no context has been set for the player (e.g., game aborted before their turn),
+            returns the initial prompt if available, otherwise None.
         """
         player = self.player_by_agent_id[agent]
-        return self.game_master.get_context_for(player)
+        try:
+            return self.game_master.get_context_for(player)
+        except AssertionError:
+            # Handle case where context isn't available (e.g., early game abort before player's turn)
+            # Fall back to initial prompt if available
+            return self.game_master.initial_prompt_for_player.get(player.name)
 
     def observation_space(self, agent: AgentID):
         """All agents share the same observation space.
