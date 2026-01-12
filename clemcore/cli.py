@@ -269,7 +269,9 @@ def serve(game: str,
           split: Optional[str] = None,
           single_pass: bool = False,
           host: str = "0.0.0.0",
-          port: int = 5000):
+          port: int = 5000,
+          results_dir: Optional[str] = None,
+          run_id: Optional[str] = None):
     logger.info(f"Starting a clem environment server for the game: {game} on {host}:{port}")
     app = create_clemv_app(
         game_name=game,
@@ -277,7 +279,9 @@ def serve(game: str,
         env_agents=env_agents,
         game_instance_split=split,
         single_pass=single_pass,
-        gen_args=gen_args
+        gen_args=gen_args,
+        results_dir=results_dir,
+        run_id=run_id
     )
     uvicorn.run(app, host=host, port=port)
 
@@ -340,7 +344,9 @@ def cli(args: argparse.Namespace):
               split=args.split,
               single_pass=args.single_pass,
               host=args.host,
-              port=args.port)
+              port=args.port,
+              results_dir=args.results_dir,
+              run_id=args.run_id)
     if args.command_name == "score":
         score(args.game, results_dir=args.results_dir)
     if args.command_name == "transcribe":
@@ -487,6 +493,16 @@ Update Behavior:
                               type=int,
                               default=8000,
                               help="The port to bind the server to. Default: 8000")
+    serve_parser.add_argument("-r", "--results-dir",
+                              type=str,
+                              default="openenv-records",
+                              help="Directory to save episode interaction results. "
+                                   "Default: 'openenv-records'.")
+    serve_parser.add_argument("--run-id",
+                              type=str,
+                              help="Identifier for this run, used as subdirectory name in results-dir. "
+                                   "If not provided, derived from env-agent model names (e.g., 'gpt-4o-llama3'), "
+                                   "otherwise defaults to 'run'.")
     cli(parser.parse_args())
 
 

@@ -6,6 +6,7 @@ from datasets import load_dataset
 from openenv_core import Environment
 
 from clemcore.backends import load_models
+from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList
 from clemcore.clemgame.envs.openenv.models import ClemGameState, ClemGameObservation, ClemGameAction
 from clemcore.clemgame.envs.pettingzoo import gym_env, check_agent_mapping_for_training
 from clemcore.clemgame.registry import GameRegistry
@@ -23,7 +24,8 @@ class ClemGameEnvironment(Environment):
                  single_pass: bool = False,
                  learner_agent: str = "player_0",
                  env_agents: Dict[str, str] = None,
-                 gen_args: Dict[str, Any] = None
+                 gen_args: Dict[str, Any] = None,
+                 callbacks: GameBenchmarkCallbackList = None
                  ):
         super().__init__()
         module_logger.info("Initialize ClemGameEnvironment: "
@@ -56,7 +58,8 @@ class ClemGameEnvironment(Environment):
                                  game_instance_filter=game_instance_filter,
                                  single_pass=single_pass,
                                  learner_agent=learner_agent,
-                                 env_agents=env_agents
+                                 env_agents=env_agents,
+                                 callbacks=callbacks
                                  )
 
     def close(self):
