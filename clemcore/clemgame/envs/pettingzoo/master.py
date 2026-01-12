@@ -12,7 +12,8 @@ from clemcore.clemgame.envs.pettingzoo.wrappers import (
     GameInstanceIteratorWrapper,
     GameBenchmarkWrapper,
     SinglePlayerWrapper,
-    AECToGymWrapper
+    AECToGymWrapper,
+    EnvAgent
 )
 
 from gymnasium import spaces
@@ -26,7 +27,7 @@ def gym_env(game_name: str,
             game_instance_filter: Callable[[str, str], list[int]] | None = None,
             single_pass: bool = False,
             learner_agent: AgentID = "player_0",
-            env_agents: dict[AgentID, Model] | None = None,
+            env_agents: dict[AgentID, EnvAgent] | None = None,
             callbacks: GameBenchmarkCallbackList | None = None
             ) -> gymnasium.Env:
     """
@@ -48,7 +49,7 @@ def gym_env(game_name: str,
         game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
         single_pass: Whether to run through the game instances only once or multiple times.
         learner_agent: the agent id of the learner agent (e.g. player_0)
-        env_agents: a mapping from agent ids to players (e.g. {player_1: "gpt5"})
+        env_agents: a mapping from agent ids to Models or Callables (e.g. {player_1: gpt5} or {player_1: lambda obs: "action"})
         callbacks: a list of callbacks to be applied to the environment lifecycle
 
     Returns:

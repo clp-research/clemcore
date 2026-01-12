@@ -1,6 +1,6 @@
 import collections
 import logging
-from typing import Callable, Literal, Any, SupportsFloat
+from typing import Callable, Literal, Any, SupportsFloat, TypeAlias
 import gymnasium
 
 from clemcore.backends.model_registry import Model, CustomResponseModel, ModelSpec
@@ -15,6 +15,9 @@ from pettingzoo import AECEnv
 from pettingzoo.utils import BaseWrapper
 
 stdout_logger = logging.getLogger("clemcore.run")
+
+# Type alias for env agents: either a Model (to create a Player) or a Callable (to use directly as policy)
+EnvAgent: TypeAlias = Model | Callable[[ObsType], ActionType]
 
 
 class AECToGymWrapper(gymnasium.Env):
@@ -91,7 +94,7 @@ class AgentControlWrapper(BaseWrapper):
     Learner agents remain externally controlled, but other agents are stepped automatically internally.
 
     Specifically, agents marked as "learner" return control to the caller.
-    Other agents are automated with provided models or players.
+    Other agents are automated with provided models, players, or callable policies.
 
     Note: When there is no "learner" in the agent mapping,
     then the control will only be given back to the caller when the episode ended.
@@ -101,11 +104,16 @@ class AgentControlWrapper(BaseWrapper):
     def __init__(
             self,
             env: AECEnv,
-            agent_mapping: dict[AgentID, Literal["learner"] | Model]
+            agent_mapping: dict[AgentID, Literal["learner"] | EnvAgent]
     ):
         super().__init__(env)
         self.agent_mapping = order_agent_mapping_by_agent_id(agent_mapping)
         self.learner_agents = [agent_id for agent_id, agent in agent_mapping.items() if agent == "learner"]
+        # Store callable agents separately (these bypass the Player and are called directly)
+        self.callable_agents = {
+            agent_id: agent for agent_id, agent in agent_mapping.items()
+            if callable(agent) and not isinstance(agent, Model)
+        }
 
     def reset(self, seed: int | None = None, options: dict | None = None):
         options = options or {}
@@ -113,10 +121,12 @@ class AgentControlWrapper(BaseWrapper):
         if "player_models" not in options:
             player_models = []
             # assume an order in keys like player_0, player_1, ...
-            for agent in self.agent_mapping.values():
-                if agent == "learner":
+            for agent_id, agent in self.agent_mapping.items():
+                if agent == "learner":  # marker model for the learner (called outside the loop)
                     player_models.append(CustomResponseModel(ModelSpec(model_name="learner")))
-                else:
+                elif agent_id in self.callable_agents:  # marker model for callable agents (called directly)
+                    player_models.append(CustomResponseModel(ModelSpec(model_name="callable")))
+                else:  # other player models are backed by the passed models, e.g., loaded via load_model("gpt5")
                     player_models.append(agent)
             options["player_models"] = player_models
         super().reset(seed, options)
@@ -143,8 +153,10 @@ class AgentControlWrapper(BaseWrapper):
         # Here the episode ended before the learner took control again, i.e., all agents have been removed
 
     def get_env_agent(self, agent_id: AgentID):
-        # Return the env agents for the agent_id (using the Player from the game master)
-        # todo: add option to use a passed player here directly
+        # Return the env agent for the agent_id
+        # If a callable was provided, use it directly; otherwise use the Player from the game master
+        if agent_id in self.callable_agents:
+            return self.callable_agents[agent_id]
         return self.unwrapped.player_by_agent_id[agent_id]
 
 
@@ -159,7 +171,7 @@ class SinglePlayerWrapper(AgentControlWrapper):
             self,
             env: AECEnv,
             learner_agent: AgentID = "player_0",
-            env_agents: dict[AgentID, Model] = None
+            env_agents: dict[AgentID, EnvAgent] = None
     ):
         env_agents = env_agents or {}  # single-player game anyway
         super().__init__(env, {learner_agent: "learner", **env_agents})

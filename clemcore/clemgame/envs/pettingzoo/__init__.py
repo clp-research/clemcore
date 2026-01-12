@@ -9,6 +9,7 @@ from clemcore.clemgame.envs.pettingzoo.wrappers import (
     AgentControlWrapper,
     GameBenchmarkWrapper,
     GameInstanceIteratorWrapper,
+    EnvAgent,
 )
 from clemcore.clemgame.envs.pettingzoo.master import (
     GameMasterEnv,
@@ -23,6 +24,7 @@ __all__ = [
     "AgentControlWrapper",
     "GameBenchmarkWrapper",
     "GameInstanceIteratorWrapper",
+    "EnvAgent",
     "env",
     "gym_env",
     "check_agent_mapping_for_training",
