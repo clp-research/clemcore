@@ -64,6 +64,77 @@ class ResultsFolder:
         return f"instance_{game_instance['game_id']:05d}"
 
 
+class EpisodeResultsFolder(ResultsFolder):
+    """
+    Episode-based results layout.
+
+    Allows iterating over the same game instance multiple times.
+    Each game run corresponds to a new episode directory, independent of the underlying instance identity.
+
+    Note:
+    This aligns with repeated exposure to an initial state, e.g., reinforcement learning or stochastic evaluation.
+    """
+
+    def __init__(self, result_dir_path: Path, run_dir: str):
+        super().__init__(result_dir_path, run_dir)
+        self.episode_id = 0  # reset per process; overwrites on rerun
+
+    def increment_episode_id(self):
+        self.episode_id += 1
+
+    def to_episode_dir(self) -> str:
+        return f"episode_{self.episode_id:05d}"
+
+    def to_instance_dir(self, game_instance: dict) -> str:
+        """
+        In episode-based layouts, the 'instance directory' corresponds
+        to an episode rather than a unique game instance.
+        """
+        return self.to_episode_dir()
+
+
+class EpisodeResultsFolderCallback(GameBenchmarkCallback):
+
+    def __init__(self, results_folder: EpisodeResultsFolder):
+        self.results_folder = results_folder
+
+    def on_game_start(self, game_master: "GameMaster", game_instance: dict):
+        # One game execution == one episode
+        self.results_folder.increment_episode_id()
+
+
+class EpochResultsFolder(ResultsFolder):
+    """
+    Epoch-based results layout.
+
+    Each benchmark run corresponds to a new epoch.
+    Within an epoch, each game instance is evaluated exactly once.
+
+    This aligns with dataset-style training loops, e.g., supervised learning.
+    """
+
+    def __init__(self, result_dir_path: Path, run_dir: str):
+        super().__init__(result_dir_path, run_dir)
+        self.epoch_id = 0  # reset per process; overwrites on rerun
+
+    def increment_epoch_id(self):
+        self.epoch_id += 1
+
+    def to_run_dir_path(self):
+        models_dir_path = super().to_run_dir_path() / f"epoch_{self.epoch_id:05d}"
+        return models_dir_path
+
+
+class EpochResultsFolderCallback(GameBenchmarkCallback):
+
+    def __init__(self, results_folder: EpochResultsFolder):
+        self.results_folder = results_folder
+
+    def on_benchmark_start(self, game_benchmark: "GameBenchmark"):
+        # assuming every benchmark run corresponds to an epoch
+        self.results_folder.increment_epoch_id()
+
+
 class RunFileSaver(GameBenchmarkCallback):
 
     def __init__(self, results_folder: ResultsFolder, *, player_model_infos: Any = None):

@@ -4,6 +4,7 @@ key*.json
 /venv
 evaltmp.ipynb
 .run
+CLAUDE.md
 
 # Wordlists https://www.kaggle.com/datasets/rtatman/english-word-frequency
 unigram_freq.csv
