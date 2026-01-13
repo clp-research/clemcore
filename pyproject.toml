@@ -32,9 +32,12 @@ dependencies = [
     "pandas==2.0.1",
     "seaborn==0.12.2",
     "sparklines~=0.7.0",
-    "pylatex~=1.4.2",       # transcripts
-    "ordered-set~=4.1.0",   # transcripts
-    "markdown~=3.8.2"       # transcripts
+    "pylatex~=1.4.2", # transcripts
+    "ordered-set~=4.1.0", # transcripts
+    "markdown~=3.8.2",       # transcripts
+    "pettingzoo~=1.25.0", # to wrap games as pettingzoo or gymnasium environments
+    "openenv-core~=0.1.1", # to serve games as openenv server
+    "datasets~=4.4.1" # to load playpen-data for openenv server
 ]
 
 [project.optional-dependencies]
@@ -56,10 +59,6 @@ slurk = [
     "python-engineio==4.4.0",
     "python-socketio==5.7.2",
     "websocket-client"
-]
-openenv = [
-    "datasets~=4.4.1", # to load playpen-data
-    "openenv-core~=0.1.1" # to use playpen openenv container
 ]
 
 [project.scripts]
