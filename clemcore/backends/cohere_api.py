@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 class Cohere(backends.RemoteBackend):
     """Backend class for accessing the Cohere remote API."""
     def _make_api_client(self):
-        self.client = cohere.Client(self.key["api_key"])
+        return cohere.Client(self.key["api_key"])
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get a Cohere model instance based on a model specification.

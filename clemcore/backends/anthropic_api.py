@@ -17,7 +17,7 @@ class Anthropic(backends.RemoteBackend):
     """Backend class for accessing the Anthropic remote API."""
 
     def _make_api_client(self):
-        self.client = anthropic.Anthropic(api_key=self.key["api_key"])
+        return anthropic.Anthropic(api_key=self.key["api_key"])
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get an Anthropic model instance based on a model specification.

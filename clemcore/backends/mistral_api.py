@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class Mistral(backends.RemoteBackend):
     """Backend class for accessing the Mistral remote API."""
     def _make_api_client(self):
-        self.client = MistralClient(api_key=self.key["api_key"])
+        return MistralClient(api_key=self.key["api_key"])
 
     def list_models(self) -> list:
         """List models available on the Mistral remote API.

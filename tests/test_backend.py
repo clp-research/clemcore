@@ -1,7 +1,9 @@
 import unittest
 
-from clemcore.backends import ModelRegistry, BackendRegistry, ModelSpec
+from clemcore.backends import ModelRegistry, ModelSpec
 from clemcore.backends.anthropic_api import Anthropic
+from clemcore.backends.cohere_api import Cohere
+from clemcore.backends.mistral_api import Mistral
 from clemcore.backends.openai_api import OpenAI
 from clemcore.backends.utils import ensure_alternating_roles
 
@@ -31,6 +33,20 @@ class GenerateTestCase(unittest.TestCase):
         self._generate_response_test(
             Anthropic(),
             "claude-3-haiku-20240307",
+            [{"role": "user", "content": "How are you?"}]
+        )
+
+    def test_generate_response_with_cohere(self):
+        self._generate_response_test(
+            Cohere(),
+            "command-r",
+            [{"role": "user", "content": "How are you?"}]
+        )
+
+    def test_generate_response_with_mistral(self):
+        self._generate_response_test(
+            Mistral(),
+            "mistral-small-latest",
             [{"role": "user", "content": "How are you?"}]
         )
 
