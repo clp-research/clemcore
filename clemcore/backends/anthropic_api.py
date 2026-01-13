@@ -122,7 +122,7 @@ class AnthropicModel(backends.Model):
                 encoded_messages.append(claude_message)
         return encoded_messages, system_message
 
-    @retry(tries=3, delay=0, logger=logger)
+    @retry(tries=3, delay=10, logger=logger)
     @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:

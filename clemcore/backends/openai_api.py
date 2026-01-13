@@ -121,7 +121,7 @@ class OpenAIModel(backends.Model):
                 encoded_messages.append(this)
         return encoded_messages
 
-    @retry(tries=3, delay=90, logger=logger)
+    @retry(tries=3, delay=10, logger=logger)
     @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:

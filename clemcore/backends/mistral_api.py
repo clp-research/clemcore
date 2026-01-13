@@ -45,7 +45,7 @@ class MistralModel(backends.Model):
         super().__init__(model_spec)
         self.client = client
 
-    @retry(tries=3, delay=0, logger=logger)
+    @retry(tries=3, delay=10, logger=logger)
     @augment_response_object
     @ensure_messages_format
     def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
