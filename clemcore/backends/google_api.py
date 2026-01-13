@@ -110,11 +110,8 @@ class GoogleModel(backends.Model):
             if message['role'] == 'system':
                 # System messages are handled separately via system_instruction
                 continue
-            if message['role'] == 'assistant':
-                encoded_messages.append(types.Content(
-                    role="model",
-                    parts=[types.Part(text=message["content"])]
-                ))
+            if message['role'] in ('assistant', 'model'):
+                encoded_messages.append(types.Content(role="model", parts=[types.Part(text=message["content"])]))
             if message['role'] == 'user':
                 parts = [types.Part(text=message["content"])]
                 if "image" in message.keys() and 'multimodality' not in self.model_spec.model_config:
@@ -211,7 +208,9 @@ class GoogleModel(backends.Model):
             config=config
         )
         response_role = result.candidates[0].content.role
-        if response_role != "model":  # safety check (Google uses "model" instead of "assistant")
+        if response_role != "model":  # safety check
+            # Note: Google uses 'model' instead of 'assistant' in the response, but this is fine,
+            # because the user will form a message with role=assistant from the returned response_text
             raise AttributeError("Response message role is " + response_role + " but should be 'model'")
 
         response_text = (result.text or "").strip()
