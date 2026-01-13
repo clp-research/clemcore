@@ -2,7 +2,6 @@ import logging
 from typing import List, Dict, Tuple, Any
 from retry import retry
 import cohere
-import json
 
 import clemcore.backends as backends
 from clemcore.backends.utils import ensure_messages_format, augment_response_object
@@ -12,8 +11,9 @@ logger = logging.getLogger(__name__)
 
 class Cohere(backends.RemoteBackend):
     """Backend class for accessing the Cohere remote API."""
+
     def _make_api_client(self):
-        return cohere.Client(self.key["api_key"])
+        return cohere.ClientV2(self.key["api_key"])
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get a Cohere model instance based on a model specification.
@@ -27,6 +27,7 @@ class Cohere(backends.RemoteBackend):
 
 class CohereModel(backends.Model):
     """Model class accessing the Cohere remote API."""
+
     def __init__(self, client: cohere.Client, model_spec: backends.ModelSpec):
         """
         Args:
@@ -39,7 +40,7 @@ class CohereModel(backends.Model):
     @retry(tries=3, delay=0, logger=logger)
     @augment_response_object
     @ensure_messages_format
-    def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
+    def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """Request a generated response from the Cohere remote API.
         Args:
             messages: A message history. For example:
@@ -52,34 +53,12 @@ class CohereModel(backends.Model):
         Returns:
             The generated response message returned by the Cohere remote API.
         """
-        chat_history = []
-
-        # all other messages except the last one. It is passed to the API with the variable message.
-        for message in messages[:-1]:
-
-            if message['role'] == 'assistant':
-                m = {"role": "CHATBOT", "message": message["content"]}
-                chat_history.append(m)
-            elif message['role'] == 'user':
-                m = {"role": "USER", "message": message["content"]}
-                chat_history.append(m)
-
-        message = messages[-1]["content"]
-
-        output = self.client.chat(
-            message=message,
+        result: cohere.V2ChatResponse = self.client.chat(
+            messages=messages,
             model=self.model_spec.model_id,
-            chat_history=chat_history,
             temperature=self.temperature,
-            max_tokens = self.max_tokens
+            max_tokens=self.max_tokens
         )
-
-        response_text = output.text
-        prompt = json.dumps({"message": message, "chat_history": chat_history})
-
-        response = output.__dict__
-        # This fix is removing the 'client' key, only when it is available.
-        response.pop('client', None)
-        response.pop('token_count', None)
-
-        return prompt, response, response_text
+        response_text = result.message.content[0].text
+        response = result.model_dump(mode="json")
+        return messages, response, response_text
