@@ -32,7 +32,7 @@ class Anthropic(backends.RemoteBackend):
 class AnthropicModel(backends.Model):
     """Model class accessing the Anthropic remote API."""
 
-    def __init__(self, client: anthropic.Client, model_spec: backends.ModelSpec):
+    def __init__(self, client: anthropic.Anthropic, model_spec: backends.ModelSpec):
         """
         Args:
             client: An Anthropic library Client class.
@@ -77,7 +77,6 @@ class AnthropicModel(backends.Model):
             if message["role"] == "system":
                 system_message = message["content"]
             else:
-
                 content = list()
                 content.append({
                     "type": "text",
@@ -86,19 +85,18 @@ class AnthropicModel(backends.Model):
 
                 if "image" in message.keys() and 'multimodality' not in self.model_spec.model_config:
                     logger.info(
-                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
+                        f"The backend {self.model_spec.model_id} does not support multimodal inputs!")
                     raise Exception(
-                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
-
+                        f"The backend {self.model_spec.model_id} does not support multimodal inputs!")
                 if 'multimodality' in self.model_spec.model_config:
                     if "image" in message.keys():
 
-                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(
+                        if not self.model_spec.model_config['multimodality']['multiple_images'] and len(
                                 message['image']) > 1:
                             logger.info(
-                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                                f"The backend {self.model_spec.model_id} does not support multiple images!")
                             raise Exception(
-                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                                f"The backend {self.model_spec.model_id} does not support multiple images!")
                         else:
                             # encode each image
                             for image in message['image']:
@@ -117,19 +115,17 @@ class AnthropicModel(backends.Model):
                                         "data": encoded_image_data,
                                     }
                                 })
-
                 claude_message = {
                     "role": message["role"],
                     "content": content
                 }
                 encoded_messages.append(claude_message)
-
         return encoded_messages, system_message
 
     @retry(tries=3, delay=0, logger=logger)
     @augment_response_object
     @ensure_messages_format
-    def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
+    def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """Request a generated response from the Anthropic remote API.
         Args:
             messages: A message history. For example:
@@ -143,37 +139,31 @@ class AnthropicModel(backends.Model):
             The generated response message returned by the Anthropic remote API.
         """
         prompt, system_message = self.encode_messages(messages)
-
-        if 'thinking_mode' not in self.model_spec.model_config:
-
-            completion = self.client.messages.create(
-                messages=prompt,
-                system=system_message,
-                model=self.model_spec.model_id,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens
-            )
-
-            json_output = completion.model_dump_json()
-            response = json.loads(json_output)
-            response_text = completion.content[0].text
-
-        else:
+        gen_kwargs = dict(
+            messages=prompt,
+            system=system_message,
+            model=self.model_spec.model_id,
+            temperature=self.temperature,
+            max_tokens=self.max_tokens
+        )
+        content_index = 0
+        if 'thinking_mode' in self.model_spec.model_config:
+            """
+            Feature compatibility:
+            - Thinking isn't compatible with temperature or top_k modifications as well as forced tool use.
+            - When thinking is enabled, you can set top_p to values between 1 and 0.95.
+            - You cannot pre-fill responses when thinking is enabled.
+            - Changes to the thinking budget invalidate cached prompt prefixes that include messages. 
+            - However, cached system prompts and tool definitions will continue to work when thinking parameters change.
+            https://platform.claude.com/docs/en/build-with-claude/extended-thinking
+            """
             # set thinking token budget to 4K
             # max_tokens should be higher than 4K -> so we set to 4K + get_max_tokens()
-            completion = self.client.messages.create(
-                messages=prompt,
-                system=system_message,
-                model=self.model_spec.model_id,
-                max_tokens=4000 + self.max_tokens,
-                thinking={
-                    "type": "enabled",
-                    "budget_tokens": 4000
-                },
-            )
-
-            json_output = completion.model_dump_json()
-            response = json.loads(json_output)
-            response_text = completion.content[1].text
-
+            content_index = 1
+            gen_kwargs["temperature"] = 1.  # todo: we need to use self.gen_args for this (user should decide)
+            gen_kwargs["max_tokens"] = 4000 + self.max_tokens # todo: we need to use self.gen_args for this
+            gen_kwargs["thinking"] = {"type": "enabled", "budget_tokens": 4000}
+        completion = self.client.messages.create(**gen_kwargs)
+        response_text = completion.content[content_index].text
+        response = completion.model_dump(mode="json")
         return prompt, response, response_text
