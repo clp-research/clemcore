@@ -152,9 +152,11 @@ class OpenAIModel(backends.Model):
             logger.info("Ignoring max_tokens for reasoning models, because the argument is not supported")
             del gen_kwargs["max_tokens"]
 
-        logger.debug(f"Calling OpenAI API with parameters: {json.dumps(gen_kwargs, indent=2)}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"Calling OpenAI API with parameters: {json.dumps(gen_kwargs, indent=2)}")
         api_response = self.client.chat.completions.create(**gen_kwargs)
-        logger.debug(f"OpenAI API response: {api_response.model_dump_json(indent=2)}")
+        if logger.isEnabledFor(logging.DEBUG):
+            logger.debug(f"OpenAI API response: {api_response.model_dump_json(indent=2)}")
 
         message = api_response.choices[0].message
         if message.role != "assistant":  # safety check

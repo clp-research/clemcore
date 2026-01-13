@@ -1,7 +1,8 @@
 import logging
 from typing import List, Dict, Tuple, Any, Union
 from retry import retry
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 import requests
 import uuid
@@ -16,8 +17,9 @@ logger = logging.getLogger(__name__)
 
 class Google(backends.RemoteBackend):
     """Backend class for accessing the Google remote API."""
+
     def _make_api_client(self):
-        genai.configure(api_key=self.key["api_key"])
+        return genai.Client(api_key=self.key["api_key"])
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
         """Get a Google model instance based on a model specification.
@@ -26,21 +28,20 @@ class Google(backends.RemoteBackend):
         Returns:
             A Google model instance based on the passed model specification.
         """
-        return GoogleModel(model_spec)
+        return GoogleModel(self.client, model_spec)
 
 
 class GoogleModel(backends.Model):
     """Model class accessing the Google remote API."""
-    def __init__(self, model_spec: backends.ModelSpec):
+
+    def __init__(self, client: genai.Client, model_spec: backends.ModelSpec):
         """
         Args:
+            client: A Google genai Client class.
             model_spec: A ModelSpec instance specifying the model.
         """
         super().__init__(model_spec)
-
-        self.model = genai.GenerativeModel(
-            model_name=model_spec.model_id
-        )
+        self.client = client
 
     def download_image(self, image_url) -> Union[str, None]:
         """Download an image from a URL.
@@ -49,23 +50,15 @@ class GoogleModel(backends.Model):
         Returns:
             The file path to the downloaded image or None if the image could not be downloaded.
         """
-        # Create a temporary directory
         temp_dir = tempfile.mkdtemp()
-
         try:
-            # Send a GET request to the URL
             response = requests.get(image_url)
             response.raise_for_status()
-
-            # Generate a unique file name
             unique_name = str(uuid.uuid4()) + '.jpg'
             file_path = os.path.join(temp_dir, unique_name)
-
-            # Write the image content to a file
             with open(file_path, 'wb') as file:
                 file.write(response.content)
             return file_path
-
         except requests.RequestException as e:
             print(f"Failed to download {image_url}: {e}")
             return None
@@ -77,28 +70,25 @@ class GoogleModel(backends.Model):
             file_path: Path to the file to upload.
             mime_type: The mime type of the file to upload.
         Returns:
-            The (URL of the) uploaded file.
+            The uploaded file reference.
         """
-        file_url = genai.upload_file(file_path, mime_type=mime_type)
-        return file_url
+        file_ref = self.client.files.upload(file=file_path, config={"mime_type": mime_type})
+        return file_ref
 
     def encode_images(self, images):
         """Encode images and upload them to Gemini allow sending them to the Google remote API.
         Args:
             images: Paths to the images to be encoded.
         Returns:
-            A list of the (URLs of the) encoded and uploaded files.
+            A list of the uploaded file references.
         """
         image_parts = []
-
         for image_path in images:
             if image_path.startswith('http'):
                 image_path = self.download_image(image_path)
-
             image_type = imghdr.what(image_path)
-            # upload to Gemini server
-            file_url = self.upload_file(image_path, 'image/'+image_type)
-            image_parts.append(file_url)
+            file_ref = self.upload_file(image_path, 'image/' + image_type)
+            image_parts.append(file_ref)
         return image_parts
 
     def encode_messages(self, messages):
@@ -112,49 +102,58 @@ class GoogleModel(backends.Model):
                     {"role": "user", "content": "Where was it played?"}
                 ]
         Returns:
-            A tuple of the message history list with encoded images and the message history list for logging.
+            A list of Content objects for the Google API.
         """
         encoded_messages = []
-        encoded_messages_for_logging = []
 
         for message in messages:
+            if message['role'] == 'system':
+                # System messages are handled separately via system_instruction
+                continue
             if message['role'] == 'assistant':
-                m = {"role": "model", "parts": [message["content"]]}
-                m_for_logging = {"role": "model", "parts": [message["content"]]}
-            elif message['role'] == 'user':
-                m = {"role": "user", "parts": [message["content"]]}
-                m_for_logging = {"role": "model", "parts": [message["content"]]}
-
+                encoded_messages.append(types.Content(
+                    role="model",
+                    parts=[types.Part(text=message["content"])]
+                ))
+            if message['role'] == 'user':
+                parts = [types.Part(text=message["content"])]
                 if "image" in message.keys() and 'multimodality' not in self.model_spec.model_config:
                     logger.info(
-                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
+                        f"The backend {self.model_spec.model_id} does not support multimodal inputs!")
                     raise Exception(
-                        f"The backend {self.model_spec.__getattribute__('model_id')} does not support multimodal inputs!")
-
+                        f"The backend {self.model_spec.model_id} does not support multimodal inputs!")
                 if 'multimodality' in self.model_spec.model_config:
                     if "image" in message.keys():
-
-                        if not self.model_spec['model_config']['multimodality']['multiple_images'] and len(message['image']) > 1:
+                        if not self.model_spec.model_config['multimodality']['multiple_images'] and len(
+                                message['image']) > 1:
                             logger.info(
-                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                                f"The backend {self.model_spec.model_id} does not support multiple images!")
                             raise Exception(
-                                f"The backend {self.model_spec.__getattribute__('model_id')} does not support multiple images!")
+                                f"The backend {self.model_spec.model_id} does not support multiple images!")
                         else:
                             image_parts = self.encode_images(message['image'])
-                            for i in image_parts:
-                                m["parts"].append(i)
+                            for img in image_parts:
+                                parts.append(types.Part(file_data=img))
+                encoded_messages.append(types.Content(role="user", parts=parts))
 
-                            # for logging purposes
-                            m_for_logging["parts"].append(message["image"])
+        return encoded_messages
 
-            encoded_messages.append(m)
-            encoded_messages_for_logging.append(m_for_logging)
-        return encoded_messages, encoded_messages_for_logging
+    def extract_system_instruction(self, messages):
+        """Extract system instruction from messages.
+        Args:
+            messages: A message history.
+        Returns:
+            The system instruction string or None.
+        """
+        for message in messages:
+            if message['role'] == 'system':
+                return message['content']
+        return None
 
-    @retry(tries=10, delay=120, logger=logger)
+    @retry(tries=3, delay=90, logger=logger)
     @augment_response_object
     @ensure_messages_format
-    def generate_response(self, messages: List[Dict]) -> Tuple[str, Any, str]:
+    def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
         """Request a generated response from the Google remote API.
         Args:
             messages: A message history. For example:
@@ -167,50 +166,55 @@ class GoogleModel(backends.Model):
         Returns:
             The generated response message returned by the Google remote API.
         """
+        encoded_messages = self.encode_messages(messages)
+        system_instruction = self.extract_system_instruction(messages)
 
-        generation_config = {
-            "temperature": self.temperature,
-            "max_output_tokens": self.max_tokens,
-            "response_mime_type": "text/plain",
-        }
+        config = types.GenerateContentConfig(
+            temperature=self.temperature,
+            max_output_tokens=self.max_tokens,
+            safety_settings=[
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                    threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                    threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                    threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                ),
+                types.SafetySetting(
+                    category=types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                    threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+                ),
+            ],
+        )
 
-        safety_settings = [
-            {
-                "category": "HARM_CATEGORY_HARASSMENT",
-                "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-                "category": "HARM_CATEGORY_HATE_SPEECH",
-                "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-                "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-            },
-            {
-                "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                "threshold": "BLOCK_MEDIUM_AND_ABOVE",
-            },
-        ]
+        if system_instruction:
+            config.system_instruction = system_instruction
 
-        encoded_messages, encoded_messages_for_logging = self.encode_messages(messages)
+        if 'thinking_mode' in self.model_spec.model_config:
+            """
+            Thinking mode for Gemini 2.5 models uses thinking_budget parameter.
+            https://ai.google.dev/gemini-api/docs/thinking
+            Note: Gemini-3 models are not yet supported out of the box here
+            """
+            # Increase max_output_tokens to account for thinking budget (similar to Anthropic)
+            config.max_output_tokens = 4096 + self.max_tokens
+            config.thinking_config = types.ThinkingConfig(thinking_budget=4096)
 
-        response = self.model.generate_content(
+        result: types.GenerateContentResponse = self.client.models.generate_content(
+            model=self.model_spec.model_id,
             contents=encoded_messages,
-            safety_settings=safety_settings,
-            generation_config=generation_config)
+            config=config
+        )
 
-        # print('Putting to sleep for 60 sec')
-        # time.sleep(120)
+        response_text = (result.text or "").strip()
 
-        response_text = ''
-        response_json = {}
-        if response.parts:
-            response_text = response.text.strip()
-            response_json = {"text": response_text}
+        if not response_text:
+            logger.warning("Google API response message content is None or empty, returning empty string.")
 
-        if response_text == '':
-            logger.error(
-                f"The backend {self.model_spec.__getattribute__('model_id')} returned empty string!")
-
-        return encoded_messages_for_logging, response_json, response_text
+        response = result.model_dump(mode="json")
+        return encoded_messages, response, response_text

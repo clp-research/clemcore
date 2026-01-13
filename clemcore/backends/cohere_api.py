@@ -28,7 +28,7 @@ class Cohere(backends.RemoteBackend):
 class CohereModel(backends.Model):
     """Model class accessing the Cohere remote API."""
 
-    def __init__(self, client: cohere.Client, model_spec: backends.ModelSpec):
+    def __init__(self, client: cohere.ClientV2, model_spec: backends.ModelSpec):
         """
         Args:
             client: A Cohere library Client class.
@@ -54,7 +54,7 @@ class CohereModel(backends.Model):
             The generated response message returned by the Cohere remote API.
         """
         result: cohere.V2ChatResponse = self.client.chat(
-            messages=messages,
+            messages=messages,  # type: ignore[arg-type]
             model=self.model_spec.model_id,
             temperature=self.temperature,
             max_tokens=self.max_tokens
