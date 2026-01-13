@@ -210,6 +210,9 @@ class GoogleModel(backends.Model):
             contents=encoded_messages,
             config=config
         )
+        response_role = result.candidates[0].content.role
+        if response_role != "model":  # safety check (Google uses "model" instead of "assistant")
+            raise AttributeError("Response message role is " + response_role + " but should be 'model'")
 
         response_text = (result.text or "").strip()
 

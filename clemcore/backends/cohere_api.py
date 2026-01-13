@@ -59,6 +59,8 @@ class CohereModel(backends.Model):
             temperature=self.temperature,
             max_tokens=self.max_tokens
         )
+        if result.message.role != "assistant":  # safety check
+            raise AttributeError("Response message role is " + result.message.role + " but should be 'assistant'")
         response_text = result.message.content[0].text
         response = result.model_dump(mode="json")
         return messages, response, response_text

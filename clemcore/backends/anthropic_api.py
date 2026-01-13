@@ -164,6 +164,8 @@ class AnthropicModel(backends.Model):
             gen_kwargs["max_tokens"] = 4000 + self.max_tokens # todo: we need to use self.gen_args for this
             gen_kwargs["thinking"] = {"type": "enabled", "budget_tokens": 4000}
         completion = self.client.messages.create(**gen_kwargs)
+        if completion.role != "assistant":  # safety check
+            raise AttributeError("Response message role is " + completion.role + " but should be 'assistant'")
         response_text = completion.content[content_index].text
         response = completion.model_dump(mode="json")
         return prompt, response, response_text
