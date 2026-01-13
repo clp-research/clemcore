@@ -129,6 +129,15 @@ class GameMasterEnv(AECEnv):
         self.agents = []
         self.possible_agents = []
 
+        # default spaces for all agents
+        self._observation_space = spaces.Dict(
+            {
+                "role": spaces.Text(max_length=128),  # should be enough chars for a role name
+                "content": spaces.Text(max_length=8192)  # should be enough chars for prompt and context
+            }
+        )
+        self._action_space = spaces.Text(max_length=8192)
+
     def get_current_agent(self):
         """ Mapping the current player to an agent id """
         return self.player_to_agent_id[self.game_master.current_player.name]
@@ -158,8 +167,8 @@ class GameMasterEnv(AECEnv):
             # GameMaster should implement this by default;
             # OK maybe the implemented game should provide a more concrete upper bound on the content length
             # If you have images, then you should also define them here
-            self.observation_spaces[agent] = self.observation_space(agent)
-            self.action_spaces[agent] = self.action_space(agent)
+            self.observation_spaces[agent] = self._observation_space
+            self.action_spaces[agent] = self._action_space
             self.terminations[agent] = False
             self.truncations[agent] = False
             self.rewards[agent] = 0.
@@ -250,16 +259,11 @@ class GameMasterEnv(AECEnv):
 
         If necessary, use AEC wrapper to change the action space, e.g., to include images.
         """
-        return spaces.Dict(
-            {
-                "role": spaces.Text(max_length=128),  # should be enough chars for a role name
-                "content": spaces.Text(max_length=8192)  # should be enough chars for prompt and context
-            }
-        )
+        return self.observation_spaces[agent]
 
     def action_space(self, agent: AgentID):
         """All agents share the same action space. The agents are supposedly generalist models.
 
         If necessary, use AEC wrapper to change the action space.
         """
-        return spaces.Text(max_length=8192)
+        return self.action_spaces[agent]
