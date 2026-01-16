@@ -1,5 +1,7 @@
 import unittest
 
+import pytest
+
 from clemcore.backends import ModelRegistry, ModelSpec
 from clemcore.backends.anthropic_api import Anthropic
 from clemcore.backends.cohere_api import Cohere
@@ -9,6 +11,7 @@ from clemcore.backends.openai_api import OpenAI
 from clemcore.backends.utils import ensure_alternating_roles
 
 
+@pytest.mark.api
 class BackendTestCase(unittest.TestCase):
 
     def generate_response_test(self, backend, model_name, messages, *, model_config=None):

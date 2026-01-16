@@ -1,4 +1,8 @@
 import unittest
+import pytest
+
+# Skip all tests if huggingface dependencies aren't available
+pytest.importorskip("clemcore.backends.huggingface_local_api")
 
 from clemcore import backends
 from clemcore.backends.huggingface_local_api import check_messages, check_context_limit
