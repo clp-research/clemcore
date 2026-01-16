@@ -1,43 +1,250 @@
-import random
 import unittest
 
-from clemcore.clemgame.runners.batchwise import DynamicBatchDataLoader, MultiGameRoundRobinScheduler, GameSession
+from clemcore.clemgame.runners.batchwise import (
+    DynamicBatchDataLoader,
+    SinglePassGameSessionPoller,
+    GameSession,
+)
 
-ALL_DONES = set()
+
+class MockPlayer:
+    """Mock player for testing."""
+
+    def __init__(self, name):
+        self.name = name
 
 
-class ProbabilisticGameMaster:
+class MockGameMaster:
+    """Mock GameMaster with controllable done state."""
 
-    def __init__(self, _id):
-        self._id = _id
-        self._done = False
+    def __init__(self, session_id, *, done_after=3):
+        self._session_id = session_id
+        self._done_after = done_after
+        self._observe_count = 0
 
     def is_done(self):
-        if self._done:
-            return True
-        self._done = random.randint(0, 100) > 70
-        if self._done:
-            ALL_DONES.add(self._id)
-        return self._done
+        return self._observe_count >= self._done_after
 
     def observe(self):
-        return f"player_{self._id}", f"context_{self._id}"
+        self._observe_count += 1
+        player = MockPlayer(f"player_{self._session_id}")
+        context = {"turn": self._observe_count, "session": self._session_id}
+        return player, context
+
+    def step(self, response):
+        done = self.is_done()
+        return done, {"response": response}
 
 
-def create_game_sessions(n):
-    return [GameSession(idx, ProbabilisticGameMaster(idx), dict()) for idx in range(n)]
+class GameSessionTestCase(unittest.TestCase):
+
+    def test_session_yields_observation_when_not_done(self):
+        """Test that session yields observation when game is not done."""
+        gm = MockGameMaster(0, done_after=5)
+        session = GameSession(session_id=0, game_master=gm, game_instance={"id": 0})
+
+        observations = list(session)
+        self.assertEqual(len(observations), 1)
+        session_id, player, context = observations[0]
+        self.assertEqual(session_id, 0)
+        self.assertEqual(player.name, "player_0")
+        self.assertEqual(context["turn"], 1)
+
+    def test_session_yields_nothing_when_done(self):
+        """Test that session yields nothing when game is already done."""
+        gm = MockGameMaster(0, done_after=0)
+        session = GameSession(session_id=0, game_master=gm, game_instance={"id": 0})
+
+        observations = list(session)
+        self.assertEqual(len(observations), 0)
+
+    def test_session_can_iterate_multiple_times(self):
+        """Test that session can be iterated multiple times."""
+        gm = MockGameMaster(0, done_after=5)
+        session = GameSession(session_id=0, game_master=gm, game_instance={"id": 0})
+
+        # First iteration
+        obs1 = list(session)
+        self.assertEqual(len(obs1), 1)
+        self.assertEqual(obs1[0][2]["turn"], 1)
+
+        # Second iteration (observe_count increases)
+        obs2 = list(session)
+        self.assertEqual(len(obs2), 1)
+        self.assertEqual(obs2[0][2]["turn"], 2)
+
+    def test_collate_fn(self):
+        """Test the collate function unpacks batches correctly."""
+        batch = [
+            (0, MockPlayer("p0"), {"ctx": 0}),
+            (1, MockPlayer("p1"), {"ctx": 1}),
+            (2, MockPlayer("p2"), {"ctx": 2}),
+        ]
+        session_ids, players, contexts = GameSession.collate_fn(batch)
+
+        self.assertEqual(session_ids, [0, 1, 2])
+        self.assertEqual([p.name for p in players], ["p0", "p1", "p2"])
+        self.assertEqual(contexts, [{"ctx": 0}, {"ctx": 1}, {"ctx": 2}])
 
 
-class DynamicBatchDataLoaderTest(unittest.TestCase):
-    def test_something(self):
-        game_sessions = create_game_sessions(16)
-        scheduler = MultiGameRoundRobinScheduler(game_sessions=game_sessions)
-        loader = DynamicBatchDataLoader(scheduler, collate_fn=GameSession.collate_fn, batch_size=7)
-        for batch in loader:
-            print("Batch:", len(batch[0]), batch[0])
-            print("Done:", ALL_DONES)
-            assert set(batch[0]) not in ALL_DONES
-        assert all(game_session.game_master.is_done() for game_session in game_sessions), "Not all done"
+class SinglePassGameSessionPollerTestCase(unittest.TestCase):
+
+    def test_polls_all_sessions_once(self):
+        """Test that poller yields one observation from each session."""
+        sessions = [
+            GameSession(i, MockGameMaster(i, done_after=5), {})
+            for i in range(3)
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+
+        observations = list(poller)
+        self.assertEqual(len(observations), 3)
+
+        session_ids = [obs[0] for obs in observations]
+        self.assertEqual(session_ids, [0, 1, 2])
+
+    def test_skips_exhausted_sessions(self):
+        """Test that poller skips already done sessions."""
+        sessions = [
+            GameSession(0, MockGameMaster(0, done_after=5), {}),
+            GameSession(1, MockGameMaster(1, done_after=0), {}),  # Already done
+            GameSession(2, MockGameMaster(2, done_after=5), {}),
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+
+        observations = list(poller)
+        self.assertEqual(len(observations), 2)
+
+        session_ids = [obs[0] for obs in observations]
+        self.assertEqual(session_ids, [0, 2])
+
+    def test_tracks_exhausted_state(self):
+        """Test that exhausted state is tracked correctly."""
+        gm = MockGameMaster(0, done_after=1)
+        sessions = [GameSession(0, gm, {})]
+        poller = SinglePassGameSessionPoller(sessions)
+
+        self.assertFalse(poller.exhausted[0])
+
+        # First poll - not exhausted yet
+        list(poller)
+        self.assertFalse(poller.exhausted[0])  # Game did one observe, not done yet
+
+        # Force the game to be done
+        gm._observe_count = 1  # Now is_done() returns True
+
+        # Create new poller to test exhaustion
+        poller2 = SinglePassGameSessionPoller(sessions)
+        list(poller2)
+        self.assertTrue(poller2.exhausted[0])
+
+    def test_multiple_passes_track_exhaustion(self):
+        """Test that multiple iterations track exhaustion properly."""
+        sessions = [
+            GameSession(0, MockGameMaster(0, done_after=2), {}),
+            GameSession(1, MockGameMaster(1, done_after=1), {}),
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+
+        # First pass - both active
+        obs1 = list(poller)
+        self.assertEqual(len(obs1), 2)
+
+        # Second pass - session 1 becomes exhausted after this
+        obs2 = list(poller)
+        # Session 1's game_master has observe_count=2 now, done_after=1, so is_done()=True
+        self.assertEqual(len(obs2), 1)  # Only session 0
+
+
+class DynamicBatchDataLoaderTestCase(unittest.TestCase):
+
+    def test_yields_batches_up_to_batch_size(self):
+        """Test that loader yields batches up to the specified size."""
+        sessions = [
+            GameSession(i, MockGameMaster(i, done_after=2), {})
+            for i in range(5)
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+        loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=3)
+
+        batches = list(loader)
+        # With 5 sessions and batch_size=3, first batch has 3, second has 2
+        # Then sessions exhaust after 2 observations each
+        self.assertGreater(len(batches), 0)
+
+        # First batch should have at most batch_size items
+        first_batch_ids, _, _ = batches[0]
+        self.assertLessEqual(len(first_batch_ids), 3)
+
+    def test_stops_when_all_exhausted(self):
+        """Test that loader stops when all sessions are exhausted."""
+        sessions = [
+            GameSession(i, MockGameMaster(i, done_after=1), {})
+            for i in range(3)
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+        loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=2)
+
+        batches = list(loader)
+        # All sessions should be exhausted after iteration
+        self.assertTrue(all(poller.exhausted))
+        self.assertGreater(len(batches), 0)
+
+    def test_handles_single_session(self):
+        """Test loader with a single session."""
+        sessions = [GameSession(0, MockGameMaster(0, done_after=3), {})]
+        poller = SinglePassGameSessionPoller(sessions)
+        loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=5)
+
+        batches = list(loader)
+        self.assertEqual(len(batches), 3)  # 3 observations before done
+
+        for batch in batches:
+            session_ids, _, _ = batch
+            self.assertEqual(len(session_ids), 1)
+            self.assertEqual(session_ids[0], 0)
+
+    def test_handles_empty_sessions(self):
+        """Test loader with all sessions already done."""
+        sessions = [
+            GameSession(i, MockGameMaster(i, done_after=0), {})
+            for i in range(3)
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+        loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=2)
+
+        batches = list(loader)
+        self.assertEqual(len(batches), 0)
+
+    def test_batch_size_larger_than_sessions(self):
+        """Test loader when batch_size exceeds number of sessions."""
+        sessions = [
+            GameSession(i, MockGameMaster(i, done_after=2), {})
+            for i in range(2)
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+        loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=10)
+
+        batches = list(loader)
+        # Should still work, batches just won't reach size 10
+        for batch in batches:
+            session_ids, _, _ = batch
+            self.assertLessEqual(len(session_ids), 2)
+
+    def test_all_sessions_complete(self):
+        """Test that all sessions eventually complete."""
+        sessions = [
+            GameSession(i, MockGameMaster(i, done_after=3), {})
+            for i in range(4)
+        ]
+        poller = SinglePassGameSessionPoller(sessions)
+        loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=2)
+
+        list(loader)  # Consume all batches
+
+        # All game masters should be done
+        for session in sessions:
+            self.assertTrue(session.game_master.is_done())
 
 
 if __name__ == '__main__':
