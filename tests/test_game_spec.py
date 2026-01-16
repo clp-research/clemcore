@@ -3,6 +3,7 @@ import json
 import os
 import tempfile
 import unittest
+from pathlib import Path
 
 from clemcore.clemgame.registry import GameSpec
 
@@ -135,9 +136,11 @@ class GameSpecTestCase(unittest.TestCase):
 
     def test_get_game_file(self):
         """Test getting game file path."""
-        spec = GameSpec(game_name="test", game_path="/some/path", players=1)
+        game_path = str(Path("/some/path"))
+        spec = GameSpec(game_name="test", game_path=game_path, players=1)
         game_file = spec.get_game_file()
-        self.assertEqual(game_file, "/some/path/master.py")
+        expected = str(Path("/some/path") / "master.py")
+        self.assertEqual(game_file, expected)
 
     def test_unify_compatible_specs(self):
         """Test unification of compatible GameSpecs."""
