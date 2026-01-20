@@ -3,6 +3,9 @@
 name: Tests
 
 on:
+  schedule:
+    # Run nightly at 3:00 UTC
+    - cron: '0 3 * * *'
   push:
     branches: [main]
   pull_request:
@@ -41,8 +44,8 @@ jobs:
 
   integration-huggingface:
     runs-on: ubuntu-latest
-    # Only run on main branch or when explicitly requested
-    if: github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'run-integration')
+    # Run on main branch, nightly schedule, or when explicitly requested via label
+    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'run-integration')
 
     steps:
     - name: Checkout repository

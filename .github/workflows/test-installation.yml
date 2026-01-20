@@ -3,6 +3,9 @@
 name: Test Python Package Installation
 
 on:
+  schedule:
+    # Run nightly at 3:00 UTC
+    - cron: '0 3 * * *'
   workflow_dispatch:
 
 jobs:
