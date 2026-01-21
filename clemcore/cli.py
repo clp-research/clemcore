@@ -503,7 +503,11 @@ Update Behavior:
                               help="Identifier for this run, used as subdirectory name in results-dir. "
                                    "If not provided, derived from env-agent model names (e.g., 'gpt-4o-llama3'), "
                                    "otherwise defaults to 'run'.")
-    cli(parser.parse_args())
+    try:  # catch all unexpected exceptions to ensure proper logging
+        cli(parser.parse_args())
+    except Exception as e:
+        logger.exception(e)
+        raise
 
 
 if __name__ == "__main__":

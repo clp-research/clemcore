@@ -4,7 +4,6 @@ from typing import List, Dict, Tuple, Any
 
 import requests
 import socketio
-from retry import retry
 
 from clemcore import backends
 from clemcore.backends import ModelSpec, Model
@@ -125,6 +124,14 @@ class SlurkModel(backends.Model):  # todo: make this HumanModel when HumanModel 
 
     def __init__(self, user_id: int, user_token: str, room_id: int, model_spec: ModelSpec):
         super().__init__(model_spec)
+        self.join_timeout = self.model_spec.get("join_timeout")
+        if self.join_timeout is None:
+            self.join_timeout = 300
+            stdout_logger.warning(f"Missing join_timeout in ModelSpec. Using default value of {self.join_timeout}.")
+        self.response_timeout = self.model_spec.get("response_timeout")
+        if self.response_timeout is None:
+            self.response_timeout = 300
+            stdout_logger.warning(f"Missing response_timeout in ModelSpec. Using default value of {self.response_timeout}.")
         self.user_id = user_id
         self.user_token = user_token
         self.sio = socketio.Client(logger=logger)
@@ -158,7 +165,7 @@ class SlurkModel(backends.Model):  # todo: make this HumanModel when HumanModel 
         if messages:
             latest_response = messages[-1]["content"]
         self.sio.emit("text", {"message": latest_response, "room": self.room_id})
-        if not self.sync_event.wait(timeout=self.model_spec.response_timeout):
+        if not self.sync_event.wait(timeout=self.response_timeout):
             pass  # no user response
         self.sync_event.clear()
         user_response = self.user_messages[0]
@@ -167,7 +174,7 @@ class SlurkModel(backends.Model):  # todo: make this HumanModel when HumanModel 
 
     def wait_for_participant(self):
         # this works because: self.sio.on("status", check_and_unblock)
-        if not self.sync_event.wait(timeout=self.model_spec.join_timeout):
+        if not self.sync_event.wait(timeout=self.join_timeout):
             raise RuntimeError("no user joined the slurk room")
         self.sync_event.clear()
 
