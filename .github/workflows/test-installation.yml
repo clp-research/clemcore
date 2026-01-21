@@ -1,11 +1,21 @@
 # This workflow installs the package and runs a command with a variety of Python versions
 
-name: Test Python Package Installation
+name: Package Installation Tests
 
 on:
   schedule:
-    # Run nightly at 3:00 UTC
+    # Run nightly at 3:00 UTC to catch upstream dependency changes
     - cron: '0 3 * * *'
+  push:
+    # Only test when there might be changes to the dependencies in pyproject.toml
+    branches: [ main ]
+    paths:
+      - 'pyproject.toml'
+  pull_request:
+    # Only test when there might be changes to the dependencies in pyproject.toml
+    branches: [ main ]
+    paths:
+      - 'pyproject.toml'
   workflow_dispatch:
 
 jobs:
