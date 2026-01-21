@@ -19,16 +19,18 @@ TINY_MODEL_SPEC = backends.ModelSpec(**{
     "model_name": "tiny-gpt2",
     "backend": "huggingface_local",
     "huggingface_id": "sshleifer/tiny-gpt2",
-    "premade_chat_template": False,
-    # Simple chat template for models without one
-    "custom_chat_template": (
-        "{% for message in messages %}"
-        "{{ message['role'] }}: {{ message['content'] }}\n"
-        "{% endfor %}"
-        "assistant:"
-    ),
-    "eos_to_cull": r"<\|endoftext\|>",
-    "padding_side": "left"
+    "model_config": {
+        "premade_chat_template": False,
+        # Simple chat template for models without one
+        "custom_chat_template": (
+            "{% for message in messages %}"
+            "{{ message['role'] }}: {{ message['content'] }}\n"
+            "{% endfor %}"
+            "assistant:"
+        ),
+        "eos_to_cull": r"<\|endoftext\|>",
+        "padding_side": "left"
+    }
 })
 
 
