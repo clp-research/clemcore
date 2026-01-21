@@ -16,8 +16,6 @@ jobs:
 
   integration-huggingface:
     runs-on: ubuntu-latest
-    # Run on main branch, nightly schedule, or when explicitly requested via label
-    if: github.event_name == 'schedule' || github.ref == 'refs/heads/main' || contains(github.event.pull_request.labels.*.name, 'run-integration')
 
     steps:
     - name: Checkout repository
