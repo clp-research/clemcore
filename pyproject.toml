@@ -22,37 +22,37 @@ dependencies = [
     "numpy>=1.24.3,<2.0.0",
     "retry>=0.9.2",
     "tqdm>=4.65.0",
-    "nltk>=3.9.2,<4.0.0",  # for featstruct.unify (3.9 fixes CVE-2024-39705)
+    "nltk>=3.9.2,<4.0.0", # for featstruct.unify (3.9 fixes CVE-2024-39705)
     "openai>=2.15.0,<3.0.0",
     "anthropic>=0.75.0,<1.0.0",
     "cohere>=5.20.1,<6.0.0",
     "google-genai>=1.57.0,<2.0.0",
-    "mistralai~=1.10.0",
+    "mistralai>=1.10.0,<2.0.0",
     "matplotlib==3.7.1",
     "pandas==2.0.1",
     "seaborn==0.12.2",
-    "sparklines~=0.7.0",
-    "pylatex~=1.4.2", # transcripts
-    "ordered-set~=4.1.0", # transcripts
-    "markdown~=3.8.2", # transcripts
-    "pettingzoo~=1.25.0", # to wrap games as pettingzoo or gymnasium environments
+    "sparklines>=0.7.0",
+    "pylatex>=1.4.0,<2.0.0", # transcripts
+    "ordered-set>=4.1.0,<5.0.0", # transcripts
+    "markdown>=3.8.0,<4.0.0", # transcripts
+    "pettingzoo>=1.25.0,<2.0.0", # to wrap games as pettingzoo or gymnasium environments
     "openenv-core~=0.1.1", # to serve games as openenv server
-    "datasets~=4.4.1" # to load playpen-data for openenv server
+    "datasets>=4.4.0,<5.0.0" # to load playpen-data for openenv server
 ]
 
 [project.optional-dependencies]
 vllm = [
-    "transformers>=4.55.2,<5.0.0", # keep in sync with huggingface extra
-    "vllm>=0.8.4,<1.0.0" # requires: torch==2.6.0 transformers>=4.51.1 cuda==12.4 openai>=1.52.0
-] # comes with torch
+    "transformers>=4.55.2,<5.0.0", # keep in sync with huggingface extra; installs torch
+    "vllm>=0.8.4,<1.0.0" # should use transformers as installed above
+]
 huggingface = [
-    "accelerate>=1.0.0,<2.0.0",  # required for device_map="auto"
-    "bitsandbytes>=0.42.0,<1.0.0", # "bitsandbytes==0.46.0" requires "torch>=2.2,<3"
-    "peft>=0.17.0,<1.0.0", # "torch>=1.13.0" "accelerate>=0.21.0"
+    "accelerate>=1.0.0,<2.0.0", # required for device_map="auto"
+    "bitsandbytes>=0.42.0,<1.0.0", # for loading models with 4-bit and 8-bit quantization
+    "peft>=0.17.0,<1.0.0", # for loading LoRA models (adapters)
     "timm>=1.0.19,<1.1.0", # for transformers
-    "transformers>=4.55.2,<5.0.0", # nltk<=3.8.1 torch>=2.1 sentencepiece>=0.1.91,!=0.1.92 torch>=2.1 timm<=1.0.19
-    "torchvision",  # version resolved by torch
-] # comes with torch
+    "transformers>=4.55.2,<5.0.0", # installs torch
+    "torchvision", # version resolved by torch
+]
 slurk = [
     "python-engineio==4.4.0",
     "python-socketio==5.7.2",
