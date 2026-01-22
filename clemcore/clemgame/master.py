@@ -97,6 +97,14 @@ class GameMaster(EnvLike, GameEventSource):
     def has_started(self) -> bool:
         pass
 
+    @abc.abstractmethod
+    def get_players(self) -> list[Player]:
+        """Get a list of the players.
+        Returns:
+            List of Player instances in the order they are added.
+        """
+        pass
+
 
 class DialogueGameMaster(GameMaster):
     """Extended GameMaster, implementing turns as described in the clembench paper.
