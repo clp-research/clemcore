@@ -7,9 +7,9 @@ from clemcore import get_version
 if TYPE_CHECKING:  # to satisfy pycharm
     from clemcore.clemgame import GameMaster, GameBenchmark
 
-from clemcore.clemgame.recorder import GameInteractionsRecorder
+from clemcore.clemgame.recorder import GameInteractionsRecorder, EventCallRecorder
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallback
-from clemcore.clemgame.resources import store_json, load_json
+from clemcore.clemgame.resources import store_json, load_json, module_logger
 
 
 # for pycharm: suppress could be static checks, because methods might be overwritten
@@ -239,9 +239,49 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         assert _key in self._recorders, f"Recorder must be registered on_game_start, but wasn't for: {_key}"
         recorder = self._recorders.pop(_key)  # auto-remove recorder from registry
-        self._store_files(recorder, game_master, game_instance)
-
-    def _store_files(self, recorder, game_master, game_instance):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
-        store_json(recorder.requests, "requests.json", instance_dir_path)
+
+
+class PlayerFileSaver(GameBenchmarkCallback):
+
+    def __init__(self, results_folder: ResultsFolder):
+        self.results_folder = results_folder
+        self._recorders: Dict[str, EventCallRecorder] = {}
+
+    @staticmethod
+    def to_key(game_name: str, experiment_name: str, game_id: int, player_name: str):
+        return "-".join([game_name, experiment_name, str(game_id), player_name])
+
+    def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
+        game_name = game_master.game_spec.game_name
+        experiment_name = game_master.experiment["name"]
+        game_id = game_instance["game_id"]
+        for player in game_master.get_players():
+            recorder = EventCallRecorder(
+                game_name,
+                experiment_name=experiment_name,
+                game_id=game_id,
+                player_name=player.name,
+                game_role=player.game_role,
+                model_name=player.model.name
+            )
+            game_master.register(recorder)  # for lifecycle events (log_next_round, log_game_end)
+            player.register(recorder)  # for call events (log_event with call tuple)
+            _key = PlayerFileSaver.to_key(game_name, experiment_name, game_id, player.name)
+            self._recorders[_key] = recorder
+
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
+        game_name = game_master.game_spec.game_name
+        experiment_name = game_master.experiment["name"]
+        game_id = game_instance["game_id"]
+        for player in game_master.get_players():
+            _key = PlayerFileSaver.to_key(game_name, experiment_name, game_id, player.name)
+            recorder = self._recorders.pop(_key, None)  # discontinue recording with this recorder
+            if recorder is None:
+                module_logger.error(f"Recorder must be registered on_game_start, but wasn't for: {_key}")
+                continue
+            if len(recorder) > 0:  # only store non-empty recordings because Players might act outside the loop
+                instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+                file_name = "_".join(player.name.lower().strip().split(" "))  # e.g., Player 1 -> player_1
+                store_json(recorder.requests, f"{file_name}.requests.json", instance_dir_path)

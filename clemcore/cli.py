@@ -14,6 +14,7 @@ from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, Experim
     InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstanceIterator, ResultsFolder, \
     GameBenchmark
 from clemcore import clemeval, get_version
+from clemcore.clemgame.callbacks.files import PlayerFileSaver
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
 from clemcore.utils.string_utils import read_query_string
@@ -178,7 +179,8 @@ def run(game_selector: Union[str, Dict, GameSpec],
         InstanceFileSaver(results_folder),
         ExperimentFileSaver(results_folder, player_model_infos=model_infos),
         InteractionsFileSaver(results_folder, player_model_infos=model_infos),
-        RunFileSaver(results_folder, player_model_infos=model_infos)
+        RunFileSaver(results_folder, player_model_infos=model_infos),
+        PlayerFileSaver(results_folder)
     ])
 
     all_start = datetime.now()
