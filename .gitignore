@@ -1,5 +1,6 @@
 # Ours
 key*.json
+model_registry*.json
 *results*
 openenv-records*/
 /venv
