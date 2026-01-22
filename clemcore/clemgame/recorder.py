@@ -24,7 +24,9 @@ class GameInteractionsRecorder(GameEventLogger):
                          experiment_name=experiment_name,
                          game_id=game_id,
                          results_folder=results_folder,
-                         clem_version=get_version()),
+                         clem_version=get_version(),
+                         round_count=None,
+                         completed=None),
             "player_models": player_model_infos,
             # already add Game Master
             "players": collections.OrderedDict(GM=dict(game_role="Game Master", model_name="programmatic")),
@@ -39,6 +41,7 @@ class GameInteractionsRecorder(GameEventLogger):
     def log_next_round(self):
         """Call this method to group interactions per turn."""
         self._current_round += 1
+        self.interactions["meta"]["round_count"] = self._current_round + 1
         self.interactions["turns"].append([])
         self.requests_counts.append(0)
         self.violated_requests_counts.append(0)
@@ -107,6 +110,10 @@ class GameInteractionsRecorder(GameEventLogger):
                 module_logger.warning(f"Invalid player identifiers, html builder won't work.")
         if not self.interactions["turns"]:
             module_logger.warning(f"Interaction logs are missing!")
+
+        # games ending in round 0 never call log_next_round, so set round_count here
+        self.interactions["meta"]["round_count"] = self._current_round + 1
+        self.interactions["meta"]["completed"] = True
 
         # add default framework metrics
         if auto_count_logging:
