@@ -1,18 +1,23 @@
 [
     {
-        "model_name": "claude-3-7-sonnet-20250219",
-        "model_id": "claude-3-7-sonnet-20250219",
+        "model_name": "claude-opus-4.5",
+        "model_id": "claude-opus-4-5-20251101",
         "backend": "anthropic",
-        "release_date": "2025-02-19",
+        "release_date": "2025-11-01",
         "open_weight": false,
         "parameters": "",
         "languages": [
             "en",
             "es",
             "fr",
-            "ja"
+            "de",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh"
         ],
-        "context_size": "128k",
+        "context_size": "200k",
         "license": {
             "name": "Anthropic",
             "url": "https://www.anthropic.com/legal/commercial-terms"
@@ -28,17 +33,22 @@
         }
     },
     {
-        "model_name": "claude-3-5-haiku-20241022",
-        "model_id": "claude-3-5-haiku-20241022",
+        "model_name": "claude-sonnet-4.5",
+        "model_id": "claude-sonnet-4-5-20250929",
         "backend": "anthropic",
-        "release_date": "2024-10-22",
+        "release_date": "2025-09-29",
         "open_weight": false,
         "parameters": "",
         "languages": [
             "en",
             "es",
             "fr",
-            "ja"
+            "de",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh"
         ],
         "context_size": "200k",
         "license": {
@@ -51,122 +61,82 @@
                 "multiple_images": true,
                 "audio": false,
                 "video": false
-            }
+            },
+            "thinking_mode": true
         }
     },
     {
-        "model_name": "command-r-plus",
-        "model_id": "command-r-plus",
+        "model_name": "command-a",
+        "model_id": "command-a-03-2025",
         "backend": "cohere",
-        "release_date": "2024-04-01",
+        "release_date": "2025-03-01",
+        "open_weight": true,
+        "parameters": "111B",
+        "languages": [
+            "en",
+            "fr",
+            "es",
+            "it",
+            "de",
+            "pt",
+            "ja",
+            "ko",
+            "zh",
+            "ar"
+        ],
+        "context_size": "256k",
+        "license": {
+            "name": "CC-BY-NC-4.0",
+            "url": "https://cohere.com/c4ai-cc-by-nc-license"
+        },
+        "model_config": {}
+    },
+    {
+        "model_name": "command-r-plus",
+        "model_id": "command-r-plus-08-2024",
+        "backend": "cohere",
+        "release_date": "2024-08-01",
         "open_weight": true,
         "parameters": "104B",
         "languages": [
-            "en"
+            "en",
+            "fr",
+            "es",
+            "it",
+            "de",
+            "pt",
+            "ja",
+            "ko",
+            "zh",
+            "ar"
         ],
-        "context_size": "",
+        "context_size": "128k",
         "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+            "name": "CC-BY-NC-4.0",
+            "url": "https://cohere.com/c4ai-cc-by-nc-license"
         },
         "model_config": {}
     },
     {
-        "model_name": "command-r",
-        "model_id": "command-r",
-        "backend": "cohere",
-        "release_date": "2024-03-01",
-        "open_weight": true,
-        "parameters": "35B",
-        "languages": [
-            "en"
-        ],
-        "context_size": "",
-        "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        "model_config": {}
-    },
-    {
-        "model_name": "gemini-2.0-flash-exp",
-        "model_id": "gemini-2.0-flash-exp",
+        "model_name": "gemini-2.5-flash",
+        "model_id": "gemini-2.5-flash",
         "backend": "google",
-        "release_date": "2024-12-11",
+        "release_date": "2025-05-20",
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "af",
-            "am",
-            "as",
-            "az",
-            "be",
-            "bs",
-            "ca",
-            "ceb",
-            "co",
-            "cy",
-            "dv",
-            "eo",
-            "eu",
-            "fa",
-            "fil",
-            "fy",
-            "ga",
-            "gd",
-            "gl",
-            "gu",
-            "ha",
-            "haw",
-            "hmn",
-            "ht",
-            "hy",
-            "ig",
-            "is",
-            "jv",
-            "ka",
-            "kk",
-            "km",
-            "kn",
-            "kri",
-            "ku",
-            "ky",
-            "la",
-            "lb",
-            "lo",
-            "mg",
-            "mi",
-            "mk",
-            "ml",
-            "mn",
-            "mni-Mtei",
-            "mr",
-            "ms",
-            "mt",
-            "my",
-            "ne",
-            "ny",
-            "or",
-            "pa",
-            "ps",
-            "sd",
-            "si",
-            "sm",
-            "sn",
-            "so",
-            "sq",
-            "st",
-            "su",
-            "ta",
-            "te",
-            "tg",
-            "ug",
-            "ur",
-            "uz",
-            "xh",
-            "yi",
-            "yo",
-            "zu"
+            "en",
+            "es",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh",
+            "ar",
+            "hi",
+            "ru"
         ],
         "context_size": "1000k",
         "license": {
@@ -183,134 +153,56 @@
         }
     },
     {
-        "model_name": "gemini-1.5-flash-8b-001",
-        "model_id": "gemini-1.5-flash-8b-001",
-        "backend": "google",
-        "release_date": "2024-10-03",
-        "open_weight": false,
-        "parameters": "8B",
-        "languages": [
-            "af",
-            "am",
-            "as",
-            "az",
-            "be",
-            "bs",
-            "ca",
-            "ceb",
-            "co",
-            "cy",
-            "dv",
-            "eo",
-            "eu",
-            "fa",
-            "fil",
-            "fy",
-            "ga",
-            "gd",
-            "gl",
-            "gu",
-            "ha",
-            "haw",
-            "hmn",
-            "ht",
-            "hy",
-            "ig",
-            "is",
-            "jv",
-            "ka",
-            "kk",
-            "km",
-            "kn",
-            "kri",
-            "ku",
-            "ky",
-            "la",
-            "lb",
-            "lo",
-            "mg",
-            "mi",
-            "mk",
-            "ml",
-            "mn",
-            "mni-Mtei",
-            "mr",
-            "ms",
-            "mt",
-            "my",
-            "ne",
-            "ny",
-            "or",
-            "pa",
-            "ps",
-            "sd",
-            "si",
-            "sm",
-            "sn",
-            "so",
-            "sq",
-            "st",
-            "su",
-            "ta",
-            "te",
-            "tg",
-            "ug",
-            "ur",
-            "uz",
-            "xh",
-            "yi",
-            "yo",
-            "zu"
-        ],
-        "context_size": "1000k",
-        "license": {
-            "name": "Gemini",
-            "url": "https://ai.google.dev/gemini-api/terms"
-        },
-        "model_config": {
-            "multimodality": {
-                "single_image": true,
-                "multiple_images": true,
-                "audio": false,
-                "video": false
-            }
-        }
-    },
-    {
-        "model_name": "Qwen3-Next-80B-A3B-Thinking",
-        "huggingface_id": "Qwen/Qwen3-Next-80B-A3B-Thinking",
+        "model_name": "llama-3.3-70b",
+        "huggingface_id": "meta-llama/Llama-3.3-70B-Instruct",
         "backend": "huggingface_local",
-        "release_date": "2025-09-09",
+        "release_date": "2024-12-06",
         "open_weight": true,
-        "parameters": "80B",
+        "parameters": "70B",
         "languages": [
-            "en"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
-        "context_size": "4096",
+        "context_size": "128k",
         "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+            "name": "Llama 3.3 Community License",
+            "url": "https://www.llama.com/llama3_3/license/"
         },
         "model_config": {
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|im_end\\|>",
-            "padding_side": "left",
-            "cot_output": true,
-            "cot_start_tag": "<think>",
-            "cot_end_tag": "</think>"
+            "eos_to_cull": "<\\|eot_id\\|>",
+            "padding_side": "left"
         }
     },
     {
-        "model_name": "Qwen3-Next-80B-A3B-Instruct",
-        "huggingface_id": "Qwen/Qwen3-Next-80B-A3B-Instruct",
+        "model_name": "qwen2.5-72b",
+        "huggingface_id": "Qwen/Qwen2.5-72B-Instruct",
         "backend": "huggingface_local",
-        "release_date": "2025-09-09",
+        "release_date": "2024-09-19",
         "open_weight": true,
-        "parameters": "80B",
+        "parameters": "72B",
         "languages": [
-            "en"
+            "en",
+            "zh",
+            "es",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "vi",
+            "th",
+            "ar",
+            "ru"
         ],
-        "context_size": "4096",
+        "context_size": "128k",
         "license": {
             "name": "Apache 2.0",
             "url": "https://www.apache.org/licenses/LICENSE-2.0"
@@ -322,7 +214,7 @@
         }
     },
     {
-        "model_name": "InternVL3-14B",
+        "model_name": "internvl3-14b",
         "backend": "huggingface_multimodal",
         "huggingface_id": "OpenGVLab/InternVL3-14B",
         "release_date": "2025-04-11",
@@ -333,29 +225,11 @@
             "zh",
             "es",
             "fr",
-            "ca",
-            "hu",
-            "hr",
-            "da",
-            "sr",
-            "hi",
-            "ar",
-            "ru",
             "de",
             "it",
-            "nl",
-            "vi",
-            "id",
-            "ro",
-            "sk",
-            "uk",
-            "bn",
-            "ta",
-            "ne",
-            "ml",
-            "mr",
-            "te",
-            "kn"
+            "ru",
+            "ar",
+            "hi"
         ],
         "context_size": "128k",
         "license": {
@@ -388,7 +262,7 @@
         }
     },
     {
-        "model_name": "InternVL3-38B",
+        "model_name": "internvl3-38b",
         "backend": "huggingface_multimodal",
         "huggingface_id": "OpenGVLab/InternVL3-38B",
         "release_date": "2025-04-11",
@@ -399,29 +273,11 @@
             "zh",
             "es",
             "fr",
-            "ca",
-            "hu",
-            "hr",
-            "da",
-            "sr",
-            "hi",
-            "ar",
-            "ru",
             "de",
             "it",
-            "nl",
-            "vi",
-            "id",
-            "ro",
-            "sk",
-            "uk",
-            "bn",
-            "ta",
-            "ne",
-            "ml",
-            "mr",
-            "te",
-            "kn"
+            "ru",
+            "ar",
+            "hi"
         ],
         "context_size": "128k",
         "license": {
@@ -454,42 +310,26 @@
         }
     },
     {
-        "model_name": "Qwen3-235B-A22B-Instruct-2507-GGUF",
-        "huggingface_id": "unsloth/Qwen3-235B-A22B-Instruct-2507-GGUF",
+        "model_name": "llama-3.3-70b-gguf",
+        "huggingface_id": "bartowski/Llama-3.3-70B-Instruct-GGUF",
         "backend": "llamacpp",
-        "release_date": "2025-07-22",
-        "open_weight": true,
-        "parameters": "235B",
-        "languages": [
-            "en"
-        ],
-        "context_size": "256K",
-        "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        "model_config": {
-            "filename": "*/Q8_0/*Q8_0*.gguf",
-            "premade_chat_template": true,
-            "bos_string": "<s>",
-            "eos_string": "<|im_end|>",
-            "eos_to_cull": "<\\|im_end\\|>"
-        }
-    },
-    {
-        "model_name": "Meta-Llama-3-70B-Instruct-GGUF-q4",
-        "backend": "llamacpp",
-        "huggingface_id": "MaziyarPanahi/Meta-Llama-3-70B-Instruct-GGUF",
-        "release_date": "2024-04-18",
+        "release_date": "2024-12-06",
         "open_weight": true,
         "parameters": "70B",
         "languages": [
-            "en"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
-        "context_size": "",
+        "context_size": "128k",
         "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+            "name": "Llama 3.3 Community License",
+            "url": "https://www.llama.com/llama3_3/license/"
         },
         "model_config": {
             "filename": "*Q4_K_M.gguf",
@@ -500,252 +340,202 @@
         }
     },
     {
-        "model_name": "mistral-large-2402",
-        "model_id": "mistral-large-2402",
-        "backend": "mistral",
-        "release_date": "2024-02-01",
+        "model_name": "qwen2.5-72b-gguf",
+        "huggingface_id": "Qwen/Qwen2.5-72B-Instruct-GGUF",
+        "backend": "llamacpp",
+        "release_date": "2024-09-19",
         "open_weight": true,
-        "parameters": "123B",
+        "parameters": "72B",
         "languages": [
             "en",
-            "de",
+            "zh",
+            "es",
             "fr",
+            "de",
             "it",
-            "es"
+            "pt",
+            "ja",
+            "ko"
         ],
         "context_size": "128k",
         "license": {
-            "name": "Mistral",
-            "url": "https://mistral.ai/licenses/MRL-0.1.md"
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+        },
+        "model_config": {
+            "filename": "*q4_k_m*.gguf",
+            "premade_chat_template": true,
+            "bos_string": "<|im_start|>",
+            "eos_string": "<|im_end|>",
+            "eos_to_cull": "<\\|im_end\\|>"
+        }
+    },
+    {
+        "model_name": "mistral-large",
+        "model_id": "mistral-large-latest",
+        "backend": "mistral",
+        "release_date": "2025-12-01",
+        "open_weight": true,
+        "parameters": "675B",
+        "languages": [
+            "en",
+            "fr",
+            "de",
+            "es",
+            "it",
+            "pt",
+            "ru",
+            "zh",
+            "ja",
+            "ko"
+        ],
+        "context_size": "256k",
+        "license": {
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         "model_config": {}
     },
     {
-        "model_name": "mistral-medium-2312",
-        "model_id": "mistral-medium-2312",
+        "model_name": "mistral-small",
+        "model_id": "mistral-small-latest",
         "backend": "mistral",
-        "release_date": "2023-12-01",
+        "release_date": "2025-06-01",
         "open_weight": true,
         "parameters": "",
         "languages": [
             "en",
-            "de",
             "fr",
+            "de",
+            "es",
             "it",
-            "es"
+            "pt"
         ],
         "context_size": "128k",
         "license": {
-            "name": "Mistral",
-            "url": "https://mistral.ai/licenses/MRL-0.1.md"
+            "name": "Apache 2.0",
+            "url": "https://www.apache.org/licenses/LICENSE-2.0"
         },
         "model_config": {}
     },
     {
-        "model_name": "o3-mini-2025-01-31",
-        "model_id": "o3-mini-2025-01-31",
+        "model_name": "gpt-4o-mini",
+        "model_id": "gpt-4o-mini",
         "backend": "openai",
-        "release_date": "2025-01-31",
+        "release_date": "2024-07-18",
         "open_weight": false,
         "parameters": "",
         "languages": [
-            "ar",
-            "bn",
-            "zh",
+            "en",
+            "es",
             "fr",
             "de",
-            "hi",
-            "en",
-            "id",
             "it",
+            "pt",
+            "ru",
+            "zh",
             "ja",
             "ko",
-            "pt",
+            "ar",
+            "hi"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": false,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "gpt-4o",
+        "model_id": "gpt-4o",
+        "backend": "openai",
+        "release_date": "2024-05-13",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
             "es",
-            "sw",
-            "yo"
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ru",
+            "zh",
+            "ja",
+            "ko",
+            "ar",
+            "hi"
+        ],
+        "context_size": "128k",
+        "license": {
+            "name": "OpenAI",
+            "url": "https://openai.com/policies/row-terms-of-use/"
+        },
+        "model_config": {
+            "multimodality": {
+                "single_image": true,
+                "multiple_images": true,
+                "audio": true,
+                "video": false
+            }
+        }
+    },
+    {
+        "model_name": "claude-sonnet-4.5-or",
+        "model_id": "anthropic/claude-sonnet-4-5",
+        "backend": "openrouter",
+        "release_date": "2025-09-29",
+        "open_weight": false,
+        "parameters": "",
+        "languages": [
+            "en",
+            "es",
+            "fr",
+            "de",
+            "it",
+            "pt",
+            "ja",
+            "ko",
+            "zh"
         ],
         "context_size": "200k",
         "license": {
-            "name": "OpenAI",
-            "url": "https://openai.com/policies/row-terms-of-use/"
+            "name": "Anthropic",
+            "url": "https://www.anthropic.com/legal/commercial-terms"
         },
-        "model_config": {
-            "reasoning_model": true
-        }
+        "model_config": {}
     },
     {
-        "model_name": "o1-2024-12-17",
-        "model_id": "o1-2024-12-17",
-        "backend": "openai",
-        "release_date": "2024-12-17",
-        "open_weight": false,
-        "parameters": "",
+        "model_name": "llama-3.3-70b-or",
+        "model_id": "meta-llama/llama-3.3-70b-instruct",
+        "backend": "openrouter",
+        "release_date": "2024-12-06",
+        "open_weight": true,
+        "parameters": "70B",
         "languages": [
             "en",
-            "es",
-            "fr",
             "de",
+            "fr",
             "it",
             "pt",
-            "ru",
-            "zh",
-            "ja",
-            "ko",
-            "ar",
             "hi",
-            "bn",
-            "te",
-            "ta",
-            "ml",
-            "kn",
-            "gu",
-            "mr",
-            "pa",
-            "ur",
-            "vi",
-            "th",
-            "id",
-            "ms",
-            "tl",
-            "sw",
-            "yo",
-            "zu",
-            "tr",
-            "he",
-            "fa",
-            "uk",
-            "pl",
-            "cs",
-            "hu",
-            "ro",
-            "nl",
-            "sv",
-            "no",
-            "da",
-            "fi",
-            "el",
-            "bg",
-            "sr",
-            "hr",
-            "sk",
-            "is"
-        ],
-        "context_size": "128k",
-        "license": {
-            "name": "OpenAI",
-            "url": "https://openai.com/policies/row-terms-of-use/"
-        },
-        "model_config": {
-            "reasoning_model": true
-        }
-    },
-    {
-        "model_name": "qwen-max",
-        "model_id": "qwen/qwen-max",
-        "backend": "openai_compatible",
-        "release_date": "2025-02-01",
-        "open_weight": false,
-        "parameters": "",
-        "languages": [
-            "en",
-            "zh",
             "es",
-            "fr",
-            "ca",
-            "hu",
-            "hr",
-            "da",
-            "sr",
-            "hi",
-            "ar",
-            "ru",
-            "de",
-            "it",
-            "nl",
-            "vi",
-            "id",
-            "ro",
-            "sk",
-            "uk",
-            "bn",
-            "ta",
-            "ne",
-            "ml",
-            "mr",
-            "te",
-            "kn"
-        ],
-        "context_size": "32k",
-        "license": {
-            "name": "Qwen-max",
-            "url": "https://www.alibabacloud.com/en/solutions/generative-ai/qwen"
-        },
-        "model_config": {}
-    },
-    {
-        "model_name": "deepseek-r1",
-        "model_id": "deepseek/deepseek-r1",
-        "backend": "openai_compatible",
-        "release_date": "2025-01-20",
-        "open_weight": true,
-        "parameters": "671B",
-        "languages": [
-            "en",
-            "zh"
+            "th"
         ],
         "context_size": "128k",
         "license": {
-            "name": "Deepseek",
-            "url": "https://github.com/deepseek-ai/DeepSeek-R1/blob/main/LICENSE"
+            "name": "Llama 3.3 Community License",
+            "url": "https://www.llama.com/llama3_3/license/"
         },
         "model_config": {}
-    },
-    {
-        "model_name": "gpt-oss-120b-openrouter-reasoning-medium",
-        "huggingface_id": "openai/gpt-oss-120b",
-        "backend": "openrouter",
-        "release_date": "2025-08-04",
-        "open_weight": true,
-        "parameters": "120B",
-        "languages": [
-            "en"
-        ],
-        "context_size": "131072",
-        "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        "model_config": {
-            "extra_body": {
-                "reasoning": {
-                    "effort": "medium"
-                }
-            }
-        }
-    },
-    {
-        "model_name": "gpt-oss-120b-openrouter-reasoning-low",
-        "huggingface_id": "openai/gpt-oss-120b",
-        "backend": "openrouter",
-        "release_date": "2025-08-04",
-        "open_weight": true,
-        "parameters": "120B",
-        "languages": [
-            "en"
-        ],
-        "context_size": "131072",
-        "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
-        },
-        "model_config": {
-            "extra_body": {
-                "reasoning": {
-                    "effort": "low"
-                }
-            }
-        }
     },
     {
         "model_name": "slurk",
@@ -756,44 +546,54 @@
         "room_layout_path": "packaged"
     },
     {
-        "model_name": "gpt-oss-120b-vllm-2gpu",
-        "huggingface_id": "openai/gpt-oss-120b",
+        "model_name": "llama-3.3-70b-vllm",
+        "huggingface_id": "meta-llama/Llama-3.3-70B-Instruct",
         "backend": "vllm",
-        "release_date": "2025-08-04",
+        "release_date": "2024-12-06",
         "open_weight": true,
-        "parameters": "120B",
+        "parameters": "70B",
         "languages": [
-            "en"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
-        "context_size": "131072",
+        "context_size": "128k",
         "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+            "name": "Llama 3.3 Community License",
+            "url": "https://www.llama.com/llama3_3/license/"
         },
         "model_config": {
             "number_gpus": 2,
             "premade_chat_template": true,
-            "eos_to_cull": "<\\|return\\|>",
-            "padding_side": "left",
-            "cot_output": true,
-            "cot_start_tag": "<|channel|>analysis<|message|>",
-            "cot_end_tag": "<\\|end\\|><\\|start\\|>assistant(<\\|channel\\|>commentary to=assistant)*<\\|channel\\|>final<\\|message\\|>"
+            "eos_to_cull": "<\\|eot_id\\|>"
         }
     },
     {
-        "model_name": "Meta-Llama-3.1-70B-Instruct-FP8-neuralmagic-1gpu",
+        "model_name": "llama-3.3-70b-fp8-vllm",
+        "huggingface_id": "nvidia/Llama-3.3-70B-Instruct-FP8",
         "backend": "vllm",
-        "huggingface_id": "neuralmagic/Meta-Llama-3.1-70B-Instruct-FP8",
-        "release_date": "2023-07-23",
+        "release_date": "2024-12-06",
         "open_weight": true,
         "parameters": "70B",
         "languages": [
-            "en"
+            "en",
+            "de",
+            "fr",
+            "it",
+            "pt",
+            "hi",
+            "es",
+            "th"
         ],
-        "context_size": "",
+        "context_size": "128k",
         "license": {
-            "name": "Apache 2.0",
-            "url": "https://www.apache.org/licenses/LICENSE-2.0"
+            "name": "Llama 3.3 Community License",
+            "url": "https://www.llama.com/llama3_3/license/"
         },
         "model_config": {
             "number_gpus": 1,
