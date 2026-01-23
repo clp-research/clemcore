@@ -4,6 +4,7 @@ import inspect
 import os
 import importlib.resources as importlib_resources
 import importlib.util as importlib_util
+from pathlib import Path
 from typing import List
 
 from clemcore.backends import ModelSpec, Model, HumanModel, CustomResponseModel
@@ -107,6 +108,23 @@ class BackendRegistry:
                 return backend_file
         raise ValueError(f"No registered backend file found for selector={backend_selector}")
 
+    @staticmethod
+    def list_backend_files(dir_path: Path, *, lookup_source: str = None) -> list[dict]:
+        return [{
+            "backend": to_backend_name(file),
+            "file_name": file,
+            "file_path": str(dir_path / file),
+            "lookup_source": lookup_source or str(dir_path / file)
+        } for file in os.listdir(dir_path) if is_backend_file(file)]
+
+    @classmethod
+    def from_directory(cls, dir_path: Path) -> "BackendRegistry":
+        """
+        Lookup _api.py files in the given directory.
+        :return: backend registry with file path to backends to be dynamically loaded
+        """
+        return cls(BackendRegistry.list_backend_files(dir_path))
+
     @classmethod
     def from_packaged_and_cwd_files(cls) -> "BackendRegistry":
         """
@@ -116,13 +134,7 @@ class BackendRegistry:
         Backends found in the (1) are favored over (2), that is listed before them to allow to 'overwrite' them.
         :return: backend registry with file path to backends to be dynamically loaded
         """
-        backend_files = []
-        for file in os.listdir():
-            if is_backend_file(file):
-                backend_files.append({"backend": to_backend_name(file),
-                                      "file_name": file,
-                                      "file_path": os.path.join(os.getcwd(), file),
-                                      "lookup_source": "cwd"})
+        backend_files = BackendRegistry.list_backend_files(Path.cwd(), lookup_source="cwd")
         for file in importlib_resources.files(__package__).iterdir():  # __package__ already points to "backends"
             if is_backend_file(file.name):
                 backend_files.append({"backend": to_backend_name(file.name),
