@@ -2,11 +2,11 @@ import abc
 import hashlib
 import json
 import logging
-import os
 from dataclasses import dataclass
+from operator import itemgetter
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Dict, List, Union, Tuple, Any
+from typing import Dict, List, Union, Tuple, Any, Callable
 import importlib.resources as importlib_resources
 import nltk
 
@@ -168,11 +168,34 @@ class ModelRegistry:
             model_specs = []
         self._model_specs = model_specs
 
+    @property
+    def model_specs(self):
+        return list(self._model_specs)  # defensive shallow copy; ModelSpec is immutable anyway
+
     def __len__(self):
         return len(self._model_specs)
 
     def __iter__(self):
         return iter(self._model_specs)
+
+    def select(self, selector: Callable[[ModelSpec], Any] | str = None) -> list[Any]:
+        """Return selected values from model specs.
+
+        Args:
+            selector: A property name or function applied to each ModelSpec.
+
+        Returns:
+            A list of selected values.
+        """
+        if selector is None:
+            return self.model_specs
+        if isinstance(selector, str):
+            selector = itemgetter(selector)
+        return [selector(spec) for spec in self.model_specs]
+
+    def where(self, predicate: Callable[[ModelSpec], bool]) -> "ModelRegistry":
+        """Return a new registry containing specs that match the predicate."""
+        return ModelRegistry([spec for spec in self if predicate(spec)])
 
     @classmethod
     def get_cwd_path(cls) -> str:
@@ -271,6 +294,26 @@ class ModelRegistry:
         return registry
 
     @classmethod
+    def from_directory(cls, dir_path: Path) -> "ModelRegistry":
+        """
+        Lookup model_registry.json in the given directory.
+        :return: model registry with model specs
+        """
+        model_registry_path = dir_path / "model_registry.json"
+        return ModelRegistry.from_json_file(model_registry_path)
+
+    @classmethod
+    def from_json_file(cls, file_path: Path) -> "ModelRegistry":
+        """
+        Creates a model registry based on the given json file.
+        :return: model registry with model specs
+        """
+        registry = cls()
+        with open(file_path, encoding='utf-8') as f:
+            registry.register_from_list(json.load(f), lookup_source=str(file_path))
+        return registry
+
+    @classmethod
     def from_packaged_and_cwd_files(cls) -> "ModelRegistry":
         """
         Lookup model_registry.json in the following locations:
@@ -281,11 +324,9 @@ class ModelRegistry:
         """
         registry = cls()
         try:
-            model_registry_path = os.path.join(os.getcwd(), "model_registry.json")
-            with open(model_registry_path, encoding='utf-8') as f:
-                registry.register_from_list(json.load(f), lookup_source=model_registry_path)
+            registry = ModelRegistry.from_directory(Path.cwd())
         except Exception as e:
-            module_logger.debug("File lookup failed with exception: %s", e)
+            module_logger.debug("Failed to initialize model registry from cwd: %s", e)
         try:
             with importlib_resources.files(__package__).joinpath("model_registry.json").open("r") as f:
                 registry.register_from_list(json.load(f), lookup_source="packaged")
