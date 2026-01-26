@@ -105,6 +105,8 @@ class DialogueGameMaster(GameMaster):
         """
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
+
+    def before_game(self):
         self._on_before_game()
         self.started = True
         self._on_before_round()

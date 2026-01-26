@@ -90,6 +90,10 @@ class GameMaster(EnvLike, GameEventSource):
         pass
 
     @abc.abstractmethod
+    def before_game(self):
+        pass
+
+    @abc.abstractmethod
     def is_done(self) -> bool:
         pass
 
@@ -210,6 +214,9 @@ class DialogueGameMaster(GameMaster):
         """
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
+
+    @final
+    def before_game(self):
         self._on_before_game()
         self.started = True
         self._on_before_round()
