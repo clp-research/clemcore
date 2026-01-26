@@ -206,7 +206,7 @@ class GameMasterEnv(AECEnv):
 
         # Update current rewards and info for the current agent (response_score is returned in legacy master)
         self._cumulative_rewards[current_agent] = 0
-        self.rewards[current_agent] = info.get("turn_score", info.get("response_score", 0.))
+        self.rewards[current_agent] = info.get("turn_score", info.get("response_score", 0.)) or 0.  # when None
         self.infos[current_agent] = info
 
         # Inform callbacks about the game step results
