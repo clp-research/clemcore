@@ -220,7 +220,7 @@ class GameMasterEnv(AECEnv):
             for agent_id in self.agents:
                 # Note: we do not handle truncations separately yet, e.g., running out of turns
                 self.terminations[agent_id] = True
-                self.rewards[agent_id] = info.get("episode_score", 0.)
+                self.rewards[agent_id] = info.get("episode_score", 0.) or 0.  # when None
             self.callbacks.on_game_end(self.game_master, self.game_instance)
 
         # Collect and reset the rewards for all agents
