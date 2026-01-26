@@ -399,7 +399,7 @@ Update Behavior:
                                  help="Create files always in current working directory.")
 
     run_parser = sub_parsers.add_parser("run", formatter_class=argparse.RawTextHelpFormatter)
-    run_parser.add_argument("-m", "--models", type=str, nargs="*",
+    run_parser.add_argument("-m", "--models", type=str, nargs="*", required=True,
                             help="""Assumes model names supported by the implemented backends.
 
       To run a specific game with a single player:
