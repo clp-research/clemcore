@@ -39,6 +39,14 @@ class GameMaster(GameEventSource):
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
         self._current_player: Player | None = None
 
+    @property
+    def current_player(self) -> Player:
+        """Get the current player whose turn it is.
+        Returns:
+            The Player instance whose turn it is to respond.
+        """
+        return self._current_player
+
     def load_json(self, file_path: Union[str, Path]):
         return self.game_resources.load_json(file_path)
 
@@ -80,11 +88,16 @@ class GameMaster(GameEventSource):
         pass
 
     @abc.abstractmethod
-    def is_done(self) -> bool:
-        pass
+    def step(self, response: str) -> Tuple[bool, Dict]:
+        """Apply the player's response, advance the game state, and return (done, info).
 
-    @abc.abstractmethod
-    def has_started(self) -> bool:
+        Args:
+            response: The textual response (action) from the current player.
+
+        Returns:
+            Tuple of (done, info) where done indicates if the game has ended,
+            and info contains step metadata (e.g., turn_score, episode_score).
+        """
         pass
 
     @abc.abstractmethod
@@ -94,14 +107,6 @@ class GameMaster(GameEventSource):
             List of Player instances in the order they are added.
         """
         pass
-
-    @property
-    def current_player(self) -> Player:
-        """Get the current player whose turn it is.
-        Returns:
-            The Player instance whose turn it is to respond.
-        """
-        return self._current_player
 
     @abc.abstractmethod
     def get_context_for(self, player: Player) -> Dict | None:
@@ -114,19 +119,6 @@ class GameMaster(GameEventSource):
             player: The player to get the context for.
         Returns:
             A dict with at least 'role' and 'content' keys, or None if no context available.
-        """
-        pass
-
-    @abc.abstractmethod
-    def step(self, response: str) -> Tuple[bool, Dict]:
-        """Apply the player's response, advance the game state, and return (done, info).
-
-        Args:
-            response: The textual response (action) from the current player.
-
-        Returns:
-            Tuple of (done, info) where done indicates if the game has ended,
-            and info contains step metadata (e.g., turn_score, episode_score).
         """
         pass
 
@@ -258,7 +250,7 @@ class DialogueGameMaster(GameMaster):
             content: The text content to be added to the initial prompt.
             extras: Additional content to be merged into the context e.g. information about images
         """
-        if self.has_started():
+        if self.current_round >= 0:
             raise RuntimeError("The initial_prompt cannot be set when the game is already running."
                                "This feature only usable during game setup.")
         if player is None:
@@ -468,12 +460,6 @@ class DialogueGameMaster(GameMaster):
             A bool, True if game continues, False if game should stop.
         """
         pass
-
-    def is_done(self) -> bool:
-        return not self._does_game_proceed()
-
-    def has_started(self) -> bool:
-        return self.current_round >= 0
 
     def _on_game_error(self, error: GameError):
         """

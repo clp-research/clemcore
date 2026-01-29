@@ -129,7 +129,7 @@ class DialogueGameMaster(GameMaster):
             content: The text content to be added to the initial prompt.
             extras: Additional content to be merged into the context e.g. information about images
         """
-        if self.has_started():
+        if self.current_round >= 0:
             raise RuntimeError("The initial_prompt cannot be set when the game is already running."
                                "This feature only usable during game setup.")
         if player is None:
@@ -350,12 +350,6 @@ class DialogueGameMaster(GameMaster):
             A bool, True if game continues, False if game should stop.
         """
         pass
-
-    def is_done(self) -> bool:
-        return not self._does_game_proceed()
-
-    def has_started(self) -> bool:
-        return self.current_round >= 0
 
     def _on_before_round(self):
         """Executed in the play loop before a new round of gameplay starts.
