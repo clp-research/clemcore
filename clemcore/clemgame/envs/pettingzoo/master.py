@@ -7,7 +7,7 @@ from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList, GameStep
 from clemcore.clemgame.registry import GameRegistry
 from clemcore.clemgame.instances import GameInstanceIterator
 from clemcore.clemgame.benchmark import GameBenchmark
-from clemcore.clemgame.master import DialogueGameMaster
+from clemcore.clemgame.master import GameMaster
 from clemcore.clemgame.envs.pettingzoo.wrappers import (
     GameInstanceIteratorWrapper,
     GameBenchmarkWrapper,
@@ -110,7 +110,7 @@ class GameMasterEnv(AECEnv):
         super().__init__()
         self.game_benchmark = game_benchmark
         self.callbacks = callbacks or GameBenchmarkCallbackList()
-        self.game_master: DialogueGameMaster | None = None  # initialized on reset()
+        self.game_master: GameMaster | None = None  # initialized on reset()
         self.game_instance: dict | None = None  # initialized on reset()
         self.experiment: dict | None = None  # initialized on reset()
         self.player_by_agent_id = {}  # mapping between agent ids and player instances
@@ -151,7 +151,7 @@ class GameMasterEnv(AECEnv):
         self.game_instance = self.options["game_instance"]
         player_models = (self.options.get("player_models", None)
                          or [CustomResponseModel()] * self.game_benchmark.game_spec.players)
-        self.game_master: DialogueGameMaster = self.game_benchmark.create_game_master(self.experiment, player_models)
+        self.game_master: GameMaster = self.game_benchmark.create_game_master(self.experiment, player_models)
         self.game_master.setup(**self.game_instance)  # this sets up the players
         self.callbacks.on_game_start(self.game_master, self.game_instance)  # this might attach loggers
         self.game_master.before_game()  # a hook for logging or other game-specific logic
@@ -245,15 +245,14 @@ class GameMasterEnv(AECEnv):
 
         Note:
             If no context has been set for the player (e.g., game aborted before their turn),
-            returns the initial prompt if available, otherwise None.
+            returns a generic message indicating the game ended early.
         """
         player = self.player_by_agent_id[agent]
-        try:
-            return self.game_master.get_context_for(player)
-        except AssertionError:
+        context = self.game_master.get_context_for(player)
+        if context is None:
             # Handle case where context isn't available (e.g., early game abort before player's turn)
-            # Fall back to initial prompt if available
-            return self.game_master.initial_prompt_for_player.get(player.name)
+            return {"role": "user", "content": "The game ended before your turn."}
+        return context
 
     def observation_space(self, agent: AgentID):
         """All agents share the same observation space.

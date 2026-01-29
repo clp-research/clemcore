@@ -100,12 +100,11 @@ class SinglePlayerWrapperTestCase(unittest.TestCase):
 class GameMasterEnvObserveTestCase(unittest.TestCase):
     """Tests for GameMasterEnv.observe() edge cases (issue #249)."""
 
-    def _create_env(self, get_context_side_effect, initial_prompts=None):
+    def _create_env(self, get_context_return_value):
         """Helper to create GameMasterEnv with mocked game_master."""
         mock_benchmark = MagicMock()
         mock_game_master = MagicMock()
-        mock_game_master.get_context_for.side_effect = get_context_side_effect
-        mock_game_master.initial_prompt_for_player = initial_prompts or {}
+        mock_game_master.get_context_for.return_value = get_context_return_value
 
         mock_player = MagicMock()
         mock_player.name = "Player 1"
@@ -115,29 +114,16 @@ class GameMasterEnvObserveTestCase(unittest.TestCase):
         env.player_by_agent_id = {"player_0": mock_player}
         return env, mock_game_master, mock_player
 
-    def test_returns_none_when_no_context(self):
-        """Returns None when no context set and no initial prompt."""
-        env, _, _ = self._create_env(
-            get_context_side_effect=AssertionError("No context"),
-            initial_prompts={},
-        )
-        self.assertIsNone(env.observe("player_0"))
-
-    def test_returns_initial_prompt_as_fallback(self):
-        """Returns initial prompt when no context set."""
-        initial_prompt = {"role": "user", "content": "Welcome!"}
-        env, _, _ = self._create_env(
-            get_context_side_effect=AssertionError("No context"),
-            initial_prompts={"Player 1": initial_prompt},
-        )
-        self.assertEqual(env.observe("player_0"), initial_prompt)
+    def test_returns_generic_message_when_no_context(self):
+        """Returns generic abort message when no context has been set (e.g., early game abort)."""
+        env, _, _ = self._create_env(get_context_return_value=None)
+        result = env.observe("player_0")
+        self.assertEqual(result, {"role": "user", "content": "The game ended before your turn."})
 
     def test_returns_context_when_available(self):
         """Returns context normally when set."""
         context = {"role": "user", "content": "Your turn!"}
-        env, mock_gm, mock_player = self._create_env(
-            get_context_side_effect=lambda p: context,
-        )
+        env, mock_gm, mock_player = self._create_env(get_context_return_value=context)
 
         result = env.observe("player_0")
         self.assertEqual(result, context)

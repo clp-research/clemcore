@@ -37,6 +37,7 @@ class GameMaster(GameEventSource):
         self.player_models: List[backends.Model] = player_models
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
+        self._current_player: Player | None = None
 
     def load_json(self, file_path: Union[str, Path]):
         return self.game_resources.load_json(file_path)
@@ -94,6 +95,28 @@ class GameMaster(GameEventSource):
         """
         pass
 
+    @property
+    def current_player(self) -> Player:
+        """Get the current player whose turn it is.
+        Returns:
+            The Player instance whose turn it is to respond.
+        """
+        return self._current_player
+
+    @abc.abstractmethod
+    def get_context_for(self, player: Player) -> Dict | None:
+        """Get the context for the specified player.
+
+        The context is what the player should respond to. Returns None if no context
+        has been set for the player yet (e.g., game aborted before their turn).
+
+        Args:
+            player: The player to get the context for.
+        Returns:
+            A dict with at least 'role' and 'content' keys, or None if no context available.
+        """
+        pass
+
     @abc.abstractmethod
     def step(self, response: str) -> Tuple[bool, Dict]:
         """Apply the player's response, advance the game state, and return (done, info).
@@ -127,7 +150,6 @@ class DialogueGameMaster(GameMaster):
         self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
         self.initial_prompt_for_player: Dict[str, Dict] = dict()
         self.current_round: int = -1
-        self._current_player: Player = None
         self._current_player_idx: int = 0
         self.info = {}
 
@@ -137,10 +159,6 @@ class DialogueGameMaster(GameMaster):
     @property
     def game_state(self):
         return None
-
-    @property
-    def current_player(self) -> Player:
-        return self._current_player
 
     @final
     def get_players(self) -> List[Player]:
@@ -267,18 +285,24 @@ class DialogueGameMaster(GameMaster):
         self.context_for_player[player.name] = context
 
     @final
-    def get_context_for(self, player) -> Dict:
+    def get_context_for(self, player: Player) -> Dict | None:
         """
         Get the context for the specified player. This is a pure function with no side effects.
 
         The initial_prompt (if set) is always merged with the context.
+
+        Returns:
+            The context dict with 'role' and 'content' keys, or None if no context has been set.
         """
-        assert player is not None, "Cannot get player context for 'None'"
-        assert player.name in self.context_for_player, f"No context set for {player.name}"
+        if player is None or player.name not in self.context_for_player:
+            return None
         context = self.context_for_player[player.name]
-        assert "role" in context, f"Player context must have a 'role' entry"
-        assert context["role"] == "user", f"Role of player context must be 'user'"
-        assert "content" in context, f"Player context must have a 'content' entry"
+        if "role" not in context:
+            raise ValueError("Player context must have a 'role' entry")
+        if context["role"] != "user":
+            raise ValueError("Role of player context must be 'user'")
+        if "content" not in context:
+            raise ValueError("Player context must have a 'content' entry")
         initial_prompt = self.initial_prompt_for_player.get(player.name)
         if initial_prompt is not None:
             content = context["content"]
