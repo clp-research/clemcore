@@ -14,34 +14,45 @@ class MockPlayer:
         self.name = name
 
 
-class MockGameMaster:
-    """Mock GameMaster with controllable done state."""
+class MockGameMasterEnv:
+    """Mock GameMasterEnv with controllable done state."""
 
     def __init__(self, session_id, *, done_after=3):
         self._session_id = session_id
         self._done_after = done_after
         self._observe_count = 0
+        self.agent_selection = "player_0"
+        self.terminations = {"player_0": False}
+        self.player_by_agent_id = {"player_0": MockPlayer(f"player_{session_id}")}
 
-    def is_done(self):
-        return self._observe_count >= self._done_after
+    def last(self, observe=False):
+        """Return observation in PettingZoo style.
 
-    def observe(self):
+        done_after specifies how many observations before termination.
+        E.g., done_after=3 means 3 observations, then done on the 4th call.
+        """
         self._observe_count += 1
-        player = MockPlayer(f"player_{self._session_id}")
         context = {"turn": self._observe_count, "session": self._session_id}
-        return player, context
+        reward = 0.0
+        # Terminate after done_after observations have been made
+        termination = self._observe_count > self._done_after
+        truncation = False
+        info = {}
+        if termination:
+            self.terminations["player_0"] = True
+        return context, reward, termination, truncation, info
 
     def step(self, response):
-        done = self.is_done()
-        return done, {"response": response}
+        """Step the environment."""
+        pass
 
 
 class GameSessionTestCase(unittest.TestCase):
 
     def test_session_yields_observation_when_not_done(self):
         """Test that session yields observation when game is not done."""
-        gm = MockGameMaster(0, done_after=5)
-        session = GameSession(session_id=0, game_master=gm, game_instance={"id": 0})
+        env = MockGameMasterEnv(0, done_after=5)
+        session = GameSession(session_id=0, game_env=env, game_instance={"id": 0})
 
         observations = list(session)
         self.assertEqual(len(observations), 1)
@@ -52,16 +63,17 @@ class GameSessionTestCase(unittest.TestCase):
 
     def test_session_yields_nothing_when_done(self):
         """Test that session yields nothing when game is already done."""
-        gm = MockGameMaster(0, done_after=0)
-        session = GameSession(session_id=0, game_master=gm, game_instance={"id": 0})
+        env = MockGameMasterEnv(0, done_after=0)
+        env.terminations["player_0"] = True  # Mark as done
+        session = GameSession(session_id=0, game_env=env, game_instance={"id": 0})
 
         observations = list(session)
         self.assertEqual(len(observations), 0)
 
     def test_session_can_iterate_multiple_times(self):
         """Test that session can be iterated multiple times."""
-        gm = MockGameMaster(0, done_after=5)
-        session = GameSession(session_id=0, game_master=gm, game_instance={"id": 0})
+        env = MockGameMasterEnv(0, done_after=5)
+        session = GameSession(session_id=0, game_env=env, game_instance={"id": 0})
 
         # First iteration
         obs1 = list(session)
@@ -92,7 +104,7 @@ class SinglePassGameSessionPollerTestCase(unittest.TestCase):
     def test_polls_all_sessions_once(self):
         """Test that poller yields one observation from each session."""
         sessions = [
-            GameSession(i, MockGameMaster(i, done_after=5), {})
+            GameSession(i, MockGameMasterEnv(i, done_after=5), {})
             for i in range(3)
         ]
         poller = SinglePassGameSessionPoller(sessions)
@@ -105,10 +117,12 @@ class SinglePassGameSessionPollerTestCase(unittest.TestCase):
 
     def test_skips_exhausted_sessions(self):
         """Test that poller skips already done sessions."""
+        env_done = MockGameMasterEnv(1, done_after=0)
+        env_done.terminations["player_0"] = True  # Already done
         sessions = [
-            GameSession(0, MockGameMaster(0, done_after=5), {}),
-            GameSession(1, MockGameMaster(1, done_after=0), {}),  # Already done
-            GameSession(2, MockGameMaster(2, done_after=5), {}),
+            GameSession(0, MockGameMasterEnv(0, done_after=5), {}),
+            GameSession(1, env_done, {}),
+            GameSession(2, MockGameMasterEnv(2, done_after=5), {}),
         ]
         poller = SinglePassGameSessionPoller(sessions)
 
@@ -120,40 +134,42 @@ class SinglePassGameSessionPollerTestCase(unittest.TestCase):
 
     def test_tracks_exhausted_state(self):
         """Test that exhausted state is tracked correctly."""
-        gm = MockGameMaster(0, done_after=1)
-        sessions = [GameSession(0, gm, {})]
+        env = MockGameMasterEnv(0, done_after=1)
+        sessions = [GameSession(0, env, {})]
         poller = SinglePassGameSessionPoller(sessions)
 
         self.assertFalse(poller.exhausted[0])
 
-        # First poll - not exhausted yet
-        list(poller)
-        self.assertFalse(poller.exhausted[0])  # Game did one observe, not done yet
+        # First poll - yields one observation (done_after=1 means 1 observation allowed)
+        obs1 = list(poller)
+        self.assertEqual(len(obs1), 1)
+        self.assertFalse(poller.exhausted[0])  # Not exhausted yet
 
-        # Force the game to be done
-        gm._observe_count = 1  # Now is_done() returns True
-
-        # Create new poller to test exhaustion
-        poller2 = SinglePassGameSessionPoller(sessions)
-        list(poller2)
-        self.assertTrue(poller2.exhausted[0])
+        # Second poll - now exhausted (no more observations)
+        obs2 = list(poller)
+        self.assertEqual(len(obs2), 0)
+        self.assertTrue(poller.exhausted[0])
 
     def test_multiple_passes_track_exhaustion(self):
         """Test that multiple iterations track exhaustion properly."""
         sessions = [
-            GameSession(0, MockGameMaster(0, done_after=2), {}),
-            GameSession(1, MockGameMaster(1, done_after=1), {}),
+            GameSession(0, MockGameMasterEnv(0, done_after=3), {}),
+            GameSession(1, MockGameMasterEnv(1, done_after=1), {}),
         ]
         poller = SinglePassGameSessionPoller(sessions)
 
-        # First pass - both active
+        # First pass - both active, both yield
         obs1 = list(poller)
         self.assertEqual(len(obs1), 2)
+        self.assertFalse(poller.exhausted[0])
+        self.assertFalse(poller.exhausted[1])
 
-        # Second pass - session 1 becomes exhausted after this
+        # Second pass - session 1 becomes exhausted (done_after=1 means only 1 observation)
         obs2 = list(poller)
-        # Session 1's game_master has observe_count=2 now, done_after=1, so is_done()=True
-        self.assertEqual(len(obs2), 1)  # Only session 0
+        self.assertEqual(len(obs2), 1)  # Only session 0 yields
+        self.assertEqual(obs2[0][0], 0)
+        self.assertFalse(poller.exhausted[0])
+        self.assertTrue(poller.exhausted[1])
 
 
 class DynamicBatchDataLoaderTestCase(unittest.TestCase):
@@ -161,7 +177,7 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
     def test_yields_batches_up_to_batch_size(self):
         """Test that loader yields batches up to the specified size."""
         sessions = [
-            GameSession(i, MockGameMaster(i, done_after=2), {})
+            GameSession(i, MockGameMasterEnv(i, done_after=2), {})
             for i in range(5)
         ]
         poller = SinglePassGameSessionPoller(sessions)
@@ -179,7 +195,7 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
     def test_stops_when_all_exhausted(self):
         """Test that loader stops when all sessions are exhausted."""
         sessions = [
-            GameSession(i, MockGameMaster(i, done_after=1), {})
+            GameSession(i, MockGameMasterEnv(i, done_after=1), {})
             for i in range(3)
         ]
         poller = SinglePassGameSessionPoller(sessions)
@@ -192,7 +208,7 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
 
     def test_handles_single_session(self):
         """Test loader with a single session."""
-        sessions = [GameSession(0, MockGameMaster(0, done_after=3), {})]
+        sessions = [GameSession(0, MockGameMasterEnv(0, done_after=3), {})]
         poller = SinglePassGameSessionPoller(sessions)
         loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=5)
 
@@ -206,10 +222,11 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
 
     def test_handles_empty_sessions(self):
         """Test loader with all sessions already done."""
-        sessions = [
-            GameSession(i, MockGameMaster(i, done_after=0), {})
-            for i in range(3)
-        ]
+        sessions = []
+        for i in range(3):
+            env = MockGameMasterEnv(i, done_after=0)
+            env.terminations["player_0"] = True
+            sessions.append(GameSession(i, env, {}))
         poller = SinglePassGameSessionPoller(sessions)
         loader = DynamicBatchDataLoader(poller, collate_fn=GameSession.collate_fn, batch_size=2)
 
@@ -219,7 +236,7 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
     def test_batch_size_larger_than_sessions(self):
         """Test loader when batch_size exceeds number of sessions."""
         sessions = [
-            GameSession(i, MockGameMaster(i, done_after=2), {})
+            GameSession(i, MockGameMasterEnv(i, done_after=2), {})
             for i in range(2)
         ]
         poller = SinglePassGameSessionPoller(sessions)
@@ -234,7 +251,7 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
     def test_all_sessions_complete(self):
         """Test that all sessions eventually complete."""
         sessions = [
-            GameSession(i, MockGameMaster(i, done_after=3), {})
+            GameSession(i, MockGameMasterEnv(i, done_after=3), {})
             for i in range(4)
         ]
         poller = SinglePassGameSessionPoller(sessions)
@@ -242,9 +259,9 @@ class DynamicBatchDataLoaderTestCase(unittest.TestCase):
 
         list(loader)  # Consume all batches
 
-        # All game masters should be done
+        # All game envs should be done
         for session in sessions:
-            self.assertTrue(session.game_master.is_done())
+            self.assertTrue(session.is_done)
 
 
 if __name__ == '__main__':

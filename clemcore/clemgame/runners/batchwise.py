@@ -8,11 +8,10 @@ from clemcore.backends.model_registry import BatchGenerativeModel
 from clemcore.clemgame import (
     GameBenchmark,
     GameBenchmarkCallbackList,
-    GameMaster,
-    GameStep,
     Player,
     GameInstanceIterator
 )
+from clemcore.clemgame.envs.pettingzoo import GameMasterEnv
 
 module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
@@ -20,28 +19,33 @@ stdout_logger = logging.getLogger("clemcore.run")
 
 class GameSession(Iterable):
     """
-    Wraps a single game master instance producing observations as an iterable.
+    Wraps a single GameMasterEnv instance producing observations as an iterable.
 
     Each iteration yields a single observation tuple consisting of:
     - session_id: int, unique identifier of this game session
     - player: Player instance observed at this step
-    - context: Dict representing the current context or game state from the GameMaster
+    - context: Dict representing the current context or game state from the GameMasterEnv
 
-    Iteration ends when the game master signals completion via `is_done()`.
+    Iteration ends when the game environment signals completion via termination.
     """
 
-    def __init__(self, session_id: int, game_master: GameMaster, game_instance: Dict):
+    def __init__(self, session_id: int, game_env: GameMasterEnv, game_instance: Dict):
         """
         Initialize a game session wrapper.
 
         Args:
             session_id: Unique identifier for the session.
-            game_master: The GameMaster instance managing the game logic.
+            game_env: The GameMasterEnv instance managing the game logic.
             game_instance: The dictionary containing the game instance configuration/state.
         """
         self.session_id = session_id
-        self.game_master = game_master
+        self.game_env = game_env
         self.game_instance = game_instance
+
+    @property
+    def is_done(self) -> bool:
+        """Check if all agents have terminated."""
+        return all(self.game_env.terminations.values())
 
     def __iter__(self):
         """
@@ -50,9 +54,13 @@ class GameSession(Iterable):
         Yields:
             Tuple[int, Player, Dict]: session id, player, and context data.
         """
-        if self.game_master.is_done():
+        if self.is_done:
             return
-        player, context = self.game_master.observe()
+        agent_id = self.game_env.agent_selection
+        context, reward, termination, truncation, info = self.game_env.last(observe=True)
+        if termination or truncation:
+            return
+        player = self.game_env.player_by_agent_id[agent_id]
         yield self.session_id, player, context
 
     @staticmethod
@@ -207,7 +215,7 @@ def run(game_benchmark: GameBenchmark,
     num_sessions = len(game_sessions)
     if batch_size > num_sessions:
         stdout_logger.info("Reduce batch_size=%s to number of game sessions %s", batch_size, num_sessions)
-    __run_game_sessions(game_sessions, callbacks, min(batch_size, num_sessions))
+    __run_game_sessions(game_sessions, min(batch_size, num_sessions))
     callbacks.on_benchmark_end(game_benchmark)
 
 
@@ -219,15 +227,17 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
     """
     Prepare GameSession instances for each game instance in the benchmark.
 
-    Iterates over the game instances, creating GameMaster objects and
+    Iterates over the game instances, creating GameMasterEnv objects and
     corresponding GameSession wrappers.
 
     Logs and counts exceptions, continuing with remaining instances on failure.
 
     Args:
         game_benchmark: The GameBenchmark providing game instances.
-        player_models: List of player models to pass to the GameMaster.
+        game_instance_iterator: Iterator over game instances.
+        player_models: List of player models to pass to the GameMasterEnv.
         callbacks: Callback list to notify on game start.
+        verbose: Whether to show progress bar.
 
     Returns:
         List[GameSession]: The list of prepared game sessions.
@@ -242,11 +252,13 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
         pbar = tqdm(total=len(game_instance_iterator), desc="Setup game instances", dynamic_ncols=True)
     for session_id, (experiment, game_instance) in enumerate(game_instance_iterator):
         try:
-            game_master = game_benchmark.create_game_master(experiment, player_models)
-            game_master.setup(**game_instance)
-            callbacks.on_game_start(game_master, game_instance)
-            game_master.before_game()
-            game_sessions.append(GameSession(session_id, game_master, game_instance))
+            game_env = GameMasterEnv(game_benchmark, callbacks=callbacks)
+            game_env.reset(options={
+                "player_models": player_models,
+                "experiment": experiment,
+                "game_instance": game_instance
+            })
+            game_sessions.append(GameSession(session_id, game_env, game_instance))
         except Exception:  # continue with other instances if something goes wrong
             message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"
             module_logger.exception(message)
@@ -264,16 +276,17 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
     return game_sessions
 
 
-def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchmarkCallbackList, batch_size: int):
+def __run_game_sessions(game_sessions: List[GameSession], batch_size: int):
     """
     Run multiple game sessions concurrently using a round-robin scheduler.
 
     Processes batches of game observations, invokes Player.batch_response to generate
-    model responses, steps the GameMaster with responses, and notifies callbacks on game end.
+    model responses, and steps the GameMasterEnv with responses. Callbacks are handled
+    internally by GameMasterEnv.step().
 
     Args:
         game_sessions: List of active GameSession instances.
-        callbacks: Callback list to notify on game end.
+        batch_size: The batch size to use for batching responses.
     """
     # Progress bar for completed games (known total)
     pbar_instances = tqdm(total=len(game_sessions), desc="Completed game instances", dynamic_ncols=True)
@@ -312,19 +325,17 @@ def __run_game_sessions(game_sessions: List[GameSession], callbacks: GameBenchma
         )
         pbar_batches.refresh()
 
-        # Apply batch to receives responses
+        # Apply batch to receive responses
         context_response_by_session_id = Player.batch_response(batch_players, batch_contexts, row_ids=session_ids)
 
         # Use session_ids to map outputs back to game sessions for stepping
         for sid, (context, response) in context_response_by_session_id.items():
             session = game_sessions[sid]  # assuming session_id is an index (see __prepare_game_sessions)
-            done, info = session.game_master.step(response)
-            game_step = GameStep(context, response, done, info)
-            callbacks.on_game_step(session.game_master, session.game_instance, game_step)
+            # Step the environment (callbacks are handled internally by GameMasterEnv.step)
+            session.game_env.step(response)
             pbar_responses.update(1)
-            if done:
+            if session.is_done:
                 pbar_instances.update(1)
-                callbacks.on_game_end(session.game_master, session.game_instance)
     pbar_instances.close()
     pbar_responses.close()
     pbar_batches.close()
