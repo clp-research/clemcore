@@ -178,16 +178,6 @@ class DialogueGameMaster(GameMaster):
             context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
         return context
 
-    def observe(self) -> Tuple[Player, Dict]:
-        """
-        Observe the current player context.
-        Returns:
-            Current Player object, current player context
-        """
-        player = self.current_player
-        context = self.get_context_for(player)
-        return player, context
-
     def step(self, response: str) -> Tuple[bool, Dict]:
         """
         Transitions the game state by applying the current player's response.

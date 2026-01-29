@@ -15,21 +15,7 @@ from clemcore.clemgame.resources import GameResourceLocator
 module_logger = logging.getLogger(__name__)
 
 
-class EnvLike(abc.ABC):
-    """
-    An interface that allows to intervene between observing the state of a game (observe) and making progress (step).
-    """
-
-    @abc.abstractmethod
-    def observe(self) -> Tuple[Player, Dict]:
-        pass
-
-    @abc.abstractmethod
-    def step(self, response: str) -> Tuple[bool, Dict]:
-        pass
-
-
-class GameMaster(EnvLike, GameEventSource):
+class GameMaster(GameEventSource):
     """Base class to contain game-specific functionality."""
 
     def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
@@ -105,6 +91,19 @@ class GameMaster(EnvLike, GameEventSource):
         """Get a list of the players.
         Returns:
             List of Player instances in the order they are added.
+        """
+        pass
+
+    @abc.abstractmethod
+    def step(self, response: str) -> Tuple[bool, Dict]:
+        """Apply the player's response, advance the game state, and return (done, info).
+
+        Args:
+            response: The textual response (action) from the current player.
+
+        Returns:
+            Tuple of (done, info) where done indicates if the game has ended,
+            and info contains step metadata (e.g., turn_score, episode_score).
         """
         pass
 
@@ -286,17 +285,6 @@ class DialogueGameMaster(GameMaster):
             initial_prompt_content = initial_prompt["content"]
             context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
         return context
-
-    @final
-    def observe(self) -> Tuple[Player, Dict]:
-        """
-        Observe the current player context.
-        Returns:
-            Current Player object, current player context
-        """
-        player = self.current_player
-        context = self.get_context_for(player)
-        return player, context
 
     @final
     def step(self, response: str) -> Tuple[bool, Dict]:
