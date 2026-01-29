@@ -3,7 +3,7 @@ import collections
 import logging
 from copy import deepcopy
 from pathlib import Path
-from typing import List, Dict, Tuple, Any, Union, final
+from typing import Any, final
 
 from clemcore import backends
 from clemcore.clemgame.errors import ParseError, GameError
@@ -18,7 +18,7 @@ module_logger = logging.getLogger(__name__)
 class GameMaster(GameEventSource):
     """Base class to contain game-specific functionality."""
 
-    def __init__(self, game_spec: GameSpec, experiment: Dict, player_models: List[backends.Model]):
+    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: list[backends.Model]):
         """
         Args:
             game_spec: the game specifications for this game as given in the clemgame.json file
@@ -27,14 +27,14 @@ class GameMaster(GameEventSource):
         """
         super().__init__()
         self.game_spec = game_spec
-        self.experiment: Dict = experiment
+        self.experiment = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
         if len(player_models) == 1 and game_spec.players > 1:
             player_models = [player_models[0]] * game_spec.players  # keeps original list untouched
         if len(player_models) != game_spec.players:
             raise ValueError(f"{game_spec.game_name} requires {game_spec.players} players, "
                              f"but {len(player_models)} were given: {[m.name for m in player_models]}")
-        self.player_models: List[backends.Model] = player_models
+        self.player_models: list[backends.Model] = player_models
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
         self._current_player: Player | None = None
@@ -47,10 +47,10 @@ class GameMaster(GameEventSource):
         """
         return self._current_player
 
-    def load_json(self, file_path: Union[str, Path]):
+    def load_json(self, file_path: str | Path):
         return self.game_resources.load_json(file_path)
 
-    def load_template(self, file_path: Union[str, Path]):
+    def load_template(self, file_path: str | Path):
         return self.game_resources.load_template(file_path)
 
     def log_gm_to_player(self, context, player):
@@ -88,7 +88,7 @@ class GameMaster(GameEventSource):
         pass
 
     @abc.abstractmethod
-    def step(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> tuple[bool, dict]:
         """Apply the player's response, advance the game state, and return (done, info).
 
         Args:
@@ -109,7 +109,7 @@ class GameMaster(GameEventSource):
         pass
 
     @abc.abstractmethod
-    def get_context_for(self, player: Player) -> Dict | None:
+    def get_context_for(self, player: Player) -> dict | None:
         """Get the context for the specified player.
 
         The context is what the player should respond to. Returns None if no context
@@ -128,7 +128,7 @@ class DialogueGameMaster(GameMaster):
     Has most logging and gameplay procedures implemented, including convenient logging methods.
     """
 
-    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: List[backends.Model]):
+    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: list[backends.Model]):
         """
         Args:
             name: The name of the game (as specified in game_registry).
@@ -138,9 +138,9 @@ class DialogueGameMaster(GameMaster):
         """
         super().__init__(game_spec, experiment, player_models)
         # the logging works with an internal mapping of "Player N" -> Player
-        self.players_by_names: Dict[str, Player] = collections.OrderedDict()
-        self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
-        self.initial_prompt_for_player: Dict[str, Dict] = dict()
+        self.players_by_names: dict[str, Player] = collections.OrderedDict()
+        self.context_for_player: dict[str, dict] = dict()  # context entries look like {"role":"user", "content": ...}
+        self.initial_prompt_for_player: dict[str, dict] = dict()
         self.current_round: int = -1
         self._current_player_idx: int = 0
         self.info = {}
@@ -153,7 +153,7 @@ class DialogueGameMaster(GameMaster):
         return None
 
     @final
-    def get_players(self) -> List[Player]:
+    def get_players(self) -> list[Player]:
         """Get a list of the players.
         Returns:
             List of Player instances in the order they are added.
@@ -164,8 +164,8 @@ class DialogueGameMaster(GameMaster):
     def add_player(self,
                    player: Player,
                    *,
-                   initial_prompt: Union[str, Dict] = None,
-                   initial_context: Union[str, Dict] = None):
+                   initial_prompt: str | dict = None,
+                   initial_context: str | dict = None):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
 
@@ -277,7 +277,7 @@ class DialogueGameMaster(GameMaster):
         self.context_for_player[player.name] = context
 
     @final
-    def get_context_for(self, player: Player) -> Dict | None:
+    def get_context_for(self, player: Player) -> dict | None:
         """
         Get the context for the specified player. This is a pure function with no side effects.
 
@@ -303,7 +303,7 @@ class DialogueGameMaster(GameMaster):
         return context
 
     @final
-    def step(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> tuple[bool, dict]:
         """
         Verifies the response and transitions the game by applying the current player's response for the turn.
 
