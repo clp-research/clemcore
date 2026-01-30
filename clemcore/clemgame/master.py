@@ -2,6 +2,7 @@ import abc
 import collections
 import logging
 from copy import deepcopy
+from enum import Enum
 from pathlib import Path
 from typing import Any, final
 
@@ -15,10 +16,42 @@ from clemcore.clemgame.resources import GameResourceLocator
 module_logger = logging.getLogger(__name__)
 
 
+class Outcome(str, Enum):
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILURE = "failure"
+    ABORTED = "aborted"
+
+    @property
+    def is_terminal(self) -> bool:
+        return self is not Outcome.RUNNING
+
+
+class GameState:
+
+    def __init__(self):
+        self.outcome = Outcome.RUNNING
+
+    def succeed(self):
+        self.outcome = Outcome.SUCCESS
+
+    def failed(self):
+        self.outcome = Outcome.FAILURE
+
+    def abort(self):
+        self.outcome = Outcome.ABORTED
+
+
 class GameMaster(GameEventSource):
     """Base class to contain game-specific functionality."""
 
-    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: list[backends.Model]):
+    def __init__(
+            self,
+            game_spec: GameSpec,
+            experiment: dict,
+            player_models: list[backends.Model],
+            state: GameState | None = None
+    ):
         """
         Args:
             game_spec: the game specifications for this game as given in the clemgame.json file
@@ -26,6 +59,7 @@ class GameMaster(GameEventSource):
             player_models: Player models to use for one or two players.
         """
         super().__init__()
+        self.state = state or GameState()
         self.game_spec = game_spec
         self.experiment = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
@@ -38,6 +72,28 @@ class GameMaster(GameEventSource):
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
         self._current_player: Player | None = None
+
+    def _does_game_proceed(self) -> bool:
+        """Determine whether the game should continue.
+
+        The default implementation checks ``self.state.outcome``: the game proceeds
+        as long as the outcome is ``Outcome.RUNNING`` (i.e., not terminal).
+
+        To end the game, call one of the state transition methods in ``_advance_game``
+        or error hooks::
+
+            self.state.succeed()   # player achieved the goal
+            self.state.failed()    # player lost but game rules were followed
+            self.state.abort()     # unrecoverable error (e.g., repeated parse failures)
+
+        Subclasses may override this method for custom termination logic (e.g., turn
+        limits, external conditions). When overriding, ensure consistency with
+        ``self.state.outcome`` if both mechanisms are used.
+
+        Returns:
+            True if the game should continue, False if it should stop.
+        """
+        return not self.state.outcome.is_terminal
 
     @property
     def current_player(self) -> Player:
@@ -128,7 +184,13 @@ class DialogueGameMaster(GameMaster):
     Has most logging and gameplay procedures implemented, including convenient logging methods.
     """
 
-    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: list[backends.Model]):
+    def __init__(
+            self,
+            game_spec: GameSpec,
+            experiment: dict,
+            player_models: list[backends.Model],
+            state: GameState | None = None
+    ):
         """
         Args:
             name: The name of the game (as specified in game_registry).
@@ -136,7 +198,7 @@ class DialogueGameMaster(GameMaster):
             experiment: The experiment (set of instances) to use.
             player_models: Player models to use for one or two players.
         """
-        super().__init__(game_spec, experiment, player_models)
+        super().__init__(game_spec, experiment, player_models, state)
         # the logging works with an internal mapping of "Player N" -> Player
         self.players_by_names: dict[str, Player] = collections.OrderedDict()
         self.context_for_player: dict[str, dict] = dict()  # context entries look like {"role":"user", "content": ...}
@@ -147,10 +209,6 @@ class DialogueGameMaster(GameMaster):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-
-    @property
-    def game_state(self):
-        return None
 
     @final
     def get_players(self) -> list[Player]:
@@ -445,19 +503,6 @@ class DialogueGameMaster(GameMaster):
             The parsed response
         Raises:
             ParseError: If the message format is incorrect or the message cannot be properly parsed by the game master.
-        """
-        pass
-
-    @abc.abstractmethod
-    def _does_game_proceed(self) -> bool:
-        """Check if game should proceed.
-
-        Mandatory override.
-
-        This method is used to determine if a game should continue or be stopped. Both successful completion of the game
-        and game-ending failures should lead to this method returning False.
-        Returns:
-            A bool, True if game continues, False if game should stop.
         """
         pass
 
