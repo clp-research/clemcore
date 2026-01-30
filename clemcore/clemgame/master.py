@@ -73,6 +73,28 @@ class GameMaster(GameEventSource):
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
         self._current_player: Player | None = None
 
+    def _does_game_proceed(self) -> bool:
+        """Determine whether the game should continue.
+
+        The default implementation checks ``self.state.outcome``: the game proceeds
+        as long as the outcome is ``Outcome.RUNNING`` (i.e., not terminal).
+
+        To end the game, call one of the state transition methods in ``_advance_game``
+        or error hooks::
+
+            self.state.succeed()   # player achieved the goal
+            self.state.failed()    # player lost but game rules were followed
+            self.state.abort()     # unrecoverable error (e.g., repeated parse failures)
+
+        Subclasses may override this method for custom termination logic (e.g., turn
+        limits, external conditions). When overriding, ensure consistency with
+        ``self.state.outcome`` if both mechanisms are used.
+
+        Returns:
+            True if the game should continue, False if it should stop.
+        """
+        return not self.state.outcome.is_terminal
+
     @property
     def current_player(self) -> Player:
         """Get the current player whose turn it is.
@@ -485,19 +507,6 @@ class DialogueGameMaster(GameMaster):
             The parsed response
         Raises:
             ParseError: If the message format is incorrect or the message cannot be properly parsed by the game master.
-        """
-        pass
-
-    @abc.abstractmethod
-    def _does_game_proceed(self) -> bool:
-        """Check if game should proceed.
-
-        Mandatory override.
-
-        This method is used to determine if a game should continue or be stopped. Both successful completion of the game
-        and game-ending failures should lead to this method returning False.
-        Returns:
-            A bool, True if game continues, False if game should stop.
         """
         pass
 

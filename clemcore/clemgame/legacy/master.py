@@ -343,19 +343,6 @@ class DialogueGameMaster(GameMaster):
         """
         return response
 
-    @abc.abstractmethod
-    def _does_game_proceed(self) -> bool:
-        """Check if game should proceed.
-
-        Mandatory override.
-
-        This method is used to determine if a game should continue or be stopped. Both successful completion of the game
-        and game-ending failures should lead to this method returning False.
-        Returns:
-            A bool, True if game continues, False if game should stop.
-        """
-        pass
-
     def _on_before_round(self):
         """Executed in the play loop before a new round of gameplay starts.
 
