@@ -1,10 +1,9 @@
 import abc
 import collections
 from copy import deepcopy
-from typing import List, Dict, Tuple, Union
 
 from clemcore import backends
-from clemcore.clemgame.master import GameMaster
+from clemcore.clemgame.master import GameMaster, GameState
 from clemcore.clemgame.registry import GameSpec
 from clemcore.clemgame.player import Player
 
@@ -14,7 +13,13 @@ class DialogueGameMaster(GameMaster):
     Has most logging and gameplay procedures implemented, including convenient logging methods.
     """
 
-    def __init__(self, game_spec: GameSpec, experiment: dict, player_models: List[backends.Model]):
+    def __init__(
+            self,
+            game_spec: GameSpec,
+            experiment: dict,
+            player_models: list[backends.Model],
+            state: GameState | None = None
+    ):
         """
         Args:
             name: The name of the game (as specified in game_registry).
@@ -22,11 +27,11 @@ class DialogueGameMaster(GameMaster):
             experiment: The experiment (set of instances) to use.
             player_models: Player models to use for one or two players.
         """
-        super().__init__(game_spec, experiment, player_models)
+        super().__init__(game_spec, experiment, player_models, state)
         # the logging works with an internal mapping of "Player N" -> Player
-        self.players_by_names: Dict[str, Player] = collections.OrderedDict()
-        self.context_for_player: Dict[str, Dict] = dict()  # context entries look like {"role":"user", "content": ...}
-        self.initial_prompt_for_player: Dict[str, Dict] = dict()
+        self.players_by_names: dict[str, Player] = collections.OrderedDict()
+        self.context_for_player: dict[str, dict] = dict()  # context entries look like {"role":"user", "content": ...}
+        self.initial_prompt_for_player: dict[str, dict] = dict()
         self.current_round: int = -1
         self._current_player_idx: int = 0
         self.info = {}
@@ -34,7 +39,7 @@ class DialogueGameMaster(GameMaster):
     def __setstate__(self, state):
         self.__dict__.update(state)
 
-    def get_players(self) -> List[Player]:
+    def get_players(self) -> list[Player]:
         """Get a list of the players.
         Returns:
             List of Player instances in the order they are added.
@@ -44,8 +49,8 @@ class DialogueGameMaster(GameMaster):
     def add_player(self,
                    player: Player,
                    *,
-                   initial_prompt: Union[str, Dict] = None,
-                   initial_context: Union[str, Dict] = None):
+                   initial_prompt: str | dict = None,
+                   initial_context: str | dict = None):
         """Add a player to the game. The same player cannot be added twice.
         The player identity is determined by the player's name.
 
@@ -154,7 +159,7 @@ class DialogueGameMaster(GameMaster):
         context = {**extras, **message}
         self.context_for_player[player.name] = context
 
-    def get_context_for(self, player) -> Dict:
+    def get_context_for(self, player) -> dict:
         """
         Get the context for the specified player. This is a pure function with no side effects.
 
@@ -179,7 +184,7 @@ class DialogueGameMaster(GameMaster):
             context = {**initial_prompt, **context, "content": "\n\n".join([initial_prompt_content, content])}
         return context
 
-    def step(self, response: str) -> Tuple[bool, Dict]:
+    def step(self, response: str) -> tuple[bool, dict]:
         """
         Transitions the game state by applying the current player's response.
 
@@ -266,7 +271,7 @@ class DialogueGameMaster(GameMaster):
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 
-    def get_response_feedback(self, response: str, context: Dict):
+    def get_response_feedback(self, response: str, context: dict):
         """
         Optional.
         :param response: The response of the current player.
@@ -275,7 +280,7 @@ class DialogueGameMaster(GameMaster):
         """
         return None
 
-    def compute_response_score(self, response: str, context: Dict):
+    def compute_response_score(self, response: str, context: dict):
         """
         Mandatory.
         :param response: The response of the current player.
