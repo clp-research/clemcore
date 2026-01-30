@@ -121,9 +121,6 @@ class DialogueGameMaster(GameMaster):
         """
         pass
 
-    def get_game_state(self):
-        return None
-
     def set_initial_prompt_for(self, player: Player, content: str, **extras):
         """
         Set the initial prompt for the specified Player. The prompt will be prefixed to the player's next turn.

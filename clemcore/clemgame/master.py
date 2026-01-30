@@ -210,10 +210,6 @@ class DialogueGameMaster(GameMaster):
     def __setstate__(self, state):
         self.__dict__.update(state)
 
-    @property
-    def game_state(self):
-        return None
-
     @final
     def get_players(self) -> list[Player]:
         """Get a list of the players.
