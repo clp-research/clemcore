@@ -117,9 +117,14 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
     padding_side = model_spec.model_config.get("padding_side", None)
     if padding_side is None:
         stdout_logger.warning("No 'padding_side' configured in 'model_config' for %s", model_spec.model_name)
-        tokenizer.padding_side = "left" if auto_config.is_decoder and not auto_config.is_encoder_decoder else "right"
-        stdout_logger.warning("Derive padding_size=%s from model architecture (decoder=%s, encoder-decoder=%s)",
-                              tokenizer.padding_side, auto_config.is_decoder, auto_config.is_encoder_decoder)
+        if auto_config.is_encoder_decoder:
+            tokenizer.padding_side = "left" if auto_config.is_decoder else "right"
+            stdout_logger.warning("Derive padding_size=%s from model architecture (decoder=%s, encoder-decoder=%s)",
+                                  tokenizer.padding_side, auto_config.is_decoder, auto_config.is_encoder_decoder)
+        else:
+            tokenizer.padding_side = "left"
+        stdout_logger.warning("Derive padding_size=%s from model architecture (encoder-decoder=%s)",
+                              tokenizer.padding_side, auto_config.is_encoder_decoder)
     else:
         padding_side = padding_side.lower()
         if padding_side not in ("left", "right"):
@@ -425,7 +430,7 @@ def split_and_clean_cot_output(response_text: str, model: HuggingfaceLocalModel)
     """
     # Cull CoT start tag if model has it defined
     if 'cot_start_tag' in model.model_spec.model_config and model.model_spec.model_config['cot_start_tag']:
-            response_text = response_text.replace(model.model_spec.model_config['cot_start_tag'], "")
+        response_text = response_text.replace(model.model_spec.model_config['cot_start_tag'], "")
     # Split response text at CoT end tag
     # split_cot_response = response_text.split(model.model_spec.model_config['cot_end_tag'])
     split_cot_response = re.split(model.model_spec.model_config['cot_end_tag'], response_text)
