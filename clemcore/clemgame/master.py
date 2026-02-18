@@ -388,7 +388,6 @@ class DialogueGameMaster(GameMaster):
         except GameError as error:
             self._on_game_error(error)
 
-        self.info["turn_feedback"] = self.get_turn_feedback()
 
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
@@ -444,13 +443,6 @@ class DialogueGameMaster(GameMaster):
     def __prepare_next_round(self):
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
-
-    def get_turn_feedback(self) -> str | None:
-        """Optional textual feedback to be fed back to model (for playpen RL).
-        Returns:
-            A verbal feedback about the player's response given the context
-        """
-        return None
 
     @abc.abstractmethod
     def _advance_game(self, player: Player, parsed_response: str):

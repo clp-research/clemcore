@@ -27,7 +27,8 @@ class ClemGameEnvironment(Environment):
                  env_agents: Dict[str, str] = None,
                  gen_args: Dict[str, Any] = None,
                  callbacks: GameBenchmarkCallbackList = None,
-                 reward_func: Callable[[dict, str, GameState, dict], float] = None
+                 reward_func: Callable[[dict, str, GameState, dict], float] = None,
+                 feedback_func: Callable[[dict, str, GameState, dict], str | None] = None
                  ):
         super().__init__()
         module_logger.info("Initialize ClemGameEnvironment: "
@@ -62,7 +63,8 @@ class ClemGameEnvironment(Environment):
                                  learner_agent=learner_agent,
                                  env_agents=env_agents,
                                  callbacks=callbacks,
-                                 reward_func=reward_func
+                                 reward_func=reward_func,
+                                 feedback_func=feedback_func
                                  )
 
     def close(self):

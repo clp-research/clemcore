@@ -199,7 +199,7 @@ class DialogueGameMaster(GameMaster):
         # Consume the initial_prompt (if set) now that we've committed to this turn
         self.initial_prompt_for_player.pop(self.current_player.name, None)
 
-        self.info["response_feedback"] = self.get_response_feedback(response, context)
+
 
         # todo: it seems we should change the order here: Parse should come first, and then validate.
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
@@ -262,19 +262,6 @@ class DialogueGameMaster(GameMaster):
     def __prepare_next_round(self):
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
-
-    def get_response_feedback(self, response: str, context: dict) -> str | None:
-        """Optional qualitative feedback on the player's response (for playpen RL).
-
-        Override to provide language feedback that can be fed back to the model during training.
-
-        Args:
-            response: The response of the current player.
-            context: The context given to the current player to generate the response for.
-        Returns:
-            A verbal feedback string, or None if no feedback is provided.
-        """
-        return None
 
     @abc.abstractmethod
     def _on_valid_player_response(self, player: Player, parsed_response: str):

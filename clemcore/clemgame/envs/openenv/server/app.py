@@ -30,6 +30,7 @@ def create_clemv_app(
         gen_args: Optional[Dict[str, Any]] = None,
         callbacks: Optional[GameBenchmarkCallbackList] = None,
         reward_func: Optional[Callable[[dict, str, GameState, dict], float]] = None,
+        feedback_func: Optional[Callable[[dict, str, GameState, dict], str | None]] = None,
         results_dir: Optional[str] = None,
         run_id: Optional[str] = None
 ):
@@ -66,6 +67,7 @@ def create_clemv_app(
                               env_agents=env_agents,
                               gen_args=gen_args,
                               callbacks=callbacks,
-                              reward_func=reward_func
+                              reward_func=reward_func,
+                              feedback_func=feedback_func
                               )
     return create_app(env, ClemGameAction, ClemGameObservation, env_name="clem_env")

@@ -29,7 +29,8 @@ def gym_env(game_name: str,
             learner_agent: AgentID = "player_0",
             env_agents: dict[AgentID, EnvAgent] | None = None,
             callbacks: GameBenchmarkCallbackList | None = None,
-            reward_func: Callable[[dict, str, GameState, dict], float] | None = None
+            reward_func: Callable[[dict, str, GameState, dict], float] | None = None,
+            feedback_func: Callable[[dict, str, GameState, dict], str | None] | None = None
             ) -> gymnasium.Env:
     """
     Factory method for Gymnasium style game envs.
@@ -56,11 +57,14 @@ def gym_env(game_name: str,
             Defaults to outcome-based rewards: 1. on success, 0. on failure, -1. on abort, 0. otherwise.
             Game-specific rewards can be implemented by subclassing GameState to carry additional fields
             (e.g. letter matches in Wordle) and reading them in a custom reward_func.
+        feedback_func: an optional callable (observation, action, state, info) -> str | None to provide
+            qualitative language feedback. When provided, the result is stored in info["turn_feedback"]
+            and can be used by the training loop (e.g. as a verbal reward signal).
 
     Returns:
         A fully initialized game env ready for RL-like training
     """
-    game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func)
+    game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
     game_env = SinglePlayerWrapper(game_env, learner_agent, env_agents=env_agents)
     game_env = AECToGymWrapper(game_env)
     return game_env
@@ -71,7 +75,8 @@ def env(game_name: str,
         game_instance_filter: Callable[[str, str], list[int]] | None = None,
         single_pass: bool = False,
         callbacks: GameBenchmarkCallbackList | None = None,
-        reward_func: Callable[[dict, str, GameState, dict], float] | None = None
+        reward_func: Callable[[dict, str, GameState, dict], float] | None = None,
+        feedback_func: Callable[[dict, str, GameState, dict], str | None] | None = None
         ) -> AECEnv:
     """
     Factory method for Pettingzoo style game envs.
@@ -96,6 +101,9 @@ def env(game_name: str,
             Defaults to outcome-based rewards: 1. on success, 0. on failure, -1. on abort, 0. otherwise.
             Game-specific rewards can be implemented by subclassing GameState to carry additional fields
             (e.g. letter matches in Wordle) and reading them in a custom reward_func.
+        feedback_func: an optional callable (observation, action, state, info) -> str | None to provide
+            qualitative language feedback. When provided, the result is stored in info["turn_feedback"]
+            and can be used by the training loop (e.g. as a verbal reward signal).
 
     Returns:
         A fully initialized game env ready for RL-like training
@@ -103,7 +111,7 @@ def env(game_name: str,
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
-    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func)
+    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
 
     # Warn env users in case of wrong method execution order
     game_env = OrderEnforcingWrapper(game_env)
@@ -117,11 +125,13 @@ def env(game_name: str,
 class GameMasterEnv(AECEnv):
 
     def __init__(self, game_benchmark: GameBenchmark, *, callbacks: GameBenchmarkCallbackList | None = None,
-                 reward_func: Callable[[dict, str, GameState, dict], float] | None = None):
+                 reward_func: Callable[[dict, str, GameState, dict], float] | None = None,
+                 feedback_func: Callable[[dict, str, GameState, dict], str | None] | None = None):
         super().__init__()
         self.game_benchmark = game_benchmark
         self.callbacks = callbacks or GameBenchmarkCallbackList()
         self._reward_func = reward_func or self._default_reward
+        self._feedback_func = feedback_func
         self.game_master: GameMaster | None = None  # initialized on reset()
         self.game_instance: dict | None = None  # initialized on reset()
         self.experiment: dict | None = None  # initialized on reset()
@@ -232,6 +242,8 @@ class GameMasterEnv(AECEnv):
         # Update current rewards and info for the current agent
         self._cumulative_rewards[current_agent] = 0
         self.rewards[current_agent] = self._reward_func(current_context, action, self.game_master.state, info)
+        if self._feedback_func is not None:
+            info["turn_feedback"] = self._feedback_func(current_context, action, self.game_master.state, info)
         self.infos[current_agent] = info
 
         # Inform callbacks about the game step results
