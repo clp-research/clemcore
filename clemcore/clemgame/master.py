@@ -388,7 +388,6 @@ class DialogueGameMaster(GameMaster):
         except GameError as error:
             self._on_game_error(error)
 
-        self.info["turn_score"] = self.compute_turn_score()
         self.info["turn_feedback"] = self.get_turn_feedback()
 
         # determine if the current player should pass the turn to the next player or get another turn:
@@ -403,7 +402,6 @@ class DialogueGameMaster(GameMaster):
         if done:
             self._on_after_game()
             self.log_game_end()
-            self.info["episode_score"] = self.compute_episode_score()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
 
@@ -453,22 +451,6 @@ class DialogueGameMaster(GameMaster):
             A verbal feedback about the player's response given the context
         """
         return None
-
-    @abc.abstractmethod
-    def compute_turn_score(self) -> float:
-        """Score response based on last context (for playpen RL)
-        Returns:
-            The performance score for a player's response given its last context
-        """
-        pass
-
-    @abc.abstractmethod
-    def compute_episode_score(self) -> float:
-        """
-        Returns:
-            The performance of the agent over the whole episode
-        """
-        pass
 
     @abc.abstractmethod
     def _advance_game(self, player: Player, parsed_response: str):

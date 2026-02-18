@@ -199,11 +199,7 @@ class DialogueGameMaster(GameMaster):
         # Consume the initial_prompt (if set) now that we've committed to this turn
         self.initial_prompt_for_player.pop(self.current_player.name, None)
 
-        # compute scores first, so that we are sure that the player's context
-        # can still be retrieved (state has not changed yet)
-        self.info["response_score"] = self.compute_response_score(response, context)
         self.info["response_feedback"] = self.get_response_feedback(response, context)
-        self.info["episode_score"] = 0
 
         # todo: it seems we should change the order here: Parse should come first, and then validate.
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
@@ -224,7 +220,6 @@ class DialogueGameMaster(GameMaster):
         if done:
             self._on_after_game()
             self.log_game_end(auto_count_logging=False)
-            self.info["episode_score"] = self.compute_episode_score()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
 
@@ -268,29 +263,18 @@ class DialogueGameMaster(GameMaster):
         self.log_next_round()  # add record entry for player turns
         self._on_before_round()
 
-    def get_response_feedback(self, response: str, context: dict):
-        """
-        Optional.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: a verbal feedback about the player's response given the context
+    def get_response_feedback(self, response: str, context: dict) -> str | None:
+        """Optional qualitative feedback on the player's response (for playpen RL).
+
+        Override to provide language feedback that can be fed back to the model during training.
+
+        Args:
+            response: The response of the current player.
+            context: The context given to the current player to generate the response for.
+        Returns:
+            A verbal feedback string, or None if no feedback is provided.
         """
         return None
-
-    def compute_response_score(self, response: str, context: dict):
-        """
-        Mandatory.
-        :param response: The response of the current player.
-        :param context: The context given to the current player to generate the response for.
-        :return: the performance score for a player's response given the context
-        """
-        return 0
-
-    def compute_episode_score(self):
-        """
-        :return: the performance of the agent over the whole episode
-        """
-        return 0
 
     @abc.abstractmethod
     def _on_valid_player_response(self, player: Player, parsed_response: str):
