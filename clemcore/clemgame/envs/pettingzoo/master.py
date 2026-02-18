@@ -155,8 +155,12 @@ class GameMasterEnv(AECEnv):
         """Default reward function mapping game outcome to scalar reward.
 
         Returns 1. on success, 0. on failure, -1. on abort, and 0. for non-terminal steps.
+
+        Note: relies on state.outcome being set (i.e. state is a GameState instance).
+        Legacy games that replace self.state with a custom dataclass need to provide a custom reward_func.
         """
-        return {Outcome.SUCCESS: 1., Outcome.FAILURE: 0., Outcome.ABORTED: -1.}.get(state.outcome, 0.)
+        reward_mapping = {Outcome.SUCCESS: 1., Outcome.FAILURE: 0., Outcome.ABORTED: -1.}
+        return reward_mapping.get(getattr(state, 'outcome', None), 0.)
 
     def get_current_agent(self):
         """ Mapping the current player to an agent id """
@@ -277,13 +281,15 @@ class GameMasterEnv(AECEnv):
     def observation_space(self, agent: AgentID):
         """All agents share the same observation space.
 
+        Falls back to the default space before reset() is called (e.g. during AECToGymWrapper init).
         If necessary, use AEC wrapper to change the action space, e.g., to include images.
         """
-        return self.observation_spaces[agent]
+        return self.observation_spaces.get(agent, self._observation_space)
 
     def action_space(self, agent: AgentID):
         """All agents share the same action space. The agents are supposedly generalist models.
 
+        Falls back to the default space before reset() is called (e.g. during AECToGymWrapper init).
         If necessary, use AEC wrapper to change the action space.
         """
-        return self.action_spaces[agent]
+        return self.action_spaces.get(agent, self._action_space)
