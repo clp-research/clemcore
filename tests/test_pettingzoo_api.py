@@ -4,6 +4,7 @@ import pytest
 from pettingzoo.test import api_test
 
 from clemcore.clemgame import env, gym_env
+from clemcore.clemgame.master import Outcome
 
 
 @pytest.mark.integration
@@ -30,11 +31,7 @@ class WordleRewardFuncTestCase(unittest.TestCase):
 
     def _wordle_reward(self, observation, action, state, info):
         """Wordle-specific reward: 1 on success, -1 on abort, 0 otherwise."""
-        if state.success:
-            return 1.
-        if state.aborted:
-            return -1.
-        return 0.
+        return {Outcome.SUCCESS: 1., Outcome.ABORTED: -1.}.get(state.outcome, 0.)
 
     def _make_guess(self, word):
         """Format a guess response in the Wordle protocol."""
@@ -71,6 +68,18 @@ class WordleRewardFuncTestCase(unittest.TestCase):
         self.assertEqual(reward, 0.)
         game_env.close()
 
+    def test_default_reward_works_without_custom_func(self):
+        """Now that WordleGameState extends GameState, the default reward works out of the box."""
+        game_env = gym_env("wordle")  # no reward_func
+        game_env.reset()
+        target_word = self._get_target_word(game_env)
+
+        _, reward, done, _, _ = game_env.step(self._make_guess(target_word))
+
+        self.assertTrue(done)
+        self.assertEqual(reward, 1.)
+        game_env.close()
+
     def test_reward_func_receives_wordle_state(self):
         """The state passed to reward_func should be WordleGameState with target_word."""
         states_seen = []
@@ -87,7 +96,7 @@ class WordleRewardFuncTestCase(unittest.TestCase):
 
         self.assertTrue(len(states_seen) > 0)
         self.assertEqual(states_seen[-1].target_word, target_word)
-        self.assertTrue(states_seen[-1].success)
+        self.assertEqual(states_seen[-1].outcome, Outcome.SUCCESS)
         game_env.close()
 
 
