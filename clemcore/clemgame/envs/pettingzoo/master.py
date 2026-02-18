@@ -7,7 +7,7 @@ from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList, GameStep
 from clemcore.clemgame.registry import GameRegistry
 from clemcore.clemgame.instances import GameInstanceIterator
 from clemcore.clemgame.benchmark import GameBenchmark
-from clemcore.clemgame.master import GameMaster
+from clemcore.clemgame.master import GameMaster, GameState, Outcome
 from clemcore.clemgame.envs.pettingzoo.wrappers import (
     GameInstanceIteratorWrapper,
     GameBenchmarkWrapper,
@@ -28,7 +28,8 @@ def gym_env(game_name: str,
             single_pass: bool = False,
             learner_agent: AgentID = "player_0",
             env_agents: dict[AgentID, EnvAgent] | None = None,
-            callbacks: GameBenchmarkCallbackList | None = None
+            callbacks: GameBenchmarkCallbackList | None = None,
+            reward_func: Callable[[dict, str, GameState, dict], float] | None = None
             ) -> gymnasium.Env:
     """
     Factory method for Gymnasium style game envs.
@@ -51,11 +52,15 @@ def gym_env(game_name: str,
         learner_agent: the agent id of the learner agent (e.g. player_0)
         env_agents: a mapping from agent ids to Models or Callables (e.g. {player_1: gpt5} or {player_1: lambda obs: "action"})
         callbacks: a list of callbacks to be applied to the environment lifecycle
+        reward_func: a callable (observation, action, state, info) -> float to compute the reward signal.
+            Defaults to outcome-based rewards: 1. on success, 0. on failure, -1. on abort, 0. otherwise.
+            Game-specific rewards can be implemented by subclassing GameState to carry additional fields
+            (e.g. letter matches in Wordle) and reading them in a custom reward_func.
 
     Returns:
         A fully initialized game env ready for RL-like training
     """
-    game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass, callbacks=callbacks)
+    game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func)
     game_env = SinglePlayerWrapper(game_env, learner_agent, env_agents=env_agents)
     game_env = AECToGymWrapper(game_env)
     return game_env
@@ -65,7 +70,8 @@ def env(game_name: str,
         *,
         game_instance_filter: Callable[[str, str], list[int]] | None = None,
         single_pass: bool = False,
-        callbacks: GameBenchmarkCallbackList | None = None
+        callbacks: GameBenchmarkCallbackList | None = None,
+        reward_func: Callable[[dict, str, GameState, dict], float] | None = None
         ) -> AECEnv:
     """
     Factory method for Pettingzoo style game envs.
@@ -86,6 +92,10 @@ def env(game_name: str,
         game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
         single_pass: Whether to run through the game instances only once or multiple times.
         callbacks: a list of callbacks to be applied to the environment lifecycle
+        reward_func: a callable (observation, action, state, info) -> float to compute the reward signal.
+            Defaults to outcome-based rewards: 1. on success, 0. on failure, -1. on abort, 0. otherwise.
+            Game-specific rewards can be implemented by subclassing GameState to carry additional fields
+            (e.g. letter matches in Wordle) and reading them in a custom reward_func.
 
     Returns:
         A fully initialized game env ready for RL-like training
@@ -93,7 +103,7 @@ def env(game_name: str,
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
-    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks)
+    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func)
 
     # Warn env users in case of wrong method execution order
     game_env = OrderEnforcingWrapper(game_env)
@@ -106,10 +116,12 @@ def env(game_name: str,
 
 class GameMasterEnv(AECEnv):
 
-    def __init__(self, game_benchmark: GameBenchmark, *, callbacks: GameBenchmarkCallbackList | None = None):
+    def __init__(self, game_benchmark: GameBenchmark, *, callbacks: GameBenchmarkCallbackList | None = None,
+                 reward_func: Callable[[dict, str, GameState, dict], float] | None = None):
         super().__init__()
         self.game_benchmark = game_benchmark
         self.callbacks = callbacks or GameBenchmarkCallbackList()
+        self._reward_func = reward_func or self._default_reward
         self.game_master: GameMaster | None = None  # initialized on reset()
         self.game_instance: dict | None = None  # initialized on reset()
         self.experiment: dict | None = None  # initialized on reset()
@@ -137,6 +149,14 @@ class GameMasterEnv(AECEnv):
             }
         )
         self._action_space = spaces.Text(max_length=8192)
+
+    @staticmethod
+    def _default_reward(observation: dict, action: str, state: GameState, info: dict) -> float:
+        """Default reward function mapping game outcome to scalar reward.
+
+        Returns 1. on success, 0. on failure, -1. on abort, and 0. for non-terminal steps.
+        """
+        return {Outcome.SUCCESS: 1., Outcome.FAILURE: 0., Outcome.ABORTED: -1.}.get(state.outcome, 0.)
 
     def get_current_agent(self):
         """ Mapping the current player to an agent id """
@@ -205,9 +225,9 @@ class GameMasterEnv(AECEnv):
         # Log the response action from Player -> GM
         done, info = self.game_master.step(action)
 
-        # Update current rewards and info for the current agent (response_score is returned in legacy master)
+        # Update current rewards and info for the current agent
         self._cumulative_rewards[current_agent] = 0
-        self.rewards[current_agent] = info.get("turn_score", info.get("response_score", 0.)) or 0.  # when None
+        self.rewards[current_agent] = self._reward_func(current_context, action, self.game_master.state, info)
         self.infos[current_agent] = info
 
         # Inform callbacks about the game step results
@@ -216,12 +236,12 @@ class GameMasterEnv(AECEnv):
 
         # The terminal case:
         # - Flag everyone as terminated so they all get a final "None" turn to observe the final reward
-        # - Distribute the game outcome as a team reward to all agents together (overwriting the individual turn_score)
+        # - Distribute the game outcome as a team reward to all agents together
         if done:
             for agent_id in self.agents:
                 # Note: we do not handle truncations separately yet, e.g., running out of turns
                 self.terminations[agent_id] = True
-                self.rewards[agent_id] = info.get("episode_score", 0.) or 0.  # when None
+                self.rewards[agent_id] = self._reward_func(current_context, action, self.game_master.state, info)
             self.callbacks.on_game_end(self.game_master, self.game_instance)
 
         # Collect and reset the rewards for all agents
