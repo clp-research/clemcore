@@ -199,8 +199,6 @@ class DialogueGameMaster(GameMaster):
         # Consume the initial_prompt (if set) now that we've committed to this turn
         self.initial_prompt_for_player.pop(self.current_player.name, None)
 
-
-
         # todo: it seems we should change the order here: Parse should come first, and then validate.
         # While parse might throw a parsing (format error) validate would check solely for satisfied game rules.
         # Note: this would allow to cut off too long responses (during parse) and to only validate on the cut off piece.
