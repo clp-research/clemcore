@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "clemcore"
-version = "3.4.2"
+version = "3.5.0"
 description = "The cLLM (chat-optimized Large Language Model, 'clem') framework tests such models' ability to engage in games, that is, rule-constituted activities played using language."
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
