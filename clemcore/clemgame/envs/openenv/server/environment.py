@@ -1,6 +1,6 @@
 import logging
 from dataclasses import asdict
-from typing import Dict, Any
+from typing import Callable, Dict, Any
 
 from datasets import load_dataset
 from openenv_core import Environment
@@ -9,6 +9,7 @@ from clemcore.backends import load_models
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList
 from clemcore.clemgame.envs.openenv.models import ClemGameState, ClemGameObservation, ClemGameAction
 from clemcore.clemgame.envs.pettingzoo import gym_env, check_agent_mapping_for_training
+from clemcore.clemgame.master import GameState
 from clemcore.clemgame.registry import GameRegistry
 from clemcore.clemgame.instances import to_instance_filter
 
@@ -25,7 +26,9 @@ class ClemGameEnvironment(Environment):
                  learner_agent: str = "player_0",
                  env_agents: Dict[str, str] = None,
                  gen_args: Dict[str, Any] = None,
-                 callbacks: GameBenchmarkCallbackList = None
+                 callbacks: GameBenchmarkCallbackList = None,
+                 reward_func: Callable[[dict, str, GameState, dict], float] = None,
+                 feedback_func: Callable[[dict, str, GameState, dict], str | None] = None
                  ):
         super().__init__()
         module_logger.info("Initialize ClemGameEnvironment: "
@@ -59,7 +62,9 @@ class ClemGameEnvironment(Environment):
                                  single_pass=single_pass,
                                  learner_agent=learner_agent,
                                  env_agents=env_agents,
-                                 callbacks=callbacks
+                                 callbacks=callbacks,
+                                 reward_func=reward_func,
+                                 feedback_func=feedback_func
                                  )
 
     def close(self):

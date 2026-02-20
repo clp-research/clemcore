@@ -1,5 +1,5 @@
 import os
-from typing import Dict, Optional, Any
+from typing import Callable, Dict, Optional, Any
 
 from openenv_core.env_server import create_app
 
@@ -8,6 +8,7 @@ from clemcore.clemgame.callbacks import episode_results_folder_callbacks
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList
 from clemcore.clemgame.envs.openenv.models import ClemGameAction, ClemGameObservation
 from clemcore.clemgame.envs.openenv.server.environment import ClemGameEnvironment
+from clemcore.clemgame.master import GameState
 
 CLEMV_GAME = os.getenv("CLEMV_GAME")
 CLEMV_GAME_SPLIT = os.getenv("CLEMV_GAME_SPLIT")
@@ -28,6 +29,8 @@ def create_clemv_app(
         single_pass: bool = CLEMV_SINGLE_PASS,
         gen_args: Optional[Dict[str, Any]] = None,
         callbacks: Optional[GameBenchmarkCallbackList] = None,
+        reward_func: Optional[Callable[[dict, str, GameState, dict], float]] = None,
+        feedback_func: Optional[Callable[[dict, str, GameState, dict], str | None]] = None,
         results_dir: Optional[str] = None,
         run_id: Optional[str] = None
 ):
@@ -63,6 +66,8 @@ def create_clemv_app(
                               learner_agent=learner_agent,
                               env_agents=env_agents,
                               gen_args=gen_args,
-                              callbacks=callbacks
+                              callbacks=callbacks,
+                              reward_func=reward_func,
+                              feedback_func=feedback_func
                               )
     return create_app(env, ClemGameAction, ClemGameObservation, env_name="clem_env")
