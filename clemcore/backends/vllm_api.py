@@ -239,11 +239,11 @@ class VLLMLocalModel(backends.Model):
             response_text = model_output.strip()
 
         # Check for CoT output and split if present
-        if 'cot_output' in self.model.model_spec.model_config and self.model.model_spec.model_config['cot_output']:
+        if 'cot_output' in self.model_spec.model_config and self.model_spec.model_config['cot_output']:
             cot_content, response_text = split_and_clean_cot_output(response_text, self.model)
 
         # Add cot_content content to response_info
-        if 'cot_output' in self.model.model_spec.model_config and self.model.model_spec.model_config['cot_output']:
+        if 'cot_output' in self.model_spec.model_config and self.model_spec.model_config['cot_output']:
             response['cot_content'] = cot_content
 
         return prompt, response, response_text
