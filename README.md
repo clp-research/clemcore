@@ -1,4 +1,4 @@
-# clembench: A Framework for the Systematic Evaluation of Chat-Optimized Language Models as Conversational Agents
+# clemcore: A Framework for the Systematic Exploration of Generalist Models as Conversational Agents
 
 The cLLM (chat-optimized Large Language Model, "clem") framework allows researchers to easily evaluate the ability of large language models (LLM) by engaging them in games – rule-constituted activities played using language.
 
