@@ -9,6 +9,8 @@ from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, PreTra
 from transformers.generation.utils import GenerateOutput
 from peft import PeftModel
 from jinja2 import TemplateError
+from jinja2 import Environment as Jinja2Env
+from jinja2 import meta as jinja2_meta
 
 import clemcore.backends as backends
 from clemcore.backends.key_registry import KeyRegistry
@@ -19,6 +21,62 @@ logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.cli")
 
 FALLBACK_CONTEXT_SIZE = 256
+_MAX_TOKENIZER_CONTEXT_GUARD = 1_000_000  # guard against very large sentinel values
+
+
+def _parse_context_size(value: Any) -> int | None:
+    """Parse context size from model registry values like 8192 or '128k'."""
+    if value is None:
+        return None
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        text = value.strip().lower()
+        if not text:
+            return None
+        match = re.fullmatch(r"(\d+)([km])?", text)
+        if not match:
+            return None
+        number = int(match.group(1))
+        suffix = match.group(2)
+        if suffix == "k":
+            return number * 1024
+        if suffix == "m":
+            return number * 1024 * 1024
+        return number
+    return None
+
+def check_chat_template_kwargs(chat_template: str, chat_template_kwargs: dict,
+                               ignore_variables: tuple = ("messages", "content",
+                                                          "add_generation_prompt", "raise_exception")):
+    """Checks a model's chat template for passable variables and compares which those in a chat template kwargs dict.
+    Chat template kwargs dicts are directly imported from model registry JSON files, and the template rendering simply
+    ignores kwargs that do not match variables in the template, so without checking, incompatible/typo'd chat template
+    kwargs will fail silently.
+    Outcomes are simply logged to not interfere with benchmarking - in case of unexpected outputs, check logs.
+    Args:
+        chat_template: The 'raw' chat template string from the used tokenizer instance.
+        chat_template_kwargs: The chat template kwargs dict imported from the model registry JSON file.
+        ignore_variables: Default variables that are either always passed or already handled by transformers/tokenizers
+            chat template rendering. Might be useful for in-depth debugging, hence not completely hardcoded.
+    """
+    # create simple jinja2 environment to allow for template parsing:
+    chat_template_test_jinja2env = Jinja2Env()
+    # parse the raw chat template to allow for template variable checking:
+    parsed_chat_template = chat_template_test_jinja2env.parse(chat_template)
+    # extract all variables in chat template:
+    chat_template_vars = jinja2_meta.find_undeclared_variables(parsed_chat_template)
+    # filter out ignored variables:
+    filtered_chat_template_vars = [var for var in chat_template_vars if var not in ignore_variables]
+    # get vars that are in chat template, but not covered in the kwargs dict:
+    chat_template_vars_not_in_kwargs = [var for var in filtered_chat_template_vars
+                                        if var not in chat_template_kwargs.keys()]
+    # get chat template kwargs that are not in chat template:
+    kwargs_not_in_chat_template_vars = [var for var in chat_template_kwargs.keys()
+                                        if var not in filtered_chat_template_vars]
+    # log the outcome:
+    logger.info(f"Non-default chat template variables not in model entry chat template kwargs: {chat_template_vars_not_in_kwargs}")
+    logger.info(f"Model entry chat template kwargs not found in chat template variables: {kwargs_not_in_chat_template_vars}")
 
 
 def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTrainedTokenizerBase, AutoConfig, int]:
@@ -101,7 +159,21 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
     elif hasattr(auto_config, 'n_positions'):  # some models may have their context size under this attribute
         context_size = auto_config.n_positions
     else:  # few models, especially older ones, might not have their context size in the config
-        context_size = FALLBACK_CONTEXT_SIZE
+        # Try the model registry entry if present (e.g., "256k")
+        # ModelSpec is dict-like but doesn't expose .get in some versions
+        try:
+            registry_context = model_spec["context_size"]
+        except Exception:
+            registry_context = None
+        context_size = _parse_context_size(registry_context)
+        # Fall back to tokenizer metadata when it looks sane
+        if context_size is None:
+            tokenizer_max = getattr(tokenizer, "model_max_length", None)
+            if isinstance(tokenizer_max, int) and tokenizer_max < _MAX_TOKENIZER_CONTEXT_GUARD:
+                context_size = tokenizer_max
+        # Last resort
+        if context_size is None:
+            context_size = FALLBACK_CONTEXT_SIZE
 
     # Decoder-only models (e.g., GPT, LLaMA) often don't define a pad token explicitly,
     # since they use causal attention over the entire left-context during generation.
@@ -178,7 +250,12 @@ def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
         model = PeftModel.from_pretrained(model, adapter_model)
 
     logger.info(f"Finished loading huggingface model: {model_spec.model_name}")
-    logger.info(f"Model device map: {model.hf_device_map}")
+    # Some model classes (e.g., certain Qwen variants) don't expose hf_device_map.
+    # Guard to avoid AttributeError during logging.
+    if hasattr(model, "hf_device_map"):
+        logger.info(f"Model device map: {model.hf_device_map}")
+    else:
+        logger.info("Model device map: <unavailable>")
 
     return model
 
@@ -297,18 +374,30 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             # NOTE: Currently this is custom code to handle gpt-oss models! Other models that have CoT effort setting
             # training might not pass the value to the model and thus template in the same way. Using this for those
             # models will likely lead to errors!
+            chat_template_kwargs = self.model_spec.model_config.get("chat_template_kwargs", {})
+            if chat_template_kwargs and not isinstance(chat_template_kwargs, dict):
+                raise ValueError("model_config.chat_template_kwargs must be a dict if provided")
+            chat_template_kwargs = dict(chat_template_kwargs)
+            check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
+            if "reasoning_effort" not in chat_template_kwargs:
+                chat_template_kwargs["reasoning_effort"] = self.model_spec.model_config['cot_effort']
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
                 tokenize=False,  # get back the rendered string
-                reasoning_effort=self.model_spec.model_config['cot_effort']  # use string from model config
+                **chat_template_kwargs
             )
         else:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
+            chat_template_kwargs = self.model_spec.model_config.get("chat_template_kwargs", {})
+            if chat_template_kwargs and not isinstance(chat_template_kwargs, dict):
+                raise ValueError("model_config.chat_template_kwargs must be a dict if provided")
+            check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
-                tokenize=False  # get back the rendered string
+                tokenize=False,  # get back the rendered string
+                ** chat_template_kwargs
             )
 
         # The rendered chat (with system message already removed before) will, for example, look like:
