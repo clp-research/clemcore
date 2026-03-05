@@ -1,5 +1,4 @@
 import logging
-from dataclasses import asdict
 from typing import Callable, Dict, Any
 
 from datasets import load_dataset
@@ -81,7 +80,7 @@ class ClemGameEnvironment(Environment):
 
     def step(self, action: ClemGameAction, timeout_s=None, **kwargs) -> ClemGameObservation:
         if module_logger.isEnabledFor(logging.DEBUG):
-            module_logger.debug(f"Step ClemGameEnvironment with action={asdict(action)}")
+            module_logger.debug(f"Step ClemGameEnvironment with action={action.model_dump()}")
         observation, reward, done, truncated, info = self._game_env.step(action.response)
         if module_logger.isEnabledFor(logging.DEBUG):
             print(f"Step ClemGameEnvironment result is "
