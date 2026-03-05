@@ -3,7 +3,7 @@ from dataclasses import asdict
 from typing import Callable, Dict, Any
 
 from datasets import load_dataset
-from openenv_core import Environment
+from openenv.core import Environment
 
 from clemcore.backends import load_models
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList
@@ -71,7 +71,7 @@ class ClemGameEnvironment(Environment):
         module_logger.info(f"Close ClemGameEnvironment {self._state.game_name}")
         self._game_env.close()
 
-    def reset(self) -> ClemGameObservation:
+    def reset(self, seed=None, episode_id=None, **kwargs) -> ClemGameObservation:
         observation, info = self._game_env.reset()
         self._state.step_count = 0
         self._state.episode_count += 1
@@ -79,7 +79,7 @@ class ClemGameEnvironment(Environment):
         module_logger.info(f"Reset ClemGameEnvironment {self._state.game_name} for episode {self._state.episode_id}")
         return ClemGameObservation(context=observation)
 
-    def step(self, action: ClemGameAction) -> ClemGameObservation:
+    def step(self, action: ClemGameAction, timeout_s=None, **kwargs) -> ClemGameObservation:
         if module_logger.isEnabledFor(logging.DEBUG):
             module_logger.debug(f"Step ClemGameEnvironment with action={asdict(action)}")
         observation, reward, done, truncated, info = self._game_env.step(action.response)

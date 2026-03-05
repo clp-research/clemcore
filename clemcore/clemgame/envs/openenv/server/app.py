@@ -1,7 +1,7 @@
 import os
 from typing import Callable, Dict, Optional, Any
 
-from openenv_core.env_server import create_app
+from openenv.core import create_app
 
 from clemcore.utils.string_utils import read_query_string
 from clemcore.clemgame.callbacks import episode_results_folder_callbacks
@@ -70,4 +70,4 @@ def create_clemv_app(
                               reward_func=reward_func,
                               feedback_func=feedback_func
                               )
-    return create_app(env, ClemGameAction, ClemGameObservation, env_name="clem_env")
+    return create_app(lambda: env, ClemGameAction, ClemGameObservation, env_name="clem_env")

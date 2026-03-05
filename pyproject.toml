@@ -36,7 +36,7 @@ dependencies = [
     "ordered-set>=4.1.0,<5.0.0", # transcripts
     "markdown>=3.8.0,<4.0.0", # transcripts
     "pettingzoo>=1.25.0,<2.0.0", # to wrap games as pettingzoo or gymnasium environments
-    "openenv-core~=0.1.1", # to serve games as openenv server
+    "openenv-core~=0.2.1", # to serve games as openenv server
     "datasets>=4.4.0,<5.0.0" # to load playpen-data for openenv server
 ]
 

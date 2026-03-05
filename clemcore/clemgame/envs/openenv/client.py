@@ -1,10 +1,10 @@
-from openenv_core.http_env_client import HTTPEnvClient
-from openenv_core.client_types import StepResult
+from openenv.core import EnvClient
+from openenv.core.client_types import StepResult
 
 from clemcore.clemgame.envs.openenv.models import ClemGameAction, ClemGameObservation, ClemGameState
 
 
-class ClemGameEnv(HTTPEnvClient[ClemGameAction, ClemGameObservation]):
+class ClemGameEnv(EnvClient[ClemGameAction, ClemGameObservation, ClemGameState]):
     def _step_payload(self, action: ClemGameAction) -> dict:
         """Convert action to JSON"""
         return {"response": action.response}
