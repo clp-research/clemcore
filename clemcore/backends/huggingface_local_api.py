@@ -400,7 +400,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
                 tokenize=False,  # get back the rendered string
-                ** chat_template_kwargs
+                **chat_template_kwargs
             )
 
         # The rendered chat (with system message already removed before) will, for example, look like:
