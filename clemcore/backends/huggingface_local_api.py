@@ -378,9 +378,9 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             if chat_template_kwargs and not isinstance(chat_template_kwargs, dict):
                 raise ValueError("model_config.chat_template_kwargs must be a dict if provided")
             chat_template_kwargs = dict(chat_template_kwargs)
-            check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
             if "reasoning_effort" not in chat_template_kwargs:
                 chat_template_kwargs["reasoning_effort"] = self.model_spec.model_config['cot_effort']
+            check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
