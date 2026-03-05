@@ -392,7 +392,10 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             chat_template_kwargs = self.model_spec.model_config.get("chat_template_kwargs", {})
             if chat_template_kwargs and not isinstance(chat_template_kwargs, dict):
                 raise ValueError("model_config.chat_template_kwargs must be a dict if provided")
-            check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
+            if chat_template_kwargs:
+                # Only validate chat_template_kwargs when they are actually provided to avoid
+                # unnecessary Jinja2 environment creation and template parsing on every call.
+                check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
