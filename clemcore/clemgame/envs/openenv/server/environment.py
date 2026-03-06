@@ -39,11 +39,11 @@ class ClemGameEnvironment(Environment):
         game_spec = GameRegistry.from_directories_and_cwd_files().get_game_spec(game_name)
         check_agent_mapping_for_training(game_spec, {learner_agent: "learner", **env_agents})
 
-        game_instance_filter = None  # use all the default game instances of the game
+        instances_filter = None  # use all the default game instances of the game
         if game_instance_split:
             # We only use the training instances so that we can properly evaluate on the validation set later
             dataset = load_dataset("colab-potsdam/playpen-data", "instances", split=game_instance_split)
-            game_instance_filter = to_instance_filter(dataset)
+            instances_filter = to_instance_filter(dataset)
 
         # Finally, load the opponent models, which can take a long time for large models
         if game_spec.is_multi_player():  # if single_player env_agents should be None; or check has failed above
@@ -57,7 +57,7 @@ class ClemGameEnvironment(Environment):
         self._game_name = game_name
         self._state = ClemGameState(game_name=game_name, episode_id="episode_0", step_count=0, episode_count=0)
         self._game_env = gym_env(game_name,
-                                 game_instance_filter=game_instance_filter,
+                                 instances_filter=instances_filter,
                                  single_pass=single_pass,
                                  learner_agent=learner_agent,
                                  env_agents=env_agents,

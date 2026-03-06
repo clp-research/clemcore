@@ -197,7 +197,7 @@ def run(game_benchmark: GameBenchmark,
 
     Args:
         game_benchmark: The GameBenchmark to run.
-        game_instance_iterator: An iterator over the game instances to be played.
+        game_instances: The collection of game instances to be played.
         player_models: List of player models participating in the benchmark.
         callbacks: Callback list to notify about benchmark and game events.
         batch_size: The batch size to use for all player models.
@@ -234,7 +234,7 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
 
     Args:
         game_benchmark: The GameBenchmark providing game instances.
-        game_instance_iterator: Iterator over game instances.
+        game_instances: The collection of game instances to iterate over.
         player_models: List of player models to pass to the GameMasterEnv.
         callbacks: Callback list to notify on game start.
         verbose: Whether to show progress bar.

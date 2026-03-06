@@ -25,7 +25,7 @@ def run(game_benchmark: GameBenchmark,
         Note: Slurk backends do not support batching, hence will run always sequentially (for now).
     Args:
         game_benchmark: The game benchmark to run, that is, a factory to create the proper game master.
-        game_instance_iterator: An iterator over the game instances to be played.
+        game_instances: The collection of game instances to be played.
         player_models: A list of backends.Model instances to run the game with.
         callbacks: Callbacks to be invoked during the benchmark run.
         batch_size: The batch size to use (default: 1).
