@@ -13,21 +13,28 @@ from clemcore.clemgame.resources import GameResourceLocator, load_json
 stdout_logger = logging.getLogger("clemcore.run")
 
 
-def to_instance_filter(dataset) -> Callable[[str, str], List[int]]:
+def to_instance_filter(dataset) -> Callable[[dict], bool]:
     """
-    Converts the given dataset into a game instance filter function.
+    Converts the given dataset into a filter condition for use with GameInstances.filter().
 
     Args:
-        dataset: a list of dict-like rows with game, experiment, task_id values
+        dataset: a list of dict-like rows with game, experiment, and task_id fields
 
     Returns:
-        A callable mapping of (game_name, experiment_name) tuples to lists of task ids (game instance ids)
+        A callable that takes a row dict and returns True if the row's (game_name, experiment, game_id)
+        triple is present in the dataset.
     """
-    tasks_by_group = collections.defaultdict(list)
+    whitelist = set()
     for row in dataset:
-        key = (row['game'], row['experiment'])
-        tasks_by_group[key].append(int(row['task_id']))
-    return lambda game, experiment: tasks_by_group[(game, experiment)]
+        whitelist.add((row['game'], row['experiment'], int(row['task_id'])))
+
+    def filter_fn(row: dict) -> bool:
+        game_name = row["game_name"]
+        game_id = row["game_instance"]["game_id"]
+        experiment_name = row["experiment"]["name"]
+        return (game_name, experiment_name, game_id) in whitelist
+
+    return filter_fn
 
 
 def to_rows(instances: dict) -> list[dict]:

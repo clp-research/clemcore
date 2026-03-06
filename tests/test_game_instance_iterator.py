@@ -6,10 +6,14 @@ import unittest
 from clemcore.clemgame.instances import GameInstances, to_instance_filter, to_rows
 
 
+def make_row(game_name, experiment_name, game_id):
+    return {"game_name": game_name, "experiment": {"name": experiment_name}, "game_instance": {"game_id": game_id}}
+
+
 class ToInstanceFilterTestCase(unittest.TestCase):
 
     def test_filter_from_dataset(self):
-        """Test creating filter from dataset."""
+        """Test creating filter condition from dataset."""
         dataset = [
             {"game": "game_a", "experiment": "exp1", "task_id": "1"},
             {"game": "game_a", "experiment": "exp1", "task_id": "2"},
@@ -18,23 +22,19 @@ class ToInstanceFilterTestCase(unittest.TestCase):
         ]
         filter_fn = to_instance_filter(dataset)
 
-        # Test filtering
-        result = filter_fn("game_a", "exp1")
-        self.assertEqual(result, [1, 2])
+        self.assertTrue(filter_fn(make_row("game_a", "exp1", 1)))
+        self.assertTrue(filter_fn(make_row("game_a", "exp1", 2)))
+        self.assertFalse(filter_fn(make_row("game_a", "exp1", 3)))
+        self.assertTrue(filter_fn(make_row("game_a", "exp2", 3)))
+        self.assertTrue(filter_fn(make_row("game_b", "exp1", 1)))
 
-        result = filter_fn("game_a", "exp2")
-        self.assertEqual(result, [3])
-
-        result = filter_fn("game_b", "exp1")
-        self.assertEqual(result, [1])
-
-    def test_filter_returns_empty_for_missing(self):
-        """Test that filter returns empty list for missing game/experiment."""
+    def test_filter_returns_false_for_missing(self):
+        """Test that filter returns False for missing game/experiment/task_id."""
         dataset = [{"game": "game_a", "experiment": "exp1", "task_id": "1"}]
         filter_fn = to_instance_filter(dataset)
 
-        result = filter_fn("nonexistent", "exp")
-        self.assertEqual(result, [])
+        self.assertFalse(filter_fn(make_row("nonexistent", "exp1", 1)))
+        self.assertFalse(filter_fn(make_row("game_a", "exp1", 99)))
 
 
 class GameInstancesTestCase(unittest.TestCase):
