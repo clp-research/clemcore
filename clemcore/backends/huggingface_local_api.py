@@ -46,6 +46,7 @@ def _parse_context_size(value: Any) -> int | None:
         return number
     return None
 
+
 def check_chat_template_kwargs(chat_template: str, chat_template_kwargs: dict,
                                ignore_variables: tuple = ("messages", "content",
                                                           "add_generation_prompt", "raise_exception")):
@@ -291,12 +292,27 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
         self.model: PreTrainedModel = load_model(model_spec)
 
+        # validate and store chat_template_kwargs via setter (runs check_chat_template_kwargs)
+        self.chat_template_kwargs = model_spec.model_config.get("chat_template_kwargs", {})
+
         # check if model's generation_config has pad_token_id set:
         if not self.model.generation_config.pad_token_id:
             # set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
             self.model.generation_config.pad_token_id = self.tokenizer.eos_token_id
 
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    @property
+    def chat_template_kwargs(self) -> dict:
+        return dict(self._chat_template_kwargs)
+
+    @chat_template_kwargs.setter
+    def chat_template_kwargs(self, value: dict):
+        if value and not isinstance(value, dict):
+            raise ValueError("chat_template_kwargs must be a dict")
+        self._chat_template_kwargs = dict(value) if value else {}
+        if self._chat_template_kwargs:
+            check_chat_template_kwargs(self.tokenizer.chat_template, self._chat_template_kwargs)
 
     @augment_response_object
     @ensure_messages_format
@@ -366,7 +382,8 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 continue_final_message=True,  # continue after CoT bypass
-                tokenize=False  # get back the rendered string
+                tokenize=False,  # get back the rendered string
+                **self._chat_template_kwargs
             )
         elif 'cot_effort' in self.model_spec.model_config and self.model_spec.model_config['cot_effort']:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
@@ -374,13 +391,9 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             # NOTE: Currently this is custom code to handle gpt-oss models! Other models that have CoT effort setting
             # training might not pass the value to the model and thus template in the same way. Using this for those
             # models will likely lead to errors!
-            chat_template_kwargs = self.model_spec.model_config.get("chat_template_kwargs", {})
-            if chat_template_kwargs and not isinstance(chat_template_kwargs, dict):
-                raise ValueError("model_config.chat_template_kwargs must be a dict if provided")
-            chat_template_kwargs = dict(chat_template_kwargs)
+            chat_template_kwargs = self.chat_template_kwargs
             if "reasoning_effort" not in chat_template_kwargs:
                 chat_template_kwargs["reasoning_effort"] = self.model_spec.model_config['cot_effort']
-            check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
@@ -389,18 +402,11 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             )
         else:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
-            chat_template_kwargs = self.model_spec.model_config.get("chat_template_kwargs", {})
-            if chat_template_kwargs and not isinstance(chat_template_kwargs, dict):
-                raise ValueError("model_config.chat_template_kwargs must be a dict if provided")
-            if chat_template_kwargs:
-                # Only validate chat_template_kwargs when they are actually provided to avoid
-                # unnecessary Jinja2 environment creation and template parsing on every call.
-                check_chat_template_kwargs(self.tokenizer.chat_template, chat_template_kwargs)
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
                 tokenize=False,  # get back the rendered string
-                **chat_template_kwargs
+                **self._chat_template_kwargs
             )
 
         # The rendered chat (with system message already removed before) will, for example, look like:
