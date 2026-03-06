@@ -139,7 +139,7 @@ class GameInstances:
         """
         game_id = int(game_id)
         for row in self._rows:
-            if row["game_instance"]["game_id"] == game_id:
+            if int(row["game_instance"]["game_id"]) == game_id:
                 return row
         raise ValueError(f"game_id={game_id!r} not found in game instances for {self._game_name}")
 
