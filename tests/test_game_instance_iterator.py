@@ -3,13 +3,17 @@ import os
 import tempfile
 import unittest
 
-from clemcore.clemgame.instances import GameInstanceIterator, to_instance_filter
+from clemcore.clemgame.instances import GameInstances, to_instance_filter, to_rows
+
+
+def make_row(game_name, experiment_name, game_id):
+    return {"game_name": game_name, "experiment": {"name": experiment_name}, "game_instance": {"game_id": game_id}}
 
 
 class ToInstanceFilterTestCase(unittest.TestCase):
 
     def test_filter_from_dataset(self):
-        """Test creating filter from dataset."""
+        """Test creating filter condition from dataset."""
         dataset = [
             {"game": "game_a", "experiment": "exp1", "task_id": "1"},
             {"game": "game_a", "experiment": "exp1", "task_id": "2"},
@@ -18,26 +22,22 @@ class ToInstanceFilterTestCase(unittest.TestCase):
         ]
         filter_fn = to_instance_filter(dataset)
 
-        # Test filtering
-        result = filter_fn("game_a", "exp1")
-        self.assertEqual(result, [1, 2])
+        self.assertTrue(filter_fn(make_row("game_a", "exp1", 1)))
+        self.assertTrue(filter_fn(make_row("game_a", "exp1", 2)))
+        self.assertFalse(filter_fn(make_row("game_a", "exp1", 3)))
+        self.assertTrue(filter_fn(make_row("game_a", "exp2", 3)))
+        self.assertTrue(filter_fn(make_row("game_b", "exp1", 1)))
 
-        result = filter_fn("game_a", "exp2")
-        self.assertEqual(result, [3])
-
-        result = filter_fn("game_b", "exp1")
-        self.assertEqual(result, [1])
-
-    def test_filter_returns_empty_for_missing(self):
-        """Test that filter returns empty list for missing game/experiment."""
+    def test_filter_returns_false_for_missing(self):
+        """Test that filter returns False for missing game/experiment/task_id."""
         dataset = [{"game": "game_a", "experiment": "exp1", "task_id": "1"}]
         filter_fn = to_instance_filter(dataset)
 
-        result = filter_fn("nonexistent", "exp")
-        self.assertEqual(result, [])
+        self.assertFalse(filter_fn(make_row("nonexistent", "exp1", 1)))
+        self.assertFalse(filter_fn(make_row("game_a", "exp1", 99)))
 
 
-class GameInstanceIteratorTestCase(unittest.TestCase):
+class GameInstancesTestCase(unittest.TestCase):
 
     def get_sample_instances(self):
         """Get sample instances for testing."""
@@ -61,133 +61,91 @@ class GameInstanceIteratorTestCase(unittest.TestCase):
             ]
         }
 
-    def test_iterator_creation(self):
-        """Test creating GameInstanceIterator."""
-        instances = self.get_sample_instances()
-        iterator = GameInstanceIterator("test_game", instances)
-        self.assertEqual(len(iterator), 0)  # Not reset yet
+    def test_creation(self):
+        """Test creating GameInstances."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
+        self.assertEqual(len(instances), 3)  # 2 + 1 instances
 
-    def test_iterator_reset(self):
-        """Test resetting iterator populates queue."""
-        instances = self.get_sample_instances()
-        iterator = GameInstanceIterator("test_game", instances)
-        iterator.reset()
-        self.assertEqual(len(iterator), 3)  # 2 + 1 instances
+    def test_iteration(self):
+        """Test iterating over instances yields row dicts."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
 
-    def test_iterator_iteration(self):
-        """Test iterating over instances."""
-        instances = self.get_sample_instances()
-        iterator = GameInstanceIterator("test_game", instances)
-        iterator.reset()
-
-        collected = list(iterator)
+        collected = list(instances)
         self.assertEqual(len(collected), 3)
 
-        # Check structure: each item is (experiment, instance) tuple
-        exp, inst = collected[0]
-        self.assertEqual(exp["name"], "experiment_1")
-        self.assertEqual(inst["game_id"], 1)
+        # Check structure: each item is a row dict
+        row = collected[0]
+        self.assertEqual(row["experiment"]["name"], "experiment_1")
+        self.assertEqual(row["game_instance"]["game_id"], 1)
 
-    def test_iterator_experiment_filtered(self):
+    def test_experiment_excludes_game_instances(self):
         """Test that experiment dict excludes game_instances."""
-        instances = self.get_sample_instances()
-        iterator = GameInstanceIterator("test_game", instances)
-        iterator.reset()
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
 
-        exp, inst = next(iterator)
-        self.assertNotIn("game_instances", exp)
-        self.assertIn("name", exp)
-        self.assertIn("param", exp)
+        row = next(iter(instances))
+        self.assertNotIn("game_instances", row["experiment"])
+        self.assertIn("name", row["experiment"])
+        self.assertIn("param", row["experiment"])
 
-    def test_iterator_with_sub_selector(self):
-        """Test iterator with sub_selector filter."""
-        instances = self.get_sample_instances()
+    def test_filter(self):
+        """Test filter returns a new GameInstances with matching rows."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
 
-        # Only select game_id 1 from experiment_1
-        def sub_selector(game_name, experiment_name):
-            if experiment_name == "experiment_1":
-                return [1]
-            return None  # Include all for other experiments
+        filtered = instances.filter(
+            lambda row: row["experiment"]["name"] == "experiment_1" and row["game_instance"]["game_id"] == 1
+        )
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(next(iter(filtered))["game_instance"]["game_id"], 1)
 
-        iterator = GameInstanceIterator("test_game", instances, sub_selector=sub_selector)
-        iterator.reset()
+    def test_filter_experiment(self):
+        """Test filtering to a single experiment."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
 
-        collected = list(iterator)
-        # Should have 1 from experiment_1, 1 from experiment_2
-        self.assertEqual(len(collected), 2)
+        filtered = instances.filter(lambda row: row["experiment"]["name"] == "experiment_2")
+        self.assertEqual(len(filtered), 1)
+        self.assertEqual(next(iter(filtered))["experiment"]["name"], "experiment_2")
 
-        game_ids = [inst["game_id"] for _, inst in collected]
-        self.assertIn(1, game_ids)
-        self.assertIn(3, game_ids)
-        self.assertNotIn(2, game_ids)
+    def test_find_by_game_id(self):
+        """Test finding a row by game_id."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
 
-    def test_iterator_sub_selector_empty_list(self):
-        """Test that empty list from sub_selector skips experiment."""
-        instances = self.get_sample_instances()
+        row = instances.find_by_game_id(2)
+        self.assertEqual(row["game_instance"]["game_id"], 2)
+        self.assertEqual(row["experiment"]["name"], "experiment_1")
 
-        def sub_selector(game_name, experiment_name):
-            if experiment_name == "experiment_1":
-                return []  # Skip this experiment
-            return None
+    def test_find_by_game_id_not_found(self):
+        """Test that find_by_game_id raises ValueError for missing id."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
 
-        iterator = GameInstanceIterator("test_game", instances, sub_selector=sub_selector)
-        iterator.reset()
-
-        collected = list(iterator)
-        self.assertEqual(len(collected), 1)  # Only experiment_2
-        exp, inst = collected[0]
-        self.assertEqual(exp["name"], "experiment_2")
-
-    def test_iterator_deepcopy(self):
-        """Test deep copying iterator."""
-        instances = self.get_sample_instances()
-        iterator = GameInstanceIterator("test_game", instances)
-        iterator.reset()
-
-        # Consume one item
-        next(iterator)
-        self.assertEqual(len(iterator), 2)
-
-        # Deep copy (note: __deepcopy__ doesn't take memo arg in this implementation)
-        iterator_copy = iterator.__deepcopy__()
-        self.assertEqual(len(iterator_copy), 2)
-
-        # Consume from copy shouldn't affect original
-        next(iterator_copy)
-        self.assertEqual(len(iterator_copy), 1)
-        self.assertEqual(len(iterator), 2)
-
-    def test_iterator_stop_iteration(self):
-        """Test that StopIteration is raised when exhausted."""
-        instances = {"experiments": [{"name": "exp", "game_instances": [{"game_id": 1}]}]}
-        iterator = GameInstanceIterator("test_game", instances)
-        iterator.reset()
-
-        next(iterator)  # Consume the only item
-        with self.assertRaises(StopIteration):
-            next(iterator)
+        with self.assertRaises(ValueError):
+            instances.find_by_game_id(999)
 
     def test_from_file(self):
-        """Test loading iterator from file."""
+        """Test loading instances from file."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            instances = self.get_sample_instances()
+            instances_data = self.get_sample_instances()
             with open(os.path.join(tmpdir, "instances.json"), "w") as f:
-                json.dump(instances, f)
+                json.dump(instances_data, f)
 
-            iterator = GameInstanceIterator.from_file("test_game", tmpdir)
-            iterator.reset()
-            self.assertEqual(len(iterator), 3)
+            instances = GameInstances.from_file("test_game", tmpdir)
+            self.assertEqual(len(instances), 3)
 
     def test_from_file_custom_name(self):
-        """Test loading iterator from file with custom name."""
+        """Test loading instances from file with custom name."""
         with tempfile.TemporaryDirectory() as tmpdir:
-            instances = self.get_sample_instances()
+            instances_data = self.get_sample_instances()
             with open(os.path.join(tmpdir, "custom_instances.json"), "w") as f:
-                json.dump(instances, f)
+                json.dump(instances_data, f)
 
-            iterator = GameInstanceIterator.from_file("test_game", tmpdir, "custom_instances")
-            iterator.reset()
-            self.assertEqual(len(iterator), 3)
+            instances = GameInstances.from_file("test_game", tmpdir, "custom_instances")
+            self.assertEqual(len(instances), 3)
 
     def test_from_file_missing_experiments_raises(self):
         """Test that missing experiments key raises ValueError."""
@@ -196,7 +154,7 @@ class GameInstanceIteratorTestCase(unittest.TestCase):
                 json.dump({"not_experiments": []}, f)
 
             with self.assertRaises(ValueError) as context:
-                GameInstanceIterator.from_file("test_game", tmpdir)
+                GameInstances.from_file("test_game", tmpdir)
             self.assertIn("experiments", str(context.exception).lower())
 
     def test_from_file_experiments_not_list_raises(self):
@@ -206,8 +164,8 @@ class GameInstanceIteratorTestCase(unittest.TestCase):
                 json.dump({"experiments": "not_a_list"}, f)
 
             with self.assertRaises(ValueError) as context:
-                GameInstanceIterator.from_file("test_game", tmpdir)
-            self.assertIn("not a list", str(context.exception).lower())
+                GameInstances.from_file("test_game", tmpdir)
+            self.assertIn("list", str(context.exception).lower())
 
     def test_from_file_empty_experiments_raises(self):
         """Test that empty experiments list raises ValueError."""
@@ -216,19 +174,36 @@ class GameInstanceIteratorTestCase(unittest.TestCase):
                 json.dump({"experiments": []}, f)
 
             with self.assertRaises(ValueError) as context:
-                GameInstanceIterator.from_file("test_game", tmpdir)
+                GameInstances.from_file("test_game", tmpdir)
             self.assertIn("empty", str(context.exception).lower())
 
-    def test_iterator_requires_game_name(self):
+    def test_requires_game_name(self):
         """Test that game_name is required."""
-        instances = self.get_sample_instances()
+        rows = to_rows("test_game", self.get_sample_instances())
         with self.assertRaises(AssertionError):
-            GameInstanceIterator(None, instances)
+            GameInstances(None, rows)
 
-    def test_iterator_requires_instances(self):
-        """Test that instances is required."""
+    def test_requires_rows(self):
+        """Test that rows is required."""
         with self.assertRaises(AssertionError):
-            GameInstanceIterator("game", None)
+            GameInstances("game", None)
+
+    def test_str(self):
+        """Test string representation."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
+        s = str(instances)
+        self.assertIn("test_game", s)
+        self.assertIn("2", s)  # 2 experiments
+        self.assertIn("3", s)  # 3 rows
+
+    def test_describe(self):
+        """Test describe includes experiment names."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
+        desc = instances.describe()
+        self.assertIn("experiment_1", desc)
+        self.assertIn("experiment_2", desc)
 
 
 if __name__ == '__main__':

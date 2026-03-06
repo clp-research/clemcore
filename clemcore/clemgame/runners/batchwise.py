@@ -9,7 +9,7 @@ from clemcore.clemgame import (
     GameBenchmark,
     GameBenchmarkCallbackList,
     Player,
-    GameInstanceIterator
+    GameInstances
 )
 from clemcore.clemgame.envs.pettingzoo import GameMasterEnv
 
@@ -179,7 +179,7 @@ class DynamicBatchDataLoader(Iterable):
 
 
 def run(game_benchmark: GameBenchmark,
-        game_instance_iterator: GameInstanceIterator,
+        game_instances: GameInstances,
         player_models: List[BatchGenerativeModel],
         *,
         callbacks: GameBenchmarkCallbackList,
@@ -197,7 +197,7 @@ def run(game_benchmark: GameBenchmark,
 
     Args:
         game_benchmark: The GameBenchmark to run.
-        game_instance_iterator: An iterator over the game instances to be played.
+        game_instances: The collection of game instances to be played.
         player_models: List of player models participating in the benchmark.
         callbacks: Callback list to notify about benchmark and game events.
         batch_size: The batch size to use for all player models.
@@ -210,7 +210,7 @@ def run(game_benchmark: GameBenchmark,
         "Not all player models support batching. Use the sequential runner instead."
 
     callbacks.on_benchmark_start(game_benchmark)
-    game_sessions = __prepare_game_sessions(game_benchmark, game_instance_iterator, player_models, callbacks,
+    game_sessions = __prepare_game_sessions(game_benchmark, game_instances, player_models, callbacks,
                                             verbose=True)
     num_sessions = len(game_sessions)
     if batch_size > num_sessions:
@@ -220,7 +220,7 @@ def run(game_benchmark: GameBenchmark,
 
 
 def __prepare_game_sessions(game_benchmark: GameBenchmark,
-                            game_instance_iterator: GameInstanceIterator,
+                            game_instances: GameInstances,
                             player_models: List[BatchGenerativeModel],
                             callbacks: Optional[GameBenchmarkCallbackList] = None,
                             verbose: bool = False):
@@ -234,7 +234,7 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
 
     Args:
         game_benchmark: The GameBenchmark providing game instances.
-        game_instance_iterator: Iterator over game instances.
+        game_instances: The collection of game instances to iterate over.
         player_models: List of player models to pass to the GameMasterEnv.
         callbacks: Callback list to notify on game start.
         verbose: Whether to show progress bar.
@@ -249,13 +249,14 @@ def __prepare_game_sessions(game_benchmark: GameBenchmark,
     error_count = 0
     game_sessions: List[GameSession] = []
     if verbose:
-        pbar = tqdm(total=len(game_instance_iterator), desc="Setup game instances", dynamic_ncols=True)
-    for session_id, (experiment, game_instance) in enumerate(game_instance_iterator):
+        pbar = tqdm(total=len(game_instances), desc="Setup game instances", dynamic_ncols=True)
+    for session_id, row in enumerate(game_instances):
         try:
+            game_instance = row["game_instance"]
             game_env = GameMasterEnv(game_benchmark, callbacks=callbacks)
             game_env.reset(options={
                 "player_models": player_models,
-                "experiment": experiment,
+                "experiment": row["experiment"],
                 "game_instance": game_instance
             })
             game_sessions.append(GameSession(session_id, game_env, game_instance))

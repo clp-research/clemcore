@@ -4,14 +4,13 @@ import textwrap
 import logging
 import uvicorn
 from datetime import datetime
-from functools import partial
 from pathlib import Path
 from typing import List, Dict, Union, Callable, Optional, Any
 
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry, Model, KeyRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
-    InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstanceIterator, ResultsFolder, \
+    InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstances, ResultsFolder, \
     GameBenchmark
 from clemcore import clemeval, get_version
 from clemcore.clemgame.callbacks.files import PlayerFileSaver
@@ -133,14 +132,6 @@ def list_games(game_selector: str, verbose: bool = False):
             print(game_name, wrapper.fill(game_spec["description"]))
 
 
-def experiment_filter(game: str, experiment: str, *, selected_experiment: str, game_ids: Optional[List[int]]):
-    if experiment != selected_experiment:
-        return []  # skip experiment
-    if game_ids is None:
-        return None  # allow all
-    return game_ids
-
-
 def run(game_selector: Union[str, Dict, GameSpec],
         model_selectors: List[backends.ModelSpec],
         *,
@@ -148,7 +139,7 @@ def run(game_selector: Union[str, Dict, GameSpec],
         experiment_name: str = None,
         instances_filename: str = None,
         results_dir_path: Path = None,
-        sub_selector: Callable[[str, str], List[int]] = None,
+        instances_filter: Callable[[dict], bool] | None = None,
         batch_size: int = 1
         ):
     """Run specific model/models with a specified clemgame.
@@ -157,11 +148,11 @@ def run(game_selector: Union[str, Dict, GameSpec],
         model_selectors: One or two selectors for the models that are supposed to play the games.
         gen_args: Text generation parameters for the backend; output length and temperature are implemented for the
             majority of model backends.
-        experiment_name: Name of the experiment to run. Corresponds to the experiment key in the instances JSON file.
+        experiment_name: Name of the experiment to run. Acts as an instance filter.
         instances_filename: Name of the instances JSON file to use for this benchmark run.
         results_dir_path: Path to the results directory in which to store the episode records.
-        sub_selector: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
-            If a mapping returns None, then all game instances will be used.
+        instances_filter: A condition to filter the list of dicts with "experiment" and "game_instance" keys.
+            If the filter is None, then all game instances will be used.
         batch_size: A batch size to use for the run.
     """
     # check games
@@ -191,22 +182,22 @@ def run(game_selector: Union[str, Dict, GameSpec],
             if instances_filename:
                 game_spec.instances = instances_filename  # force the use of cli argument, when given
 
-            if experiment_name:  # establish experiment filter, if given
+            experiment_filter = None
+            if experiment_name:
                 logger.info("Only running experiment: %s", experiment_name)
-                if sub_selector is None:
-                    sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=None)
-                else:
-                    game_ids = sub_selector(game_spec.game_name, experiment_name)
-                    sub_selector = partial(experiment_filter, selected_experiment=experiment_name, game_ids=game_ids)
+                experiment_filter = lambda row: row["experiment"]["name"] == experiment_name
 
             with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
                 time_start = datetime.now()
                 logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
-                game_instance_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=sub_selector)
-                game_instance_iterator.reset(verbose=True)
+                game_instances = GameInstances.from_game_spec(game_spec)
+                logger.info("Loaded %s (initially)", game_instances.describe())
+                game_instances = game_instances.filter(experiment_filter)
+                game_instances = game_instances.filter(instances_filter)
+                logger.info("Proceed with %s (after applying filters)", game_instances.describe())
                 dispatch.run(
                     game_benchmark,
-                    game_instance_iterator,
+                    game_instances,
                     player_models,
                     callbacks=callbacks,
                     batch_size=batch_size
