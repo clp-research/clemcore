@@ -63,13 +63,13 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_creation(self):
         """Test creating GameInstances."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
         self.assertEqual(len(instances), 3)  # 2 + 1 instances
 
     def test_iteration(self):
         """Test iterating over instances yields row dicts."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
 
         collected = list(instances)
@@ -82,7 +82,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_experiment_excludes_game_instances(self):
         """Test that experiment dict excludes game_instances."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
 
         row = next(iter(instances))
@@ -92,7 +92,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_filter(self):
         """Test filter returns a new GameInstances with matching rows."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
 
         filtered = instances.filter(
@@ -103,7 +103,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_filter_experiment(self):
         """Test filtering to a single experiment."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
 
         filtered = instances.filter(lambda row: row["experiment"]["name"] == "experiment_2")
@@ -112,7 +112,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_find_by_game_id(self):
         """Test finding a row by game_id."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
 
         row = instances.find_by_game_id(2)
@@ -121,7 +121,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_find_by_game_id_not_found(self):
         """Test that find_by_game_id raises ValueError for missing id."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
 
         with self.assertRaises(ValueError):
@@ -179,7 +179,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_requires_game_name(self):
         """Test that game_name is required."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         with self.assertRaises(AssertionError):
             GameInstances(None, rows)
 
@@ -190,7 +190,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_str(self):
         """Test string representation."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
         s = str(instances)
         self.assertIn("test_game", s)
@@ -199,7 +199,7 @@ class GameInstancesTestCase(unittest.TestCase):
 
     def test_describe(self):
         """Test describe includes experiment names."""
-        rows = to_rows(self.get_sample_instances())
+        rows = to_rows("test_game", self.get_sample_instances())
         instances = GameInstances("test_game", rows)
         desc = instances.describe()
         self.assertIn("experiment_1", desc)

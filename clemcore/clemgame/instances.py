@@ -37,10 +37,11 @@ def to_instance_filter(dataset) -> Callable[[dict], bool]:
     return filter_fn
 
 
-def to_rows(instances: dict) -> list[dict]:
+def to_rows(game_name: str, instances: dict) -> list[dict]:
     """Transforms a hierarchical instances dict into a flat list of row dicts.
 
-    Each row has two keys:
+    Each row has three keys:
+        - "game_name": the name of the game these instances belong to
         - "experiment": the experiment metadata (all fields except "game_instances")
         - "game_instance": the individual instance data (game_id and instance-specific fields)
 
@@ -58,6 +59,10 @@ def to_rows(instances: dict) -> list[dict]:
             ]
         }
 
+    Args:
+        game_name: The name of the game, included in each row to enable cross-game filtering.
+        instances: The hierarchical instances dict loaded from instances.json.
+
     Raises:
         ValueError: If the instances dict is missing "experiments", it is not a list, or it is empty.
     """
@@ -68,19 +73,18 @@ def to_rows(instances: dict) -> list[dict]:
     if len(instances["experiments"]) == 0:
         raise ValueError("'experiments' list is empty")
     results = []
-    experiment_names = []
     for experiment in instances["experiments"]:
-        experiment_names.append(experiment["name"])
         for game_instance in experiment["game_instances"]:
             experiment_data = {k: experiment[k] for k in experiment if k != 'game_instances'}
-            results.append({"experiment": experiment_data, "game_instance": game_instance})
+            results.append({"game_name": game_name, "experiment": experiment_data, "game_instance": game_instance})
     return results
 
 
 class GameInstances:
     """A collection of game instance rows for a single game, loaded from instances.json.
 
-    Each row is a dict with two keys:
+    Each row is a dict with three keys:
+        - "game_name": the name of the game these instances belong to
         - "experiment": the experiment metadata (name and parameters, excluding game_instances)
         - "game_instance": the individual instance data (game_id and instance-specific parameters)
 
@@ -167,7 +171,7 @@ class GameInstances:
         """
         file_path = os.path.join(instance_dir_path, instance_file_name)
         instances = load_json(file_path)
-        rows = to_rows(instances)
+        rows = to_rows(game_name, instances)
         return cls(game_name, rows)
 
 
