@@ -31,6 +31,138 @@ def to_instance_filter(dataset) -> Callable[[str, str], List[int]]:
     return lambda game, experiment: tasks_by_group[(game, experiment)]
 
 
+def to_rows(instances: dict) -> list[dict]:
+    """Transforms a hierarchical instances dict into a flat list of row dicts.
+
+    Each row has two keys:
+        - "experiment": the experiment metadata (all fields except "game_instances")
+        - "game_instance": the individual instance data (game_id and instance-specific fields)
+
+    The instances dict must follow this structure:
+        {
+            "experiments": [
+                {
+                    "name": <experiment-name>,
+                    "param1": "value1",
+                    "game_instances": [
+                        {"game_id": <value>, ...},
+                        {"game_id": <value>, ...}
+                    ]
+                }
+            ]
+        }
+
+    Raises:
+        ValueError: If the instances dict is missing "experiments", it is not a list, or it is empty.
+    """
+    if "experiments" not in instances:
+        raise ValueError("No 'experiments' key in instances")
+    if not isinstance(instances["experiments"], list):
+        raise ValueError("'experiments' must be a list")
+    if len(instances["experiments"]) == 0:
+        raise ValueError("'experiments' list is empty")
+    results = []
+    experiment_names = []
+    for experiment in instances["experiments"]:
+        experiment_names.append(experiment["name"])
+        for game_instance in experiment["game_instances"]:
+            experiment_data = {k: experiment[k] for k in experiment if k != 'game_instances'}
+            results.append({"experiment": experiment_data, "game_instance": game_instance})
+    return results
+
+
+class GameInstances:
+    """A collection of game instance rows for a single game, loaded from instances.json.
+
+    Each row is a dict with two keys:
+        - "experiment": the experiment metadata (name and parameters, excluding game_instances)
+        - "game_instance": the individual instance data (game_id and instance-specific parameters)
+
+    Rows are produced by `to_rows()` from the hierarchical instances.json structure and held
+    eagerly in memory. Use `filter()` to sub-select rows, and `find_by_game_id()` for direct lookup.
+
+    Args:
+        game_name: The name of the game these instances belong to.
+        rows: Flat list of row dicts as returned by `to_rows()`.
+    """
+
+    def __init__(self, game_name: str, rows: list):
+        assert game_name is not None, "Game name must be given as 'game_name'"
+        assert rows is not None, "Instances must be given as 'rows'"
+        self._game_name = game_name
+        self._rows: list[dict] = rows
+        self._experiment_names = list({row["experiment"]["name"] for row in rows})
+
+    def __iter__(self):
+        return iter(self._rows)
+
+    def __len__(self):
+        return len(self._rows)
+
+    def __str__(self):
+        return f"GameInstances({self._game_name}, {len(self._experiment_names)} experiments, {len(self._rows)} rows)"
+
+    def describe(self) -> str:
+        """Returns a detailed description, including experiment names, for logging."""
+        return (f"{self._game_name}: {len(self._rows)} rows "
+                f"from {len(self._experiment_names)} experiments: {self._experiment_names}")
+
+    def filter(self, condition: Callable[[dict], bool]) -> "GameInstances":
+        """Returns a new GameInstances containing only rows for which the condition returns True.
+
+        The condition receives a single row dict with "experiment" and "game_instance" keys,
+        aligned with the HuggingFace Dataset.filter() signature for future compatibility.
+
+        Args:
+            condition: A callable that takes a row dict and returns True to keep the row.
+        """
+        rows = [row for row in self._rows if condition(row)]
+        return GameInstances(self._game_name, rows)
+
+    def find_by_game_id(self, game_id) -> dict:
+        """Returns the row dict for the given game_id or raises ValueError if not found.
+
+        Args:
+            game_id: The game_id to look up (as stored in row["game_instance"]["game_id"]).
+        """
+        for row in self._rows:
+            if row["game_instance"]["game_id"] == game_id:
+                return row
+        raise ValueError(f"game_id={game_id!r} not found in game instances for {self._game_name}")
+
+    @classmethod
+    def from_game_spec(cls, game_spec: GameSpec) -> "GameInstances":
+        """Load game instances from the path and file name defined in the given GameSpec.
+
+        Args:
+            game_spec: The game spec providing game_name, game_path, and optional instances file name.
+        """
+        if not hasattr(game_spec, "instances"):
+            game_spec.instances = "instances"
+        return cls.from_file(
+            game_spec.game_name,
+            os.path.join(game_spec.game_path, "in"),
+            game_spec.instances
+        )
+
+    @classmethod
+    def from_file(cls,
+                  game_name: str,
+                  instance_dir_path: str,
+                  instance_file_name: str = "instances") -> "GameInstances":
+        """Load game instances from a JSON file on disk.
+
+        Args:
+            game_name: The name of the game these instances belong to.
+            instance_dir_path: Path to the directory containing the instances JSON file.
+            instance_file_name: Name of the instances file (without .json extension).
+        """
+        file_path = os.path.join(instance_dir_path, instance_file_name)
+        instances = load_json(file_path)
+        rows = to_rows(instances)
+        return cls(game_name, rows)
+
+
 class GameInstanceIterator:
     """
     The instances.json must follow the structure:
