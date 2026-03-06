@@ -70,7 +70,7 @@ class GameBenchmark(GameResourceLocator):
         filter_games = [self.game_name]
         interaction_files = [
             f for f in glob.glob(os.path.join(results_root, '**', 'interactions.json'), recursive=True)
-            if Path(f).parents[2].name in filter_games
+            if any(game_name in Path(f).parts for game_name in filter_games)
         ]
         stdout_logger.info(f"Found {len(interaction_files)} interaction files to score. "
                            f"Games: {filter_games if filter_games else 'all'}")
