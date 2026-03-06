@@ -2,13 +2,13 @@ import logging
 from typing import List
 
 from clemcore.backends import Model, BatchGenerativeModel
-from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstanceIterator
+from clemcore.clemgame import GameBenchmark, GameBenchmarkCallbackList, GameInstances
 
 stdout_logger = logging.getLogger("clemcore.run")
 
 
 def run(game_benchmark: GameBenchmark,
-        game_instance_iterator: GameInstanceIterator,
+        game_instances: GameInstances,
         player_models: List[Model | BatchGenerativeModel],
         *,
         callbacks: GameBenchmarkCallbackList = None,
@@ -37,7 +37,7 @@ def run(game_benchmark: GameBenchmark,
                            game_benchmark.game_name,
                            ",".join(player_model.name for player_model in player_models),
                            batch_size)
-        batchwise.run(game_benchmark, game_instance_iterator, player_models, callbacks=callbacks, batch_size=batch_size)
+        batchwise.run(game_benchmark, game_instances, player_models, callbacks=callbacks, batch_size=batch_size)
     else:
         from clemcore.clemgame.runners import sequential  # lazy import
         if not Model.all_support_batching(player_models):
@@ -48,4 +48,4 @@ def run(game_benchmark: GameBenchmark,
                            game_benchmark.game_name,
                            ",".join(player_model.name for player_model in player_models),
                            batch_size)
-        sequential.run(game_benchmark, game_instance_iterator, player_models, callbacks=callbacks)
+        sequential.run(game_benchmark, game_instances, player_models, callbacks=callbacks)

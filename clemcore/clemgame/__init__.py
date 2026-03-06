@@ -8,7 +8,7 @@ from clemcore.clemgame.envs.openenv.models import ClemGameObservation, ClemGameA
 from clemcore.clemgame.envs.pettingzoo import env, gym_env
 from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError, ResponseError, ProtocolError, \
     NotApplicableError
-from clemcore.clemgame.instances import GameInstanceGenerator, GameInstanceIterator
+from clemcore.clemgame.instances import GameInstanceGenerator, GameInstances
 from clemcore.clemgame.resources import GameResourceLocator
 from clemcore.clemgame.master import GameMaster, DialogueGameMaster, Player
 from clemcore.clemgame.metrics import GameScorer
@@ -33,7 +33,7 @@ __all__ = [
     "GameScorer",
     "GameSpec",
     "GameRegistry",
-    "GameInstanceIterator",
+    "GameInstances",
     "GameInstanceGenerator",
     "episode_results_folder_callbacks",
     "EpochResultsFolder",

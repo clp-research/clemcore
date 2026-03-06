@@ -5,7 +5,7 @@ import gymnasium
 from clemcore.backends.model_registry import CustomResponseModel
 from clemcore.clemgame.callbacks.base import GameBenchmarkCallbackList, GameStep
 from clemcore.clemgame.registry import GameRegistry
-from clemcore.clemgame.instances import GameInstanceIterator
+from clemcore.clemgame.instances import GameInstances
 from clemcore.clemgame.benchmark import GameBenchmark
 from clemcore.clemgame.master import GameMaster, GameState, Outcome
 from clemcore.clemgame.envs.pettingzoo.wrappers import (
@@ -24,7 +24,7 @@ from pettingzoo.utils.env import AgentID, ObsType, ActionType
 
 def gym_env(game_name: str,
             *,
-            game_instance_filter: Callable[[str, str], list[int]] | None = None,
+            instances_filter: Callable[[dict], bool] | None = None,
             single_pass: bool = False,
             learner_agent: AgentID = "player_0",
             env_agents: dict[AgentID, EnvAgent] | None = None,
@@ -48,7 +48,8 @@ def gym_env(game_name: str,
 
     Args:
         game_name: The name of the clem-game to wrap as a PZ env
-        game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+        instances_filter: A condition to filter the list of dicts with "experiment" and "game_instance" keys.
+            If the filter is None, then all game instances will be used.
         single_pass: Whether to run through the game instances only once or multiple times.
         learner_agent: the agent id of the learner agent (e.g. player_0)
         env_agents: a mapping from agent ids to Models or Callables (e.g. {player_1: gpt5} or {player_1: lambda obs: "action"})
@@ -64,7 +65,7 @@ def gym_env(game_name: str,
     Returns:
         A fully initialized game env ready for RL-like training
     """
-    game_env = env(game_name, game_instance_filter=game_instance_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
+    game_env = env(game_name, instances_filter=instances_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
     game_env = SinglePlayerWrapper(game_env, learner_agent, env_agents=env_agents)
     game_env = AECToGymWrapper(game_env)
     return game_env
@@ -72,7 +73,7 @@ def gym_env(game_name: str,
 
 def env(game_name: str,
         *,
-        game_instance_filter: Callable[[str, str], list[int]] | None = None,
+        instances_filter: Callable[[dict], bool] | None = None,
         single_pass: bool = False,
         callbacks: GameBenchmarkCallbackList | None = None,
         reward_func: Callable[[dict, str, GameState, dict], float] | None = None,
@@ -94,7 +95,8 @@ def env(game_name: str,
 
     Args:
         game_name: The name of the clem-game to wrap as a PZ env
-        game_instance_filter: A callable mapping from (game_name, experiment_name) tuples to lists of game instance ids.
+        instances_filter: A condition to filter the list of dicts with "experiment" and "game_instance" keys.
+            If the filter is None, then all game instances will be used.
         single_pass: Whether to run through the game instances only once or multiple times.
         callbacks: a list of callbacks to be applied to the environment lifecycle
         reward_func: a callable (observation, action, state, info) -> float to compute the reward signal.
@@ -116,9 +118,10 @@ def env(game_name: str,
     # Warn env users in case of wrong method execution order
     game_env = OrderEnforcingWrapper(game_env)
 
-    # Load the packaged default instances.json to be played and pass an optional filter
-    game_iterator = GameInstanceIterator.from_game_spec(game_spec, sub_selector=game_instance_filter)
-    game_env = GameInstanceIteratorWrapper(game_env, game_iterator, single_pass=single_pass)
+    # Load the packaged default instances.json to be played and apply an optional filter
+    game_instances = GameInstances.from_game_spec(game_spec)
+    game_instances = game_instances.filter(instances_filter)
+    game_env = GameInstanceIteratorWrapper(game_env, game_instances, single_pass=single_pass)
     return game_env
 
 

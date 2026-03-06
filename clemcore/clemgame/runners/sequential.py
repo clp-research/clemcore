@@ -4,7 +4,7 @@ from typing import List
 from tqdm import tqdm
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmarkCallbackList, GameInstanceIterator, GameStep, GameBenchmark
+from clemcore.clemgame import GameBenchmarkCallbackList, GameInstances, GameBenchmark
 from clemcore.clemgame.envs.pettingzoo.master import GameMasterEnv
 
 module_logger = logging.getLogger(__name__)
@@ -12,7 +12,7 @@ stdout_logger = logging.getLogger("clemcore.run")
 
 
 def run(game_benchmark: GameBenchmark,
-        game_instance_iterator: GameInstanceIterator,
+        game_instances: GameInstances,
         player_models: List[Model],
         *,
         callbacks: GameBenchmarkCallbackList
@@ -20,12 +20,12 @@ def run(game_benchmark: GameBenchmark,
     callbacks.on_benchmark_start(game_benchmark)
     game_env = GameMasterEnv(game_benchmark, callbacks=callbacks)
     error_count = 0
-    for experiment, game_instance in tqdm(game_instance_iterator, desc="Playing game instances"):
+    for row in tqdm(game_instances, desc="Playing game instances"):
         try:
             game_env.reset(options={
                 "player_models": player_models,
-                "experiment": experiment,
-                "game_instance": game_instance
+                "experiment": row["experiment"],
+                "game_instance": row["game_instance"]
             })
             for model in player_models:
                 model.reset()  # this is mainly to notify slurk backends; other models are state-less anyway
@@ -40,7 +40,7 @@ def run(game_benchmark: GameBenchmark,
                     response = player(context)
                 game_env.step(response)
         except Exception:  # continue with other instances if something goes wrong
-            message = f"{game_benchmark.game_name}: Exception for instance {game_instance['game_id']} (but continue)"
+            message = f"{game_benchmark.game_name}: Exception for instance {row['game_instance']['game_id']} (but continue)"
             module_logger.exception(message)
             error_count += 1
             for model in player_models:
