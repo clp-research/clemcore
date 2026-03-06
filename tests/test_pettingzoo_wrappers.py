@@ -5,9 +5,11 @@ from clemcore.backends.model_registry import CustomResponseModel, ModelSpec
 from clemcore.clemgame.envs.pettingzoo.wrappers import (
     AgentControlWrapper,
     SinglePlayerWrapper,
+    GameInstanceIteratorWrapper,
     order_agent_mapping_by_agent_id,
 )
 from clemcore.clemgame.envs.pettingzoo.master import GameMasterEnv
+from clemcore.clemgame.instances import GameInstances, to_rows
 
 
 class OrderAgentMappingTestCase(unittest.TestCase):
@@ -128,6 +130,73 @@ class GameMasterEnvObserveTestCase(unittest.TestCase):
         result = env.observe("player_0")
         self.assertEqual(result, context)
         mock_gm.get_context_for.assert_called_once_with(mock_player)
+
+
+class GameInstanceIteratorWrapperTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.mock_env = MagicMock()
+        instances_data = {
+            "experiments": [{
+                "name": "exp1",
+                "game_instances": [
+                    {"game_id": 1},
+                    {"game_id": 2},
+                    {"game_id": 3},
+                ]
+            }]
+        }
+        self.instances = GameInstances("test_game", to_rows("test_game", instances_data))
+
+    def _last_reset_options(self):
+        return self.mock_env.reset.call_args[1]["options"]
+
+    def test_sequential_iteration(self):
+        """reset() without game_id advances through instances in order."""
+        wrapper = GameInstanceIteratorWrapper(self.mock_env, self.instances, single_pass=True)
+        wrapper.reset()
+        self.assertEqual(self._last_reset_options()["game_instance"]["game_id"], 1)
+        wrapper.reset()
+        self.assertEqual(self._last_reset_options()["game_instance"]["game_id"], 2)
+
+    def test_single_pass_raises_stop_iteration(self):
+        """Single-pass iterator raises StopIteration after all instances are exhausted."""
+        instances = GameInstances("test_game", to_rows("test_game", {
+            "experiments": [{"name": "exp1", "game_instances": [{"game_id": 1}]}]
+        }))
+        wrapper = GameInstanceIteratorWrapper(self.mock_env, instances, single_pass=True)
+        wrapper.reset()
+        with self.assertRaises(StopIteration):
+            wrapper.reset()
+
+    def test_cycling(self):
+        """Default (non-single-pass) iterator cycles infinitely."""
+        instances = GameInstances("test_game", to_rows("test_game", {
+            "experiments": [{"name": "exp1", "game_instances": [{"game_id": 1}]}]
+        }))
+        wrapper = GameInstanceIteratorWrapper(self.mock_env, instances, single_pass=False)
+        wrapper.reset()
+        wrapper.reset()  # cycles back to start
+        self.assertEqual(self._last_reset_options()["game_instance"]["game_id"], 1)
+
+    def test_game_id_random_access(self):
+        """reset(options={"game_id": N}) selects the specific episode."""
+        wrapper = GameInstanceIteratorWrapper(self.mock_env, self.instances)
+        wrapper.reset(options={"game_id": 3})
+        self.assertEqual(self._last_reset_options()["game_instance"]["game_id"], 3)
+
+    def test_game_id_does_not_advance_iterator(self):
+        """Random access via game_id leaves the iterator position unchanged."""
+        wrapper = GameInstanceIteratorWrapper(self.mock_env, self.instances, single_pass=True)
+        wrapper.reset(options={"game_id": 3})  # random access, iterator not advanced
+        wrapper.reset()  # should still get first instance from iterator
+        self.assertEqual(self._last_reset_options()["game_instance"]["game_id"], 1)
+
+    def test_game_id_not_forwarded_to_env(self):
+        """game_id is consumed by the wrapper and not passed to the underlying env."""
+        wrapper = GameInstanceIteratorWrapper(self.mock_env, self.instances)
+        wrapper.reset(options={"game_id": 1})
+        self.assertNotIn("game_id", self._last_reset_options())
 
 
 if __name__ == '__main__':

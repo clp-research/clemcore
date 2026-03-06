@@ -224,6 +224,7 @@ class GameInstanceIteratorWrapper(BaseWrapper):
     def __init__(self, wrapped_env: AECEnv, game_instances: GameInstances, single_pass: bool = False):
         super().__init__(wrapped_env)
         stdout_logger.info("Iterating over %s", game_instances.describe())
+        self._game_instances = game_instances
         if not single_pass:
             stdout_logger.info("Detected single_pass=False, cycling through instances infinitely.")
             self._iter = cycle(game_instances)
@@ -232,8 +233,12 @@ class GameInstanceIteratorWrapper(BaseWrapper):
             self._iter = iter(game_instances)
 
     def reset(self, seed: int | None = None, options: dict | None = None):
-        row = next(self._iter)
         options = options or {}
+        game_id = options.pop("game_id", None)  # consumed here; not forwarded to the underlying game env
+        if game_id is not None:
+            row = self._game_instances.find_by_game_id(game_id)
+        else:
+            row = next(self._iter)
         options["experiment"] = row["experiment"]
         options["game_instance"] = row["game_instance"]
         super().reset(seed=seed, options=options)

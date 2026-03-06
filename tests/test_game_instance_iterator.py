@@ -119,6 +119,14 @@ class GameInstancesTestCase(unittest.TestCase):
         self.assertEqual(row["game_instance"]["game_id"], 2)
         self.assertEqual(row["experiment"]["name"], "experiment_1")
 
+    def test_find_by_game_id_accepts_string(self):
+        """Test that find_by_game_id coerces string game_id to int (e.g. from HTTP callers)."""
+        rows = to_rows("test_game", self.get_sample_instances())
+        instances = GameInstances("test_game", rows)
+
+        row = instances.find_by_game_id("2")
+        self.assertEqual(row["game_instance"]["game_id"], 2)
+
     def test_find_by_game_id_not_found(self):
         """Test that find_by_game_id raises ValueError for missing id."""
         rows = to_rows("test_game", self.get_sample_instances())
