@@ -131,12 +131,13 @@ class GameInstances:
         rows = [row for row in self._rows if condition(row)]
         return GameInstances(self._game_name, rows)
 
-    def find_by_game_id(self, game_id) -> dict:
+    def find_by_game_id(self, game_id: int | str) -> dict:
         """Returns the row dict for the given game_id or raises ValueError if not found.
 
         Args:
-            game_id: The game_id to look up (as stored in row["game_instance"]["game_id"]).
+            game_id: The game_id to look up. Coerced to int to handle string values from HTTP callers.
         """
+        game_id = int(game_id)
         for row in self._rows:
             if row["game_instance"]["game_id"] == game_id:
                 return row
