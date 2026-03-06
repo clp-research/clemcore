@@ -71,7 +71,10 @@ class ClemGameEnvironment(Environment):
         self._game_env.close()
 
     def reset(self, seed=None, episode_id=None, **kwargs) -> ClemGameObservation:
-        observation, info = self._game_env.reset()
+        if episode_id is not None:
+            kwargs["episode_id"] = episode_id
+        options = kwargs if kwargs else None
+        observation, info = self._game_env.reset(seed=seed, options=options)
         self._state.step_count = 0
         self._state.episode_count += 1
         self._state.episode_id = f"episode_{self._state.episode_count}"
