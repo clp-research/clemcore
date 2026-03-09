@@ -24,6 +24,13 @@ loggers:
     level: WARNING
   "clemcore.clemgame.envs":
     level: INFO
+    handlers: [ console ]
+  "uvicorn":
+    level: INFO
+    handlers: [ console ]
+  "pettingzoo":
+    level: WARNING
+    handlers: [ console ]
 root:
   level: INFO
   handlers: [ file_handler ]
