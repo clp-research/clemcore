@@ -78,7 +78,10 @@ class ClemGameEnvironment(Environment):
         self._state.step_count = 0
         self._state.episode_count += 1
         self._state.episode_id = f"episode_{self._state.episode_count}"
-        module_logger.info(f"Reset ClemGameEnvironment {self._state.game_name} for episode {self._state.episode_id}")
+        module_logger.info(
+            f"Reset ClemGameEnvironment '{self._state.game_name}' for episode '{self._state.episode_id}' "
+            f"with options={options}"
+        )
         return ClemGameObservation(context=observation)
 
     def step(self, action: ClemGameAction, timeout_s=None, **kwargs) -> ClemGameObservation:
