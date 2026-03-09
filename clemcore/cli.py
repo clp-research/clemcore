@@ -12,7 +12,7 @@ from clemcore.backends import ModelRegistry, BackendRegistry, Model, KeyRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
     InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstances, ResultsFolder, \
     GameBenchmark
-from clemcore import clemeval, get_version
+from clemcore import clemeval, get_version, load_logging_config
 from clemcore.clemgame.callbacks.files import PlayerFileSaver
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
@@ -276,7 +276,7 @@ def serve(game: str,
         results_dir=results_dir,
         run_id=run_id
     )
-    uvicorn.run(app, host=host, port=port)
+    uvicorn.run(app, host=host, port=port, log_config=load_logging_config())
 
 
 def parse_kv(arg: str):
