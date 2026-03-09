@@ -89,9 +89,9 @@ class ClemGameEnvironment(Environment):
             module_logger.debug(f"Step ClemGameEnvironment with action={action.model_dump()}")
         observation, reward, done, truncated, info = self._game_env.step(action.response)
         if module_logger.isEnabledFor(logging.DEBUG):
-            print(f"Step ClemGameEnvironment result is "
-                  f"observation={observation}, reward={reward}, done={done}, "
-                  f"truncated={truncated}, info={info}")
+            module_logger.debug(f"Step ClemGameEnvironment result is "
+                                f"observation={observation}, reward={reward}, done={done}, "
+                                f"truncated={truncated}, info={info}")
         self._state.step_count += 1
         return ClemGameObservation(
             context=observation,
