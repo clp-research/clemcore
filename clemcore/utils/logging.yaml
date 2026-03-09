@@ -28,11 +28,6 @@ loggers:
   "uvicorn":
     level: INFO
     handlers: [ console ]
-  "uvicorn.error":
-    level: INFO
-  "uvicorn.access":
-    level: INFO
-    handlers: [ console ]
   "pettingzoo":
     level: WARNING
     handlers: [ console ]
