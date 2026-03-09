@@ -74,14 +74,14 @@ class ClemGameEnvironment(Environment):
         if episode_id is not None:
             kwargs["episode_id"] = episode_id
         options = kwargs if kwargs else None
-        observation, info = self._game_env.reset(seed=seed, options=options)
-        self._state.step_count = 0
-        self._state.episode_count += 1
-        self._state.episode_id = f"episode_{self._state.episode_count}"
         module_logger.info(
             f"Reset ClemGameEnvironment '{self._state.game_name}' for episode '{self._state.episode_id}' "
             f"with kwargs={kwargs}"
         )
+        observation, info = self._game_env.reset(seed=seed, options=options)
+        self._state.step_count = 0
+        self._state.episode_count += 1
+        self._state.episode_id = f"episode_{self._state.episode_count}"
         return ClemGameObservation(context=observation)
 
     def step(self, action: ClemGameAction, timeout_s=None, **kwargs) -> ClemGameObservation:
