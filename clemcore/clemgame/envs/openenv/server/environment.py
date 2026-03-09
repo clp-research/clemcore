@@ -80,7 +80,7 @@ class ClemGameEnvironment(Environment):
         self._state.episode_id = f"episode_{self._state.episode_count}"
         module_logger.info(
             f"Reset ClemGameEnvironment '{self._state.game_name}' for episode '{self._state.episode_id}' "
-            f"with options={options}"
+            f"with kwargs={kwargs}"
         )
         return ClemGameObservation(context=observation)
 
