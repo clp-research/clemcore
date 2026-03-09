@@ -376,6 +376,7 @@ class DialogueGameMaster(GameMaster):
         # Log message exchange (assuming the step response is from the current player and context)
         self.log_gm_to_player(context, self.current_player)
         self.log_player_to_gm(response, self.current_player)
+        self.count_request()
 
         # Consume the initial_prompt (if set) now that we've committed to this turn
         self.initial_prompt_for_player.pop(self.current_player.name, None)
