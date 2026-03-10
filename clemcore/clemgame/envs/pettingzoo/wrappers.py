@@ -236,9 +236,12 @@ class GameInstanceIteratorWrapper(BaseWrapper):
         options = options or {}
         game_id = options.pop("game_id", None)  # consumed here; not forwarded to the underlying game env
         if game_id is not None:
+            stdout_logger.info("Reset requested for game_id=%s", game_id)
             row = self._game_instances.find_by_game_id(game_id)
         else:
             row = next(self._iter)
+        stdout_logger.info("Loading instance: experiment=%s, game_id=%s",
+                           row["experiment"]["name"], row["game_instance"].get("game_id"))
         options["experiment"] = row["experiment"]
         options["game_instance"] = row["game_instance"]
         super().reset(seed=seed, options=options)
