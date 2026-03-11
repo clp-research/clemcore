@@ -74,17 +74,6 @@ These key/values are recommended to only be used with a custom registry file:
 | `execute_on`           | string | Either `gpu`, to run the model with all layers loaded to GPU using VRAM, or `cpu` to run the model on CPU only, using main RAM. `gpu` requires a llama.cpp installation with GPU support, `cpu` one with CPU support. |         |
 | `gpu_layers_offloaded` | int    | The number of model layers to offload to GPU/VRAM. This requires a llama.cpp installation with GPU support. This key is only used if there is no `execute_on` key in the model entry.                                 |         |
 
-### vllm Backend
-The python module of this backend is `clemcore/backends/vllm_api.py.`  
-This backend requires these **mandatory** key/values:  
-
-| Key                     | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | Example               |
-|-------------------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------|
-| `huggingface_id`        | string | The full huggingface model ID; huggingface user name / model name. NOTE: This key is **not part of the model config**, but a key for the model entry object!                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `"01-ai/Yi-34B-Chat"` |
-| `number_gpus`           | int    | The number of GPUs to run this model on.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | `1`                   |
-| `premade_chat_template` | bool   | If `true`, the chat template that is applied for generation is loaded from the model repository on huggingface. If `false`, the value of `custom_chat_template` will be used if defined, otherwise a generic chat template is applied (highly discouraged).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |                       |
-| `eos_to_cull`           | string | This is a regular expression matching the model's EOS token or longer substrings at the end of the model's outputs. These need to be removed by the backend to assure proper processing by clembench. Make sure that this contains a proper python regular expression string matching the intended substrings. Characters and sequences that can be parsed as python regular expression special characters or special sequences, but are part of model special token strings or chat templates need to be properly escaped by "`\\`"! Note the double backslash "`\\`", which is necessary to properly handle the escape between JSON and python! This is mandatory as there are models that do not define this in their tokenizer configuration. | `"<\\\|im_end\\\|>"`  |
-
 ### OpenRouter Backend
 The python module of this backend is `clemcore/backends/openrouter_api.py.`  
 
@@ -109,6 +98,32 @@ The following key/values are **optional**, but should be defined for models that
 | `multimodality[audio]`           | bool   | If true, the model is capable of processing audio.                                                                                                                                                                                                                                      |                                                                                                    |
 | `multimodality[video]`           | bool   | If true, the model is capable of processing video.                                                                                                                                                                                                                                      |                                                                                                    |
 | `reasoning_model`                | bool   | If true, the model performs reasoning. OpenAI API reasoning models do not allow inference with temperature 0.0, so responses are indeterministic. These models also do not allow setting the maximum number of output tokens, so if this value was set, it is ignored for these models. |                                                                                                    |
+| `extra_body`                     | object | Additional request arguments passed directly to the API call. Refer to the [OpenAI API documentation](https://platform.openai.com/docs/api-reference) for supported values.                                                                                                             |                                                                                                    |
+
+### OpenAI-Compatible Backend
+The python module of this backend is `clemcore/backends/openai_compatible_api.py.`
+Use this backend for any server exposing an OpenAI-compatible API, such as a locally hosted vLLM server (`vllm serve`),
+Ollama, LM Studio, or similar.
+
+Any additional request arguments (e.g. vLLM-specific sampling parameters) can be passed via the `extra_body` key
+under the entry's `model_config`. For example, to enable reasoning/thinking mode for Qwen3.5 served via vLLM:
+
+```bash
+vllm serve Qwen/Qwen3.5-4B --port 8000 --reasoning-parser qwen3
+```
+
+```json
+{
+  "model_name": "qwen3.5-4b-thinking",
+  "model_id": "Qwen/Qwen3.5-4B",
+  "backend": "openai_compatible",
+  "model_config": {
+    "extra_body": {
+      "enable_thinking": true
+    }
+  }
+}
+```
 
 # Backend Classes
 Model registry entries are mainly used for two classes: `backends.ModelSpec` and `backends.Model`.

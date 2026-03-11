@@ -1,6 +1,6 @@
 """Integration tests for model registry entries.
 
-Tests that all models in model_registry.json (except huggingface, vllm, openrouter, llamacpp)
+Tests that all models in model_registry.json (except huggingface, openrouter, llamacpp)
 can be loaded and their backends instantiated.
 """
 import inspect
@@ -13,7 +13,6 @@ from clemcore.backends import ModelRegistry
 EXCLUDED_BACKENDS = {
     "huggingface_local",
     "huggingface_multimodal",
-    "vllm",
     "openrouter",
     "llamacpp",
     "slurk"

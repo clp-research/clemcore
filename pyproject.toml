@@ -38,10 +38,6 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-vllm = [
-    "transformers>=4.55.2,<5.0.0", # keep in sync with huggingface extra; installs torch
-    "vllm>=0.8.4,<1.0.0" # should use transformers as installed above
-]
 huggingface = [
     "accelerate>=1.0.0,<2.0.0", # required for device_map="auto"
     "bitsandbytes>=0.42.0,<1.0.0", # for loading models with 4-bit and 8-bit quantization
