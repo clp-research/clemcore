@@ -106,18 +106,20 @@ Use this backend for any server exposing an OpenAI-compatible API, such as a loc
 Ollama, LM Studio, or similar.
 
 Any additional request arguments (e.g. vLLM-specific sampling parameters) can be passed via the `extra_body` key
-under the entry's `model_config`:
+under the entry's `model_config`. For example, to enable reasoning/thinking mode for Qwen3.5 served via vLLM:
+
+```bash
+vllm serve Qwen/Qwen3.5-4B --port 8000 --reasoning-parser qwen3
+```
 
 ```json
 {
-  "model_name": "my-vllm-model",
-  "model_id": "Qwen/Qwen2.5-72B-Instruct",
+  "model_name": "qwen3.5-4b-thinking",
+  "model_id": "Qwen/Qwen3.5-4B",
   "backend": "openai_compatible",
   "model_config": {
     "extra_body": {
-      "top_k": 50,
-      "min_p": 0.05,
-      "repetition_penalty": 1.1
+      "enable_thinking": true
     }
   }
 }
