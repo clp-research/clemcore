@@ -1,7 +1,7 @@
 ## Instructions on how to run existing games:
 
 1. Create your working directory. Set up a python environment in your working directory and install the clemcore 
-library. For support for specific backends, install clemcore with the `[huggingface]`, `[vllm]` or `[slurk]` flags, for 
+library. For support for specific backends, install clemcore with the `[huggingface]` or `[slurk]` flags, for
 example `pip install clemcore[huggingface]`.
 
 2. Clone the [clemgames repository](https://github.com/clp-research/clemgames.git) into your working directory.
