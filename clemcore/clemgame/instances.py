@@ -5,7 +5,12 @@ import os
 import random
 from typing import Dict, final, Callable, List
 
-import numpy as np
+try:
+    import numpy as np
+    _has_numpy = True
+except ImportError:
+    _has_numpy = False
+
 from clemcore.clemgame.registry import GameSpec
 
 from clemcore.clemgame.resources import GameResourceLocator, load_json
@@ -256,7 +261,8 @@ class GameInstanceGenerator(GameResourceLocator):
             kwargs: Keyword arguments (or dict) to pass to the on_generate method.
         """
         random.seed(seed)
-        np.random.seed(seed)
+        if _has_numpy:
+            np.random.seed(seed)
         self.on_generate(seed, **kwargs)
         file_path = self.store_file(self.instances, filename, sub_dir="in")
         return file_path
