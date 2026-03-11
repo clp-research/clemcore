@@ -38,9 +38,9 @@ def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
     # extract only relevant metrics
     df = df[df['metric'].isin(MAIN_METRICS)]
 
-    # make sure all values are actually numeric (temporarily surpressing SettingwithCopyWarning)
-    with pd.option_context('mode.chained_assignment', None):
-        df['value'] = pd.to_numeric(df['value'])
+    # make sure all values are actually numeric
+    df = df.copy()
+    df['value'] = pd.to_numeric(df['value'])
 
     # compute mean benchscore and mean played (which is binary, so a proportion)
     df_a = (df.groupby(['game', 'model', 'metric'])
@@ -48,9 +48,8 @@ def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
             .reset_index())
     df_a.loc[df_a.metric == clemmetrics.METRIC_PLAYED, 'value'] *= 100
     df_a = df_a.round(2)
-    df_a['metric'].replace(
-        {clemmetrics.METRIC_PLAYED: '% ' + clemmetrics.METRIC_PLAYED},
-        inplace=True)
+    df_a['metric'] = df_a['metric'].replace(
+        {clemmetrics.METRIC_PLAYED: '% ' + clemmetrics.METRIC_PLAYED})
 
     # compute the std of benchscore
     df = df[df.metric == clemmetrics.BENCH_SCORE]
@@ -58,9 +57,8 @@ def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
             .std(numeric_only=True)
             .reset_index()
             .round(2))
-    df_b['metric'].replace(
-        {clemmetrics.BENCH_SCORE: clemmetrics.BENCH_SCORE + ' (std)'},
-        inplace=True)
+    df_b['metric'] = df_b['metric'].replace(
+        {clemmetrics.BENCH_SCORE: clemmetrics.BENCH_SCORE + ' (std)'})
 
     # compute the macro-average main score over games, per model
     df_all = (df_a.groupby(['model', 'metric'])
