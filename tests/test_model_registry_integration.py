@@ -1,6 +1,6 @@
 """Integration tests for models in model_registry.json.
 
-Tests that all registered models (except huggingface, vllm, openrouter, llamacpp)
+Tests that all registered models (except huggingface, openrouter, llamacpp)
 can be loaded via the ModelRegistry and successfully generate responses.
 
 Run with: pytest -m api tests/test_model_registry_integration.py -v
@@ -17,7 +17,6 @@ from clemcore.backends.backend_registry import BackendRegistry
 EXCLUDED_BACKENDS = {
     "huggingface_local",
     "huggingface_multimodal",
-    "vllm",
     "openrouter",
     "llamacpp",
     "slurk"

@@ -152,6 +152,9 @@ class OpenAIModel(backends.Model):
             logger.info("Ignoring max_tokens for reasoning models, because the argument is not supported")
             del gen_kwargs["max_tokens"]
 
+        if 'extra_body' in model_config:
+            gen_kwargs['extra_body'] = model_config['extra_body']
+
         if logger.isEnabledFor(logging.DEBUG):
             logger.debug(f"Calling OpenAI API with parameters: {json.dumps(gen_kwargs, indent=2)}")
         api_response = self.client.chat.completions.create(**gen_kwargs)
