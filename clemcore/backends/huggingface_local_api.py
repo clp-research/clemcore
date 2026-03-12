@@ -5,7 +5,7 @@ import logging
 from typing import List, Dict, Tuple, Any
 import torch
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, PreTrainedTokenizerBase, PreTrainedModel
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig, PreTrainedTokenizerBase, PreTrainedModel
 from transformers.generation.utils import GenerateOutput
 from peft import PeftModel
 from jinja2 import TemplateError
@@ -112,9 +112,6 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
         if model_spec['model_config']['slow_tokenizer']:
             tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
                 hf_model_str,
-                device_map="auto",
-                torch_dtype="auto",
-                verbose=False,
                 use_fast=False
             )
         else:
@@ -127,16 +124,10 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             hf_model_str,
             token=api_key,
-            device_map="auto",
-            torch_dtype="auto",
-            verbose=False
         )
     else:
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             hf_model_str,
-            device_map="auto",
-            torch_dtype="auto",
-            verbose=False
         )
 
     # apply proper chat template:
@@ -233,10 +224,13 @@ def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
     logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
 
     model_args = dict(device_map="auto", torch_dtype="auto")
+    bnb_kwargs = {}
     if "load_in_8bit" in model_spec.model_config:
-        model_args["load_in_8bit"] = model_spec.model_config["load_in_8bit"]
+        bnb_kwargs["load_in_8bit"] = model_spec.model_config["load_in_8bit"]
     if "load_in_4bit" in model_spec.model_config:
-        model_args["load_in_4bit"] = model_spec.model_config["load_in_4bit"]
+        bnb_kwargs["load_in_4bit"] = model_spec.model_config["load_in_4bit"]
+    if bnb_kwargs:
+        model_args["quantization_config"] = BitsAndBytesConfig(**bnb_kwargs)
     if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
         # load HF API key:
         key = KeyRegistry.from_json().get_key_for("huggingface")
@@ -728,7 +722,10 @@ def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
     else:
         current_messages = messages
     # the actual tokens, including chat format:
+    # transformers >=5: apply_chat_template returns BatchEncoding when tokenize=True
     prompt_tokens = tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)
+    if hasattr(prompt_tokens, 'input_ids'):
+        prompt_tokens = prompt_tokens.input_ids
     context_check_tuple = _check_context_limit(context_size, prompt_tokens, max_new_tokens=max_new_tokens)
     tokens_used = context_check_tuple[1]
     tokens_left = context_check_tuple[2]

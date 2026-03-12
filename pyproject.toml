@@ -43,7 +43,7 @@ huggingface = [
     "bitsandbytes>=0.42.0,<1.0.0", # for loading models with 4-bit and 8-bit quantization
     "peft>=0.17.0,<1.0.0", # for loading LoRA models (adapters)
     "timm>=1.0.19,<1.1.0", # for transformers
-    "transformers>=4.55.2,<5.0.0", # installs torch
+    "transformers>=5.0.0,<6.0.0", # installs torch
     "torchvision", # version resolved by torch
 ]
 slurk = [
