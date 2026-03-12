@@ -294,7 +294,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             # set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
             self.model.generation_config.pad_token_id = self.tokenizer.eos_token_id
 
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = next(self.model.parameters()).device
 
     @property
     def chat_template_kwargs(self) -> dict:
