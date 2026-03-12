@@ -5,8 +5,9 @@ import logging
 from typing import List, Dict, Tuple, Any
 import torch
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig, PreTrainedTokenizerBase, PreTrainedModel
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, AutoProcessor, BitsAndBytesConfig, PreTrainedTokenizerBase, PreTrainedModel
 from transformers.generation.utils import GenerateOutput
+from transformers.image_utils import load_image
 from peft import PeftModel
 from jinja2 import TemplateError
 from jinja2 import Environment as Jinja2Env
@@ -47,6 +48,27 @@ def _parse_context_size(value: Any) -> int | None:
     return None
 
 
+def _context_size_from_config(auto_config, model_spec: "backends.ModelSpec", tokenizer=None) -> int:
+    """Resolve context size from AutoConfig, falling back to registry entry, tokenizer metadata, or a hard default.
+    Args:
+        auto_config: The AutoConfig instance for the model.
+        model_spec: The ModelSpec for the model; checked for a top-level 'context_size' entry.
+        tokenizer: Optional tokenizer; its model_max_length is used as a secondary fallback.
+    Returns:
+        Context size as int.
+    """
+    if hasattr(auto_config, 'max_position_embeddings'):
+        return auto_config.max_position_embeddings
+    if hasattr(auto_config, 'n_positions'):
+        return auto_config.n_positions
+    context_size = _parse_context_size(getattr(model_spec, "context_size", None))
+    if context_size is None and tokenizer is not None:
+        tokenizer_max = getattr(tokenizer, "model_max_length", None)
+        if isinstance(tokenizer_max, int) and tokenizer_max < _MAX_TOKENIZER_CONTEXT_GUARD:
+            context_size = tokenizer_max
+    return context_size or FALLBACK_CONTEXT_SIZE
+
+
 def check_chat_template_kwargs(chat_template: str, chat_template_kwargs: dict,
                                ignore_variables: tuple = ("messages", "content",
                                                           "add_generation_prompt", "raise_exception")):
@@ -80,14 +102,12 @@ def check_chat_template_kwargs(chat_template: str, chat_template_kwargs: dict,
     logger.info(f"Model entry chat template kwargs not found in chat template variables: {kwargs_not_in_chat_template_vars}")
 
 
-def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTrainedTokenizerBase, AutoConfig, int]:
-    """Load a HuggingFace model's standard config and tokenizer, and get context token limit from config.
-    If the model config does not contain the context limit, it is set to 256 as fallback. Does not load the model
-    weights, allowing for prototyping on non-GPU systems.
+def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTrainedTokenizerBase, AutoConfig]:
+    """Load a HuggingFace model's config and tokenizer. Does not load model weights.
     Args:
         model_spec: The ModelSpec for the model.
     Returns:
-        Tokenizer, model config and context token limit (int).
+        Tokenizer and model config.
     """
     logger.info(f'Loading huggingface model config and tokenizer: {model_spec.model_name}')
 
@@ -132,28 +152,6 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
     else:
         auto_config = AutoConfig.from_pretrained(hf_model_str)
 
-    # get context token limit for model:
-    if hasattr(auto_config, 'max_position_embeddings'):  # this is the standard attribute used by most
-        context_size = auto_config.max_position_embeddings
-    elif hasattr(auto_config, 'n_positions'):  # some models may have their context size under this attribute
-        context_size = auto_config.n_positions
-    else:  # few models, especially older ones, might not have their context size in the config
-        # Try the model registry entry if present (e.g., "256k")
-        # ModelSpec is dict-like but doesn't expose .get in some versions
-        try:
-            registry_context = model_spec["context_size"]
-        except Exception:
-            registry_context = None
-        context_size = _parse_context_size(registry_context)
-        # Fall back to tokenizer metadata when it looks sane
-        if context_size is None:
-            tokenizer_max = getattr(tokenizer, "model_max_length", None)
-            if isinstance(tokenizer_max, int) and tokenizer_max < _MAX_TOKENIZER_CONTEXT_GUARD:
-                context_size = tokenizer_max
-        # Last resort
-        if context_size is None:
-            context_size = FALLBACK_CONTEXT_SIZE
-
     # Decoder-only models (e.g., GPT, LLaMA) often don't define a pad token explicitly,
     # since they use causal attention over the entire left-context during generation.
     # To avoid warnings from Transformers when padding is used, we set the pad token
@@ -196,7 +194,7 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
                              f"for {model_spec.model_name}. Must be 'left' or 'right'.")
         tokenizer.padding_side = padding_side
 
-    return tokenizer, auto_config, context_size
+    return tokenizer, auto_config
 
 
 def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
@@ -222,6 +220,10 @@ def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
         # load HF API key:
         key = KeyRegistry.from_json().get_key_for("huggingface")
         model_args["token"] = key["api_key"]
+    if model_spec.model_config.get('trust_remote_code'):
+        model_args['trust_remote_code'] = True
+    if 'attn_implementation' in model_spec.model_config:
+        model_args['attn_implementation'] = model_spec.model_config['attn_implementation']
 
     hf_model_str = model_spec['huggingface_id']
     model = AutoModelForCausalLM.from_pretrained(hf_model_str, **model_args)
@@ -249,19 +251,20 @@ class HuggingfaceLocal(backends.Backend):
         super().__init__()
 
     def get_model_for(self, model_spec: backends.ModelSpec) -> backends.Model:
-        """Get a HuggingFaceLocalModel instance with the passed model and settings.
-        Will load all required data for using the model upon initialization.
+        """Return HuggingfaceLocalMultimodalModel for multimodal models, HuggingfaceLocalModel otherwise.
         Args:
             model_spec: The ModelSpec for the model.
         Returns:
             The Model class instance of the model.
         """
         torch.set_num_threads(1)
+        if model_spec.model_config.get('multimodal', False):
+            return HuggingfaceLocalMultimodalModel(model_spec)
         return HuggingfaceLocalModel(model_spec)
 
 
 class HuggingfaceLocalModel(backends.BatchGenerativeModel):
-    """Class for loaded HuggingFace transformers models ready for generation."""
+    """Class for loaded HuggingFace transformers text-only models ready for generation."""
 
     def __init__(self, model_spec: backends.ModelSpec):
         """
@@ -270,7 +273,8 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         """
         super().__init__(model_spec)
         # fail-fast
-        self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
+        self.tokenizer, self.config = load_config_and_tokenizer(model_spec)
+        self.context_size = _context_size_from_config(self.config, model_spec, self.tokenizer)
         self.model: PreTrainedModel = load_model(model_spec)
 
         # validate and store chat_template_kwargs via setter (runs check_chat_template_kwargs)
@@ -443,6 +447,112 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         return list(zip(prompts, responses, response_texts))
 
 
+class HuggingfaceLocalMultimodalModel(backends.Model):
+    """Class for loaded HuggingFace vision-language models ready for generation.
+    Batch generation is not supported for multimodal models.
+    CoT-specific features (cot_bypass, cot_output, etc.) are not applicable to VLMs.
+    """
+
+    def __init__(self, model_spec: backends.ModelSpec):
+        """
+        Args:
+            model_spec: A ModelSpec instance specifying the model.
+        """
+        super().__init__(model_spec)
+        self.processor = HuggingfaceLocalMultimodalModel.load_processor(model_spec)
+        self.model: PreTrainedModel = load_model(model_spec)
+        self.device = next(self.model.parameters()).device
+
+        # context size from AutoConfig
+        trust_rc = model_spec.model_config.get('trust_remote_code', False)
+        auto_config = AutoConfig.from_pretrained(
+            model_spec.huggingface_id,
+            trust_remote_code=trust_rc
+        )
+        self.context_size = _context_size_from_config(auto_config, model_spec)
+
+    @augment_response_object
+    @ensure_messages_format
+    def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
+        """Generate a response for multimodal (vision-language) input."""
+        hf_messages, images = HuggingfaceLocalMultimodalModel._unpack_images_from_messages(messages)
+        text = self.processor.apply_chat_template(
+            hf_messages, add_generation_prompt=True, tokenize=False
+        )
+        inputs = self.processor(
+            text=text,
+            images=images if images else None,
+            return_tensors="pt"
+        ).to(self.device)
+
+        # Context limit check on the tokenized input
+        assert_context_limits(self, inputs['input_ids'])
+
+        gen_args = {
+            "do_sample": False,
+            "temperature": None,
+            "top_p": None,
+            "max_new_tokens": self.max_tokens,
+            "return_dict_in_generate": True,
+        }
+        if self.temperature > 0.0:
+            gen_args["do_sample"] = True
+            gen_args["temperature"] = self.temperature
+            gen_args["top_p"] = getattr(self.model.generation_config, "top_p", None)
+
+        if self.model.training:
+            stdout_logger.info("Model is in training mode; switching to eval mode for generation.")
+            self.model.eval()
+
+        input_len = inputs['input_ids'].shape[-1]
+        generation_output: GenerateOutput = self.model.generate(**inputs, **gen_args)
+
+        # Decode only the newly generated tokens
+        new_tokens = generation_output.sequences[0][input_len:]
+        response_text = self.processor.decode(new_tokens, skip_special_tokens=True).strip()
+
+        prompt = {"inputs": text, "max_new_tokens": self.max_tokens, "temperature": self.temperature}
+        response = {"response": self.processor.decode(generation_output.sequences[0], skip_special_tokens=False)}
+        return prompt, response, response_text
+
+    @staticmethod
+    def load_processor(model_spec: backends.ModelSpec):
+        """Load AutoProcessor for multimodal models."""
+        logger.info(f'Loading processor for multimodal model: {model_spec.model_name}')
+        hf_model_str = model_spec['huggingface_id']
+        kwargs = {}
+        if model_spec.model_config.get('trust_remote_code'):
+            kwargs['trust_remote_code'] = True
+        if model_spec.model_config.get('requires_api_key'):
+            key = KeyRegistry.from_json().get_key_for("huggingface")
+            kwargs['token'] = key['api_key']
+        return AutoProcessor.from_pretrained(hf_model_str, **kwargs)
+
+    @staticmethod
+    def _unpack_images_from_messages(messages: List[Dict]) -> Tuple[List[Dict], List]:
+        """Convert clemcore messages to HF processor format, separating embedded images into a list.
+
+        Clemcore embeds images directly in messages as a string path/URL (or list of them) under the
+        'image' key. HF processors expect images as a flat list alongside messages where image slots
+        are marked with {"type": "image"} content entries. This method performs both transformations.
+        """
+        hf_messages = []
+        images = []
+        for msg in messages:
+            content = []
+            if 'image' in msg:
+                image_field = msg['image']
+                if isinstance(image_field, str):
+                    content.append({"type": "image"})
+                    images.append(load_image(image_field))
+                elif isinstance(image_field, list):
+                    for img in image_field:
+                        content.append({"type": "image"})
+                        images.append(load_image(img))
+            content.append({"type": "text", "text": msg['content']})
+            hf_messages.append({"role": msg['role'], "content": content})
+        return hf_messages, images
+
 def split_and_clean_batch_outputs(
         model: HuggingfaceLocalModel,
         model_outputs: List[str],
@@ -607,7 +717,7 @@ def check_messages(messages: List[Dict], model_spec: backends.ModelSpec) -> bool
     Returns:
         True if messages are sound as-is, False if messages are not compatible with the model's template.
     """
-    tokenizer, _, _ = load_config_and_tokenizer(model_spec)
+    tokenizer, _ = load_config_and_tokenizer(model_spec)
 
     # bool for message acceptance:
     messages_accepted: bool = True
@@ -703,7 +813,8 @@ def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
             Number of tokens of 'context space left'
             Total context token limit
     """
-    tokenizer, _, context_size = load_config_and_tokenizer(model_spec)
+    tokenizer, auto_config = load_config_and_tokenizer(model_spec)
+    context_size = _context_size_from_config(auto_config, model_spec, tokenizer)
 
     # optional messages processing:
     if clean_messages:

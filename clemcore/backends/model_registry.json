@@ -215,98 +215,42 @@
     },
     {
         "model_name": "internvl3-14b",
-        "backend": "huggingface_multimodal",
+        "backend": "huggingface_local",
         "huggingface_id": "OpenGVLab/InternVL3-14B",
         "release_date": "2025-04-11",
         "open_weight": true,
         "parameters": "14B",
-        "languages": [
-            "en",
-            "zh",
-            "es",
-            "fr",
-            "de",
-            "it",
-            "ru",
-            "ar",
-            "hi"
-        ],
+        "languages": ["en", "zh", "es", "fr", "de", "it", "ru", "ar", "hi"],
         "context_size": "128k",
-        "license": {
-            "name": "MIT",
-            "url": "https://choosealicense.com/licenses/mit/"
-        },
+        "license": {"name": "MIT", "url": "https://choosealicense.com/licenses/mit/"},
         "model_config": {
-            "model_class": "transformers.AutoModel",
-            "processor_class": "transformers.AutoTokenizer",
-            "processor_config": {
-                "use_fast": false
-            },
-            "prompt": "clemcore.backends.multimodal_utils.generate_internvl2_prompt_text",
-            "response": "clemcore.backends.multimodal_utils.generate_internvl3_response",
+            "multimodal": true,
+            "premade_chat_template": true,
+            "eos_to_cull": "",
             "trust_remote_code": true,
             "do_sample": false,
-            "multimodality": {
-                "single_image": true,
-                "multiple_images": true,
-                "audio": false,
-                "video": true
-            },
-            "mm_model_config": {
-                "torch_dtype": "auto",
-                "load_in_8bit": true,
-                "low_cpu_mem_usage": true,
-                "use_flash_attn": true,
-                "device_map": "clemcore.backends.multimodal_utils.split_internvl3_model"
-            }
+            "load_in_8bit": true,
+            "attn_implementation": "flash_attention_2"
         }
     },
     {
         "model_name": "internvl3-38b",
-        "backend": "huggingface_multimodal",
+        "backend": "huggingface_local",
         "huggingface_id": "OpenGVLab/InternVL3-38B",
         "release_date": "2025-04-11",
         "open_weight": true,
         "parameters": "38B",
-        "languages": [
-            "en",
-            "zh",
-            "es",
-            "fr",
-            "de",
-            "it",
-            "ru",
-            "ar",
-            "hi"
-        ],
+        "languages": ["en", "zh", "es", "fr", "de", "it", "ru", "ar", "hi"],
         "context_size": "128k",
-        "license": {
-            "name": "MIT",
-            "url": "https://choosealicense.com/licenses/mit/"
-        },
+        "license": {"name": "MIT", "url": "https://choosealicense.com/licenses/mit/"},
         "model_config": {
-            "model_class": "transformers.AutoModel",
-            "processor_class": "transformers.AutoTokenizer",
-            "processor_config": {
-                "use_fast": false
-            },
-            "prompt": "clemcore.backends.multimodal_utils.generate_internvl2_prompt_text",
-            "response": "clemcore.backends.multimodal_utils.generate_internvl3_response",
+            "multimodal": true,
+            "premade_chat_template": true,
+            "eos_to_cull": "",
             "trust_remote_code": true,
             "do_sample": false,
-            "multimodality": {
-                "single_image": true,
-                "multiple_images": true,
-                "audio": false,
-                "video": true
-            },
-            "mm_model_config": {
-                "torch_dtype": "auto",
-                "load_in_8bit": true,
-                "low_cpu_mem_usage": true,
-                "use_flash_attn": true,
-                "device_map": "clemcore.backends.multimodal_utils.split_internvl3_model"
-            }
+            "load_in_8bit": true,
+            "attn_implementation": "flash_attention_2"
         }
     },
     {
