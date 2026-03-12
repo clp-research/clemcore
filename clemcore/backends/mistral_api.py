@@ -1,7 +1,7 @@
 import logging
-import mistralai
 from typing import List, Dict, Tuple, Any
 from retry import retry
+from mistralai import Mistral as MistralClient
 import clemcore.backends as backends
 from clemcore.backends.utils import ensure_messages_format, augment_response_object
 
@@ -12,7 +12,7 @@ class Mistral(backends.RemoteBackend):
     """Backend class for accessing the Mistral remote API."""
 
     def _make_api_client(self):
-        return mistralai.Mistral(api_key=self.key["api_key"])
+        return MistralClient(api_key=self.key["api_key"])
 
     def list_models(self) -> list:
         """List models available on the Mistral remote API.
@@ -37,10 +37,10 @@ class Mistral(backends.RemoteBackend):
 class MistralModel(backends.Model):
     """Model class accessing the Mistral remote API."""
 
-    def __init__(self, client: mistralai.Mistral, model_spec: backends.ModelSpec):
+    def __init__(self, client: MistralClient, model_spec: backends.ModelSpec):
         """
         Args:
-            client: An Mistral library MistralClient class.
+            client: A Mistral API client.
             model_spec: A ModelSpec instance specifying the model.
         """
         super().__init__(model_spec)
@@ -62,7 +62,7 @@ class MistralModel(backends.Model):
         Returns:
             The generated response message returned by the Mistral remote API.
         """
-        api_response: mistralai.ChatCompletionResponse = self.client.chat.complete(
+        api_response = self.client.chat.complete(
             model=self.model_spec.model_id,
             messages=messages,
             temperature=self.temperature,
