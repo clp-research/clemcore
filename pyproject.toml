@@ -10,12 +10,10 @@ readme = "README.md"
 requires-python = ">=3.10,<3.13"
 license = { text = "MIT" }
 authors = [
-    { name = "Philipp Sadler", email = "first.last@uni-potsdam.de" },
-    { name = "Jonathan Jordan", email = "first.last@uni-potsdam.de" },
-    { name = "Sherzod Hakimov", email = "first.last@uni-potsdam.de" },
-    { name = "Anne Beyer", email = "first.last@uni-potsdam.de" },
-    { name = "L. Pfennigschmidt", email = "first.last@uni-potsdam.de" },
-    { name = "Kushal Koshti", email = "first.last@uni-potsdam.de" }
+    { name = "Philipp Sadler", email = "philipp.sadler@gmail.com" },
+]
+maintainers = [
+    { name = "Computational Linguistics Group, University of Potsdam" },
 ]
 dependencies = [
     "pyyaml>=6.0",
