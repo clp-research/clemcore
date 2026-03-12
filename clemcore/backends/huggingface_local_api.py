@@ -107,20 +107,7 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
 
     hf_model_str = model_spec['huggingface_id']
 
-    # use 'slow' tokenizer for models that require it:
-    if 'slow_tokenizer' in model_spec.model_config:
-        if model_spec['model_config']['slow_tokenizer']:
-            tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-                hf_model_str,
-                use_fast=False
-            )
-        else:
-            tokenizer = None
-            slow_tokenizer_info = (f"{model_spec['model_name']} registry setting has slow_tokenizer, "
-                                   f"but it is not 'true'. Please check the model entry.")
-            print(slow_tokenizer_info)
-            logger.info(slow_tokenizer_info)
-    elif use_api_key:
+    if use_api_key:
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             hf_model_str,
             token=api_key,
