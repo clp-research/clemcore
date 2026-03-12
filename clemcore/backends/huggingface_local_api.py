@@ -102,14 +102,12 @@ def check_chat_template_kwargs(chat_template: str, chat_template_kwargs: dict,
     logger.info(f"Model entry chat template kwargs not found in chat template variables: {kwargs_not_in_chat_template_vars}")
 
 
-def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTrainedTokenizerBase, AutoConfig, int]:
-    """Load a HuggingFace model's standard config and tokenizer, and get context token limit from config.
-    If the model config does not contain the context limit, it is set to 256 as fallback. Does not load the model
-    weights, allowing for prototyping on non-GPU systems.
+def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTrainedTokenizerBase, AutoConfig]:
+    """Load a HuggingFace model's config and tokenizer. Does not load model weights.
     Args:
         model_spec: The ModelSpec for the model.
     Returns:
-        Tokenizer, model config and context token limit (int).
+        Tokenizer and model config.
     """
     logger.info(f'Loading huggingface model config and tokenizer: {model_spec.model_name}')
 
@@ -154,9 +152,6 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
     else:
         auto_config = AutoConfig.from_pretrained(hf_model_str)
 
-    # get context token limit for model:
-    context_size = _context_size_from_config(auto_config, model_spec, tokenizer)
-
     # Decoder-only models (e.g., GPT, LLaMA) often don't define a pad token explicitly,
     # since they use causal attention over the entire left-context during generation.
     # To avoid warnings from Transformers when padding is used, we set the pad token
@@ -199,7 +194,7 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
                              f"for {model_spec.model_name}. Must be 'left' or 'right'.")
         tokenizer.padding_side = padding_side
 
-    return tokenizer, auto_config, context_size
+    return tokenizer, auto_config
 
 
 def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
@@ -278,7 +273,8 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         """
         super().__init__(model_spec)
         # fail-fast
-        self.tokenizer, self.config, self.context_size = load_config_and_tokenizer(model_spec)
+        self.tokenizer, self.config = load_config_and_tokenizer(model_spec)
+        self.context_size = _context_size_from_config(self.config, model_spec, self.tokenizer)
         self.model: PreTrainedModel = load_model(model_spec)
 
         # validate and store chat_template_kwargs via setter (runs check_chat_template_kwargs)
@@ -721,7 +717,7 @@ def check_messages(messages: List[Dict], model_spec: backends.ModelSpec) -> bool
     Returns:
         True if messages are sound as-is, False if messages are not compatible with the model's template.
     """
-    tokenizer, _, _ = load_config_and_tokenizer(model_spec)
+    tokenizer, _ = load_config_and_tokenizer(model_spec)
 
     # bool for message acceptance:
     messages_accepted: bool = True
@@ -817,7 +813,8 @@ def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
             Number of tokens of 'context space left'
             Total context token limit
     """
-    tokenizer, _, context_size = load_config_and_tokenizer(model_spec)
+    tokenizer, auto_config = load_config_and_tokenizer(model_spec)
+    context_size = _context_size_from_config(auto_config, model_spec, tokenizer)
 
     # optional messages processing:
     if clean_messages:
