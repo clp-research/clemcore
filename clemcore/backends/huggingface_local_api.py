@@ -5,7 +5,7 @@ import logging
 from typing import List, Dict, Tuple, Any
 import torch
 import re
-from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, PreTrainedTokenizerBase, PreTrainedModel
+from transformers import AutoTokenizer, AutoModelForCausalLM, AutoConfig, BitsAndBytesConfig, PreTrainedTokenizerBase, PreTrainedModel
 from transformers.generation.utils import GenerateOutput
 from peft import PeftModel
 from jinja2 import TemplateError
@@ -102,41 +102,19 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
         else:
             requires_api_key_info = (f"{model_spec['model_name']} registry setting has requires_api_key, "
                                      f"but it is not 'true'. Please check the model entry.")
-            print(requires_api_key_info)
+            stdout_logger.info(requires_api_key_info)
             logger.info(requires_api_key_info)
 
     hf_model_str = model_spec['huggingface_id']
 
-    # use 'slow' tokenizer for models that require it:
-    if 'slow_tokenizer' in model_spec.model_config:
-        if model_spec['model_config']['slow_tokenizer']:
-            tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-                hf_model_str,
-                device_map="auto",
-                torch_dtype="auto",
-                verbose=False,
-                use_fast=False
-            )
-        else:
-            tokenizer = None
-            slow_tokenizer_info = (f"{model_spec['model_name']} registry setting has slow_tokenizer, "
-                                   f"but it is not 'true'. Please check the model entry.")
-            print(slow_tokenizer_info)
-            logger.info(slow_tokenizer_info)
-    elif use_api_key:
+    if use_api_key:
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             hf_model_str,
             token=api_key,
-            device_map="auto",
-            torch_dtype="auto",
-            verbose=False
         )
     else:
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
             hf_model_str,
-            device_map="auto",
-            torch_dtype="auto",
-            verbose=False
         )
 
     # apply proper chat template:
@@ -233,10 +211,13 @@ def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
     logger.info(f'Start loading huggingface model weights: {model_spec.model_name}')
 
     model_args = dict(device_map="auto", torch_dtype="auto")
+    bnb_kwargs = {}
     if "load_in_8bit" in model_spec.model_config:
-        model_args["load_in_8bit"] = model_spec.model_config["load_in_8bit"]
+        bnb_kwargs["load_in_8bit"] = model_spec.model_config["load_in_8bit"]
     if "load_in_4bit" in model_spec.model_config:
-        model_args["load_in_4bit"] = model_spec.model_config["load_in_4bit"]
+        bnb_kwargs["load_in_4bit"] = model_spec.model_config["load_in_4bit"]
+    if bnb_kwargs:
+        model_args["quantization_config"] = BitsAndBytesConfig(**bnb_kwargs)
     if 'requires_api_key' in model_spec.model_config and model_spec['model_config']['requires_api_key']:
         # load HF API key:
         key = KeyRegistry.from_json().get_key_for("huggingface")
@@ -300,7 +281,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             # set pad_token_id to tokenizer's eos_token_id to prevent excessive warnings:
             self.model.generation_config.pad_token_id = self.tokenizer.eos_token_id
 
-        self.device = "cuda" if torch.cuda.is_available() else "cpu"
+        self.device = next(self.model.parameters()).device
 
     @property
     def chat_template_kwargs(self) -> dict:
@@ -445,14 +426,16 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             gen_args["max_new_tokens"] = self.context_size
 
         # Put the model into evaluation mode e.g., disable dropout and configure batch norm etc.
-        self.model.eval()
+        if self.model.training:
+            stdout_logger.info("Model is in training mode; switching to eval mode for generation.")
+            self.model.eval()
 
         # Generate outputs for the whole batch (Note: model.generate() is decorated with torch.no_grad() !)
         generation_output: GenerateOutput = self.model.generate(prompt_token_ids, **gen_args)
 
         # Decode all outputs and prompts
-        model_outputs = self.tokenizer.batch_decode(generation_output.sequences)
-        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids)
+        model_outputs = self.tokenizer.decode(generation_output.sequences)
+        prompt_texts = self.tokenizer.decode(prompt_token_ids)
 
         prompts, response_texts, responses = split_and_clean_batch_outputs(self,
                                                                            model_outputs,
@@ -728,7 +711,10 @@ def check_context_limit(messages: List[Dict], model_spec: backends.ModelSpec,
     else:
         current_messages = messages
     # the actual tokens, including chat format:
+    # transformers >=5: apply_chat_template returns BatchEncoding when tokenize=True
     prompt_tokens = tokenizer.apply_chat_template(current_messages, add_generation_prompt=True)
+    if hasattr(prompt_tokens, 'input_ids'):
+        prompt_tokens = prompt_tokens.input_ids
     context_check_tuple = _check_context_limit(context_size, prompt_tokens, max_new_tokens=max_new_tokens)
     tokens_used = context_check_tuple[1]
     tokens_left = context_check_tuple[2]
