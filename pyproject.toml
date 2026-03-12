@@ -39,10 +39,10 @@ dependencies = [
 
 [project.optional-dependencies]
 huggingface = [
-    "accelerate", # required for device_map="auto"; version compatibility managed by transformers
-    "bitsandbytes>=0.42.0,<1.0.0", # for loading models with 4-bit and 8-bit quantization
-    "peft>=0.18.0,<1.0.0", # for loading LoRA models (adapters)
     "transformers>=5.0.0,<6.0.0", # installs torch
+    "accelerate", # required for device_map="auto"; version compatibility managed by transformers
+    "bitsandbytes", # for loading models with 4-bit and 8-bit quantization
+    "peft", # for loading LoRA models (adapters)
     "torchvision", # version resolved by torch
 ]
 slurk = [
