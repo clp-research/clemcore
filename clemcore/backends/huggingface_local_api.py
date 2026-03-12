@@ -48,6 +48,27 @@ def _parse_context_size(value: Any) -> int | None:
     return None
 
 
+def _context_size_from_config(auto_config, model_spec: "backends.ModelSpec", tokenizer=None) -> int:
+    """Resolve context size from AutoConfig, falling back to registry entry, tokenizer metadata, or a hard default.
+    Args:
+        auto_config: The AutoConfig instance for the model.
+        model_spec: The ModelSpec for the model; checked for a top-level 'context_size' entry.
+        tokenizer: Optional tokenizer; its model_max_length is used as a secondary fallback.
+    Returns:
+        Context size as int.
+    """
+    if hasattr(auto_config, 'max_position_embeddings'):
+        return auto_config.max_position_embeddings
+    if hasattr(auto_config, 'n_positions'):
+        return auto_config.n_positions
+    context_size = _parse_context_size(getattr(model_spec, "context_size", None))
+    if context_size is None and tokenizer is not None:
+        tokenizer_max = getattr(tokenizer, "model_max_length", None)
+        if isinstance(tokenizer_max, int) and tokenizer_max < _MAX_TOKENIZER_CONTEXT_GUARD:
+            context_size = tokenizer_max
+    return context_size or FALLBACK_CONTEXT_SIZE
+
+
 def check_chat_template_kwargs(chat_template: str, chat_template_kwargs: dict,
                                ignore_variables: tuple = ("messages", "content",
                                                           "add_generation_prompt", "raise_exception")):
@@ -134,22 +155,7 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
         auto_config = AutoConfig.from_pretrained(hf_model_str)
 
     # get context token limit for model:
-    if hasattr(auto_config, 'max_position_embeddings'):  # this is the standard attribute used by most
-        context_size = auto_config.max_position_embeddings
-    elif hasattr(auto_config, 'n_positions'):  # some models may have their context size under this attribute
-        context_size = auto_config.n_positions
-    else:  # few models, especially older ones, might not have their context size in the config
-        # Try the model registry entry if present (e.g., "256k")
-        registry_context = getattr(model_spec, "context_size", None)
-        context_size = _parse_context_size(registry_context)
-        # Fall back to tokenizer metadata when it looks sane
-        if context_size is None:
-            tokenizer_max = getattr(tokenizer, "model_max_length", None)
-            if isinstance(tokenizer_max, int) and tokenizer_max < _MAX_TOKENIZER_CONTEXT_GUARD:
-                context_size = tokenizer_max
-        # Last resort
-        if context_size is None:
-            context_size = FALLBACK_CONTEXT_SIZE
+    context_size = _context_size_from_config(auto_config, model_spec, tokenizer)
 
     # Decoder-only models (e.g., GPT, LLaMA) often don't define a pad token explicitly,
     # since they use causal attention over the entire left-context during generation.
@@ -467,13 +473,7 @@ class HuggingfaceLocalMultimodalModel(backends.Model):
             model_spec.huggingface_id,
             trust_remote_code=trust_rc
         )
-        if hasattr(auto_config, 'max_position_embeddings'):
-            self.context_size = auto_config.max_position_embeddings
-        elif hasattr(auto_config, 'n_positions'):
-            self.context_size = auto_config.n_positions
-        else:
-            registry_context = getattr(model_spec, "context_size", None)
-            self.context_size = _parse_context_size(registry_context) or FALLBACK_CONTEXT_SIZE
+        self.context_size = _context_size_from_config(auto_config, model_spec)
 
     @augment_response_object
     @ensure_messages_format
