@@ -15,7 +15,8 @@ authors = [
     { name = "Sherzod Hakimov", email = "first.last@uni-potsdam.de" },
     { name = "Anne Beyer", email = "first.last@uni-potsdam.de" },
     { name = "L. Pfennigschmidt", email = "first.last@uni-potsdam.de" },
-    { name = "Kushal Koshti", email = "first.last@uni-potsdam.de" }
+    { name = "Kushal Koshti", email = "first.last@uni-potsdam.de" },
+    { name = "Karl Osswald", email = "first.last@uni-potsdam.de" }
 ]
 dependencies = [
     "pyyaml>=6.0",

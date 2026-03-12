@@ -85,7 +85,7 @@ class GameScorer:
         if turn_idx not in self.scores[KEY_TURN_SCORES]:
             self.scores[KEY_TURN_SCORES][turn_idx] = {}
         if score_name in self.scores[KEY_TURN_SCORES][turn_idx]:
-            module_logger.warning(f"{self.game_name}: Score {score_name} overwritten at turn {turn_idx}!")
+            module_logger.warning(f"{self.game_name}: Score '{score_name}' overwritten at turn {turn_idx}!")
         self.scores[KEY_TURN_SCORES][turn_idx][score_name] = score_value
         module_logger.info(f"{self.game_name}: Logged turn {turn_idx} score {score_name}={score_value}.")
 
@@ -96,9 +96,9 @@ class GameScorer:
             score_value: The value to be recorded for the episode-level score/metric.
         """
         if score_name in self.scores[KEY_EPISODE_SCORES]:
-            module_logger.warning(f"{self.game_name}: Episode score {score_name} overwritten!")
+            module_logger.warning(f"{self.game_name}: Episode score '{score_name}' overwritten!")
         self.scores[KEY_EPISODE_SCORES][score_name] = score_value
-        module_logger.info(f"{self.game_name}: Logged episode score {score_name}={score_value}.")
+        module_logger.info(f"{self.game_name}: Logged episode score '{score_name}'={score_value}.")
 
     def compute_scores(self, interactions: Dict) -> None:
         """Compute and log scores for a game episode. This method is used to perform complete scoring of an episode.

@@ -107,37 +107,26 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
 
     hf_model_str = model_spec['huggingface_id']
 
+    tokenizer_args = {
+        "device_map": "auto",
+        "torch_dtype": "auto",
+        "trust_remote_code": model_spec.model_config.get('trust_remote_code', False),
+        "token": api_key if use_api_key else None,
+        "verbose": False
+    }
+    
     # use 'slow' tokenizer for models that require it:
     if 'slow_tokenizer' in model_spec.model_config:
         if model_spec['model_config']['slow_tokenizer']:
-            tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-                hf_model_str,
-                device_map="auto",
-                torch_dtype="auto",
-                verbose=False,
-                use_fast=False
-            )
+            tokenizer_args["use_fast"] = False
+            tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(hf_model_str, **tokenizer_args)
         else:
             tokenizer = None
             slow_tokenizer_info = (f"{model_spec['model_name']} registry setting has slow_tokenizer, "
                                    f"but it is not 'true'. Please check the model entry.")
-            print(slow_tokenizer_info)
             logger.info(slow_tokenizer_info)
-    elif use_api_key:
-        tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            hf_model_str,
-            token=api_key,
-            device_map="auto",
-            torch_dtype="auto",
-            verbose=False
-        )
     else:
-        tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(
-            hf_model_str,
-            device_map="auto",
-            torch_dtype="auto",
-            verbose=False
-        )
+        tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(hf_model_str, **tokenizer_args)
 
     # apply proper chat template:
     if not model_spec['model_config']['premade_chat_template']:
@@ -149,16 +138,20 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
                 f"while model has no pre-made template! Generic template will be used, likely leading to "
                 f"bad results.")
 
-    if use_api_key:
-        auto_config = AutoConfig.from_pretrained(hf_model_str, token=api_key)
-    else:
-        auto_config = AutoConfig.from_pretrained(hf_model_str)
+    config_args = {
+        "trust_remote_code": model_spec.model_config.get('trust_remote_code', False),
+        "token": api_key if use_api_key else None
+    }
+    auto_config = AutoConfig.from_pretrained(hf_model_str, **config_args)
 
     # get context token limit for model:
     if hasattr(auto_config, 'max_position_embeddings'):  # this is the standard attribute used by most
         context_size = auto_config.max_position_embeddings
     elif hasattr(auto_config, 'n_positions'):  # some models may have their context size under this attribute
         context_size = auto_config.n_positions
+    elif hasattr(auto_config, 'text_config') and hasattr(auto_config.text_config, 'max_position_embeddings'): 
+        # some models (e.g., Mistral) have nested configs
+        context_size = auto_config.text_config.max_position_embeddings
     else:  # few models, especially older ones, might not have their context size in the config
         # Try the model registry entry if present (e.g., "256k")
         # ModelSpec is dict-like but doesn't expose .get in some versions
@@ -241,6 +234,8 @@ def load_model(model_spec: backends.ModelSpec) -> PreTrainedModel | PeftModel:
         # load HF API key:
         key = KeyRegistry.from_json().get_key_for("huggingface")
         model_args["token"] = key["api_key"]
+    if 'trust_remote_code' in model_spec.model_config:
+        model_args["trust_remote_code"] = model_spec.model_config['trust_remote_code']
 
     hf_model_str = model_spec['huggingface_id']
     model = AutoModelForCausalLM.from_pretrained(hf_model_str, **model_args)
@@ -374,17 +369,20 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
 
         # Bypassing CoT requires appending a message with empty CoT to the history, which is then completed by the model
         # As this is incompatible with the add_generation_prompt argument, it's handled separately here
+        tokenizer_args = {
+            "add_generation_prompt": True,  # append assistant prompt
+            "tokenize": False,  # get back the rendered string to tokenize together as a batch
+        }
+        if 'chat_template_language' in self.model_spec.model_config:
+            # Only needed for Teuken, which has different templates for different languages
+            tokenizer_args["chat_template"] = self.model_spec.model_config['chat_template_language'].upper()
         if 'cot_bypass' in self.model_spec.model_config and self.model_spec.model_config['cot_bypass']:
             # Add last message containing CoT bypass string content to each message history in batch
             for message_history in batch_messages:
                 message_history.append({"role": "assistant", "content": self.model_spec.model_config['cot_bypass']})
             # Render each chat in the batch (list of messages) to a string prompt to continue after CoT bypass
-            rendered_chats = self.tokenizer.apply_chat_template(
-                batch_messages,
-                continue_final_message=True,  # continue after CoT bypass
-                tokenize=False,  # get back the rendered string
-                **self._chat_template_kwargs
-            )
+            tokenizer_args["continue_final_message"] = True  # continue after CoT bypass
+            tokenizer_args["add_generation_prompt"] = False  # don't append assistant prompt, as CoT bypass content is already added as last message
         elif 'cot_effort' in self.model_spec.model_config and self.model_spec.model_config['cot_effort']:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
             # including setting CoT effort to value defined in model registry entry
@@ -394,20 +392,9 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             chat_template_kwargs = self.chat_template_kwargs
             if "reasoning_effort" not in chat_template_kwargs:
                 chat_template_kwargs["reasoning_effort"] = self.model_spec.model_config['cot_effort']
-            rendered_chats = self.tokenizer.apply_chat_template(
-                batch_messages,
-                add_generation_prompt=True,  # append assistant prompt
-                tokenize=False,  # get back the rendered string
-                **chat_template_kwargs
-            )
-        else:
-            # Render each chat in the batch (list of messages) to a string prompt with generation prompt
-            rendered_chats = self.tokenizer.apply_chat_template(
-                batch_messages,
-                add_generation_prompt=True,  # append assistant prompt
-                tokenize=False,  # get back the rendered string
-                **self._chat_template_kwargs
-            )
+            tokenizer_args.update(chat_template_kwargs)
+        
+        rendered_chats = self.tokenizer.apply_chat_template(batch_messages, **tokenizer_args)  # apply chat template with args
 
         # The rendered chat (with system message already removed before) will, for example, look like:
         # <|begin_of_text|><|start_header_id|>user<|end_header_id|>\n\nWho won the world series in 2020?<|eot_id|>
