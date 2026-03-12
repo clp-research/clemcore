@@ -102,7 +102,7 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
         else:
             requires_api_key_info = (f"{model_spec['model_name']} registry setting has requires_api_key, "
                                      f"but it is not 'true'. Please check the model entry.")
-            print(requires_api_key_info)
+            stdout_logger.info(requires_api_key_info)
             logger.info(requires_api_key_info)
 
     hf_model_str = model_spec['huggingface_id']
@@ -426,14 +426,16 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             gen_args["max_new_tokens"] = self.context_size
 
         # Put the model into evaluation mode e.g., disable dropout and configure batch norm etc.
-        self.model.eval()
+        if self.model.training:
+            stdout_logger.info("Model is in training mode; switching to eval mode for generation.")
+            self.model.eval()
 
         # Generate outputs for the whole batch (Note: model.generate() is decorated with torch.no_grad() !)
         generation_output: GenerateOutput = self.model.generate(prompt_token_ids, **gen_args)
 
         # Decode all outputs and prompts
-        model_outputs = self.tokenizer.batch_decode(generation_output.sequences)
-        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids)
+        model_outputs = self.tokenizer.decode(generation_output.sequences)
+        prompt_texts = self.tokenizer.decode(prompt_token_ids)
 
         prompts, response_texts, responses = split_and_clean_batch_outputs(self,
                                                                            model_outputs,
