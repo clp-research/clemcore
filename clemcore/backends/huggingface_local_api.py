@@ -115,17 +115,19 @@ def load_config_and_tokenizer(model_spec: backends.ModelSpec) -> Tuple[PreTraine
         "verbose": False
     }
     
+    init_tokenizer = True
     # use 'slow' tokenizer for models that require it:
     if 'slow_tokenizer' in model_spec.model_config:
         if model_spec['model_config']['slow_tokenizer']:
             tokenizer_args["use_fast"] = False
-            tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(hf_model_str, **tokenizer_args)
         else:
             tokenizer = None
+            init_tokenizer = False
             slow_tokenizer_info = (f"{model_spec['model_name']} registry setting has slow_tokenizer, "
                                    f"but it is not 'true'. Please check the model entry.")
             logger.info(slow_tokenizer_info)
-    else:
+    
+    if init_tokenizer:
         tokenizer: PreTrainedTokenizerBase = AutoTokenizer.from_pretrained(hf_model_str, **tokenizer_args)
 
     # apply proper chat template:
