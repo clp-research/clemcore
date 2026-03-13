@@ -61,6 +61,9 @@ def _context_size_from_config(auto_config, model_spec: "backends.ModelSpec", tok
         return auto_config.max_position_embeddings
     if hasattr(auto_config, 'n_positions'):
         return auto_config.n_positions
+    if hasattr(auto_config, 'text_config') and hasattr(auto_config.text_config, 'max_position_embeddings'):
+        # some multimodal models (e.g., Mistral) store context size in a nested text_config
+        return auto_config.text_config.max_position_embeddings
     context_size = _parse_context_size(getattr(model_spec, "context_size", None))
     if context_size is None and tokenizer is not None:
         tokenizer_max = getattr(tokenizer, "model_max_length", None)
@@ -357,8 +360,13 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         # item batches, because here, the padding is not necessary anyway. In the following we first apply
         # the chat template and then use the tokenizer to receive the proper masks, also feasible for batches.
 
+        # Some models (e.g., Teuken) select a chat template variant via a 'chat_template' kwarg.
+        language_kwargs = {}
+        if 'chat_template_language' in self.model_spec.model_config:
+            language_kwargs["chat_template"] = self.model_spec.model_config['chat_template_language']
+
         # Bypassing CoT requires appending a message with empty CoT to the history, which is then completed by the model
-        # As this is incompatible with the add_generation_prompt argument, it's handled separately here
+        # This is incompatible with the add_generation_prompt argument. Hence, it is handled separately here.
         if 'cot_bypass' in self.model_spec.model_config and self.model_spec.model_config['cot_bypass']:
             # Add last message containing CoT bypass string content to each message history in batch
             for message_history in batch_messages:
@@ -367,8 +375,9 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
             rendered_chats = self.tokenizer.apply_chat_template(
                 batch_messages,
                 continue_final_message=True,  # continue after CoT bypass
+                add_generation_prompt=False,  # incompatible with continue_final_message
                 tokenize=False,  # get back the rendered string
-                **self._chat_template_kwargs
+                **{**self._chat_template_kwargs, **language_kwargs}
             )
         elif 'cot_effort' in self.model_spec.model_config and self.model_spec.model_config['cot_effort']:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
@@ -383,7 +392,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
                 tokenize=False,  # get back the rendered string
-                **chat_template_kwargs
+                **{**chat_template_kwargs, **language_kwargs}
             )
         else:
             # Render each chat in the batch (list of messages) to a string prompt with generation prompt
@@ -391,7 +400,7 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
                 batch_messages,
                 add_generation_prompt=True,  # append assistant prompt
                 tokenize=False,  # get back the rendered string
-                **self._chat_template_kwargs
+                **{**self._chat_template_kwargs, **language_kwargs}
             )
 
         # The rendered chat (with system message already removed before) will, for example, look like:
