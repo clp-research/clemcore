@@ -72,7 +72,7 @@ class GameBenchmark(GameResourceLocator):
         interaction_files = [
             f for f in glob.glob(os.path.join(results_root, '**', 'interactions.json'), recursive=True)
             if any(game_name in Path(f).parts for game_name in filter_games)
-            and (model_selector is None or model_selector in Path(f).parts)
+            and (model_selector is None or any(model_selector in part for part in Path(f).parts))
         ]
         stdout_logger.info(f"Found {len(interaction_files)} interaction files to score. "
                            f"Games: {filter_games if filter_games else 'all'}")
