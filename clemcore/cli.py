@@ -352,7 +352,13 @@ def cli(args: argparse.Namespace):
     if args.command_name == "transcribe":
         transcripts(args.game, results_dir=args.results_dir)
     if args.command_name == "eval":
-        clemeval.perform_evaluation(args.results_dir, show_std=args.std, sort_by=args.sort, model_selector=args.model)
+        clemeval.perform_evaluation(
+            args.results_dir,
+            show_std=args.std,
+            sort_by=args.sort,
+            model_selector=args.model,
+            game_selector=args.game
+        )
 
 
 def main():
@@ -480,7 +486,11 @@ Update Behavior:
     eval_parser.add_argument("-m", "--model", type=str, default=None,
                              help="A model name substring to add or re-evaluate a single model. "
                                   "If given, loads only that model's scores from disk, sets them into "
-                                  "the existing raw.csv, and recomputes the full results table.")
+                                  "the existing raw.csv, and recomputes the full results table."
+                                  "Can be combined with -g to update a specific model/game combination.")
+    eval_parser.add_argument("-g", "--game", type=str, default=None,
+                             help="A game name substring to add or re-evaluate a single game. "
+                                  "Can be combined with -m to update a specific model/game combination.")
 
     serve_parser = sub_parsers.add_parser("serve")
     serve_parser.add_argument("-g", "--game",
