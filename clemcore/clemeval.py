@@ -134,16 +134,19 @@ def parse_directory_name(name: Path) -> dict:
             'episode': episode}
 
 
-def load_scores(path: str, model_selector: str = None) -> dict:
+def load_scores(path: str, model_selector: str = None, game_selector: str = None) -> dict:
     """Get all turn and episodes scores and return them in a dictionary.
     Args:
         path: Root directory to search for score files.
         model_selector: Optional substring to filter score files by model name.
+        game_selector: Optional substring to filter score files by game name.
     """
     # https://stackoverflow.com/a/18394205
     score_files = list(Path(path).rglob("*scores.json"))
     if model_selector is not None:
         score_files = [f for f in score_files if model_selector in str(f)]
+    if game_selector is not None:
+        score_files = [f for f in score_files if game_selector in Path(f).parts]
     print(f'Loading {len(score_files)} JSON files.')
     scores = {}
     for path in tqdm(score_files, desc="Loading scores"):
@@ -174,29 +177,35 @@ def build_df_episode_scores(scores: dict) -> pd.DataFrame:
 
 def perform_evaluation(results_path: str, return_dataframe: bool = False,
                        show_std: bool = False, sort_by: str = "model_name",
-                       model_selector: str = None) -> pd.DataFrame | None:
+                       model_selector: str = None, game_selector: str = None) -> pd.DataFrame | None:
     """Run evaluation and save results table.
     Args:
         results_path: Root directory containing score files and where results are saved.
         return_dataframe: If True, return the results dataframe.
         show_std: If True, include standard deviation columns.
         sort_by: Sort rows by 'model_name' or 'clemscore'.
-        model_selector: Optional substring to restrict evaluation to a single model.
-            When set, loads only that model's scores from disk, merges them into the
-            existing raw.csv (replacing any previous rows for that model), and
-            recomputes the full results table. This allows incremental updates without
-            re-scoring all models.
+        model_selector: Optional substring to restrict evaluation to a specific model.
+            When set (with or without game_selector), loads only matching scores from
+            disk, merges them into the existing raw.csv (replacing matching rows), and
+            recomputes the full results table.
+        game_selector: Optional substring to restrict evaluation to a specific game.
+            Can be combined with model_selector for finer-grained updates.
     """
     raw_csv_path = Path(results_path) / 'raw.csv'
+    incremental = (model_selector is not None or game_selector is not None) and raw_csv_path.exists()
 
-    if model_selector is not None and raw_csv_path.exists():
-        # Incremental update: load existing raw data, drop old rows for this model,
-        # load fresh scores for the selected model, then recompute the full table.
+    if incremental:
+        # Incremental update: load existing raw data, drop rows matching the selectors,
+        # load fresh scores for the selection, then recompute the full table.
         df_existing = pd.read_csv(raw_csv_path, index_col=0)
-        df_existing = df_existing[~df_existing['model'].str.contains(model_selector, na=False)]
-        scores = load_scores(path=results_path, model_selector=model_selector)
+        mask = pd.Series(True, index=df_existing.index)
+        if model_selector is not None:
+            mask &= df_existing['model'].str.contains(model_selector, na=False)
+        if game_selector is not None:
+            mask &= df_existing['game'] == game_selector
+        df_existing = df_existing[~mask]
+        scores = load_scores(path=results_path, model_selector=model_selector, game_selector=game_selector)
         df_new = build_df_episode_scores(scores)
-        # Add PLAYED for the new rows
         if clemmetrics.METRIC_PLAYED in df_new['metric'].unique():
             raise PlayedScoreError("Computed scores should not contain METRIC_PLAYED.")
         aux = df_new[df_new["metric"] == clemmetrics.METRIC_ABORTED].copy()
@@ -206,7 +215,7 @@ def perform_evaluation(results_path: str, return_dataframe: bool = False,
         df_episode_scores = pd.concat([df_existing, df_new], ignore_index=True)
     else:
         # Full evaluation: load all scores from disk.
-        scores = load_scores(path=results_path, model_selector=model_selector)
+        scores = load_scores(path=results_path, model_selector=model_selector, game_selector=game_selector)
         df_episode_scores = build_df_episode_scores(scores)
         if clemmetrics.METRIC_PLAYED in df_episode_scores['metric'].unique():
             raise PlayedScoreError("Computed scores should not contain METRIC_PLAYED.")
