@@ -164,6 +164,61 @@ class TestPerformEvaluation(unittest.TestCase):
             clemeval.build_df_episode_scores = original_build
 
 
+class TestSaveClemTableStdFlag(unittest.TestCase):
+
+    def setUp(self):
+        # Two episodes so std is meaningful
+        rows = [
+            {'game': 'taboo', 'model': 'gpt-4', 'experiment': 'exp1', 'episode': 'episode_1',
+             'metric': clemmetrics.METRIC_ABORTED, 'value': 0},
+            {'game': 'taboo', 'model': 'gpt-4', 'experiment': 'exp1', 'episode': 'episode_1',
+             'metric': clemmetrics.BENCH_SCORE, 'value': 80},
+            {'game': 'taboo', 'model': 'gpt-4', 'experiment': 'exp1', 'episode': 'episode_2',
+             'metric': clemmetrics.METRIC_ABORTED, 'value': 0},
+            {'game': 'taboo', 'model': 'gpt-4', 'experiment': 'exp1', 'episode': 'episode_2',
+             'metric': clemmetrics.BENCH_SCORE, 'value': 60},
+        ]
+        self.df = _add_played_column(_make_episode_scores_df(rows))
+        self.tmpdir = tempfile.mkdtemp()
+
+    def test_std_columns_absent_by_default(self):
+        result = save_clem_table(self.df.copy(), self.tmpdir)
+        std_cols = [c for c in result.columns if '(std)' in c]
+        self.assertEqual(std_cols, [], f"Expected no std columns by default, got {std_cols}")
+
+    def test_std_columns_present_when_requested(self):
+        result = save_clem_table(self.df.copy(), self.tmpdir, show_std=True)
+        std_cols = [c for c in result.columns if '(std)' in c]
+        self.assertGreater(len(std_cols), 0, "Expected at least one std column when show_std=True")
+
+
+class TestSaveClemTableSortFlag(unittest.TestCase):
+
+    def setUp(self):
+        rows = []
+        for model, score in [('z-model', 10), ('a-model', 90), ('m-model', 50)]:
+            for ep in ['episode_1', 'episode_2']:
+                rows += [
+                    {'game': 'taboo', 'model': model, 'experiment': 'exp1', 'episode': ep,
+                     'metric': clemmetrics.METRIC_ABORTED, 'value': 0},
+                    {'game': 'taboo', 'model': model, 'experiment': 'exp1', 'episode': ep,
+                     'metric': clemmetrics.BENCH_SCORE, 'value': score},
+                ]
+        self.df = _add_played_column(_make_episode_scores_df(rows))
+        self.tmpdir = tempfile.mkdtemp()
+
+    def test_sort_by_model_name_default(self):
+        result = save_clem_table(self.df.copy(), self.tmpdir, sort_by='model_name')
+        self.assertEqual(list(result.index), sorted(result.index.tolist()))
+
+    def test_sort_by_clemscore_descending(self):
+        result = save_clem_table(self.df.copy(), self.tmpdir, sort_by='clemscore')
+        clemscore_col = [c for c in result.columns if 'clemscore' in c][0]
+        scores = result[clemscore_col].tolist()
+        self.assertEqual(scores, sorted(scores, reverse=True))
+        self.assertEqual(result.index[0], 'a-model')
+
+
 class TestGoldenOutput(unittest.TestCase):
     """Regression test against real clembench-runs data.
 

@@ -188,5 +188,37 @@ class GameSpecTestCase(unittest.TestCase):
             self.assertEqual(specs[1].game_name, "game_b")
 
 
+class GameSpecHashEqTestCase(unittest.TestCase):
+
+    def _make(self, name):
+        return GameSpec(game_name=name, game_path="/path", players=1)
+
+    def test_equal_same_name(self):
+        self.assertEqual(self._make("taboo"), self._make("taboo"))
+
+    def test_not_equal_different_name(self):
+        self.assertNotEqual(self._make("taboo"), self._make("wordle"))
+
+    def test_hashable(self):
+        spec = self._make("taboo")
+        self.assertIsInstance(hash(spec), int)
+
+    def test_same_name_deduplicates_in_set(self):
+        specs = {self._make("taboo"), self._make("taboo"), self._make("wordle")}
+        self.assertEqual(len(specs), 2)
+
+    def test_duplicate_selectors_deduplicated_via_set(self):
+        """Simulates clem run -g taboo taboo: expanding two identical selectors
+        and collecting into a set should yield a single game spec."""
+        expanded = [self._make("taboo"), self._make("taboo")]
+        result = set(expanded)
+        self.assertEqual(len(result), 1)
+
+    def test_not_equal_to_non_gamespec(self):
+        spec = self._make("taboo")
+        self.assertNotEqual(spec, "taboo")
+        self.assertNotEqual(spec, None)
+
+
 if __name__ == '__main__':
     unittest.main()
