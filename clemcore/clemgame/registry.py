@@ -69,6 +69,14 @@ class GameSpec(SimpleNamespace):
         """
         return hasattr(self, attribute)
 
+    def __eq__(self, other):
+        if not isinstance(other, GameSpec):
+            return NotImplemented
+        return self.game_name == other.game_name
+
+    def __hash__(self):
+        return hash(self.game_name)
+
     def to_string(self):
         return json.dumps(self.__dict__, separators=(",", ":"), indent=None)
 
