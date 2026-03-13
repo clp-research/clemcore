@@ -232,7 +232,9 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         self._recorders[_key] = game_recorder
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+        if exception is not None:
+            return
         game_name = game_master.game_spec.game_name
         experiment_name = game_master.experiment["name"]
         game_id = game_instance["game_id"]
@@ -241,6 +243,38 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         recorder = self._recorders.pop(_key)  # auto-remove recorder from registry
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
+
+
+class SignalFileSaver(GameBenchmarkCallback):
+    """Writes a signal file into each instance directory to indicate run outcome.
+
+    - ``completed.json`` — written when a game episode finishes without error.
+    - ``error.json``     — written when an exception aborts the episode.
+
+    These files make it easy to check the run status of any instance at a glance,
+    and support future ``--resume`` logic (see issue #231).
+    """
+
+    def __init__(self, results_folder: ResultsFolder):
+        self.results_folder = results_folder
+
+    def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
+        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+        for signal_file in ["completed.json", "error.json"]:
+            signal_path = instance_dir_path / signal_file
+            if signal_path.exists():
+                signal_path.unlink()
+
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+        if exception is None:
+            store_json({"timestamp": datetime.now().isoformat()}, "completed.json", instance_dir_path)
+        else:
+            store_json({
+                "timestamp": datetime.now().isoformat(),
+                "error": type(exception).__name__,
+                "message": str(exception)
+            }, "error.json", instance_dir_path)
 
 
 class PlayerFileSaver(GameBenchmarkCallback):
@@ -271,7 +305,9 @@ class PlayerFileSaver(GameBenchmarkCallback):
             _key = PlayerFileSaver.to_key(game_name, experiment_name, game_id, player.name)
             self._recorders[_key] = recorder
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+        if exception is not None:
+            return
         game_name = game_master.game_spec.game_name
         experiment_name = game_master.experiment["name"]
         game_id = game_instance["game_id"]
