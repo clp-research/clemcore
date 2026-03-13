@@ -1,3 +1,4 @@
+from functools import wraps
 from typing import Callable
 
 import gymnasium
@@ -125,6 +126,28 @@ def env(game_name: str,
     return game_env
 
 
+def _notify_on_error(method):
+    """Decorator for GameMasterEnv methods that notifies callbacks when a game episode ends
+    unexpectedly due to an exception, then reraises.
+
+    This ensures callbacks such as SignalFileSaver can write signal files (e.g. error.json)
+    regardless of whether the episode ended normally or due to an error, mirroring the
+    on_game_end call that happens in step() on normal completion.
+
+    Only notifies when game_master is already initialised (i.e. after create_game_master()
+    succeeded in reset()), so callbacks always receive a valid game_master instance.
+    """
+    @wraps(method)
+    def wrapper(self: "GameMasterEnv", *args, **kwargs):
+        try:
+            return method(self, *args, **kwargs)
+        except Exception as e:
+            if self.game_master is not None and self.game_instance is not None:
+                self.callbacks.on_game_end(self.game_master, self.game_instance, e)
+            raise
+    return wrapper
+
+
 class GameMasterEnv(AECEnv):
 
     def __init__(self, game_benchmark: GameBenchmark, *, callbacks: GameBenchmarkCallbackList | None = None,
@@ -179,6 +202,7 @@ class GameMasterEnv(AECEnv):
         """ Mapping the current player to an agent id """
         return self.player_to_agent_id[self.game_master.current_player.name]
 
+    @_notify_on_error
     def reset(self, seed: int | None = None, options: dict | None = None):
         self.options = options or {}
         assert "experiment" in self.options, "Missing 'experiment' in reset options"
@@ -213,6 +237,7 @@ class GameMasterEnv(AECEnv):
             self._cumulative_rewards[agent] = 0.
             self.infos[agent] = {}
 
+    @_notify_on_error
     def step(self, action: ActionType) -> None:
         """Accepts, executes, and logs the action of the current agent in the environment.
 

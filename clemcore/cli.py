@@ -13,7 +13,7 @@ from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, Experim
     InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstances, ResultsFolder, \
     GameBenchmark
 from clemcore import clemeval, get_version, load_logging_config
-from clemcore.clemgame.callbacks.files import PlayerFileSaver
+from clemcore.clemgame.callbacks.files import PlayerFileSaver, SignalFileSaver
 from clemcore.clemgame.runners import dispatch
 from clemcore.clemgame.transcripts.builder import build_transcripts
 from clemcore.utils.string_utils import read_query_string
@@ -177,7 +177,8 @@ def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpe
         ExperimentFileSaver(results_folder, player_model_infos=model_infos),
         InteractionsFileSaver(results_folder, player_model_infos=model_infos),
         RunFileSaver(results_folder, player_model_infos=model_infos),
-        PlayerFileSaver(results_folder)
+        PlayerFileSaver(results_folder),
+        SignalFileSaver(results_folder)
     ])
 
     all_start = datetime.now()

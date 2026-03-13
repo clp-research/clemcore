@@ -25,7 +25,13 @@ class GameBenchmarkCallback(abc.ABC):
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
         pass
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+        """Called when a game episode ends, whether normally or due to an unexpected exception.
+
+        If exception is None, the episode completed normally. If exception is set, the episode
+        was aborted by an error. Implementors that only handle normal completion should guard
+        with ``if exception is not None: return`` at the top of their implementation.
+        """
         pass
 
     def on_benchmark_end(self, game_benchmark: "GameBenchmark"):
@@ -55,9 +61,9 @@ class GameBenchmarkCallbackList(GameBenchmarkCallback):
         for callback in self.callbacks:
             callback.on_game_step(game_master, game_instance, game_step)
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
         for callback in self.callbacks:
-            callback.on_game_end(game_master, game_instance)
+            callback.on_game_end(game_master, game_instance, exception)
 
     def on_benchmark_end(self, game_benchmark: "GameBenchmark"):
         for callback in self.callbacks:
