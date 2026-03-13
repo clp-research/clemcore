@@ -185,7 +185,7 @@ class TestGoldenOutput(unittest.TestCase):
             df = pd.concat([df, aux], ignore_index=True)
 
             with tempfile.TemporaryDirectory() as out_dir:
-                save_clem_table(df, out_dir)
+                save_clem_table(df, out_dir, show_std=True)
                 actual = pd.read_csv(Path(out_dir) / "results.csv", index_col=0)
 
         golden = pd.read_csv(GOLDEN_CSV, index_col=0)

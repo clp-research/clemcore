@@ -32,8 +32,14 @@ class PlayedScoreError(Exception):
     pass
 
 
-def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
-    """Create benchmark results as a table."""
+def save_clem_table(df: pd.DataFrame, path: str, show_std: bool = False, sort_by: str = "model_name") -> pd.DataFrame | None:
+    """Create benchmark results as a table.
+    Args:
+        df: Episode scores dataframe.
+        path: Directory path to save the results files.
+        show_std: If True, include standard deviation columns for Quality Score. Default: False.
+        sort_by: Sort rows by 'model_name' (alphabetical) or 'clemscore' (descending). Default: 'model_name'.
+    """
 
     # extract only relevant metrics
     df = df[df['metric'].isin(MAIN_METRICS)]
@@ -51,15 +57,6 @@ def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
     df_a['metric'] = df_a['metric'].replace(
         {clemmetrics.METRIC_PLAYED: '% ' + clemmetrics.METRIC_PLAYED})
 
-    # compute the std of benchscore
-    df = df[df.metric == clemmetrics.BENCH_SCORE]
-    df_b = (df.groupby(['game', 'model', 'metric'])
-            .std(numeric_only=True)
-            .reset_index()
-            .round(2))
-    df_b['metric'] = df_b['metric'].replace(
-        {clemmetrics.BENCH_SCORE: clemmetrics.BENCH_SCORE + ' (std)'})
-
     # compute the macro-average main score over games, per model
     df_all = (df_a.groupby(['model', 'metric'])
               .mean(numeric_only=True)
@@ -69,8 +66,21 @@ def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
     df_all['game'] = 'all'
     df_all['metric'] = 'Average ' + df_all['metric']
 
+    parts = [df_a, df_all]
+
+    if show_std:
+        # compute the std of benchscore
+        df_std = df[df.metric == clemmetrics.BENCH_SCORE]
+        df_b = (df_std.groupby(['game', 'model', 'metric'])
+                .std(numeric_only=True)
+                .reset_index()
+                .round(2))
+        df_b['metric'] = df_b['metric'].replace(
+            {clemmetrics.BENCH_SCORE: clemmetrics.BENCH_SCORE + ' (std)'})
+        parts.insert(1, df_b)
+
     # merge all data and make it one model per row
-    df_full = pd.concat([df_a, df_b, df_all], axis=0, ignore_index=True)
+    df_full = pd.concat(parts, axis=0, ignore_index=True)
     # sort just so all metrics are close to each other in a game column
     df_full.sort_values(by=['game', 'metric'], inplace=True)
     # rename according to paper
@@ -88,6 +98,12 @@ def save_clem_table(df: pd.DataFrame, path: str) -> pd.DataFrame | None:
     df_results.index.name = None
     df_results.columns = df_results.columns.to_flat_index()
     df_results.columns = [', '.join(x) for x in df_results.columns]
+
+    # sort rows
+    if sort_by == "clemscore":
+        df_results.sort_values(by='-, clemscore', ascending=False, inplace=True)
+    else:
+        df_results.sort_index(inplace=True)
 
     # save table
     df_results.to_csv(Path(path) / f'{TABLE_NAME}.csv')
@@ -150,7 +166,8 @@ def build_df_episode_scores(scores: dict) -> pd.DataFrame:
     return df_episode_scores
 
 
-def perform_evaluation(results_path: str, return_dataframe: bool = False) -> pd.DataFrame | None:
+def perform_evaluation(results_path: str, return_dataframe: bool = False,
+                       show_std: bool = False, sort_by: str = "model_name") -> pd.DataFrame | None:
     # Get all episode scores as a pandas dataframe
     scores = load_scores(path=results_path)
     df_episode_scores = build_df_episode_scores(scores)
@@ -169,6 +186,6 @@ def perform_evaluation(results_path: str, return_dataframe: bool = False) -> pd.
     print(f'\n Saved raw scores into {results_path}/raw.csv')
 
     # save main table
-    df_episode_scores = save_clem_table(df_episode_scores, results_path)
+    df_episode_scores = save_clem_table(df_episode_scores, results_path, show_std=show_std, sort_by=sort_by)
     if return_dataframe:
         return df_episode_scores

@@ -132,7 +132,7 @@ def list_games(game_selector: str, verbose: bool = False):
             print(game_name, wrapper.fill(game_spec["description"]))
 
 
-def run(game_selector: Union[str, Dict, GameSpec],
+def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpec]]],
         model_selectors: List[backends.ModelSpec],
         *,
         gen_args: Dict,
@@ -144,7 +144,8 @@ def run(game_selector: Union[str, Dict, GameSpec],
         ):
     """Run specific model/models with a specified clemgame.
     Args:
-        game_selector: Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.
+        game_selectors: One or more game selectors. Each can be a game name, a GameSpec-like dict, or a GameSpec.
+            Pass a list to run multiple games in a single invocation.
         model_selectors: One or two selectors for the models that are supposed to play the games.
         gen_args: Text generation parameters for the backend; output length and temperature are implemented for the
             majority of model backends.
@@ -156,8 +157,13 @@ def run(game_selector: Union[str, Dict, GameSpec],
         batch_size: A batch size to use for the run.
     """
     # check games
+    if not isinstance(game_selectors, list):
+        game_selectors = [game_selectors]
     game_registry = GameRegistry.from_directories_and_cwd_files()
-    game_specs = game_registry.get_game_specs_that_unify_with(game_selector)  # throws error when nothing unifies
+    game_specs = set()
+    for game_selector in game_selectors:
+        game_specs.update(game_registry.get_game_specs_that_unify_with(game_selector))  # throws error when nothing unifies
+    game_specs = list(game_specs)
 
     # load models (can take some time for large local models)
     player_models = backends.load_models(model_selectors, gen_args)
@@ -212,13 +218,12 @@ def run(game_selector: Union[str, Dict, GameSpec],
         sys.exit(1)
 
 
-def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
+def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None, model_selector: str = None):
     """Calculate scores from a game benchmark run's records and store score files.
     Args:
         game_selector: Name of the game, matching the game's name in the game registry, OR GameSpec-like dict, OR GameSpec.
-        experiment_name: Name of the experiment to score. Corresponds to the experiment directory in each player pair
-            subdirectory in the results directory.
         results_dir: Path to the results directory in which the benchmark records are stored.
+        model_selector: Optional model name to restrict scoring to a specific model.
     """
     logger.info(f"Scoring game {game_selector}")
     errors = []
@@ -228,7 +233,7 @@ def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None):
         try:
             time_start = datetime.now()
             with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
-                game_benchmark.compute_scores(results_dir)
+                game_benchmark.compute_scores(results_dir, model_selector=model_selector)
             logger.info(f"Scoring {game_benchmark.game_name} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -329,6 +334,7 @@ def cli(args: argparse.Namespace):
                 batch_size=args.batch_size)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
+
     if args.command_name == "serve":
         serve(args.game,
               learner_agent=args.learner_agent,
@@ -341,11 +347,11 @@ def cli(args: argparse.Namespace):
               results_dir=args.results_dir,
               run_id=args.run_id)
     if args.command_name == "score":
-        score(args.game, results_dir=args.results_dir)
+        score(args.game, results_dir=args.results_dir, model_selector=args.model)
     if args.command_name == "transcribe":
         transcripts(args.game, results_dir=args.results_dir)
     if args.command_name == "eval":
-        clemeval.perform_evaluation(args.results_dir)
+        clemeval.perform_evaluation(args.results_dir, show_std=args.std, sort_by=args.sort)
 
 
 def main():
@@ -406,8 +412,21 @@ Update Behavior:
       Default: None.""")
     run_parser.add_argument("-e", "--experiment_name", type=str,
                             help="Optional argument to only run a specific experiment")
-    run_parser.add_argument("-g", "--game", type=str,
-                            required=True, help="A specific game name (see ls), or a GameSpec-like JSON string object.")
+    run_parser.add_argument("-g", "--game", type=str, nargs="+",
+                            required=True, help="""One or more game selectors. Duplicates are ignored.
+
+      Run a single game by name:
+      $> clem run -g taboo -m mock
+
+      Run multiple games in a single invocation:
+      $> clem run -g taboo wordle imagegame -m mock
+
+      Select games by GameSpec-like JSON dict for unification (e.g. by benchmark version):
+      $> clem run -g "{'benchmark':['2.0']}" -m llama3-8b-sft
+
+      Mix names and JSON dicts freely:
+      $> clem run -g taboo "{'benchmark':['2.0']}" -m mock
+      """)
     run_parser.add_argument("-t", "--temperature", type=float, default=0.0,
                             help="Argument to specify sampling temperature for the models. Default: 0.0.")
     run_parser.add_argument("-l", "--max_tokens", type=int, default=300,
@@ -424,16 +443,18 @@ Update Behavior:
                             help="The instances file name (.json suffix will be added automatically.")
     run_parser.add_argument("-r", "--results_dir", type=Path, default="results",
                             help="A relative or absolute path to the results root directory. "
-                                 "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
+                                 "For example '-r results/v1.5/de' or '-r /absolute/path/for/results'. "
                                  "When not specified, then the results will be located in 'results'")
 
     score_parser = sub_parsers.add_parser("score")
     score_parser.add_argument("-g", "--game", type=str,
                               help='A specific game name, a GameSpec-like JSON string object or "all" (default).',
                               default="all")
+    score_parser.add_argument("-m", "--model", type=str, default=None,
+                              help="Optional model name to restrict scoring to a specific model's results.")
     score_parser.add_argument("-r", "--results_dir", type=str, default="results",
                               help="A relative or absolute path to the results root directory. "
-                                   "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
+                                   "For example '-r results/v1.5/de' or '-r /absolute/path/for/results'. "
                                    "When not specified, then the results will be located in 'results'")
 
     transcribe_parser = sub_parsers.add_parser("transcribe")
@@ -442,15 +463,19 @@ Update Behavior:
                                    default="all")
     transcribe_parser.add_argument("-r", "--results_dir", type=str, default="results",
                                    help="A relative or absolute path to the results root directory. "
-                                        "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
+                                        "For example '-r results/v1.5/de' or '-r /absolute/path/for/results'. "
                                         "When not specified, then the results will be located in 'results'")
 
     eval_parser = sub_parsers.add_parser("eval")
     eval_parser.add_argument("-r", "--results_dir", type=str, default="results",
                              help="A relative or absolute path to the results root directory. "
-                                  "For example '-r results/v1.5/de‘ or '-r /absolute/path/for/results'. "
+                                  "For example '-r results/v1.5/de' or '-r /absolute/path/for/results'. "
                                   "When not specified, then the results will be located in 'results'."
                                   "For evaluation, the directory must already contain the scores.")
+    eval_parser.add_argument("--std", action="store_true",
+                             help="Include standard deviation columns in the results table. Default: off.")
+    eval_parser.add_argument("--sort", type=str, choices=["model_name", "clemscore"], default="model_name",
+                             help="Sort results by model name or clemscore. Default: model_name.")
 
     serve_parser = sub_parsers.add_parser("serve")
     serve_parser.add_argument("-g", "--game",
