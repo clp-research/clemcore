@@ -133,7 +133,7 @@ class TestPerformEvaluation(unittest.TestCase):
                 {'game': 'taboo', 'model': 'gpt-4', 'experiment': 'exp1', 'episode': 'ep1',
                  'metric': clemmetrics.METRIC_PLAYED, 'value': 1},
             ])
-            clemeval.load_scores = lambda path: {}
+            clemeval.load_scores = lambda path, model_selector=None: {}
             clemeval.build_df_episode_scores = lambda scores: bad_df
 
             with tempfile.TemporaryDirectory() as tmpdir:
@@ -151,7 +151,7 @@ class TestPerformEvaluation(unittest.TestCase):
         original_build = clemeval.build_df_episode_scores
 
         try:
-            clemeval.load_scores = lambda path: {}
+            clemeval.load_scores = lambda path, model_selector=None: {}
             clemeval.build_df_episode_scores = lambda scores: _minimal_scores()
 
             with tempfile.TemporaryDirectory() as tmpdir:

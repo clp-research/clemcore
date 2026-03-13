@@ -352,7 +352,7 @@ def cli(args: argparse.Namespace):
     if args.command_name == "transcribe":
         transcripts(args.game, results_dir=args.results_dir)
     if args.command_name == "eval":
-        clemeval.perform_evaluation(args.results_dir, show_std=args.std, sort_by=args.sort)
+        clemeval.perform_evaluation(args.results_dir, show_std=args.std, sort_by=args.sort, model_selector=args.model)
 
 
 def main():
@@ -477,6 +477,10 @@ Update Behavior:
                              help="Include standard deviation columns in the results table. Default: off.")
     eval_parser.add_argument("--sort", type=str, choices=["model_name", "clemscore"], default="model_name",
                              help="Sort results by model name or clemscore. Default: model_name.")
+    eval_parser.add_argument("-m", "--model", type=str, default=None,
+                             help="A model name substring to add or re-evaluate a single model. "
+                                  "If given, loads only that model's scores from disk, sets them into "
+                                  "the existing raw.csv, and recomputes the full results table.")
 
     serve_parser = sub_parsers.add_parser("serve")
     serve_parser.add_argument("-g", "--game",
