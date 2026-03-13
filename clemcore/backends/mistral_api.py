@@ -1,7 +1,7 @@
 import logging
 from typing import List, Dict, Tuple, Any
 from retry import retry
-from mistralai import Mistral as MistralClient
+from mistralai.client import Mistral as MistralClient
 import clemcore.backends as backends
 from clemcore.backends.utils import ensure_messages_format, augment_response_object
 
