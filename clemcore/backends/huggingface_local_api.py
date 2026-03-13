@@ -360,14 +360,13 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         # item batches, because here, the padding is not necessary anyway. In the following we first apply
         # the chat template and then use the tokenizer to receive the proper masks, also feasible for batches.
 
-        # Bypassing CoT requires appending a message with empty CoT to the history, which is then completed by the model
-        # As this is incompatible with the add_generation_prompt argument, it's handled separately here
         # Some models (e.g., Teuken) select a chat template variant via a 'chat_template' kwarg.
-        # We uppercase the value assuming the template key is an uppercase language code (e.g. "DE", "EN").
         language_kwargs = {}
         if 'chat_template_language' in self.model_spec.model_config:
-            language_kwargs["chat_template"] = self.model_spec.model_config['chat_template_language'].upper()
+            language_kwargs["chat_template"] = self.model_spec.model_config['chat_template_language']
 
+        # Bypassing CoT requires appending a message with empty CoT to the history, which is then completed by the model
+        # This is incompatible with the add_generation_prompt argument. Hence, it is handled separately here.
         if 'cot_bypass' in self.model_spec.model_config and self.model_spec.model_config['cot_bypass']:
             # Add last message containing CoT bypass string content to each message history in batch
             for message_history in batch_messages:
