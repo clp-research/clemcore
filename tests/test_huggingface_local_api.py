@@ -11,8 +11,10 @@ MODEL_SPEC = backends.ModelSpec(**{
     "model_name": "Mistral-7B-Instruct-v0.1",
     "backend": "huggingface_local",
     "huggingface_id": "mistralai/Mistral-7B-Instruct-v0.1",
-    "premade_chat_template": True,
-    "eos_to_cull": "</s>"
+    "model_config": {
+        "premade_chat_template": True,
+        "eos_to_cull": "</s>"
+    }
 })
 
 
