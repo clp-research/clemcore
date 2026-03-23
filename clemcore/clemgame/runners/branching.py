@@ -12,40 +12,29 @@ module_logger = logging.getLogger(__name__)
 stdout_logger = logging.getLogger("clemcore.run")
 
 
-class BranchingCondition:
-    """Base class for branching conditions."""
+# Type alias for branching condition callable
+BranchingCondition = Callable[[GameMasterEnv, str, any], bool]
+
+
+def player_role_condition(role_name: str) -> BranchingCondition:
+    """
+    Create a branching condition that triggers when a specific player role is active.
     
-    def should_branch(self, game_env: GameMasterEnv, agent_id: str, context: any) -> bool:
-        """
-        Determine if branching should occur at this step.
+    Args:
+        role_name: The role name to branch on (e.g., "Describer", "GM")
         
-        Args:
-            game_env: The game environment
-            agent_id: Current agent ID
-            context: Current observation/context
-            
-        Returns:
-            True if branching should occur, False otherwise
-        """
-        raise NotImplementedError
-
-
-class PlayerRoleBranchingCondition(BranchingCondition):
-    """Branch when a specific player role is active."""
-    
-    def __init__(self, role_name: str):
-        """
-        Args:
-            role_name: The role name to branch on (e.g., "Describer", "GM")
-        """
-        self.role_name = role_name
-    
-    def should_branch(self, game_env: GameMasterEnv, agent_id: str, context: any) -> bool:
+    Returns:
+        A callable that returns True when the specified role is active
+        
+    Example:
+        condition = player_role_condition("Describer")
+    """
+    def condition(game_env: GameMasterEnv, agent_id: str, context: any) -> bool:
         player = game_env.player_by_agent_id.get(agent_id)
         if player is None:
             return False
-        # Check if player has a role attribute matching our target
-        return hasattr(player, 'role') and player.role == self.role_name
+        return hasattr(player, 'role') and player.role == role_name
+    return condition
 
 
 class GameBranch:
@@ -76,7 +65,15 @@ def run(game_benchmark: GameBenchmark,
         player_models: List of player models
         callbacks: Callbacks for benchmark events
         branching_factor: Number of branches to create when condition is met (1 = no branching)
-        branching_condition: Condition that triggers branching. If None, no branching occurs.
+        branching_condition: A callable(game_env, agent_id, context) -> bool that determines
+            when to branch. If None, no branching occurs.
+            
+    Example:
+        # Branch when the Describer role is active
+        run(..., branching_factor=3, branching_condition=player_role_condition("Describer"))
+        
+        # Or use a lambda for simple conditions
+        run(..., branching_factor=2, branching_condition=lambda env, agent, ctx: agent == "player_1")
     """
     callbacks.on_benchmark_start(game_benchmark)
     error_count = 0
@@ -126,7 +123,7 @@ def run(game_benchmark: GameBenchmark,
                                 not has_branched and 
                                 branching_factor > 1 and 
                                 branching_condition is not None and
-                                branching_condition.should_branch(branch.game_env, agent_id, context)
+                                branching_condition(branch.game_env, agent_id, context)
                             )
                             
                             if should_branch:
