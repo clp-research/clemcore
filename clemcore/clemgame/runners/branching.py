@@ -9,10 +9,10 @@ Key concepts:
 - **Branching condition**: A callable that determines when to create branches
 - **Leaf branches**: The final completed game trajectories (e.g., 64 independent gameplays)
 
-The runner creates a tree structure where:
-- Each node represents a game state
-- Each branch explores a different response/action
-- Leaf nodes are complete game episodes
+The runner maintains a flat pool of active environments. At each step:
+- Every active environment is checked against the branching condition
+- If the condition is met, the environment is copied branching_factor times
+- Each copy is then stepped forward independently
 
 Use cases:
 - Collecting multiple model responses for the same context
@@ -52,7 +52,7 @@ def is_player_role(game_role: str) -> BranchingCondition:
         A callable that returns True when the specified role is active
 
     Example:
-        condition = player_role_condition("Describer")
+        condition = is_player_role("Describer")
     """
 
     def condition(player: 'Player' = None, **_) -> bool:
@@ -72,7 +72,7 @@ def is_player_model(model: Model) -> BranchingCondition:
         A callable that returns True when the specified model is active
 
     Example:
-        condition = player_model_condition(learner_model)
+        condition = is_player_model(learner_model)
     """
 
     def condition(player: 'Player' = None, **_) -> bool:
@@ -208,107 +208,121 @@ def run(game_benchmark: GameBenchmark,
             f"{game_benchmark.game_name}: '{error_count}' exceptions occurred: See clembench.log for details.")
     callbacks.on_benchmark_end(game_benchmark)
 
-
-class BranchingRunner:
-    """
-    Manages the execution of a branching game episode.
-
-    This runner maintains a list of active game environments and processes them
-    in parallel, creating new branches when the branching condition is met.
-
-    The runner uses a breadth-first approach:
-    1. Start with the root game environment
-    2. For each active environment:
-       - Check if branching should occur
-       - Create copies if branching
-       - Execute the next step for each branch
-    3. Continue until all branches complete
-
-    Attributes:
-        _root: The initial game environment
-        branching_factor: Number of branches to create when condition is met
-        branching_condition: Callable that determines when to branch
-        _current_envs: List of currently active game environments
-
-    Example:
-        runner = BranchingRunner(game_env, branching_factor=3, branching_condition=is_round(0))
-        runner.run()
-        # Results in 3 independent game trajectories
-    """
-
-    def __init__(
-            self,
-            game_env: GameMasterEnv,
-            branching_factor: int = 1,
-            branching_condition: Optional[BranchingCondition] = lambda **_: True,
-            progress_bar=None
-    ):
-        self._root = game_env
-        self.branching_factor = branching_factor
-        self.branching_condition = branching_condition
-
-        self._progress_bar = progress_bar
-        self._current_envs: List[GameMasterEnv] = [self._root]
-
-    def should_branch(self, game_env):
+    class BranchingRunner:
         """
-        Determine if branching should occur at the current step.
+        Manages the execution of a branching game episode.
 
-        Args:
-            game_env: The current game environment
+        This runner maintains a flat list of active game environments and processes them
+        in parallel, creating new branches when the branching condition is met.
 
-        Returns:
-            bool: True if branching should occur, False otherwise
+        At each iteration:
+        1. Every active environment is checked against the branching condition
+        2. If the condition is met, the environment is deep-copied branching_factor times
+        3. Each copy is stepped forward independently
+        4. The resulting active environments form the pool for the next iteration
+        5. Continue until all environments have completed
 
-        The method checks:
-        1. branching_factor > 1 (branching is enabled)
-        2. branching_condition is not None (a condition is specified)
-        3. branching_condition returns True for the current player/env
+        Attributes:
+            _root: The initial game environment
+            branching_factor: Number of branches to create when condition is met
+            branching_condition: Callable that determines when to branch
+            _current_envs: List of currently active game environments
+
+        Example:
+            runner = BranchingRunner(game_env, branching_factor=3, branching_condition=is_round(0))
+            runner.run()
+            # Results in 3 independent game trajectories
         """
-        agent_id = game_env.agent_selection
-        if agent_id is None:
-            return False  # Don't branch terminal envs
-        if game_env.terminations.get(agent_id) or game_env.truncations.get(agent_id):
-            return False  # Don't branch on cleanup steps
-        player = game_env.player_by_agent_id[agent_id]
-        return (
-                self.branching_factor > 1 and
-                self.branching_condition is not None and
-                self.branching_condition(player=player, env=game_env)
-        )
 
-    def run(self):
-        while self._current_envs:  # As long as we have remaining game envs to be played ...
+        def __init__(
+                self,
+                game_env: GameMasterEnv,
+                branching_factor: int = 1,
+                branching_condition: Optional[BranchingCondition] = lambda **_: True,
+                progress_bar=None
+        ):
+            self._root = game_env
+            self.branching_factor = branching_factor
+            self.branching_condition = branching_condition
+
+            self._progress_bar = progress_bar
+            self._current_envs: List[GameMasterEnv] = [self._root]
+
+        def should_branch(self, game_env):
+            """
+            Determine if branching should occur at the current step.
+
+            Args:
+                game_env: The current game environment
+
+            Returns:
+                bool: True if branching should occur, False otherwise
+
+            The method checks:
+            1. branching_factor > 1 (branching is enabled)
+            2. branching_condition is not None (a condition is specified)
+            3. branching_condition returns True for the current player/env
+            """
+            agent_id = game_env.agent_selection
+            if agent_id is None:
+                return False  # Don't branch terminal envs
+            if game_env.terminations.get(agent_id) or game_env.truncations.get(agent_id):
+                return False  # Don't branch on cleanup steps
+            player = game_env.player_by_agent_id[agent_id]
+            return (
+                    self.branching_factor > 1 and
+                    self.branching_condition is not None and
+                    self.branching_condition(player=player, env=game_env)
+            )
+
+        def run(self):
+            while self._current_envs:  # As long as we have remaining game envs to be played ...
+                if self._progress_bar is not None:
+                    self._progress_bar.set_postfix(branches=len(self._current_envs))
+                remaining_envs = []
+                for game_env in self._current_envs:  # ... we iterate over all of them
+                    if self.should_branch(game_env):  # ... and branch for each game env if necessary
+                        branch_envs = [deepcopy(game_env) for _ in range(self.branching_factor)]
+                    else:
+                        branch_envs = [deepcopy(game_env)]  # Note: Still copy to keep single nodes immutable
+                    continued_branches = self._single_step_all(branch_envs)
+                    remaining_envs.extend(continued_branches)
+                self._current_envs = remaining_envs
             if self._progress_bar is not None:
-                self._progress_bar.set_postfix(branches=len(self._current_envs))
-            remaining_envs = []
-            for game_env in self._current_envs:  # ... we iterate over all of them
-                if self.should_branch(game_env):  # ... and branch for each game env if necessary
-                    branch_envs = [deepcopy(game_env) for _ in range(self.branching_factor)]
-                else:
-                    branch_envs = [deepcopy(game_env)]  # Note: Still copy to keep single nodes immutable
-                continued_branches = self._single_step_all(branch_envs)
-                remaining_envs.extend(continued_branches)
-            self._current_envs = remaining_envs
-        if self._progress_bar is not None:
-            self._progress_bar.set_postfix(branches=0)
+                self._progress_bar.set_postfix(branches=0)
 
-    def _single_step_all(self, branch_envs):
-        continued_branches = []
-        for branch_env in branch_envs:
-            agent_id = branch_env.agent_selection
-            if agent_id is None:  # This was a terminal branch (we can safely ignore it)
-                branch_env.close()
-                continue
-            context, reward, termination, truncation, info = branch_env.last(observe=True)
-            if termination or truncation:
-                # None actions remove the agent from the game during step(None)
-                # This is essential to observe the final reward, e.g., for the describer, when the guesser wins
-                response = None
-            else:
-                player = branch_env.player_by_agent_id[agent_id]
-                response = player(context)
-            branch_env.step(response)
-            # If we made it to here, then the branch is to be continued (agent_id was not None)
-            continued_branches.append(branch_env)
-        return continued_branches
+        def _single_step_all(self, branch_envs):
+            """
+            Execute a single step for each branch environment.
+
+            For each environment, observes the current context and computes
+            a response via the active player. Terminal or truncated agents
+            receive a ``None`` action to allow final reward observation before
+            the environment is closed.
+
+            Args:
+                branch_envs: List of game environments to step through.
+
+            Returns:
+                List of branch environments that are still active after the step.
+                Environments whose ``agent_selection`` is ``None`` (terminal) are
+                closed and excluded from the returned list.
+            """
+            continued_branches = []
+            for branch_env in branch_envs:
+                agent_id = branch_env.agent_selection
+                if agent_id is None:  # This was a terminal branch (we can safely ignore it)
+                    branch_env.close()
+                    continue
+                context, reward, termination, truncation, info = branch_env.last(observe=True)
+                if termination or truncation:
+                    # None actions remove the agent from the game during step(None)
+                    # This is essential to observe the final reward, e.g., for the describer, when the guesser wins
+                    response = None
+                else:
+                    player = branch_env.player_by_agent_id[agent_id]
+                    response = player(context)
+                branch_env.step(response)
+                # If we made it to here, then the branch is to be continued (agent_id was not None)
+                continued_branches.append(branch_env)
+            return continued_branches
