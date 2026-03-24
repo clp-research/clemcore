@@ -266,8 +266,10 @@ class BranchingRunner:
         3. branching_condition returns True for the current player/env
         """
         agent_id = game_env.agent_selection
-        if agent_id is None:  # Game is done, no branching on terminal envs
-            return False
+        if agent_id is None:
+            return False  # Don't branch terminal envs
+        if game_env.terminations.get(agent_id) or game_env.truncations.get(agent_id):
+            return False  # Don't branch on cleanup steps
         player = game_env.player_by_agent_id[agent_id]
         return (
                 self.branching_factor > 1 and
