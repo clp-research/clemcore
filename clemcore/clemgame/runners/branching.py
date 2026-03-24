@@ -293,7 +293,7 @@ class BranchingRunner:
         )
 
     @staticmethod
-    def to_parent_id(game_env: GameMasterEnv) -> str:
+    def to_branching_point_id(game_env: GameMasterEnv) -> str:
         return (f"{game_env.metadata.get('name')}"
                 f"-{game_env.experiment['name']}"
                 f"-{game_env.game_instance['game_id']}"
@@ -305,14 +305,18 @@ class BranchingRunner:
                 self._progress_bar.set_postfix(branches=len(self._current_envs))
             remaining_envs = []
             for parent_env in self._current_envs:  # ... we iterate over all of them
-                parent_id = BranchingRunner.to_parent_id(parent_env)
+                branching_point_id = BranchingRunner.to_branching_point_id(parent_env)
                 branch_envs = []
                 num_branches = 1  # by default, we do not branch
                 if self.should_branch(parent_env):
                     num_branches = self.branching_factor
                 for _ in range(num_branches):
                     branch_env = deepcopy(parent_env)
-                    branch_env.callbacks.on_branch_start(branch_env.game_master, branch_env.game_instance, parent_id)
+                    branch_env.callbacks.on_branch_start(
+                        branch_env.game_master,
+                        branch_env.game_instance,
+                        branching_point_id
+                    )
                     branch_envs.append(branch_env)
                 continued_branches = self._single_step_all(branch_envs)
                 remaining_envs.extend(continued_branches)
