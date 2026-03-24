@@ -267,9 +267,10 @@ class GameMasterEnv(AECEnv):
 
         # After step() current_player might have changed, so we reference it here already
         current_agent = self.get_current_agent()
+        current_player = self.player_by_agent_id[current_agent]
 
         # Get the context that was given from GM -> Player (logging happens in game_master.step)
-        current_context = self.game_master.get_context_for(self.player_by_agent_id[current_agent])
+        current_context = self.game_master.get_context_for(current_player)
 
         # Step possibly transitions the current agent (as specified by the game master)
         # Log the response action from Player -> GM
@@ -283,7 +284,7 @@ class GameMasterEnv(AECEnv):
         self.infos[current_agent] = info
 
         # Inform callbacks about the game step results
-        game_step = GameStep(current_context, action, done, info)
+        game_step = GameStep(current_context, action, done, info, current_player.name, current_player.model.name)
         self.callbacks.on_game_step(self.game_master, self.game_instance, game_step)
 
         # The terminal case:
