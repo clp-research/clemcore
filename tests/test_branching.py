@@ -1,7 +1,11 @@
+from pathlib import Path
+
 import pytest
 
 from clemcore import backends
-from clemcore.clemgame import GameBenchmark, GameRegistry, GameInstances, GameBenchmarkCallbackList
+from clemcore.backends import Model
+from clemcore.clemgame import GameBenchmark, GameRegistry, GameInstances, GameBenchmarkCallbackList, EpochResultsFolder, \
+    EpochResultsFolderCallback, InstanceFileSaver, ExperimentFileSaver, InteractionsFileSaver, SignalFileSaver
 from clemcore.clemgame.runners import branching
 
 TEST_GAME = "taboo"
@@ -37,6 +41,25 @@ class TestBranchingRunner:
             game_instances,
             player_models,
             callbacks=GameBenchmarkCallbackList(),
+            branching_factor=2,
+            branching_condition=lambda **_: True
+        )
+
+    def test_branching_runner_with_results_folder(self, game_benchmark, game_instances, player_models):
+        results_folder = EpochResultsFolder(Path("results-branching"), Model.to_identifier(player_models))
+        model_infos = Model.to_infos(player_models)
+        callbacks = GameBenchmarkCallbackList([
+            EpochResultsFolderCallback(results_folder),
+            InstanceFileSaver(results_folder),
+            ExperimentFileSaver(results_folder, player_model_infos=model_infos),
+            InteractionsFileSaver(results_folder, player_model_infos=model_infos, store_branches=True),
+            SignalFileSaver(results_folder)
+        ])
+        branching.run(
+            game_benchmark,
+            game_instances,
+            player_models,
+            callbacks=callbacks,
             branching_factor=2,
             branching_condition=lambda **_: True
         )
