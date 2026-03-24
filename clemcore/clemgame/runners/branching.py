@@ -131,7 +131,7 @@ def run(game_benchmark: GameBenchmark,
         *,
         callbacks: GameBenchmarkCallbackList,
         branching_factor: int = 1,
-        branching_condition: Optional[BranchingCondition] = None
+        branching_condition: Optional[BranchingCondition] = lambda **_: True
         ):
     """
     Run game instances with optional branching to explore multiple trajectories.
@@ -149,7 +149,7 @@ def run(game_benchmark: GameBenchmark,
             - 1 = no branching (default, standard gameplay)
             - 2+ = create this many parallel branches at each branching point
         branching_condition: A callable(player, env, context) -> bool that determines
-            when to branch. If None, no branching occurs.
+            when to branch. If None, no branching occurs. Default: always True.
             - player: The Player object (access to model, role, etc.)
             - env: The GameMasterEnv (access to game state, round, etc.)
             Returns True to trigger branching at this step.
@@ -240,7 +240,7 @@ class BranchingRunner:
             self,
             game_env: GameMasterEnv,
             branching_factor: int = 1,
-            branching_condition: Optional[BranchingCondition] = None,
+            branching_condition: Optional[BranchingCondition] = lambda **_: True,
             progress_bar=None
     ):
         self._root = game_env

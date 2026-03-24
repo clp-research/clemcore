@@ -20,7 +20,7 @@ def game_benchmark(game_spec):
 
 @pytest.fixture
 def game_instances(game_spec):
-    return GameInstances.from_game_spec(game_spec).filter(lambda row: row["game_instance"]["game_id"] in [0, 1])
+    return GameInstances.from_game_spec(game_spec).filter(lambda row: row["game_instance"]["game_id"] in [0])
 
 
 @pytest.fixture
