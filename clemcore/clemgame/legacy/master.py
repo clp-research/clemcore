@@ -108,6 +108,7 @@ class DialogueGameMaster(GameMaster):
     def before_game(self):
         self._on_before_game()
         self.current_round += 1
+        self.state.current_turn += 1
         self._on_before_round()
 
     @abc.abstractmethod
@@ -220,6 +221,9 @@ class DialogueGameMaster(GameMaster):
             self.log_game_end(auto_count_logging=False)
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
+
+        if not done:
+            self.state.current_turn += 1
 
         info = deepcopy(self.info)
         self.info = {}  # reset info after each step

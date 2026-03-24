@@ -31,6 +31,7 @@ class GameState:
 
     def __init__(self):
         self.outcome = Outcome.RUNNING
+        self.current_turn = -1
 
     def succeed(self):
         self.outcome = Outcome.SUCCESS
@@ -284,6 +285,7 @@ class DialogueGameMaster(GameMaster):
     def before_game(self):
         self._on_before_game()
         self.current_round += 1
+        self.state.current_turn += 1
         self._on_before_round()
 
     @abc.abstractmethod
@@ -389,7 +391,6 @@ class DialogueGameMaster(GameMaster):
         except GameError as error:
             self._on_game_error(error)
 
-
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
             self._current_player = self._next_player()
@@ -399,11 +400,15 @@ class DialogueGameMaster(GameMaster):
             self.current_round += 1  # already increment here b.c. _does_game_proceed might rely on it
 
         done = not self._does_game_proceed()
+
         if done:
             self._on_after_game()
             self.log_game_end()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
+
+        if not done:
+            self.state.current_turn += 1
 
         info = deepcopy(self.info)
         self.info = {}  # reset info after each step
