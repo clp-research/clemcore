@@ -12,6 +12,8 @@ class GameStep:
     response: str
     done: bool = False
     info: dict = field(default_factory=dict)
+    player_name: str | None = None
+    model_name: str | None = None
 
 
 class GameBenchmarkCallback(abc.ABC):
@@ -20,6 +22,9 @@ class GameBenchmarkCallback(abc.ABC):
         pass
 
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
+        pass
+
+    def on_branch_start(self, game_master: "GameMaster", game_instance: Dict, parent_id: str):
         pass
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
@@ -56,6 +61,10 @@ class GameBenchmarkCallbackList(GameBenchmarkCallback):
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         for callback in self.callbacks:
             callback.on_game_start(game_master, game_instance)
+
+    def on_branch_start(self, game_master: "GameMaster", game_instance: Dict, parent_id: str):
+        for callback in self.callbacks:
+            callback.on_branch_start(game_master, game_instance, parent_id)
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
         for callback in self.callbacks:
