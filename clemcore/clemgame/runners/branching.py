@@ -184,7 +184,8 @@ def run(game_benchmark: GameBenchmark,
     """
     callbacks.on_benchmark_start(game_benchmark)
     error_count = 0
-    for row in tqdm(game_instances, desc="Playing game instances"):
+    progress_bar = tqdm(game_instances, desc="Playing game instances")
+    for row in progress_bar:
         try:
             game_env = GameMasterEnv(game_benchmark, callbacks=callbacks)
             game_env.reset(options={
@@ -194,7 +195,7 @@ def run(game_benchmark: GameBenchmark,
             })
             for model in player_models:
                 model.reset()
-            runner = BranchingRunner(game_env, branching_factor, branching_condition)
+            runner = BranchingRunner(game_env, branching_factor, branching_condition, progress_bar=progress_bar)
             runner.run()
         except Exception:
             message = f"{game_benchmark.game_name}: Exception for instance {row['game_instance']['game_id']} (but continue)"
@@ -239,12 +240,14 @@ class BranchingRunner:
             self,
             game_env: GameMasterEnv,
             branching_factor: int = 1,
-            branching_condition: Optional[BranchingCondition] = None
+            branching_condition: Optional[BranchingCondition] = None,
+            progress_bar=None
     ):
         self._root = game_env
         self.branching_factor = branching_factor
         self.branching_condition = branching_condition
 
+        self._progress_bar = progress_bar
         self._current_envs: List[GameMasterEnv] = [self._root]
 
     def should_branch(self, game_env):
@@ -263,6 +266,8 @@ class BranchingRunner:
         3. branching_condition returns True for the current player/env
         """
         agent_id = game_env.agent_selection
+        if agent_id is None:  # Game is done, no branching on terminal envs
+            return False
         player = game_env.player_by_agent_id[agent_id]
         return (
                 self.branching_factor > 1 and
@@ -272,26 +277,36 @@ class BranchingRunner:
 
     def run(self):
         while self._current_envs:  # As long as we have remaining game envs to be played ...
+            if self._progress_bar is not None:
+                self._progress_bar.set_postfix(branches=len(self._current_envs))
             remaining_envs = []
             for game_env in self._current_envs:  # ... we iterate over all of them
                 if self.should_branch(game_env):  # ... and branch for each game env if necessary
-                    branch_envs = [deepcopy(game_env) for _ in range(self.branching_factor - 1)]
+                    branch_envs = [deepcopy(game_env) for _ in range(self.branching_factor)]
                 else:
                     branch_envs = [deepcopy(game_env)]  # Note: Still copy to keep single nodes immutable
-                for branch_env in branch_envs:  # ... then we continue the branches, or the game_env itself
-                    agent_id = branch_env.agent_selection  # Only select the next agent
-                    if agent_id is None:  # When there is no agent left, the episode is done for this game env
-                        branch_env.close()
-                        continue
-                    context, reward, termination, truncation, info = game_env.last(observe=True)
-                    if termination or truncation:
-                        # None actions remove the agent from the game during step(None)
-                        # This is essential to observe the final reward, e.g., for the describer, when the guesser wins
-                        response = None
-                    else:
-                        player = branch_env.player_by_agent_id[agent_id]
-                        response = player(context)
-                    branch_env.step(response)
-                    # If we made it to here, then the branch is to be continued (agent_id was not None)
-                    remaining_envs.append(branch_env)
+                continued_branches = self._single_step_all(branch_envs)
+                remaining_envs.extend(continued_branches)
             self._current_envs = remaining_envs
+        if self._progress_bar is not None:
+            self._progress_bar.set_postfix(branches=0)
+
+    def _single_step_all(self, branch_envs):
+        continued_branches = []
+        for branch_env in branch_envs:
+            agent_id = branch_env.agent_selection
+            if agent_id is None:  # This was a terminal branch (we can safely ignore it)
+                branch_env.close()
+                continue
+            context, reward, termination, truncation, info = branch_env.last(observe=True)
+            if termination or truncation:
+                # None actions remove the agent from the game during step(None)
+                # This is essential to observe the final reward, e.g., for the describer, when the guesser wins
+                response = None
+            else:
+                player = branch_env.player_by_agent_id[agent_id]
+                response = player(context)
+            branch_env.step(response)
+            # If we made it to here, then the branch is to be continued (agent_id was not None)
+            continued_branches.append(branch_env)
+        return continued_branches
