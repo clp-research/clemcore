@@ -1,12 +1,14 @@
 # Ours
 key*.json
 model_registry*.json
+game_registry*.json
 *results*
 openenv-records*/
 /venv
 evaltmp.ipynb
 .run
 CLAUDE.md
+.aider*
 
 # Wordlists https://www.kaggle.com/datasets/rtatman/english-word-frequency
 unigram_freq.csv
