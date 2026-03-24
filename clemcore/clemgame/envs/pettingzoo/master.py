@@ -66,7 +66,8 @@ def gym_env(game_name: str,
     Returns:
         A fully initialized game env ready for RL-like training
     """
-    game_env = env(game_name, instances_filter=instances_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
+    game_env = env(game_name, instances_filter=instances_filter, single_pass=single_pass, callbacks=callbacks,
+                   reward_func=reward_func, feedback_func=feedback_func)
     game_env = SinglePlayerWrapper(game_env, learner_agent, env_agents=env_agents)
     game_env = AECToGymWrapper(game_env)
     return game_env
@@ -114,7 +115,8 @@ def env(game_name: str,
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
-    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
+    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func,
+                                    feedback_func=feedback_func)
 
     # Warn env users in case of wrong method execution order
     game_env = OrderEnforcingWrapper(game_env)
@@ -137,6 +139,7 @@ def _notify_on_error(method):
     Only notifies when game_master is already initialised (i.e. after create_game_master()
     succeeded in reset()), so callbacks always receive a valid game_master instance.
     """
+
     @wraps(method)
     def wrapper(self: "GameMasterEnv", *args, **kwargs):
         try:
@@ -145,6 +148,7 @@ def _notify_on_error(method):
             if self.game_master is not None and self.game_instance is not None:
                 self.callbacks.on_game_end(self.game_master, self.game_instance, e)
             raise
+
     return wrapper
 
 
@@ -255,6 +259,10 @@ class GameMasterEnv(AECEnv):
             # Note: This removes the agent and selects the next (dead) agent in self.agents
             # or selects the next live agent stored during _deads_step_first() at the end of this step
             self._was_dead_step(action)
+            if not self.agents:
+                # PZ doesn't handle this case: All agents terminate simultaneously.
+                # See https://github.com/Farama-Foundation/PettingZoo/issues/652
+                self.agent_selection = None
             return
 
         # After step() current_player might have changed, so we reference it here already
