@@ -276,16 +276,28 @@ class BranchingRunner:
                 self.branching_condition(player=player, env=game_env)
         )
 
+    @staticmethod
+    def to_parent_id(game_env: GameMasterEnv) -> str:
+        return (f"{game_env.metadata.get('name')}"
+                f"-{game_env.experiment['name']}"
+                f"-{game_env.game_instance['game_id']}"
+                f"-turn_{game_env.game_master.state.current_turn}")
+
     def run(self):
         while self._current_envs:  # As long as we have remaining game envs to be played ...
             if self._progress_bar is not None:
                 self._progress_bar.set_postfix(branches=len(self._current_envs))
             remaining_envs = []
-            for game_env in self._current_envs:  # ... we iterate over all of them
-                if self.should_branch(game_env):  # ... and branch for each game env if necessary
-                    branch_envs = [deepcopy(game_env) for _ in range(self.branching_factor)]
-                else:
-                    branch_envs = [deepcopy(game_env)]  # Note: Still copy to keep single nodes immutable
+            for parent_env in self._current_envs:  # ... we iterate over all of them
+                parent_id = BranchingRunner.to_parent_id(parent_env)
+                branch_envs = []
+                num_branches = 1  # by default, we do not branch
+                if self.should_branch(parent_env):
+                    num_branches = self.branching_factor
+                for _ in range(num_branches):
+                    branch_env = deepcopy(parent_env)
+                    branch_env.callbacks.on_branch_start(branch_env.game_master, branch_env.game_instance, parent_id)
+                    branch_envs.append(branch_env)
                 continued_branches = self._single_step_all(branch_envs)
                 remaining_envs.extend(continued_branches)
             self._current_envs = remaining_envs
