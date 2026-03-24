@@ -252,7 +252,8 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         self._recorders[_key] = game_recorder
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict,
+                    exception: Exception = None, rewards: dict[str, float] = None):
         if exception is not None:
             return
         game_name = game_master.game_spec.game_name
@@ -287,7 +288,8 @@ class SignalFileSaver(GameBenchmarkCallback):
             if signal_path.exists():
                 signal_path.unlink()
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict,
+                    exception: Exception = None, rewards: dict[str, float] = None):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
         if exception is None:
             store_json({"timestamp": datetime.now().isoformat()}, "completed.json", instance_dir_path)
@@ -327,7 +329,8 @@ class PlayerFileSaver(GameBenchmarkCallback):
             _key = PlayerFileSaver.to_key(game_name, experiment_name, game_id, player.name)
             self._recorders[_key] = recorder
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict,
+                    exception: Exception = None, rewards: dict[str, float] = None):
         if exception is not None:
             return
         game_name = game_master.game_spec.game_name

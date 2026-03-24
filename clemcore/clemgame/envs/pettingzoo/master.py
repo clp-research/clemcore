@@ -295,7 +295,7 @@ class GameMasterEnv(AECEnv):
                 # Note: we do not handle truncations separately yet, e.g., running out of turns
                 self.terminations[agent_id] = True
                 self.rewards[agent_id] = self._reward_func(current_context, action, self.game_master.state, info)
-            self.callbacks.on_game_end(self.game_master, self.game_instance)
+            self.callbacks.on_game_end(self.game_master, self.game_instance, rewards=self.rewards)
 
         # Collect and reset the rewards for all agents
         # Note: We accumulate the rewards to collect all environmental impacts on an agent until its next call of last()

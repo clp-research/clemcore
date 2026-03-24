@@ -31,6 +31,8 @@ from clemcore.clemgame import GameBenchmarkCallbackList, GameInstances, GameBenc
 from clemcore.clemgame.envs.pettingzoo.master import GameMasterEnv
 from typing import Callable, TYPE_CHECKING
 
+from clemcore.clemgame.master import GameState
+
 if TYPE_CHECKING:
     from clemcore.clemgame.player import Player
 
@@ -125,14 +127,17 @@ def combined_condition(*conditions: BranchingCondition) -> BranchingCondition:
     return condition
 
 
-def run(game_benchmark: GameBenchmark,
+def run(
+        game_benchmark: GameBenchmark,
         game_instances: GameInstances,
         player_models: List[Model],
         *,
         callbacks: GameBenchmarkCallbackList,
         branching_factor: int = 1,
-        branching_condition: Optional[BranchingCondition] = lambda **_: True
-        ):
+        branching_condition: Optional[BranchingCondition] = lambda **_: True,
+        reward_func: Callable[[dict, str, GameState, dict], float] | None = None,
+        feedback_func: Callable[[dict, str, GameState, dict], str | None] | None = None
+):
     """
     Run game instances with optional branching to explore multiple trajectories.
 
@@ -153,7 +158,13 @@ def run(game_benchmark: GameBenchmark,
             - player: The Player object (access to model, role, etc.)
             - env: The GameMasterEnv (access to game state, round, etc.)
             Returns True to trigger branching at this step.
-
+        reward_func: a callable (observation, action, state, info) -> float to compute the reward signal.
+            Defaults to outcome-based rewards: 1. on success, 0. on failure, -1. on abort, 0. otherwise.
+            Game-specific rewards can be implemented by subclassing GameState to carry additional fields
+            (e.g. letter matches in Wordle) and reading them in a custom reward_func.
+        feedback_func: an optional callable (observation, action, state, info) -> str | None to provide
+            qualitative language feedback. When provided, the result is stored in info["turn_feedback"]
+            and can be used by the training loop (e.g. as a verbal reward signal).
     Returns:
         None. Results are saved via callbacks.
 
@@ -187,7 +198,12 @@ def run(game_benchmark: GameBenchmark,
     progress_bar = tqdm(game_instances, desc="Playing game instances")
     for row in progress_bar:
         try:
-            game_env = GameMasterEnv(game_benchmark, callbacks=callbacks)
+            game_env = GameMasterEnv(
+                game_benchmark,
+                callbacks=callbacks,
+                reward_func=reward_func,
+                feedback_func=feedback_func
+            )
             game_env.reset(options={
                 "player_models": player_models,
                 "experiment": row["experiment"],
