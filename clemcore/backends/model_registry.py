@@ -433,7 +433,10 @@ class Model(abc.ABC):
 
     @staticmethod
     def to_infos(player_models: List["Model"]):
-        return {idx: m.model_spec.to_dict() for idx, m in enumerate(player_models)}
+        return {
+            idx: dict(model_spec=m.model_spec.to_dict(), gen_args=m.gen_args)
+            for idx, m in enumerate(player_models)
+        }
 
     @property
     def name(self):
