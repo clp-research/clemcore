@@ -7,6 +7,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List, Dict, Union, Callable, Optional, Any
 
+from tqdm import tqdm
+
 import clemcore.backends as backends
 from clemcore.backends import ModelRegistry, BackendRegistry, Model, KeyRegistry
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
@@ -162,7 +164,8 @@ def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpe
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_specs = set()
     for game_selector in game_selectors:
-        game_specs.update(game_registry.get_game_specs_that_unify_with(game_selector))  # throws error when nothing unifies
+        game_specs.update(
+            game_registry.get_game_specs_that_unify_with(game_selector))  # throws error when nothing unifies
     game_specs = list(game_specs)
 
     # load models (can take some time for large local models)
@@ -228,13 +231,35 @@ def score(game_selector: Union[str, Dict, GameSpec], results_dir: str = None, mo
     """
     logger.info(f"Scoring game {game_selector}")
     errors = []
+
+    # Load the game specs from the registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
-    game_specs = game_registry.get_game_specs_that_unify_with(game_selector)
-    for game_spec in game_specs:
+    game_specs = game_registry.get_game_specs_that_unify_with(game_selector, verbose=False)
+
+    logger.info("Scanning for interaction files in %s", results_dir)
+    interaction_files = [
+        f for f in Path(results_dir).rglob('interactions.json')
+        if model_selector is None or any(model_selector in part for part in Path(f).parts)
+    ]
+
+    # Partition interaction files by game spec in a single pass; game_specs is already the relevant subset
+    files_by_game: dict[str, list[Path]] = {g.game_name: [] for g in game_specs}
+    for interaction_file in tqdm(interaction_files, desc="Partitioning interaction files"):
+        parts = Path(interaction_file).parts
+        for game_spec in game_specs:
+            if game_spec.game_name in parts:
+                files_by_game[game_spec.game_name].append(interaction_file)
+                break  # Each file can only belong to a single game
+
+    # When a file is detected for a specific game, then we will load its scoring functions
+    affected_game_specs = [g for g in game_specs if files_by_game[g.game_name]]
+
+    for game_spec in affected_game_specs:
         try:
             time_start = datetime.now()
             with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
-                game_benchmark.compute_scores(results_dir, model_selector=model_selector)
+                game_files = files_by_game[game_spec.game_name]
+                game_benchmark.compute_scores(game_files)
             logger.info(f"Scoring {game_benchmark.game_name} took: %s", datetime.now() - time_start)
         except Exception as e:
             logger.exception(e)
@@ -462,7 +487,8 @@ Update Behavior:
     score_parser.add_argument("-r", "--results_dir", type=str, default="results",
                               help="A relative or absolute path to the results root directory. "
                                    "For example '-r results/v1.5/de' or '-r /absolute/path/for/results'. "
-                                   "When not specified, then the results will be located in 'results'")
+                                   "When not specified, then the results will be located in 'results'. "
+                                   "Tip: Point to a specific game or model subdirectory to speed up file scanning.")
 
     transcribe_parser = sub_parsers.add_parser("transcribe")
     transcribe_parser.add_argument("-g", "--game", type=str,

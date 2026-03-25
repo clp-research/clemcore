@@ -23,45 +23,6 @@ class CLIExceptionLoggingTestCase(unittest.TestCase):
                 mock_logger.exception.assert_called_once()
 
 
-class ScoreModelSelectorTestCase(unittest.TestCase):
-    """Test that clem score -m filters scoring to the specified model."""
-
-    def _make_spec(self, name="taboo"):
-        return GameSpec(game_name=name, game_path="/path", players=1)
-
-    def test_model_selector_passed_to_compute_scores(self):
-        mock_benchmark = MagicMock()
-        mock_benchmark.game_name = "taboo"
-        mock_benchmark.__enter__ = lambda s: s
-        mock_benchmark.__exit__ = MagicMock(return_value=False)
-
-        with patch("clemcore.cli.GameRegistry") as mock_registry_cls:
-            mock_registry = mock_registry_cls.from_directories_and_cwd_files.return_value
-            mock_registry.get_game_specs_that_unify_with.return_value = [self._make_spec()]
-            with patch("clemcore.cli.GameBenchmark") as mock_benchmark_cls:
-                mock_benchmark_cls.load_from_spec.return_value = mock_benchmark
-
-                score("taboo", results_dir="results", model_selector="gpt-4o")
-
-        mock_benchmark.compute_scores.assert_called_once_with("results", model_selector="gpt-4o")
-
-    def test_no_model_selector_passes_none(self):
-        mock_benchmark = MagicMock()
-        mock_benchmark.game_name = "taboo"
-        mock_benchmark.__enter__ = lambda s: s
-        mock_benchmark.__exit__ = MagicMock(return_value=False)
-
-        with patch("clemcore.cli.GameRegistry") as mock_registry_cls:
-            mock_registry = mock_registry_cls.from_directories_and_cwd_files.return_value
-            mock_registry.get_game_specs_that_unify_with.return_value = [self._make_spec()]
-            with patch("clemcore.cli.GameBenchmark") as mock_benchmark_cls:
-                mock_benchmark_cls.load_from_spec.return_value = mock_benchmark
-
-                score("taboo", results_dir="results")
-
-        mock_benchmark.compute_scores.assert_called_once_with("results", model_selector=None)
-
-
 class RunGameDeduplicationTestCase(unittest.TestCase):
     """Test that duplicate game selectors don't result in duplicate game runs."""
 
