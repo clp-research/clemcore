@@ -27,7 +27,7 @@ from copy import deepcopy
 from tqdm import tqdm
 
 from clemcore.backends import Model
-from clemcore.clemgame import GameBenchmarkCallbackList, GameInstances, GameBenchmark
+from clemcore.clemgame import GameBenchmarkCallbackList, GameInstances, GameBenchmark, GameSnapshot
 from clemcore.clemgame.envs.pettingzoo.master import GameMasterEnv
 from typing import Callable, TYPE_CHECKING
 
@@ -263,7 +263,7 @@ class BranchingRunner:
         self.branching_condition = branching_condition
 
         self._progress_bar = progress_bar
-        self._current_envs: List[GameMasterEnv] = [self._root]
+        self._current_envs: list[GameMasterEnv] = [self._root]
 
     def should_branch(self, game_env):
         """
@@ -292,39 +292,33 @@ class BranchingRunner:
                 self.branching_condition(player=player, env=game_env)
         )
 
-    @staticmethod
-    def to_branching_point_id(game_env: GameMasterEnv) -> str:
-        return (f"{game_env.metadata.get('name')}"
-                f"-{game_env.experiment['name']}"
-                f"-{game_env.game_instance['game_id']}"
-                f"-turn_{game_env.game_master.state.current_turn}")
-
     def run(self):
         while self._current_envs:  # As long as we have remaining game envs to be played ...
             if self._progress_bar is not None:
                 self._progress_bar.set_postfix(branches=len(self._current_envs))
-            remaining_envs = []
+            remaining_envs: list[GameMasterEnv] = []
             for parent_env in self._current_envs:  # ... we iterate over all of them
-                branching_point_id = BranchingRunner.to_branching_point_id(parent_env)
+                snapshot = GameSnapshot.create_from(parent_env.game_master)
                 branch_envs = []
-                num_branches = 1  # by default, we do not branch
                 if self.should_branch(parent_env):
                     num_branches = self.branching_factor
-                for _ in range(num_branches):
-                    branch_env = deepcopy(parent_env)
-                    branch_env.callbacks.on_branching_point(
-                        branch_env.game_master,
-                        branch_env.game_instance,
-                        branching_point_id
-                    )
-                    branch_envs.append(branch_env)
+                    for _ in range(num_branches):
+                        branch_env = deepcopy(parent_env)
+                        branch_env.callbacks.on_branching_point(
+                            branch_env.game_master,
+                            branch_env.game_instance,
+                            snapshot
+                        )
+                        branch_envs.append(branch_env)
+                else:
+                    branch_envs.append(deepcopy(parent_env))
                 continued_branches = self._single_step_all(branch_envs)
                 remaining_envs.extend(continued_branches)
             self._current_envs = remaining_envs
         if self._progress_bar is not None:
             self._progress_bar.set_postfix(branches=0)
 
-    def _single_step_all(self, branch_envs):
+    def _single_step_all(self, branch_envs: list[GameMasterEnv]) -> list[GameMasterEnv]:
         """
         Execute a single step for each branch environment.
 
@@ -341,7 +335,7 @@ class BranchingRunner:
             Environments whose ``agent_selection`` is ``None`` (terminal) are
             closed and excluded from the returned list.
         """
-        continued_branches = []
+        continued_branches: list[GameMasterEnv] = []
         for branch_env in branch_envs:
             agent_id = branch_env.agent_selection
             if agent_id is None:  # This was a terminal branch (we can safely ignore it)
