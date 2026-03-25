@@ -24,7 +24,7 @@ class GameBenchmarkCallback(abc.ABC):
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         pass
 
-    def on_branch_start(self, game_master: "GameMaster", game_instance: Dict, parent_id: str):
+    def on_branching_point(self, game_master: "GameMaster", game_instance: Dict, branching_point_id: str):
         pass
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
@@ -63,9 +63,9 @@ class GameBenchmarkCallbackList(GameBenchmarkCallback):
         for callback in self.callbacks:
             callback.on_game_start(game_master, game_instance)
 
-    def on_branch_start(self, game_master: "GameMaster", game_instance: Dict, parent_id: str):
+    def on_branching_point(self, game_master: "GameMaster", game_instance: Dict, branching_point_id: str):
         for callback in self.callbacks:
-            callback.on_branch_start(game_master, game_instance, parent_id)
+            callback.on_branching_point(game_master, game_instance, branching_point_id)
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
         for callback in self.callbacks:

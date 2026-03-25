@@ -312,7 +312,7 @@ class BranchingRunner:
                     num_branches = self.branching_factor
                 for _ in range(num_branches):
                     branch_env = deepcopy(parent_env)
-                    branch_env.callbacks.on_branch_start(
+                    branch_env.callbacks.on_branching_point(
                         branch_env.game_master,
                         branch_env.game_instance,
                         branching_point_id
