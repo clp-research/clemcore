@@ -415,7 +415,7 @@ class Model(abc.ABC):
 
     def __str__(self):
         """Human-readable descriptor of this model."""
-        return f"{self.name}-t{self.temperature}"
+        return f"{self.name}"
 
     @staticmethod
     def to_identifier(player_models: List["Model"]):
@@ -433,7 +433,10 @@ class Model(abc.ABC):
 
     @staticmethod
     def to_infos(player_models: List["Model"]):
-        return {idx: m.model_spec.to_dict() for idx, m in enumerate(player_models)}
+        return {
+            idx: dict(model_spec=m.model_spec.to_dict(), gen_args=m.gen_args)
+            for idx, m in enumerate(player_models)
+        }
 
     @property
     def name(self):
