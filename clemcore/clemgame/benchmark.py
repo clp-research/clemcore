@@ -59,28 +59,18 @@ class GameBenchmark(GameResourceLocator):
         self.close()
         return False
 
-    def compute_scores(self, results_dir: str, model_selector: str = None):
+    def compute_scores(self, interaction_files: list[Path]):
         """Compute and store scores for each episode and player pair.
         Episode score JSON files are stored in each corresponding episode directory. Combined scores for a player/model
         pair are stored in the player pair directory.
         Args:
-            results_dir: Path to the results directory.
-            model_selector: Optional model name to restrict scoring to a specific model's results.
+            interaction_files: The path to the JSON files containing the interactions to score.
         """
-        results_root = results_dir
-        filter_games = [self.game_name]
-        interaction_files = [
-            f for f in glob.glob(os.path.join(results_root, '**', 'interactions.json'), recursive=True)
-            if any(game_name in Path(f).parts for game_name in filter_games)
-            and (model_selector is None or any(model_selector in part for part in Path(f).parts))
-        ]
-        stdout_logger.info(f"Found {len(interaction_files)} interaction files to score. "
-                           f"Games: {filter_games if filter_games else 'all'}")
         error_count = 0
         for interaction_file in tqdm(interaction_files, desc="Scoring episodes"):
             try:
-                interactions = load_json(interaction_file)
-                interactions_dir = Path(interaction_file).parent
+                interactions = load_json(str(interaction_file))
+                interactions_dir = interaction_file.parent
                 instance = load_json(os.path.join(interactions_dir, "instance.json"))  # sibling file
                 experiment_dir = interactions_dir.parent
                 experiment = load_json(os.path.join(experiment_dir, "experiment.json"))  # parent file
