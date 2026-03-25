@@ -65,5 +65,6 @@ packages = ["clemcore"]
 markers = [
     "api: tests that call external APIs (require keys, cost money)",
     "integration: integration tests with known limitations",
+    "clembench: integration tests requiring clembench games",
 ]
-addopts = "-m 'not api and not integration'"
+addopts = "-m 'not api and not integration and not clembench'"

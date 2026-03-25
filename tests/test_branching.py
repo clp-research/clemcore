@@ -32,7 +32,7 @@ def player_models():
     return backends.load_models([TEST_MODEL] * 2)
 
 
-@pytest.mark.integration
+@pytest.mark.clembench
 class TestBranchingRunner:
 
     def test_branching_runner(self, game_benchmark, game_instances, player_models):
