@@ -1,9 +1,11 @@
 import abc
+from copy import deepcopy
 from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List, TYPE_CHECKING, Dict
 
 if TYPE_CHECKING:  # to satisfy pycharm
-    from clemcore.clemgame import GameMaster, GameBenchmark
+    from clemcore.clemgame import GameMaster, GameBenchmark, GameState
 
 
 @dataclass
@@ -16,6 +18,20 @@ class GameStep:
     model_name: str | None = None
 
 
+@dataclass(frozen=True)
+class GameSnapshot:
+    origin: int
+    state: "GameState" = field(compare=False)
+    timestamp: datetime = field(default_factory=datetime.now, compare=False)
+
+    def __str__(self):
+        return f"{self.origin}@{self.timestamp.strftime('%Y%m%d-%H%M%S-%f')}"
+
+    @classmethod
+    def create_from(cls, game_master: "GameMaster") -> "GameSnapshot":
+        return cls(origin=id(game_master), state=deepcopy(game_master.state))
+
+
 class GameBenchmarkCallback(abc.ABC):
 
     def on_benchmark_start(self, game_benchmark: "GameBenchmark"):
@@ -24,7 +40,7 @@ class GameBenchmarkCallback(abc.ABC):
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         pass
 
-    def on_branching_point(self, game_master: "GameMaster", game_instance: Dict, branching_point_id: str):
+    def on_branching_point(self, game_master: "GameMaster", game_instance: Dict, snapshot: GameSnapshot):
         pass
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
@@ -63,9 +79,9 @@ class GameBenchmarkCallbackList(GameBenchmarkCallback):
         for callback in self.callbacks:
             callback.on_game_start(game_master, game_instance)
 
-    def on_branching_point(self, game_master: "GameMaster", game_instance: Dict, branching_point_id: str):
+    def on_branching_point(self, game_master: "GameMaster", game_instance: Dict, snapshot: GameSnapshot):
         for callback in self.callbacks:
-            callback.on_branching_point(game_master, game_instance, branching_point_id)
+            callback.on_branching_point(game_master, game_instance, snapshot)
 
     def on_game_step(self, game_master: "GameMaster", game_instance: Dict, game_step: GameStep):
         for callback in self.callbacks:

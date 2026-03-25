@@ -1,5 +1,5 @@
 from clemcore.clemgame.callbacks import episode_results_folder_callbacks
-from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameBenchmarkCallbackList, GameStep
+from clemcore.clemgame.callbacks.base import GameBenchmarkCallback, GameBenchmarkCallbackList, GameStep, GameSnapshot
 from clemcore.clemgame.callbacks.files import ResultsFolder, InstanceFileSaver, ExperimentFileSaver, \
     InteractionsFileSaver, RunFileSaver, SignalFileSaver, EpochResultsFolder, EpisodeResultsFolder, \
     EpochResultsFolderCallback, EpisodeResultsFolderCallback
@@ -10,7 +10,7 @@ from clemcore.clemgame.errors import GameError, ParseError, RuleViolationError, 
     NotApplicableError
 from clemcore.clemgame.instances import GameInstanceGenerator, GameInstances
 from clemcore.clemgame.resources import GameResourceLocator
-from clemcore.clemgame.master import GameMaster, DialogueGameMaster, Player
+from clemcore.clemgame.master import GameMaster, DialogueGameMaster, Player, GameState
 from clemcore.clemgame.metrics import GameScorer
 from clemcore.clemgame.recorder import GameInteractionsRecorder
 from clemcore.clemgame.registry import GameSpec, GameRegistry
@@ -21,7 +21,9 @@ __all__ = [
     "GameBenchmarkCallback",
     "GameBenchmarkCallbackList",
     "GameStep",
+    "GameSnapshot",
     "Player",
+    "GameState",
     "GameMaster",
     "DialogueGameMaster",
     "ClemGameEnv",
