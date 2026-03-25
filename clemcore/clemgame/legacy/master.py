@@ -104,11 +104,12 @@ class DialogueGameMaster(GameMaster):
         """
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
+        self.state.game_id = kwargs.get("game_id", None)
 
     def before_game(self):
         self._on_before_game()
         self.current_round += 1
-        self.state.current_turn += 1
+        self.state.current_turn = 0
         self._on_before_round()
 
     @abc.abstractmethod

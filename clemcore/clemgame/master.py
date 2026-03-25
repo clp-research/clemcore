@@ -31,7 +31,14 @@ class GameState:
 
     def __init__(self):
         self.outcome = Outcome.RUNNING
-        self.current_turn = -1
+        self.current_turn: int | None = None
+        self.game_id: int | None = None
+        self.game_name: str | None = None
+        self.experiment_name: str | None = None
+
+    def __str__(self):
+        # Example: [Experiment] GameName (ID) | Turn: 5
+        return f"[{self.experiment_name[:10]}] {self.game_name} ({self.game_id}) | Turn: {self.current_turn:02d}"
 
     def succeed(self):
         self.outcome = Outcome.SUCCESS
@@ -61,6 +68,8 @@ class GameMaster(GameEventSource):
         """
         super().__init__()
         self.state = state or GameState()
+        self.state.game_name = game_spec.game_name
+        self.state.experiment_name = experiment.get("name", None)
         self.game_spec = game_spec
         self.experiment = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
@@ -280,12 +289,13 @@ class DialogueGameMaster(GameMaster):
         """
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
+        self.state.game_id = kwargs.get("game_id", None)
 
     @final
     def before_game(self):
         self._on_before_game()
         self.current_round += 1
-        self.state.current_turn += 1
+        self.state.current_turn = 0
         self._on_before_round()
 
     @abc.abstractmethod
