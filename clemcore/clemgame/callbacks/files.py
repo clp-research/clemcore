@@ -1,6 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, TYPE_CHECKING, Any
+from threading import Lock
 
 from clemcore import get_version
 
@@ -204,11 +205,30 @@ class ExperimentFileSaver(GameBenchmarkCallback):
         store_json(experiment_config, "experiment.json", experiment_dir_path)
 
 
+class BranchCounter:
+
+    def __init__(self):
+        self._counters: Dict[str, int] = {}
+        self._lock = Lock()
+
+    def __deepcopy__(self, memo):
+        # Always return the same instance - this must be shared across all branches
+        return self
+
+    def next(self, key: str) -> int:
+        with self._lock:
+            count = self._counters.get(key, 0)
+            self._counters[key] = count + 1
+            return count
+
+
 class InteractionsFileSaver(GameBenchmarkCallback):
 
-    def __init__(self, results_folder: ResultsFolder, *, player_model_infos: Any = None):
+    def __init__(self, results_folder: ResultsFolder, *, player_model_infos: Any = None, store_branches: bool = False):
         self.results_folder = results_folder
         self.player_models_infos = player_model_infos
+        self._store_branches = store_branches
+        self._branch_counter = BranchCounter()
         self._recorders: Dict[str, GameInteractionsRecorder] = {}
 
     @staticmethod
@@ -232,7 +252,8 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         _key = InteractionsFileSaver.to_key(game_name, experiment_name, game_id)
         self._recorders[_key] = game_recorder
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict,
+                    exception: Exception = None, rewards: dict[str, float] = None):
         if exception is not None:
             return
         game_name = game_master.game_spec.game_name
@@ -242,6 +263,8 @@ class InteractionsFileSaver(GameBenchmarkCallback):
         assert _key in self._recorders, f"Recorder must be registered on_game_start, but wasn't for: {_key}"
         recorder = self._recorders.pop(_key)  # auto-remove recorder from registry
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+        if self._store_branches:
+            instance_dir_path = instance_dir_path / f"branch_{self._branch_counter.next(_key) + 1:05d}"
         store_json(recorder.interactions, "interactions.json", instance_dir_path)
 
 
@@ -265,7 +288,8 @@ class SignalFileSaver(GameBenchmarkCallback):
             if signal_path.exists():
                 signal_path.unlink()
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict,
+                    exception: Exception = None, rewards: dict[str, float] = None):
         instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
         if exception is None:
             store_json({"timestamp": datetime.now().isoformat()}, "completed.json", instance_dir_path)
@@ -305,7 +329,8 @@ class PlayerFileSaver(GameBenchmarkCallback):
             _key = PlayerFileSaver.to_key(game_name, experiment_name, game_id, player.name)
             self._recorders[_key] = recorder
 
-    def on_game_end(self, game_master: "GameMaster", game_instance: Dict, exception: Exception = None):
+    def on_game_end(self, game_master: "GameMaster", game_instance: Dict,
+                    exception: Exception = None, rewards: dict[str, float] = None):
         if exception is not None:
             return
         game_name = game_master.game_spec.game_name

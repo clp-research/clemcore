@@ -31,6 +31,14 @@ class GameState:
 
     def __init__(self):
         self.outcome = Outcome.RUNNING
+        self.current_turn: int | None = None
+        self.game_id: int | None = None
+        self.game_name: str | None = None
+        self.experiment_name: str | None = None
+
+    def __str__(self):
+        # Example: [Experiment] GameName (ID) | Turn: 5
+        return f"[{self.experiment_name[:10]}] {self.game_name} ({self.game_id}) | Turn: {self.current_turn:02d}"
 
     def succeed(self):
         self.outcome = Outcome.SUCCESS
@@ -60,6 +68,8 @@ class GameMaster(GameEventSource):
         """
         super().__init__()
         self.state = state or GameState()
+        self.state.game_name = game_spec.game_name
+        self.state.experiment_name = experiment.get("name", None)
         self.game_spec = game_spec
         self.experiment = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
@@ -279,11 +289,13 @@ class DialogueGameMaster(GameMaster):
         """
         self._on_setup(**kwargs)
         self._current_player = self.get_players()[self._current_player_idx]
+        self.state.game_id = kwargs.get("game_id", None)
 
     @final
     def before_game(self):
         self._on_before_game()
         self.current_round += 1
+        self.state.current_turn = 0
         self._on_before_round()
 
     @abc.abstractmethod
@@ -389,7 +401,6 @@ class DialogueGameMaster(GameMaster):
         except GameError as error:
             self._on_game_error(error)
 
-
         # determine if the current player should pass the turn to the next player or get another turn:
         if self._should_pass_turn():  # True = move on to next player
             self._current_player = self._next_player()
@@ -399,11 +410,15 @@ class DialogueGameMaster(GameMaster):
             self.current_round += 1  # already increment here b.c. _does_game_proceed might rely on it
 
         done = not self._does_game_proceed()
+
         if done:
             self._on_after_game()
             self.log_game_end()
         elif self._start_next_round():  # prepare next round only when game has not ended yet
             self.__prepare_next_round()
+
+        if not done:
+            self.state.current_turn += 1
 
         info = deepcopy(self.info)
         self.info = {}  # reset info after each step

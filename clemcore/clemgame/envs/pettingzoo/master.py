@@ -66,7 +66,8 @@ def gym_env(game_name: str,
     Returns:
         A fully initialized game env ready for RL-like training
     """
-    game_env = env(game_name, instances_filter=instances_filter, single_pass=single_pass, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
+    game_env = env(game_name, instances_filter=instances_filter, single_pass=single_pass, callbacks=callbacks,
+                   reward_func=reward_func, feedback_func=feedback_func)
     game_env = SinglePlayerWrapper(game_env, learner_agent, env_agents=env_agents)
     game_env = AECToGymWrapper(game_env)
     return game_env
@@ -114,7 +115,8 @@ def env(game_name: str,
     # Load game registry
     game_registry = GameRegistry.from_directories_and_cwd_files()
     game_spec = game_registry.get_game_specs_that_unify_with(game_name)[0]
-    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func, feedback_func=feedback_func)
+    game_env = GameBenchmarkWrapper(GameMasterEnv, game_spec=game_spec, callbacks=callbacks, reward_func=reward_func,
+                                    feedback_func=feedback_func)
 
     # Warn env users in case of wrong method execution order
     game_env = OrderEnforcingWrapper(game_env)
@@ -137,6 +139,7 @@ def _notify_on_error(method):
     Only notifies when game_master is already initialised (i.e. after create_game_master()
     succeeded in reset()), so callbacks always receive a valid game_master instance.
     """
+
     @wraps(method)
     def wrapper(self: "GameMasterEnv", *args, **kwargs):
         try:
@@ -145,6 +148,7 @@ def _notify_on_error(method):
             if self.game_master is not None and self.game_instance is not None:
                 self.callbacks.on_game_end(self.game_master, self.game_instance, e)
             raise
+
     return wrapper
 
 
@@ -255,13 +259,18 @@ class GameMasterEnv(AECEnv):
             # Note: This removes the agent and selects the next (dead) agent in self.agents
             # or selects the next live agent stored during _deads_step_first() at the end of this step
             self._was_dead_step(action)
+            if not self.agents:
+                # PZ doesn't handle this case: All agents terminate simultaneously.
+                # See https://github.com/Farama-Foundation/PettingZoo/issues/652
+                self.agent_selection = None
             return
 
         # After step() current_player might have changed, so we reference it here already
         current_agent = self.get_current_agent()
+        current_player = self.player_by_agent_id[current_agent]
 
         # Get the context that was given from GM -> Player (logging happens in game_master.step)
-        current_context = self.game_master.get_context_for(self.player_by_agent_id[current_agent])
+        current_context = self.game_master.get_context_for(current_player)
 
         # Step possibly transitions the current agent (as specified by the game master)
         # Log the response action from Player -> GM
@@ -275,7 +284,7 @@ class GameMasterEnv(AECEnv):
         self.infos[current_agent] = info
 
         # Inform callbacks about the game step results
-        game_step = GameStep(current_context, action, done, info)
+        game_step = GameStep(current_context, action, done, info, current_player.name, current_player.model.name)
         self.callbacks.on_game_step(self.game_master, self.game_instance, game_step)
 
         # The terminal case:
@@ -286,7 +295,7 @@ class GameMasterEnv(AECEnv):
                 # Note: we do not handle truncations separately yet, e.g., running out of turns
                 self.terminations[agent_id] = True
                 self.rewards[agent_id] = self._reward_func(current_context, action, self.game_master.state, info)
-            self.callbacks.on_game_end(self.game_master, self.game_instance)
+            self.callbacks.on_game_end(self.game_master, self.game_instance, rewards=self.rewards)
 
         # Collect and reset the rewards for all agents
         # Note: We accumulate the rewards to collect all environmental impacts on an agent until its next call of last()
