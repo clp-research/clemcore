@@ -38,7 +38,8 @@ class GameState:
 
     def __str__(self):
         # Example: [Experiment] GameName (ID) | Turn: 5
-        return f"[{self.experiment_name[:10]}] {self.game_name} ({self.game_id}) | Turn: {self.current_turn:02d}"
+        experiment_name = self.experiment_name or "None"
+        return f"[{experiment_name[:10]}] {self.game_name} ({self.game_id}) | Turn: {self.current_turn:02d}"
 
     def succeed(self):
         self.outcome = Outcome.SUCCESS
@@ -52,6 +53,8 @@ class GameState:
 
 class GameMaster(GameEventSource):
     """Base class to contain game-specific functionality."""
+
+    _GAME_STATE_FIELDS = vars(GameState()).keys()
 
     def __init__(
             self,
@@ -67,9 +70,9 @@ class GameMaster(GameEventSource):
             player_models: Player models to use for one or two players.
         """
         super().__init__()
-        self.state = state or GameState()
-        self.state.game_name = game_spec.game_name
-        self.state.experiment_name = experiment.get("name", None)
+        self._state = state or GameState()
+        self._state.game_name = game_spec.game_name
+        self._state.experiment_name = experiment.get("name", None)
         self.game_spec = game_spec
         self.experiment = experiment
         # Automatic player expansion: When only a single model is given, then use this model given for each game role.
@@ -82,6 +85,24 @@ class GameMaster(GameEventSource):
         # Note: Using GameResourceLocator could be obsolete, when all necessary info is in the instances file.
         self.game_resources = GameResourceLocator(game_spec.game_name, game_spec.game_path)
         self._current_player: Player | None = None
+
+    @property
+    def state(self) -> GameState:
+        return self._state
+
+    @state.setter
+    def state(self, new_state: GameState):
+        """Allows subclasses to replace the game state during _on_setup() without losing
+        base field values set during __init__. When a subclass assigns a new state object
+        (e.g. self.state = TabooGameState(...)), any base GameState fields already populated
+        on the current state are carried over to the new state, unless the new state has
+        already set them explicitly (i.e. they are not None).
+        """
+        if self._state is not None:
+            for field in self._GAME_STATE_FIELDS:
+                if getattr(new_state, field) is None:
+                    setattr(new_state, field, getattr(self._state, field))
+        self._state = new_state
 
     def _does_game_proceed(self) -> bool:
         """Determine whether the game should continue.
