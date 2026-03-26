@@ -562,16 +562,16 @@ class CustomResponseModel(BatchGenerativeModel):
     def __init__(self, model_spec=ModelSpec(model_name="programmatic")):
         super().__init__(model_spec)
         self.set_gen_args(temperature=0.0)  # dummy value for get_temperature()
+        self.players = []  # injection attribute for Player.batch_response due to game-dependent Player behavior
 
     def generate_response(self, messages: List[Dict]) -> Tuple[Any, Any, str]:
-        player = self.get_gen_arg("players")[0]
+        player = self.players[0]
         result = self._call_player(player, messages)
         return result
 
     def generate_batch_response(self, batch_messages: List[List[Dict]]) -> List[Tuple[Any, Any, str]]:
-        players = self.get_gen_arg("players")
         results = []
-        for player, messages in zip(players, batch_messages):
+        for player, messages in zip(self.players, batch_messages):
             result = self._call_player(player, messages)
             results.append(result)
         return results
