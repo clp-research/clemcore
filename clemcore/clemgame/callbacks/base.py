@@ -1,4 +1,5 @@
 import abc
+import uuid
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -20,16 +21,16 @@ class GameStep:
 
 @dataclass(frozen=True)
 class GameSnapshot:
-    origin: int
     state: "GameState" = field(compare=False)
     timestamp: datetime = field(default_factory=datetime.now, compare=False)
+    origin: uuid.UUID = field(default_factory=uuid.uuid4)
 
     def __str__(self):
         return f"{self.origin}@{self.timestamp.strftime('%Y%m%d-%H%M%S-%f')}"
 
     @classmethod
     def create_from(cls, game_master: "GameMaster") -> "GameSnapshot":
-        return cls(origin=id(game_master), state=deepcopy(game_master.state))
+        return cls(state=deepcopy(game_master.state))
 
 
 class GameBenchmarkCallback(abc.ABC):
