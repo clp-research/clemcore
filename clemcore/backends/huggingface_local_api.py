@@ -447,8 +447,8 @@ class HuggingfaceLocalModel(backends.BatchGenerativeModel):
         generation_output: GenerateOutput = self.model.generate(prompt_token_ids, **gen_args)
 
         # Decode all outputs and prompts
-        model_outputs = self.tokenizer.decode(generation_output.sequences)
-        prompt_texts = self.tokenizer.decode(prompt_token_ids)
+        model_outputs = self.tokenizer.batch_decode(generation_output.sequences)
+        prompt_texts = self.tokenizer.batch_decode(prompt_token_ids)
 
         prompts, response_texts, responses = split_and_clean_batch_outputs(self,
                                                                            model_outputs,
