@@ -143,6 +143,11 @@ class RunFileSaver(GameBenchmarkCallback):
         self.game_info = None
         self.benchmark_start = None
         self.num_instances = 0
+        if player_model_infos is not None:
+            self.set_player_model_infos(player_model_infos)
+    
+    def set_player_model_infos(self, model_infos: Any):
+        player_model_infos = model_infos
         self.data = dict(clem_version=get_version(),
                          created=datetime.now().isoformat(),
                          player_models=player_model_infos,
@@ -192,6 +197,9 @@ class ExperimentFileSaver(GameBenchmarkCallback):
         self.results_folder = results_folder
         self.player_models_infos = player_model_infos
 
+    def set_player_model_infos(self, model_infos: Any):
+        self.player_models_infos = model_infos
+
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         experiment_dir_path = self.results_folder.to_experiment_dir_path(game_master)
         experiment_file_path = experiment_dir_path / "experiment.json"
@@ -234,6 +242,17 @@ class InteractionsFileSaver(GameBenchmarkCallback):
     @staticmethod
     def to_key(game_name: str, experiment_name: str, game_id: int):
         return f"{game_name}-{experiment_name}-{game_id}"
+
+    def set_player_model_infos(self, model_infos: Any):
+        self.player_models_infos = model_infos
+
+    def file_exists(self, game_master: "GameMaster", game_instance: Dict) -> bool:
+        instance_dir_path = self.results_folder.to_instance_dir_path(game_master, game_instance)
+        if self._store_branches:
+            module_logger.warning("Branching is enabled, so file existence check is skipped. Branching will create a new directory for each branch.")
+            return False
+        interactions_file_path = instance_dir_path / "interactions.json"
+        return interactions_file_path.exists()
 
     def on_game_start(self, game_master: "GameMaster", game_instance: Dict):
         game_name = game_master.game_spec.game_name

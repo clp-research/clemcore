@@ -131,6 +131,18 @@ clem score                    # computes individual performance measures
 clem eval                     # computes overall performances measures; requires scores
 ```
 
+Use `-r`, `--results_dir <path>` to specify a custom results directory. Default is `./results` in the current working directory. Applicable for `run`, `transcribe`, `score`, and `eval` commands.
+
+### `run` flags
+
+`clem run` additionally supports the following flags:
+
+- `-t`, `--temperature <float>`: Sampling temperature for the models (default: 0.0)
+- `-l`, `--max_tokens <int>`: Specify the maximum number of tokens to be generated per turn. Be careful with high values which might lead to exceed your API token limits. (default: 500)
+- `-b` `--batch_size <int>`: The batch size for response generation, i.e., the number of simultaneously played game instances. Only applicable for models that support batching (default: 1)
+- `-i`, `--instances_filename <filename>`: Specify a JSON file from the games instances folder to run a specific set of game instances. If not specified, `instances.json` will be run. `.json` suffix is added automatically.
+- `-o`, `--overwrite_existing_results`: Default behavior is to skip instances that have already been run. Use this flag to overwrite existing results.
+
 ---
 
 ## Games

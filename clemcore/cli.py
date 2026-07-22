@@ -10,7 +10,7 @@ from typing import List, Dict, Union, Callable, Optional, Any
 from tqdm import tqdm
 
 import clemcore.backends as backends
-from clemcore.backends import ModelRegistry, BackendRegistry, Model, KeyRegistry
+from clemcore.backends import ModelRegistry, BackendRegistry, Model, KeyRegistry, ModelLoader
 from clemcore.clemgame import GameRegistry, GameSpec, InstanceFileSaver, ExperimentFileSaver, \
     InteractionsFileSaver, GameBenchmarkCallbackList, RunFileSaver, GameInstances, ResultsFolder, \
     GameBenchmark
@@ -142,7 +142,8 @@ def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpe
         instances_filename: str = None,
         results_dir_path: Path = None,
         instances_filter: Callable[[dict], bool] | None = None,
-        batch_size: int = 1
+        batch_size: int = 1,
+        overwrite_existing_results: bool = False
         ):
     """Run specific model/models with a specified clemgame.
     Args:
@@ -157,6 +158,7 @@ def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpe
         instances_filter: A condition to filter the list of dicts with "experiment" and "game_instance" keys.
             If the filter is None, then all game instances will be used.
         batch_size: A batch size to use for the run.
+        overwrite_existing_results: If True, existing results will be overwritten. Otherwise, existing episodes are skipped.
     """
     # check games
     if not isinstance(game_selectors, list):
@@ -169,20 +171,27 @@ def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpe
     game_specs = list(game_specs)
 
     # load models (can take some time for large local models)
-    player_models = backends.load_models(model_selectors, gen_args)
+    # player_models = backends.load_models(model_selectors, gen_args)
+    model_loader = backends.ModelLoader(model_selectors, gen_args)
 
     # setup reusable callbacks here once
     # we name the run directory after the participating models
-    results_folder = ResultsFolder(results_dir_path, run_dir=Model.to_identifier(player_models))
-    model_infos = Model.to_infos(player_models)
+    # results_folder = ResultsFolder(results_dir_path, run_dir=Model.to_identifier(player_models))
+    results_folder = ResultsFolder(results_dir_path, run_dir=Model.to_identifier(model_selectors))
+    # model_infos = Model.to_infos(player_models)
     callbacks = GameBenchmarkCallbackList([
         InstanceFileSaver(results_folder),
-        ExperimentFileSaver(results_folder, player_model_infos=model_infos),
-        InteractionsFileSaver(results_folder, player_model_infos=model_infos),
-        RunFileSaver(results_folder, player_model_infos=model_infos),
+        # ExperimentFileSaver(results_folder, player_model_infos=model_infos),
+        ExperimentFileSaver(results_folder),
+        # InteractionsFileSaver(results_folder, player_model_infos=model_infos),
+        InteractionsFileSaver(results_folder),
+        # RunFileSaver(results_folder, player_model_infos=model_infos),
+        RunFileSaver(results_folder),
         PlayerFileSaver(results_folder),
         SignalFileSaver(results_folder)
     ])
+
+    player_models = None  # We don't want to load the models in case all episodes have already been played
 
     all_start = datetime.now()
     errors = []
@@ -199,16 +208,29 @@ def run(game_selectors: Union[str, Dict, GameSpec, List[Union[str, Dict, GameSpe
 
             with GameBenchmark.load_from_spec(game_spec) as game_benchmark:
                 time_start = datetime.now()
-                logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
+                # logger.info(f'Running {game_spec["game_name"]} (models={player_models})')
+                logger.info(f'Running {game_spec["game_name"]} (ModelLoader={model_loader})')
                 game_instances = GameInstances.from_game_spec(game_spec)
                 logger.info("Loaded %s (initially)", game_instances.describe())
                 game_instances = game_instances.filter(experiment_filter)
                 game_instances = game_instances.filter(instances_filter)
+                if not overwrite_existing_results:
+                    game_instances = game_instances.filter(game_instances.filter_out_existing(results_folder))
+                if len(game_instances) == 0:
+                    logger.warning("No game instances to run after applying filters. Skipping this game.")
+                    continue
                 logger.info("Proceed with %s (after applying filters)", game_instances.describe())
+                # time to load the player models, if not already done
+                if not player_models:
+                    player_models = model_loader.load_models()
+                    model_infos = Model.to_infos(player_models)
+                    for callback in callbacks.callbacks:
+                        if hasattr(callback, "set_player_model_infos"):
+                            callback.set_player_model_infos(model_infos)
                 dispatch.run(
                     game_benchmark,
                     game_instances,
-                    player_models,
+                    player_models=player_models,
                     callbacks=callbacks,
                     batch_size=batch_size
                 )
@@ -357,7 +379,8 @@ def cli(args: argparse.Namespace):
                 experiment_name=args.experiment_name,
                 instances_filename=args.instances_filename,
                 results_dir_path=args.results_dir,
-                batch_size=args.batch_size)
+                batch_size=args.batch_size,
+                overwrite_existing_results=args.overwrite_existing_results)
         finally:
             logger.info("clem run took: %s", datetime.now() - start)
 
@@ -477,6 +500,8 @@ Update Behavior:
                             help="A relative or absolute path to the results root directory. "
                                  "For example '-r results/v1.5/de' or '-r /absolute/path/for/results'. "
                                  "When not specified, then the results will be located in 'results'")
+    run_parser.add_argument("-o", "--overwrite_existing_results", action="store_true", default=False,
+                            help="If set, existing results will be overwritten. Default: False (existing episodes are skipped).")
 
     score_parser = sub_parsers.add_parser("score")
     score_parser.add_argument("-g", "--game", type=str,

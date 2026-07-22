@@ -117,6 +117,9 @@ class ModelSpec(SimpleNamespace):
     def to_string(self):
         return json.dumps(self.__dict__, separators=(",", ":"), indent=None)
 
+    def to_name(self):
+        return self.model_name
+
     @classmethod
     def from_string(cls, model_string: str):
         """
@@ -418,13 +421,13 @@ class Model(abc.ABC):
         return f"{self.name}"
 
     @staticmethod
-    def to_identifier(player_models: List["Model"]):
+    def to_identifier(player_models: List[Union["Model", ModelSpec]]) -> str:
         """Generate a unique and (where possible) human-readable identifier for a list of models.
 
         - For 1–2 models: returns human-readable concatenation (pretty label)
         - For >2 models: returns a deterministic hashed identifier (still unique)
         """
-        model_descriptors = [str(m) for m in player_models]
+        model_descriptors = [m.to_name() if isinstance(m, ModelSpec) else str(m) for m in player_models]
         folder_name = "--".join(model_descriptors)
         if len(player_models) <= 2:
             return folder_name
