@@ -41,6 +41,46 @@ def load_model(model_spec: str | ModelSpec, gen_args: Dict = None) -> Model:
     """
     return load_models([model_spec], gen_args)[0]
 
+class ModelLoader:
+    """
+    A utility class to load models from the model registry.
+    Especially useful when running with `--overwrite_existing_results==False` to avoid loading models for games that are already completed.
+    """
+
+    @temporary_loglevel(logger, logging.INFO)
+    def __init__(self, model_specs: List[str | ModelSpec], gen_args: Dict = None):
+        if gen_args is None:
+            gen_args = dict(temperature=0.0, max_tokens=300)
+            logger.warning(f"No generation arguments provided, using default values: {gen_args}.")
+        self.gen_args = gen_args
+        model_selectors = [
+            ModelSpec.from_name(model_spec) if isinstance(model_spec, str) else model_spec
+            for model_spec in model_specs
+        ]
+        # check models are available
+        _model_registry = ModelRegistry.from_packaged_and_cwd_files()
+        self.unified_model_specs = []
+        for model_selector in model_selectors:
+            unified_model_spec = _model_registry.get_first_model_spec_that_unify_with(model_selector)
+            logger.info(f"Found registered model spec that unifies with {model_selector.to_string()} "
+                        f"-> {unified_model_spec}")
+            self.unified_model_specs.append(unified_model_spec)
+
+        # check backends are available
+        _backend_registry = BackendRegistry.from_packaged_and_cwd_files()
+        for unified_model_spec in self.unified_model_specs:
+            backend_selector = unified_model_spec.backend
+            if not _backend_registry.is_supported(backend_selector):
+                raise ValueError(f"Specified model backend '{backend_selector}' not found in backend registry.")
+            logger.info(f"Found registry entry for backend {backend_selector} "
+                        f"-> {_backend_registry.get_first_file_matching(backend_selector)}")
+        logger.info(f"Successfully loaded {len(self.unified_model_specs)} model specs from registry.")
+
+    def __str__(self):
+        return f"ModelLoader(unified_model_specs={self.unified_model_specs})"
+
+    def load_models(self) -> List[Model]:
+        return load_models(self.unified_model_specs, self.gen_args)
 
 @temporary_loglevel(logger, logging.INFO)
 def load_models(model_specs: List[str | ModelSpec], gen_args: Dict = None) -> List[Model]:

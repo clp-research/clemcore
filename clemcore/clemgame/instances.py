@@ -148,6 +148,21 @@ class GameInstances:
                 return row
         raise ValueError(f"game_id={game_id!r} not found in game instances for {self._game_name}")
 
+    def filter_out_existing(self, results_dir_path: "ResultsFolder") -> Callable[[dict], bool]:
+        """Returns a filter function that excludes rows for which an interactions file already exists.
+
+        Args:
+            results_dir_path: The path to the results directory where interactions files are stored.
+        """
+        def filter_fn(row: dict) -> bool:
+            # print(row)
+            game_name = row["game_name"]
+            experiment = row["experiment"]["name"]
+            game_id = row["game_instance"]["game_id"]
+            interactions_file_path = results_dir_path.to_results_dir_path() / results_dir_path.run_dir / game_name / experiment / f"instance_{game_id:05d}" /"interactions.json"
+            return not interactions_file_path.exists()
+        return filter_fn
+
     @classmethod
     def from_game_spec(cls, game_spec: GameSpec) -> "GameInstances":
         """Load game instances from the path and file name defined in the given GameSpec.
